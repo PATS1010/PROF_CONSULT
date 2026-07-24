@@ -1,0 +1,276 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap");
+
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d90000;
+  --color-card-start: #b70024;
+  --color-card-end: #f2601c;
+  --color-text-light: #ffffff;
+
+  --font-main: "Montserrat", sans-serif;
+
+  --shadow-container: 0 18px 42px rgba(0, 0, 0, 0.16);
+  --shadow-card: 0 8px 18px rgba(126, 10, 19, 0.28);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+.page-background {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+  background-color: #fffaf7;
+}
+
+.page-background-image {
+  position: absolute;
+  inset: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+  filter: blur(5px);
+  opacity: 0.32;
+}
+
+.page-background-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    rgba(255, 141, 105, 0.42) 0%,
+    rgba(255, 244, 239, 0.82) 42%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+}
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+.back-button {
+  position: fixed;
+  top: 48px;
+  left: 48px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 15px;
+  border-radius: 999px;
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 700;
+  box-shadow: 0 5px 12px rgba(125, 0, 0, 0.2);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.back-button:hover {
+  opacity: 0.9;
+  transform: translateX(-3px);
+}
+
+/* =========================================================
+   MAIN ACCOUNT PANEL
+========================================================= */
+.account-container {
+  position: relative;
+  z-index: 5;
+  width: min(100% - 48px, 360px);
+  margin: 48px auto;
+  padding: 30px 28px 26px;
+  border-radius: 28px;
+  background-color: rgba(255, 255, 255, 0.97);
+  box-shadow: var(--shadow-container);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* =========================================================
+   PROF CONSULT LOGO
+========================================================= */
+.account-logo {
+  width: min(100%, 220px);
+  height: auto;
+  margin-bottom: 17px;
+}
+
+/* =========================================================
+   TITLE
+   Black-to-orange text transition
+========================================================= */
+.account-title {
+  margin-bottom: 22px;
+  font-family: var(--font-main);
+  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  font-weight: 900;
+  line-height: 1.08;
+  letter-spacing: -0.7px;
+  text-align: center;
+  text-transform: uppercase;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    #f2601c 78%,
+    #f2601c 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   ACCOUNT OPTIONS
+========================================================= */
+.account-cards {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account-card {
+  width: 100%;
+  padding: 12px 28px 13px;
+  border-radius: 15px;
+  background: linear-gradient(
+    100deg,
+    var(--color-card-start) 0%,
+    #e83718 50%,
+    var(--color-card-end) 100%
+  );
+  box-shadow: var(--shadow-card);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.account-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 22px rgba(126, 10, 19, 0.34);
+}
+
+.account-card-label {
+  margin-bottom: 7px;
+  color: var(--color-text-light);
+  font-family: var(--font-main);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.account-card-button {
+  display: block;
+  width: 100%;
+  padding: 5px 14px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 999px;
+  background: linear-gradient(
+    100deg,
+    rgba(154, 14, 42, 0.55),
+    rgba(255, 174, 105, 0.46)
+  );
+  color: var(--color-text-light);
+  font-family: var(--font-main);
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.6px;
+  text-transform: uppercase;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.account-card-button:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  transform: scale(1.02);
+}
+
+/* =========================================================
+   MOBILE / TABLET
+========================================================= */
+@media (max-width: 600px) {
+  .back-button {
+    top: 20px;
+    left: 20px;
+    padding: 7px 13px;
+    font-size: 0.82rem;
+  }
+
+  .account-container {
+    width: min(100% - 32px, 360px);
+    margin: 76px auto 24px;
+    padding: 28px 22px 24px;
+    border-radius: 24px;
+  }
+
+  .account-logo {
+    width: min(100%, 205px);
+  }
+
+  .account-title {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .account-card {
+    padding: 11px 20px 12px;
+  }
+
+  .account-card-button {
+    font-size: 1.05rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .account-container {
+    padding: 24px 18px 20px;
+  }
+
+  .account-title {
+    font-size: 1.25rem;
+  }
+
+  .account-card-button {
+    font-size: 0.95rem;
+  }
+}

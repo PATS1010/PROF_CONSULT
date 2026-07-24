@@ -1,0 +1,544 @@
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d81f26;
+  --color-maroon-button: #7a1010;
+
+  --color-gradient-maroon: #5c0d0d;
+  --color-gradient-orange: #f2601c;
+
+  --mobile-prefix-width: 56px;
+
+  --color-text-dark: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-text-light: #ffffff;
+
+  --font-main: 'Montserrat', sans-serif;
+
+  --shadow-card: 0 25px 60px rgba(0, 0, 0, 0.25);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  font-weight: 400;
+  color: var(--color-text-dark);
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+/* =========================================================
+   FORMATTEXT
+   Reusable heading style. Montserrat ExtraBold + the
+   black-to-orange gradient used throughout the project.
+========================================================= */
+.format-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    var(--color-gradient-orange) 78%,
+    var(--color-gradient-orange) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   BACKGROUND
+   Full-viewport blurred image with a dark-maroon-to-orange
+   gradient overlay, matching the Student Login page
+========================================================= */
+.page-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+  filter: blur(6px);
+}
+
+.page-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-gradient-maroon) 0%, var(--color-gradient-orange) 100%);
+  opacity: 0.88;
+}
+
+/* =========================================================
+   BACK BUTTON
+   Same style used across the entire ProfConsult website
+========================================================= */
+.back-button {
+  position: fixed;
+  top: 32px;
+  left: 32px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.back-button:hover {
+  opacity: 0.9;
+  transform: translateX(-2px);
+}
+
+/* =========================================================
+   MAIN CONTAINER: registration card
+========================================================= */
+.registration-card {
+  position: relative;
+  z-index: 5;
+  width: auto;
+  max-width: 680px;
+  margin: 110px auto 60px;
+  background-color: #fdfdf9;
+  border: 2px solid rgba(242, 96, 28, 0.8);
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+  padding: 48px 60px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.registration-title {
+  text-align: center;
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  margin-bottom: 32px;
+}
+
+/* =========================================================
+   FORM
+========================================================= */
+.registration-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.form-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.form-field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  margin-bottom: 8px;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 14px 22px;
+  border: none;
+  border-radius: 999px;
+  background-color: #d9d9d9;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-align: center;
+  text-align-last: center; /* keeps the selected <option> centered in Firefox */
+}
+
+.form-input::placeholder {
+  color: #6f6f6f;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: 2px solid var(--color-gradient-orange);
+  outline-offset: 2px;
+}
+
+/* Custom dropdown arrow for the two <select> fields */
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.form-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 44px;
+  cursor: pointer;
+}
+
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 7px solid var(--color-text-dark);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* =========================================================
+   NEXT BUTTON
+========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 36px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  background-color: var(--color-maroon-button);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.5);
+  opacity: 0.95;
+}
+
+.next-button {
+  margin-top: 12px;
+}
+
+/* =========================================================
+   FIELD VALIDATION / SUCCESS MESSAGES
+========================================================= */
+.field-message {
+  width: 100%;
+  font-size: 0.78rem;
+  margin-top: 8px;
+  text-align: center;
+}
+
+.field-message-error {
+  color: #c0392b;
+}
+
+.field-message-success {
+  color: #1e8a4c;
+  font-weight: 600;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+/* =========================================================
+   MOBILE NUMBER FIELD
+   Fixed, non-editable +63 prefix on the left
+========================================================= */
+.mobile-input-group {
+  position: relative;
+  width: 100%;
+  background-color: #d9d9d9;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+/* Focus ring applied to the whole pill-shaped group, not the
+   inner <input> alone -- keeps the ring wrapped around the
+   full field instead of seaming at the prefix/input boundary. */
+.mobile-input-group:focus-within {
+  outline: 2px solid var(--color-gradient-orange);
+  outline-offset: 2px;
+}
+
+/* Overlaid on top of the input rather than taking up flex
+   space next to it -- this way the input itself spans the
+   full width of the pill, so its centered text is always
+   centered relative to the whole field, not just the space
+   left over after the prefix. */
+.mobile-prefix {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--mobile-prefix-width);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Divider between "+63" and the number -- shorter than the
+   pill's full height and centered vertically, so it stays
+   fully contained inside the field instead of touching the
+   rounded top/bottom edges. */
+.mobile-prefix::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 1px;
+  height: 55%;
+  background-color: rgba(43, 43, 43, 0.25);
+  transform: translateY(-50%);
+}
+
+.mobile-input {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  text-align: center;
+  padding: 14px 22px;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+.mobile-input:focus {
+  outline: none; /* handled by .mobile-input-group:focus-within instead */
+}
+
+/* =========================================================
+   PASSWORD FIELDS
+   Show/Hide toggle positioned inside the input, right side
+========================================================= */
+.password-input-group {
+  position: relative;
+  width: 100%;
+}
+
+.password-input {
+  /* Symmetric padding -- matching the reserved space on the
+     right (for the Show button) with equal empty space on the
+     left, so text-align:center lands on the field's true visual
+     center instead of skewing left. */
+  padding: 14px 70px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  background: transparent;
+  color: var(--color-red-primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  padding: 8px 12px;
+}
+
+.password-toggle:hover {
+  opacity: 0.75;
+}
+
+/* =========================================================
+   PASSWORD REQUIREMENTS HINT
+========================================================= */
+.password-requirements {
+  width: 100%;
+  list-style: none;
+  margin-top: 8px;
+  padding-left: 4px;
+}
+
+.password-requirements li {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   TERMS AND CONDITIONS CHECKBOX
+   Circular, matching the Remember Me checkbox style used
+   on the login pages
+========================================================= */
+.terms-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+  cursor: pointer;
+  user-select: none;
+  width: 100%;
+  justify-content: center;
+  margin: 6px 0 24px;
+}
+
+.terms-checkbox-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.terms-checkbox-circle {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--color-red-primary);
+  background-color: transparent;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.terms-checkbox-circle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background-color: var(--color-red-primary);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.15s ease;
+}
+
+.terms-checkbox-input:checked + .terms-checkbox-circle {
+  background-color: rgba(216, 31, 38, 0.12);
+}
+
+.terms-checkbox-input:checked + .terms-checkbox-circle::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* =========================================================
+   LOGIN LINK
+========================================================= */
+.login-text {
+  width: 100%;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--color-text-dark);
+  margin-top: 16px;
+}
+
+.login-link {
+  color: var(--color-text-dark);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.login-link:hover {
+  color: var(--color-red-primary);
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 768px) {
+  .registration-card {
+    margin: 100px 20px 40px;
+    padding: 40px 32px 44px;
+    border-radius: 26px;
+  }
+
+  .back-button {
+    top: 20px;
+    left: 20px;
+    padding: 10px 18px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .registration-card {
+    margin: 90px 14px 32px;
+    padding: 32px 22px 36px;
+    border-radius: 22px;
+  }
+
+  .registration-title {
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+  }
+
+  .form-input,
+  .form-select {
+    padding: 13px 18px;
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px 20px;
+  }
+}
