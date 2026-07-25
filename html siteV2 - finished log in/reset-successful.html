@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Password Reset Successful</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="reset-successful.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       BACKGROUND -- same treatment as the rest of the reset flow
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       BACK BUTTON
+       Returns to whichever login page the user originally came
+       from (student-login.html or faculty-login.html), based on
+       the ?from= param carried through the reset flow
+  ========================================================= -->
+  <a href="student-login.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span> Back
+  </a>
+
+  <!-- =========================================================
+       MAIN CONTAINER
+  ========================================================= -->
+  <main class="registration-card">
+
+    <h1 class="format-text registration-title">Password Reset Successful!</h1>
+
+    <p class="reset-successful-message">
+      Your password has been updated successfully.<br>
+      You can now log in using your new password.
+    </p>
+
+    <a href="student-login.html" class="btn back-to-login-button" id="backToLoginButton" data-nav="login">
+      Back to Login
+    </a>
+
+  </main>
+
+  <script src="reset-successful.js"></script>
+</body>
+</html>

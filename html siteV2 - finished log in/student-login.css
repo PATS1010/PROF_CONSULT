@@ -1,0 +1,438 @@
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d81f26;
+  --color-red-dark: #7a1414;
+  --color-maroon-button: #7a1010;
+
+  --color-overlay-start: #7a0f0f;
+  --color-overlay-end: #f2601c;
+
+  --color-title-dark: #3a1a14;
+  --color-text-dark: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-text-light: #ffffff;
+
+  --font-main: 'Courier New', Courier, monospace;
+
+  --shadow-card: 0 25px 50px rgba(0, 0, 0, 0.3);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  color: var(--color-text-dark);
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+/* =========================================================
+   FORMATTEXT
+   Reusable heading style for major page headings across the
+   Prof Consult website. Arial Black is used ONLY here.
+========================================================= */
+.format-text {
+  font-family: "Arial Black", Gadget, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: clamp(1.4rem, 3.4vw, 2.4rem);
+  line-height: 1.15;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    var(--color-overlay-end) 78%,
+    var(--color-overlay-end) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   BACKGROUND
+   Full-viewport image with a dark-red-to-orange gradient
+   overlay on top (image stays faintly visible underneath)
+========================================================= */
+.page-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+}
+
+.page-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-overlay-start) 0%, var(--color-overlay-end) 100%);
+  opacity: 0.88;
+}
+
+/* =========================================================
+   BACK BUTTON
+========================================================= */
+.back-button {
+  position: fixed;
+  top: 32px;
+  left: 32px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 999px;
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.back-button:hover {
+  opacity: 0.9;
+  transform: translateX(-2px);
+}
+
+/* =========================================================
+   PAGE LAYOUT
+   Left: branding (Welcome to + logo)
+   Right: login card
+========================================================= */
+.login-page {
+  position: relative;
+  z-index: 5;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 80px;
+  flex-wrap: wrap;
+  padding: 120px 60px 60px;
+}
+
+/* =========================================================
+   LEFT SECTION: BRANDING
+========================================================= */
+.branding-section {
+  flex: 1 1 380px;
+  max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.welcome-text {
+  color: var(--color-text-light);
+  font-size: 1.3rem;
+  font-weight: 400;
+  margin-bottom: 12px;
+}
+
+.branding-logo {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+}
+
+/* =========================================================
+   RIGHT SECTION: LOGIN CARD
+========================================================= */
+.login-card {
+  flex: 1 1 380px;
+  max-width: 420px;
+  background-color: #fdfdf9;
+  border: 2px solid rgba(242, 96, 28, 0.8);
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-title {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-subtitle {
+  font-size: 1.05rem;
+  color: var(--color-text-dark);
+  margin-bottom: 26px;
+}
+
+.login-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.login-input {
+  width: 100%;
+  padding: 14px 22px;
+  margin-bottom: 18px;
+  border: none;
+  border-radius: 999px;
+  background-color: #d9d9d9;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.login-input::placeholder {
+  color: #6f6f6f;
+}
+
+/* =========================================================
+   LOGIN VALIDATION MESSAGE
+========================================================= */
+.field-message {
+  width: 100%;
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: -8px;
+  margin-bottom: 18px;
+}
+
+.field-message-error {
+  color: #c0392b;
+}
+
+.login-input:focus {
+  outline: 2px solid var(--color-overlay-end);
+  outline-offset: 2px;
+}
+
+.login-actions-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.login-button {
+  padding: 12px 32px;
+  border-radius: 999px;
+  background-color: var(--color-maroon-button);
+  color: var(--color-text-light);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(122, 16, 16, 0.4);
+  opacity: 0.95;
+}
+
+.forgot-password-link {
+  font-size: 0.85rem;
+  color: var(--color-red-primary);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.forgot-password-link:hover {
+  opacity: 0.8;
+}
+
+/* =========================================================
+   REMEMBER ME (custom circular checkbox)
+========================================================= */
+.remember-me {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: var(--color-text-dark);
+  cursor: pointer;
+  margin-bottom: 24px;
+  user-select: none;
+}
+
+.remember-me-checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.remember-me-circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--color-red-primary);
+  background-color: transparent;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.remember-me-circle::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-red-primary);
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.15s ease;
+}
+
+.remember-me-checkbox:checked + .remember-me-circle {
+  background-color: rgba(216, 31, 38, 0.12);
+}
+
+.remember-me-checkbox:checked + .remember-me-circle::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+/* =========================================================
+   CREATE ACCOUNT TEXT
+========================================================= */
+.create-account-text {
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+  text-align: center;
+}
+
+.create-account-link {
+  color: var(--color-text-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.create-account-link:hover {
+  color: var(--color-red-primary);
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 900px) {
+  .login-page {
+    gap: 48px;
+    padding: 110px 32px 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page {
+    flex-direction: column;
+    padding: 100px 24px 40px;
+  }
+
+  .branding-section {
+    max-width: 320px;
+  }
+
+  .branding-logo {
+    max-width: 280px;
+  }
+
+  .login-card {
+    width: 100%;
+    padding: 36px 28px;
+  }
+
+  .back-button {
+    top: 20px;
+    left: 20px;
+    padding: 10px 18px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-page {
+    padding: 90px 16px 32px;
+  }
+
+  .welcome-text {
+    font-size: 1.1rem;
+  }
+
+  .login-card {
+    padding: 30px 20px;
+    border-radius: 24px;
+  }
+
+  .login-actions-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .login-button {
+    width: 100%;
+  }
+}

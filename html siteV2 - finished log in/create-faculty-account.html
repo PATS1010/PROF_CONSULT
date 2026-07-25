@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Create Faculty Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="create-faculty-account.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       BACKGROUND -- identical to Create Student Account Page 1
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       BACK BUTTON -> faculty-login.html
+  ========================================================= -->
+  <a href="faculty-login.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span> Back
+  </a>
+
+  <!-- =========================================================
+       MAIN CONTAINER: registration card
+  ========================================================= -->
+  <main class="registration-card">
+
+    <h1 class="format-text registration-title">Create Faculty Account</h1>
+
+    <form class="registration-form" id="createFacultyAccountForm">
+
+      <div class="form-field">
+        <label for="facultyIdNumber">Faculty ID Number</label>
+        <input
+          type="text"
+          id="facultyIdNumber"
+          name="facultyIdNumber"
+          class="form-input"
+          placeholder="00-00000"
+          inputmode="numeric"
+          autocomplete="off"
+          maxlength="8"
+          required
+        >
+      </div>
+
+      <div class="form-field">
+        <label for="fullName">Full Name</label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          class="form-input"
+          placeholder="Surname, First Name, M.I"
+          autocomplete="name"
+          required
+        >
+      </div>
+
+      <div class="form-field">
+        <label for="departmentTrigger">Department</label>
+        <div class="custom-select" id="departmentSelect" data-name="department">
+          <button
+            type="button"
+            class="custom-select-trigger"
+            id="departmentTrigger"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+          >
+            <span class="custom-select-value" data-placeholder="Select Department">Select Department</span>
+          </button>
+          <ul class="custom-select-options" role="listbox" hidden>
+            <!-- More departments can be added here later as additional <li> options -->
+            <li role="option" data-value="computer-engineering">Computer Engineering</li>
+          </ul>
+          <input type="hidden" id="department" name="department" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn next-button" id="nextButton">
+        Next <span aria-hidden="true">&rarr;</span>
+      </button>
+
+    </form>
+
+  </main>
+
+  <script src="create-faculty-account.js"></script>
+</body>
+</html>
