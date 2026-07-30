@@ -118,5 +118,18 @@
   </main>
 
   <script src="create-student-account.js"></script>
+
+    <!-- ADD ONLY THIS -->
+  <script>
+  document.getElementById('createStudentAccountForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      localStorage.setItem('pf_student_num',    document.getElementById('studentNumber').value);
+      localStorage.setItem('pf_student_name',   document.getElementById('fullName').value);
+      localStorage.setItem('pf_student_course', document.getElementById('courseProgram').value);
+      localStorage.setItem('pf_student_year',   document.getElementById('yearLevel').value);
+      window.location.href = 'create-student-account2.html';
+  });
+  </script>
+  
 </body>
 </html>

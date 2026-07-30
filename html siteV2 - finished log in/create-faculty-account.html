@@ -92,5 +92,17 @@
   </main>
 
   <script src="create-faculty-account.js"></script>
+
+<!-- ADD THIS: Saves Step 1 data and goes to Step 2 -->
+  <script>
+  document.getElementById('createFacultyAccountForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      localStorage.setItem('pf_faculty_id',   document.getElementById('facultyIdNumber').value);
+      localStorage.setItem('pf_faculty_name', document.getElementById('fullName').value);
+      localStorage.setItem('pf_faculty_dept', document.getElementById('department').value);
+      window.location.href = 'create-faculty-account2.html';
+  });
+  </script>
+
 </body>
 </html>
