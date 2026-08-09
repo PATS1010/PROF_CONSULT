@@ -39,7 +39,13 @@
       A 6-digit verification code has been sent to your email or mobile number.
     </p>
 
-    <form class="registration-form" id="verificationForm">
+        <form class="registration-form" id="verificationForm"
+          action="verify-code.php" method="POST">
+
+      <input type="hidden" id="tokenField" name="token">
+      <input type="hidden" id="combinedCode" name="code">
+
+      <p class="field-message field-message-error" id="phpError" style="display:none; margin-bottom: 1rem;"></p>
 
       <label class="verification-label" id="verificationCodeLabel">Verification Code</label>
 
@@ -71,5 +77,33 @@
   </main>
 
   <script src="verification-code.js"></script>
+
+    <script>
+  (function() {
+      const form = document.getElementById('verificationForm');
+      const params = new URLSearchParams(window.location.search);
+
+      // 1. Fill hidden token from URL
+      document.getElementById('tokenField').value = params.get('token') || '';
+
+      // 2. Before submit, combine 6 digits into hidden input
+      form.addEventListener('submit', function(e) {
+          const digits = document.querySelectorAll('.code-digit');
+          let code = '';
+          digits.forEach(function(d) { code += d.value; });
+          document.getElementById('combinedCode').value = code;
+      });
+
+      // 3. Show PHP error if redirected back with ?error=...
+      const error = params.get('error');
+      if (error) {
+          const errDiv = document.getElementById('phpError');
+          errDiv.textContent = decodeURIComponent(error.replace(/\+/g, ' '));
+          errDiv.style.display = 'block';
+          window.history.replaceState({}, document.title, window.location.pathname);
+      }
+  })();
+  </script>
+
 </body>
 </html>

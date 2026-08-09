@@ -25,7 +25,7 @@
        from (student-login.html or faculty-login.html), based on
        the ?from= param carried through the reset flow
   ========================================================= -->
-  <a href="student-login.html" class="back-button" id="backButton" data-nav="back">
+  <a href="#" class="back-button" id="backButton" data-nav="back">
     <span aria-hidden="true">&larr;</span> Back
   </a>
 
@@ -41,12 +41,23 @@
       You can now log in using your new password.
     </p>
 
-    <a href="student-login.html" class="btn back-to-login-button" id="backToLoginButton" data-nav="login">
+    <a href="#" class="btn back-to-login-button" id="backToLoginButton" data-nav="login">
       Back to Login
     </a>
 
   </main>
 
   <script src="reset-successful.js"></script>
+
+    <script>
+  (function() {
+      const params = new URLSearchParams(window.location.search);
+      const type = params.get('type');
+      const loginPage = (type === 'faculty') ? 'faculty-login.html' : 'student-login.html';
+      document.getElementById('backToLoginButton').href = loginPage;
+      document.getElementById('backButton').href = loginPage;
+  })();
+  </script>
+  
 </body>
 </html>

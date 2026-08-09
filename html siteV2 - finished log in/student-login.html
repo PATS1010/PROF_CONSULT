@@ -45,7 +45,9 @@
 
       <h1 class="format-text login-title">Student Login</h1>
 
-      <form class="login-form" id="studentLoginForm">
+      <form class="login-form" id="studentLoginForm" action="student-login.php" method="POST">
+
+        <p class="field-message field-message-error" id="phpError" style="display:none; margin-bottom: 1rem;"></p>
 
         <label for="studentEmail" class="visually-hidden">Email or Username</label>
         <input
@@ -100,5 +102,25 @@
   </main>
 
   <script src="student-login.js"></script>
+
+    <script>
+  (function() {
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get('error');
+      if (error) {
+          const errDiv = document.getElementById('phpError');
+          errDiv.textContent = decodeURIComponent(error.replace(/\+/g, ' '));
+          errDiv.style.display = 'block';
+          window.history.replaceState({}, document.title, window.location.pathname);
+      }
+      if (params.get('registered') === '1') {
+          alert('Account created successfully! Please log in.');
+      }
+      if (params.get('reset') === '1') {
+          alert('Password reset successful! Please log in.');
+      }
+  })();
+  </script>
+  
 </body>
 </html>
