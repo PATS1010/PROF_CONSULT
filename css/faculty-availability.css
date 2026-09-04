@@ -1,0 +1,456 @@
+/* SYSTEM NOTE: Styles the faculty availability page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   FACULTY AVAILABILITY -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and is not duplicated
+   or overridden here.
+
+   Heading gradient is page-local and self-contained (matches
+   the approach already used on Faculty Profile/Notifications/
+   Consultation Requests) -- no dependency on .format-text.
+========================================================= */
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+.availability-page-heading {
+  margin-bottom: 32px;
+}
+
+.availability-title {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
+  line-height: 1.1;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    #e8560f 78%,
+    #e8560f 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   LAYOUT
+========================================================= */
+.availability-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  max-width: 1150px;
+  margin: 0 auto;
+}
+
+.availability-column-left {
+  flex: 1 1 380px;
+  min-width: 0;
+}
+
+/* =========================================================
+   STATUS PILL + CHANGE STATUS DROPDOWN
+========================================================= */
+.status-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-available { background-color: var(--color-status-available); }
+.status-teaching { background-color: var(--color-status-teaching); }
+.status-meeting { background-color: var(--color-status-meeting); }
+.status-offline { background-color: var(--color-status-offline); }
+.status-onleave { background-color: var(--color-status-onleave); }
+.status-consultation { background-color: var(--color-status-consultation); }
+
+.faculty-status-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-status-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 22px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  box-shadow: var(--shadow-card);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+/* Wraps just the button, so the popup can anchor to the button
+   itself rather than the whole status row (which would place it
+   under the status pill instead). */
+.faculty-change-status-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.faculty-change-status-button {
+  padding: 16px 26px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-change-status-button:hover,
+.faculty-change-status-button[aria-expanded="true"] {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.faculty-status-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 230px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 150;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-status-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.faculty-status-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.faculty-status-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+}
+
+.faculty-status-radio {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c9c9c9;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.faculty-status-option.is-selected {
+  background-color: var(--color-gradient-end);
+  color: var(--color-text-light);
+}
+
+.faculty-status-option.is-selected .faculty-status-radio {
+  border-color: var(--color-text-light);
+  background-color: var(--color-text-light);
+}
+
+.faculty-status-save-button {
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-status-save-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   AVAILABLE HOURS CARD
+========================================================= */
+.availability-hours-card {
+  flex: 1 1 460px;
+  min-width: 0;
+  position: relative;
+  overflow: visible;
+  padding: 26px 26px 26px 42px;
+}
+
+.availability-hours-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  border-radius: 22px 0 0 22px;
+  background-color: var(--color-red-primary);
+}
+
+.availability-hours-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 16px;
+}
+
+.availability-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.availability-hours-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.availability-day-badge {
+  flex: 0 0 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 10px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+/* Light/white time display -- explicitly NOT a black background,
+   per the correction. */
+.availability-time-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background-color: #f5f1ea;
+  box-shadow: var(--shadow-card);
+}
+
+.availability-time-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  letter-spacing: 0.3px;
+}
+
+.availability-time-text.is-unavailable {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-style: italic;
+}
+
+/* Arrow button -- BLACK, hidden until Edit mode is active */
+.availability-time-arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background-color: transparent;
+  color: #000000;
+  font-size: 0.75rem;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+.availability-time-arrow:hover {
+  background-color: rgba(0, 0, 0, 0.08);
+}
+
+.availability-time-arrow[hidden] {
+  display: none;
+}
+
+.availability-time-arrow[aria-expanded="true"] {
+  transform: rotate(180deg);
+}
+
+/* Per-day time dropdown -- opens directly below that day's row */
+.availability-time-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 220px;
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+  z-index: 120;
+
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.availability-time-dropdown.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.availability-time-dropdown[hidden] {
+  display: none;
+}
+
+.availability-time-option {
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background-color: #f5f1ea;
+  color: var(--color-text-dark);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.availability-time-option:hover {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+}
+
+.availability-time-option.is-selected {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+}
+
+.availability-time-option.is-unavailable-option {
+  border-top: 1px solid #e5e0d6;
+  margin-top: 4px;
+  padding-top: 12px;
+  color: var(--color-status-onleave);
+}
+
+.availability-time-option.is-unavailable-option:hover,
+.availability-time-option.is-unavailable-option.is-selected {
+  background-color: var(--color-status-onleave);
+  color: var(--color-text-light);
+}
+
+.availability-hours-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.availability-edit-button,
+.availability-save-button {
+  flex: 1;
+  padding: 13px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.availability-edit-button:hover,
+.availability-save-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  .availability-grid {
+    flex-direction: column;
+  }
+
+  .availability-column-left,
+  .availability-hours-card {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-status-row {
+    flex-wrap: wrap;
+  }
+
+  .faculty-status-pill {
+    width: 100%;
+  }
+
+  .faculty-change-status-wrap {
+    width: 100%;
+  }
+
+  .faculty-change-status-button {
+    width: 100%;
+  }
+
+  .faculty-status-panel {
+    width: 100%;
+    right: 0;
+    left: 0;
+  }
+
+  .availability-hours-card {
+    padding: 22px 18px 22px 32px;
+  }
+
+  .availability-day-badge {
+    flex: 0 0 78px;
+    font-size: 0.72rem;
+    padding: 10px 6px;
+  }
+
+  .availability-time-text {
+    font-size: 0.75rem;
+  }
+
+  .availability-time-dropdown {
+    width: 190px;
+  }
+}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the faculty settings page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Faculty Settings</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Shared Faculty layout -->
+  <link rel="stylesheet" href="css/faculty-shared.css">
+
+  <!-- Settings page styles -->
+  <link rel="stylesheet" href="css/faculty-settings.css">
+</head>
+
+<body data-active-page="settings">
+
+  <!-- ==========================
+       TOP NAVIGATION BAR
+  =========================== -->
+  <header class="faculty-navbar">
+    <div class="faculty-navbar-left">
+      <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-navbar-logo">
+    </div>
+
+    <div class="faculty-navbar-right">
+
+      <button type="button" class="faculty-nav-icon-button faculty-notification-bell-button" id="facultyNotificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <button type="button" class="faculty-nav-icon-button faculty-quick-action-button" id="facultyQuickActionButton" aria-haspopup="true" aria-expanded="false">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <div class="faculty-quick-action-panel" id="facultyQuickActionPanel" hidden>
+
+        <div class="faculty-quick-action-header">
+          <span class="faculty-quick-action-icon-wrap">
+            <img src="images/redactionbutton.png" alt="">
+          </span>
+
+          <p class="format-text faculty-quick-action-title">
+            Quick Action
+          </p>
+        </div>
+
+        <div class="faculty-quick-action-actions">
+          <button type="button" class="faculty-quick-action-item-button faculty-checkin-button" id="facultyCheckInButton">
+            Check In
+          </button>
+
+          <button type="button" class="faculty-quick-action-item-button faculty-checkout-button" id="facultyCheckOutButton">
+            Check Out
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==========================
+       SIDEBAR
+  =========================== -->
+
+  <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
+
+  <aside class="faculty-sidebar" id="facultySidebar">
+
+    <div class="faculty-sidebar-header">
+
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-sidebar-logo">
+
+      <button type="button" class="faculty-sidebar-close" id="facultySidebarClose">
+        &times;
+      </button>
+
+    </div>
+
+    <nav class="faculty-sidebar-nav">
+      <a href="faculty-dashboard.html" class="faculty-sidebar-link" data-page="dashboard">Dashboard</a>
+      <a href="faculty-consultation-requests.html" class="faculty-sidebar-link" data-page="consultation-requests">Consultation Requests</a>
+      <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
+      <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
+      <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
+      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+    </nav>
+
+  </aside>
+
+  <!-- ==========================
+       BACKGROUND
+  =========================== -->
+
+  <div class="faculty-page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
+    <div class="faculty-page-background-overlay"></div>
+  </div>
+
+  <!-- ==========================
+       SETTINGS CONTENT
+  =========================== -->
+
+  <main class="faculty-main-content">
+
+    <!-- Build the Settings page here -->
+<!-- =========================================================
+     FACULTY ACCOUNT SETTINGS -- MAIN CONTENT
+     Paste this inside <main class="faculty-main-content">...</main>
+     on faculty-settings.html, alongside the shared navbar/
+     sidebar/background shell. Do not duplicate the shell here.
+========================================================= -->
+
+<section class="faculty-card faculty-settings-card">
+
+  <h1 class="format-text faculty-settings-title">Account Settings</h1>
+
+  <div class="faculty-settings-inner-card">
+
+    <label class="faculty-settings-checkbox-row">
+      <input type="checkbox" id="emailNotificationsCheckbox" class="faculty-settings-checkbox">
+      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+      <span class="faculty-settings-checkbox-label">Email Notifications</span>
+    </label>
+
+    <label class="faculty-settings-checkbox-row">
+      <input type="checkbox" id="darkModeCheckbox" class="faculty-settings-checkbox">
+      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+      <span class="faculty-settings-checkbox-label">Dark Mode</span>
+    </label>
+
+    <label class="faculty-settings-checkbox-row">
+      <input type="checkbox" id="autoCheckInCheckbox" class="faculty-settings-checkbox">
+      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+      <span class="faculty-settings-checkbox-label">Auto Check-In Reminder</span>
+    </label>
+
+    <a href="forgot-password.html" class="faculty-change-password-link">Change Password</a>
+
+  </div>
+
+  <div class="faculty-settings-footer">
+    <p class="faculty-save-success" id="settingsSaveSuccess" hidden>Changes saved successfully.</p>
+    <button type="button" class="faculty-settings-save-button" id="saveSettingsButton">Save</button>
+  </div>
+
+</section>
+  </main>
+
+  <script src="js/faculty-shared.js"></script>
+  <script src="js/faculty-settings.js"></script>
+
+</body>
+</html>

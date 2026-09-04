@@ -1,0 +1,338 @@
+/* SYSTEM NOTE: Styles the faculty consultation requests page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   FACULTY CONSULTATION REQUESTS -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and is not duplicated
+   or overridden here.
+
+   Heading gradient is page-local and self-contained (matches
+   the approach already used on Faculty Profile/Notifications)
+   -- no dependency on .format-text or shared CSS variables.
+========================================================= */
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+.requests-page-heading {
+  margin-bottom: 24px;
+}
+
+.requests-title {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
+  line-height: 1.1;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    #e8560f 78%,
+    #e8560f 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.requests-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* =========================================================
+   REQUESTS CARD
+   White rounded card with a thick red left accent bar,
+   matching the Notifications/Student panel-card treatment.
+========================================================= */
+.requests-card {
+  position: relative;
+  overflow: hidden;
+  padding: 28px 28px 28px 44px;
+}
+
+.requests-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-red-primary);
+}
+
+/* =========================================================
+   HORIZONTAL SCROLL CONTAINER
+========================================================= */
+.requests-scroll-container {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
+}
+
+.no-requests-message {
+  padding: 24px 4px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.no-requests-message[hidden] {
+  display: none;
+}
+
+/* =========================================================
+   REQUEST CARD -- COLLAPSED (default)
+========================================================= */
+.request-card {
+  position: relative;
+  flex: 0 0 auto;
+  width: 260px;
+  background-color: #f5f1ea;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 18px 18px 20px;
+  transition: width 0.25s ease;
+}
+
+.request-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.request-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+}
+
+.request-avatar {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: #e4e0d8;
+  box-shadow: var(--shadow-card);
+}
+
+.request-avatar svg {
+  width: 24px;
+  height: 24px;
+  color: #a8a196;
+}
+
+.request-accept-button {
+  flex-shrink: 0;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background-color: var(--color-checkin, #2fae4e);
+  color: var(--color-text-light);
+  font-size: 0.76rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.request-accept-button:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.request-accept-button:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.request-accept-button.is-accepted {
+  background-color: var(--color-checkin, #2fae4e);
+}
+
+.request-type {
+  font-size: 0.82rem;
+  color: var(--color-text-dark);
+  margin-bottom: 2px;
+}
+
+.request-date {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+/* =========================================================
+   REQUEST CARD -- EXPANDED-ONLY CONTENT
+   Hidden by default; shown when the card carries .is-expanded.
+========================================================= */
+.request-expanded-info {
+  display: none;
+  gap: 28px;
+  margin-bottom: 16px;
+}
+
+.request-info-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.request-info-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-top: 8px;
+}
+
+.request-info-label:first-child {
+  margin-top: 0;
+}
+
+.request-info-value {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.request-message {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+.request-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-view-more-button,
+.request-reschedule-button,
+.request-decline-button {
+  width: 100%;
+  padding: 9px 16px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.request-view-more-button,
+.request-reschedule-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.request-decline-button {
+  background-color: var(--color-red-dark);
+}
+
+.request-decline-button.is-declined {
+  background-color: var(--color-status-onleave);
+}
+
+.request-view-more-button:hover,
+.request-reschedule-button:hover,
+.request-decline-button:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.request-decline-button:disabled,
+.request-view-more-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* Small inline toast for the Reschedule placeholder action */
+.request-toast {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-status-available);
+  margin-top: 8px;
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease;
+}
+
+.request-toast.is-visible {
+  opacity: 1;
+  height: auto;
+}
+
+/* =========================================================
+   REQUEST CARD -- EXPANDED STATE
+========================================================= */
+.request-card.is-expanded {
+  width: 560px;
+}
+
+.request-card.is-expanded .request-avatar {
+  display: flex;
+}
+
+.request-card.is-expanded .request-date {
+  margin-bottom: 0;
+}
+
+.request-card.is-expanded .request-expanded-info {
+  display: flex;
+}
+
+.request-card.is-expanded .request-view-more-button {
+  display: none;
+}
+
+.request-card.is-expanded .request-actions {
+  flex-direction: row;
+  max-width: 240px;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  .requests-card {
+    padding: 24px 20px 24px 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .requests-card {
+    padding: 20px 16px 20px 30px;
+  }
+
+  .request-card {
+    width: 220px;
+  }
+
+  .request-card.is-expanded {
+    width: min(420px, 82vw);
+  }
+
+  .request-card.is-expanded .request-expanded-info {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .request-card.is-expanded .request-actions {
+    flex-direction: column;
+    max-width: none;
+  }
+}

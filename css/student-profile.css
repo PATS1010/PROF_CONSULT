@@ -1,0 +1,652 @@
+/* SYSTEM NOTE: Styles the student profile page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d81f26;
+  --color-red-dark: #7a1414;
+
+  --color-gradient-start: #7a0f0f;
+  --color-gradient-end: #e8560f;
+
+  --color-text-dark: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-text-light: #ffffff;
+
+  --color-status-available: #2fae4e;
+  --color-status-teaching: #f2601c;
+  --color-status-meeting: #2a7de1;
+  --color-status-offline: #b9b9b9;
+  --color-status-onleave: #e0405a;
+
+  --font-main: 'Montserrat', sans-serif;
+
+  --nav-height: 64px;
+  --content-padding-x: 60px;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  color: var(--color-text-dark);
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* =========================================================
+   FORMATTEXT
+   Reusable heading style used throughout the Prof Consult site
+========================================================= */
+.format-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    var(--color-gradient-end) 78%,
+    var(--color-gradient-end) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   TOP NAVIGATION BAR
+========================================================= */
+.dashboard-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+  padding: 0 var(--content-padding-x);
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.navbar-logo {
+  height: 38px;
+  width: auto;
+}
+
+.nav-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.hamburger-button {
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+}
+
+.hamburger-button span {
+  width: 24px;
+  height: 3px;
+  background-color: var(--color-text-light);
+  border-radius: 2px;
+}
+
+.navbar-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-bell-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.notification-bell-button img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.notification-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.notification-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* =========================================================
+   QUICK ACTION POPUP
+========================================================= */
+.quick-action-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  width: 460px;
+  max-width: 92vw;
+  background-color: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  z-index: 200;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.quick-action-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.quick-action-title {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.quick-action-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Each action is its own row: text on the left, button pinned
+   to the right -- flex row prevents the button from overlapping
+   the item below it. */
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+}
+
+.quick-action-item + .quick-action-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.quick-action-item-text-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-item-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 4px;
+}
+
+.quick-action-item-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.quick-action-button {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   BURGER SIDEBAR
+========================================================= */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 301;
+  width: 300px;
+  max-width: 85vw;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.is-open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-logo {
+  height: 34px;
+  width: auto;
+}
+
+.sidebar-close {
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-text-light);
+  padding: 4px 8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-link:hover,
+.sidebar-link.is-active {
+  background-color: rgba(255, 255, 255, 0.22);
+  color: var(--color-text-light);
+}
+
+/* =========================================================
+   BACKGROUND
+   Slightly blurred, light white overlay for readability
+========================================================= */
+.page-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+  filter: blur(6px);
+}
+
+.page-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.86);
+}
+
+/* =========================================================
+   PROFILE PAGE LAYOUT
+========================================================= */
+.profile-page {
+  display: flex;
+  justify-content: center;
+  padding: 48px var(--content-padding-x) 60px;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 760px;
+  background-color: #ffffff;
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+  padding: 48px 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-title {
+  text-align: center;
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
+  margin-bottom: 32px;
+}
+
+/* =========================================================
+   STUDENT INFORMATION CARD
+========================================================= */
+.profile-info-card {
+  width: 100%;
+  background-color: #f7f4ee;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+.profile-photo-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.profile-photo {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.profile-photo-edit {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.profile-photo-edit[hidden] {
+  display: none;
+}
+
+.profile-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.profile-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-field-row label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.profile-field {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 6px 0;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  border-bottom: 1px solid transparent;
+}
+
+.profile-field-highlight {
+  color: var(--color-red-primary);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.profile-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: default;
+}
+
+.profile-phone-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-phone-prefix {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  flex-shrink: 0;
+}
+
+.profile-phone-input {
+  flex: 1;
+}
+
+/* Editing state -- applied to the whole info card via JS when
+   Edit Profile is active */
+.profile-info-card.is-editing .profile-field:not(:disabled) {
+  background-color: #ffffff;
+  border-bottom-color: var(--color-gradient-end);
+  border-radius: 6px;
+  padding: 6px 10px;
+}
+
+.profile-info-card.is-editing .profile-select:not(:disabled) {
+  cursor: pointer;
+}
+
+.profile-info-card.is-editing .profile-field:not(:disabled):focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 1px;
+}
+
+/* =========================================================
+   EDIT PROFILE BUTTON
+========================================================= */
+.btn {
+  display: inline-block;
+  padding: 14px 40px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
+  opacity: 0.95;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  :root {
+    --content-padding-x: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 36px 28px;
+    border-radius: 26px;
+  }
+
+  .profile-info-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 26px;
+  }
+
+  .profile-fields {
+    width: 100%;
+  }
+
+  .profile-field-row label {
+    text-align: left;
+  }
+
+  .profile-phone-group {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --content-padding-x: 18px;
+  }
+
+  .dashboard-navbar {
+    padding: 0 16px;
+  }
+
+  .profile-page {
+    padding: 32px 18px 40px;
+  }
+
+  .profile-card {
+    padding: 28px 18px;
+  }
+
+  .profile-title {
+    font-size: 1.4rem;
+    margin-bottom: 22px;
+  }
+
+  .profile-photo {
+    width: 88px;
+    height: 88px;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+    padding: 13px 20px;
+  }
+
+  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
+  .sidebar {
+    width: 80vw;
+    max-width: 80vw;
+  }
+
+  /* Quick Action stays fully visible and doesn't overflow the screen */
+  .quick-action-panel {
+    width: min(400px, 90vw);
+    right: -8px;
+  }
+}

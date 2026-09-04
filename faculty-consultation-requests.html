@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the faculty consultation requests page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Consultation Requests</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Shared Faculty layout styles -- load on every Faculty page -->
+  <link rel="stylesheet" href="css/faculty-shared.css">
+  <!-- Page-specific styles -- only this file changes per page -->
+  <link rel="stylesheet" href="css/faculty-consultation-requests.css">
+</head>
+<body data-active-page="consultation-requests">
+
+  <!-- =========================================================
+       TOP NAVIGATION BAR (shared shell -- do not duplicate
+       edits here; change faculty-shared.css/js instead)
+  ========================================================= -->
+  <header class="faculty-navbar">
+    <div class="faculty-navbar-left">
+      <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-navbar-logo">
+    </div>
+
+    <div class="faculty-navbar-right">
+      <!-- Notification bell -- clickable, functionality not implemented yet -->
+      <button type="button" class="faculty-nav-icon-button faculty-notification-bell-button" id="facultyNotificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <!-- Quick Action trigger -->
+      <button type="button" class="faculty-nav-icon-button faculty-quick-action-button" id="facultyQuickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <!-- Quick Action popup -->
+      <div class="faculty-quick-action-panel" id="facultyQuickActionPanel" hidden>
+        <div class="faculty-quick-action-header">
+          <span class="faculty-quick-action-icon-wrap">
+            <img src="images/redactionbutton.png" alt="">
+          </span>
+          <p class="format-text faculty-quick-action-title">Quick Action</p>
+        </div>
+
+        <div class="faculty-quick-action-actions">
+          <button type="button" class="faculty-quick-action-item-button faculty-checkin-button" id="facultyCheckInButton">Check In</button>
+          <button type="button" class="faculty-quick-action-item-button faculty-checkout-button" id="facultyCheckOutButton">Check Out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       BURGER SIDEBAR (shared shell)
+  ========================================================= -->
+  <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
+
+  <aside class="faculty-sidebar" id="facultySidebar">
+    <div class="faculty-sidebar-header">
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-sidebar-logo">
+      <button type="button" class="faculty-sidebar-close" id="facultySidebarClose" aria-label="Close menu">&times;</button>
+    </div>
+
+    <nav class="faculty-sidebar-nav">
+      <a href="faculty-dashboard.html" class="faculty-sidebar-link" data-page="dashboard">Dashboard</a>
+      <a href="faculty-consultation-requests.html" class="faculty-sidebar-link" data-page="consultation-requests">Consultation Requests</a>
+      <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
+      <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
+      <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
+      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       BACKGROUND (shared shell)
+  ========================================================= -->
+  <div class="faculty-page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
+    <div class="faculty-page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       MAIN CONTENT AREA
+       Only this section differs from page to page.
+  ========================================================= -->
+  <main class="faculty-main-content">
+<!-- =========================================================
+     FACULTY CONSULTATION REQUESTS -- MAIN CONTENT
+     Paste this inside <main class="faculty-main-content">...</main>
+     on faculty-consultation-requests.html, alongside the shared
+     navbar/sidebar/background shell. Do not duplicate the shell
+     here, and do not touch faculty-shared.css/faculty-shared.js.
+========================================================= -->
+
+<div class="requests-page-heading">
+  <h1 class="requests-title">Consultation Requests</h1>
+  <p class="requests-subtitle">Pending Requests</p>
+</div>
+
+<section class="faculty-card requests-card">
+  <div class="requests-scroll-container" id="requestsScrollContainer">
+    <!-- Request cards are rendered by faculty-consultation-requests.js
+         from the REQUESTS data array, so new/incoming requests can
+         be added later without touching this markup. -->
+  </div>
+
+  <p class="no-requests-message" id="noRequestsMessage" hidden>
+    No pending consultation requests right now.
+  </p>
+</section>
+
+</main>
+
+  <!-- Shared Faculty layout behavior -- load on every Faculty page -->
+  <script src="js/faculty-shared.js"></script>
+  <!-- Page-specific behavior -->
+  <script src="js/faculty-consultation-requests.js?v=20260904-0030"></script>
+</body>
+</html>

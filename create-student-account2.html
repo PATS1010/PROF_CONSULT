@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the create student account2 page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Create Student Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/create-student-account2.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       BACKGROUND -- identical to Page 1
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       BACK BUTTON -> create-student-account.html
+  ========================================================= -->
+  <a href="create-student-account.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span> Back
+  </a>
+
+  <!-- =========================================================
+       MAIN CONTAINER: registration card
+  ========================================================= -->
+  <main class="registration-card">
+
+    <h1 class="format-text registration-title">Create Student Account</h1>
+
+    <form class="registration-form" id="createStudentAccountStep2Form" novalidate>
+
+      <!-- Email Address -->
+      <div class="form-field">
+        <label for="emailAddress">Email Address</label>
+        <input
+          type="email"
+          id="emailAddress"
+          name="emailAddress"
+          class="form-input"
+          placeholder="example@gmail.com"
+          autocomplete="email"
+          required
+        >
+        <p class="field-message field-message-error" id="emailError" hidden>
+          Please enter a valid email address.
+        </p>
+      </div>
+
+      <!-- Mobile Number -->
+      <div class="form-field">
+        <label for="mobileNumber">Mobile Number</label>
+        <div class="mobile-input-group">
+          <span class="mobile-prefix" aria-hidden="true">+63</span>
+          <input
+            type="tel"
+            id="mobileNumber"
+            name="mobileNumber"
+            class="form-input mobile-input"
+            placeholder="912-345-6789"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="12"
+            required
+          >
+        </div>
+        <p class="field-message field-message-error" id="mobileError" hidden>
+          Please enter a valid 10-digit mobile number.
+        </p>
+      </div>
+
+      <!-- Password -->
+      <div class="form-field">
+        <label for="password">Password</label>
+        <div class="password-input-group">
+          <input
+            type="password"
+            id="password"
+            name="password"
+            class="form-input password-input"
+            placeholder="Enter Password"
+            autocomplete="new-password"
+            required
+          >
+          <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" data-target="password">
+            Show
+          </button>
+        </div>
+        <p class="field-message field-message-error" id="passwordFieldError" hidden></p>
+        <ul class="password-requirements">
+          <li>&check; At least 8 characters</li>
+          <li>&check; One uppercase letter</li>
+          <li>&check; One number</li>
+        </ul>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="form-field">
+        <label for="confirmPassword">Confirm Password</label>
+        <div class="password-input-group">
+          <input
+            type="password"
+            id="confirmPassword"
+            name="confirmPassword"
+            class="form-input password-input"
+            placeholder="Confirm Password"
+            autocomplete="new-password"
+            required
+          >
+          <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Show password" data-target="confirmPassword">
+            Show
+          </button>
+        </div>
+        <p class="field-message field-message-error" id="passwordError" hidden>
+          Password does not match.
+        </p>
+      </div>
+
+      <!-- Terms and Conditions -->
+      <label class="terms-checkbox">
+        <input type="checkbox" id="agreeTerms" class="terms-checkbox-input" required>
+        <span class="terms-checkbox-circle" aria-hidden="true"></span>
+        I agree to the Terms and Conditions.
+      </label>
+
+      <button type="submit" class="btn create-account-button" id="createAccountButton">
+        Create Student Account
+      </button>
+
+      <p class="field-message field-message-success" id="successMessage" hidden>
+        Account successfully created.
+      </p>
+
+      <p class="login-text">
+        Already have an account?
+        <a href="student-login.html" class="login-link" data-nav="login">Login</a>
+      </p>
+
+    </form>
+
+  </main>
+
+  <script src="js/create-student-account2.js"></script>
+</body>
+</html>

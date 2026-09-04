@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the request consultation page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Request a Consultation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/request-consultation.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       TOP NAVIGATION BAR -- identical to the Student Dashboard
+  ========================================================= -->
+  <header class="dashboard-navbar">
+    <div class="navbar-left">
+      <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+    </div>
+
+    <div class="navbar-right">
+      <!-- Notification bell -- navigates to notifications.html -->
+      <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <!-- Quick Action trigger -->
+      <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <!-- Quick Action popup: two actions, one shared "View Directory" button -->
+      <div class="quick-action-panel" id="quickActionPanel" hidden>
+        <div class="quick-action-header">
+          <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
+          <div>
+            <p class="format-text quick-action-title">Quick Action</p>
+            <p class="quick-action-subtitle">What would you like to do?</p>
+          </div>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Find Faculty</p>
+            <p class="quick-action-item-text">Search and view real-time faculty availability.</p>
+          </div>
+          <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Request Consultation</p>
+            <p class="quick-action-item-text">Schedule a conversation with your professor.</p>
+          </div>
+          <a href="#" class="quick-action-button" id="requestConsultationButton">Send Request</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       BURGER SIDEBAR -- identical to the Student Dashboard
+  ========================================================= -->
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="student-dashboard.html" class="sidebar-link">Dashboard</a>
+      <a href="faculty-directory.html" class="sidebar-link is-active">Faculty</a>
+      <a href="my-requests.html" class="sidebar-link">My Requests</a>
+      <a href="notifications.html" class="sidebar-link">Notifications</a>
+      <a href="student-profile.html" class="sidebar-link">Profile</a>
+      <a href="settings.html" class="sidebar-link">Settings</a>
+      <a href="student-login.html" class="sidebar-link">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       BACKGROUND -- identical to the Student Dashboard
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       MAIN CONTENT
+  ========================================================= -->
+  <main class="request-page">
+
+    <h1 class="format-text request-title">Request a Consultation</h1>
+    <p class="request-subtitle">
+      Complete the form below to submit your consultation request. Your selected faculty
+      member will review your request and respond through FINDPROF.
+    </p>
+
+    <form class="request-card" id="requestConsultationForm" novalidate>
+
+      <div class="request-columns">
+
+        <!-- =========================================================
+             LEFT COLUMN
+        ========================================================= -->
+        <div class="request-column">
+
+          <div class="info-row">
+            <span class="info-label">Faculty Member</span>
+            <span class="info-value" id="facultyMember"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Purpose of Consultation</span>
+            <input
+              type="text"
+              id="consultationPurpose"
+              name="consultationPurpose"
+              class="info-value info-input"
+              placeholder="Purpose of Request"
+              autocomplete="off"
+              required
+            >
+          </div>
+
+          <div class="message-block">
+            <div class="info-row info-row-label-only">
+              <span class="info-label">Additional Message</span>
+            </div>
+            <textarea
+              id="additionalMessage"
+              name="additionalMessage"
+              class="message-textarea"
+              rows="4"
+              placeholder="Provide additional details regarding your consultation request..."
+            ></textarea>
+          </div>
+
+        </div>
+
+        <!-- =========================================================
+             RIGHT COLUMN
+        ========================================================= -->
+        <div class="request-column">
+
+          <div class="info-row">
+            <span class="info-label">Student Name</span>
+            <span class="info-value" id="studentName"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Program &amp; Year</span>
+            <span class="info-value" id="programYear"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Student ID</span>
+            <span class="info-value" id="studentId"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Preferred Date</span>
+            <input
+              type="date"
+              id="preferredDate"
+              name="preferredDate"
+              class="info-value info-input"
+              required
+            >
+          </div>
+
+          <div class="info-row info-row-select">
+            <span class="info-label">Preferred Time</span>
+            <div class="custom-select" id="preferredTimeSelect">
+              <button
+                type="button"
+                class="custom-select-trigger"
+                id="preferredTimeTrigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span class="custom-select-value" data-placeholder="Select Time">Select Time</span>
+              </button>
+              <ul class="custom-select-options" id="preferredTimeOptions" role="listbox" hidden>
+                <!-- Populated by request-consultation.js with 30-minute slots covering the full day -->
+              </ul>
+              <input type="hidden" id="preferredTime" name="preferredTime" required>
+            </div>
+          </div>
+
+          <!-- =========================================================
+               BUTTONS
+          ========================================================= -->
+          <div class="request-buttons">
+            <a href="faculty-directory.html" class="btn btn-cancel" data-nav="cancel">Cancel</a>
+            <button type="submit" class="btn btn-submit" id="submitRequestButton">Submit Request</button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </form>
+
+  </main>
+
+  <script src="js/request-consultation.js?v=20260903-2345"></script>
+</body>
+</html>

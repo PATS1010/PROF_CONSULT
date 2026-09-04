@@ -1,0 +1,466 @@
+/* SYSTEM NOTE: Styles the faculty profile page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   FACULTY PROFILE -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and is not duplicated
+   or overridden here.
+========================================================= */
+
+/* =========================================================
+   OUTER CARD
+   One large white rounded card holding everything: title,
+   photo + Edit Profile, faculty info, and the Save button.
+========================================================= */
+.faculty-profile-card {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 44px 44px;
+}
+
+.faculty-profile-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  margin-bottom: 32px;
+  display: inline-block;
+
+  /* Page-local black -> orange fade, fully self-contained (no
+     dependency on faculty-shared.css variables, and no
+     dependency on .format-text). Fade holds mostly black
+     through the first half, then eases into orange toward the
+     end. !important guards the properties that actually make
+     the gradient text render -- if anything else on the page
+     sets color/background on headings, it cannot silently
+     cancel this effect. */
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    #e8560f 78%,
+    #e8560f 100%
+  ) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* =========================================================
+   BODY: photo/Edit Profile on the left, info card on the right
+========================================================= */
+.faculty-profile-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 36px;
+  flex-wrap: wrap;
+}
+
+/* ---- LEFT: photo + Edit Profile ---- */
+.faculty-profile-left {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.faculty-profile-photo-wrap {
+  position: relative;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  box-shadow: var(--shadow-card);
+  flex-shrink: 0;
+}
+
+.faculty-profile-photo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.faculty-profile-photo-edit {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+}
+
+.faculty-profile-photo-edit[hidden] {
+  display: none;
+}
+
+.faculty-profile-photo-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.faculty-edit-profile-button {
+  padding: 10px 22px;
+  border-radius: 999px;
+  background-color: #f5f1ea;
+  color: var(--color-text-dark);
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-edit-profile-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+}
+
+.faculty-edit-profile-button[hidden] {
+  display: none;
+}
+
+/* ---- RIGHT: faculty info card ---- */
+.faculty-profile-right {
+  flex: 1 1 320px;
+  min-width: 260px;
+}
+
+.faculty-profile-info-card {
+  background-color: #ffffff;
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+  padding: 26px 30px;
+}
+
+.faculty-profile-info-card[hidden] {
+  display: none;
+}
+
+/* View mode */
+.faculty-profile-name {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 6px;
+}
+
+.faculty-profile-id {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 18px;
+}
+
+.faculty-profile-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.faculty-profile-detail-row {
+  display: flex;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.faculty-profile-detail-row dt {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.faculty-profile-detail-row dd {
+  color: var(--color-text-dark);
+  font-weight: 600;
+}
+
+/* =========================================================
+   EDIT MODE FORM
+========================================================= */
+.faculty-profile-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.faculty-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.faculty-form-group label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.faculty-form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  color: var(--color-text-dark);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-form-input:focus {
+  outline: none;
+  border-color: var(--color-gradient-end);
+  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
+}
+
+.faculty-form-input.has-error {
+  border-color: var(--color-status-onleave);
+}
+
+.faculty-form-input-readonly {
+  background-color: #eeece7;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.faculty-form-error {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-status-onleave);
+}
+
+.faculty-form-error[hidden] {
+  display: none;
+}
+
+/* Phone: fixed +63 prefix beside the editable local number */
+.faculty-phone-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-phone-input-wrap:focus-within {
+  border-color: var(--color-gradient-end);
+  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
+}
+
+.faculty-phone-input-wrap.has-error {
+  border-color: var(--color-status-onleave);
+}
+
+.faculty-phone-prefix {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.faculty-phone-input {
+  border: none;
+  background: transparent;
+  padding: 12px 0;
+}
+
+.faculty-phone-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* =========================================================
+   PROGRAM DROPDOWN
+   Custom component (not a native <select>) so the options
+   list never gets invisibly clipped by an overflow:hidden
+   ancestor -- matches the dropdown pattern used elsewhere
+   in Prof Consult.
+========================================================= */
+.faculty-dropdown {
+  position: relative;
+}
+
+.faculty-dropdown-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
+  font-family: var(--font-main);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-dropdown-trigger:hover,
+.faculty-dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--color-gradient-end);
+}
+
+.faculty-dropdown-caret {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.faculty-dropdown-trigger[aria-expanded="true"] .faculty-dropdown-caret {
+  transform: rotate(180deg);
+}
+
+.faculty-dropdown-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  list-style: none;
+  background-color: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  z-index: 60;
+  max-height: 220px;
+  overflow-y: auto;
+
+  opacity: 0;
+  transform: translateY(-6px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.faculty-dropdown-list.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* [hidden] only controls presence in the DOM flow; is-open
+   (toggled a frame later by JS) drives the actual fade/slide
+   animation -- same pattern as the Quick Action popup. */
+.faculty-dropdown-list[hidden] {
+  display: none;
+}
+
+.faculty-dropdown-option {
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.faculty-dropdown-option:hover {
+  background-color: #f5f1ea;
+}
+
+.faculty-dropdown-option.is-selected {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-weight: 700;
+}
+
+/* =========================================================
+   FOOTER: Save button + success message
+========================================================= */
+.faculty-profile-footer {
+  margin-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-save-button {
+  padding: 13px 46px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-save-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.faculty-save-success {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-status-available);
+
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.faculty-save-success.is-visible {
+  opacity: 1;
+}
+
+.faculty-save-success[hidden] {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 720px) {
+  .faculty-profile-card {
+    padding: 32px 26px 36px;
+  }
+
+  .faculty-profile-body {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .faculty-profile-right {
+    width: 100%;
+  }
+
+  .faculty-profile-info-card {
+    padding: 22px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-profile-card {
+    padding: 26px 18px 30px;
+  }
+
+  .faculty-profile-title {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+  }
+
+  .faculty-profile-photo-wrap {
+    width: 120px;
+    height: 120px;
+  }
+
+  .faculty-save-button {
+    width: 100%;
+  }
+}

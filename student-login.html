@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the student login page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Student Login</title>
+  <link rel="stylesheet" href="css/student-login.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       BACKGROUND
+       Full-screen background image with a dark red -> orange
+       gradient overlay on top. Swap images/student-login-background.png
+       for the real photo later.
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       BACK BUTTON
+       Returns to the Choose Account Type page
+  ========================================================= -->
+  <a href="choose-account.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span> Back
+  </a>
+
+  <!-- =========================================================
+       PAGE LAYOUT
+       Left: branding (Welcome to + logo)
+       Right: login card
+  ========================================================= -->
+  <main class="login-page">
+
+    <!-- Left section: branding -->
+    <section class="branding-section">
+      <p class="welcome-text">Welcome to</p>
+      <img src="images/prof-consult-logo.png" alt="Prof Consult Logo" class="branding-logo">
+    </section>
+
+    <!-- Right section: login card -->
+    <section class="login-card">
+
+      <h1 class="format-text login-title">Student Login</h1>
+
+      <form class="login-form" id="studentLoginForm">
+
+        <label for="studentEmail" class="visually-hidden">Email or Username</label>
+        <input
+          type="text"
+          id="studentEmail"
+          name="email"
+          class="login-input"
+          placeholder="Email or Username"
+          autocomplete="username"
+          required
+        >
+
+        <label for="studentPassword" class="visually-hidden">Password</label>
+        <div class="password-input-group">
+          <input
+            type="password"
+            id="studentPassword"
+            name="password"
+            class="login-input password-input"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+          >
+          <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" data-target="studentPassword">
+            Show
+          </button>
+        </div>
+
+        <p class="field-message field-message-error" id="loginError" hidden>
+          Incorrect email/username or password.
+        </p>
+
+        <div class="login-actions-row">
+          <button type="submit" class="login-button" id="loginButton">Login</button>
+          <a href="forgot-password.html?from=student" class="forgot-password-link" data-nav="forgot-password">
+            Forgot Password?
+          </a>
+        </div>
+
+        <label class="remember-me">
+          <input type="checkbox" id="rememberMe" name="rememberMe" class="remember-me-checkbox">
+          <span class="remember-me-circle" aria-hidden="true"></span>
+          Remember Me
+        </label>
+
+      </form>
+
+      <p class="create-account-text">
+        Don't have an account?
+        <a href="create-student-account.html" class="create-account-link" data-nav="create-account">
+          Create Student Account
+        </a>
+      </p>
+
+    </section>
+
+  </main>
+
+  <script src="js/student-login.js"></script>
+</body>
+</html>

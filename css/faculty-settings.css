@@ -1,0 +1,210 @@
+/* SYSTEM NOTE: Styles the faculty settings page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and is not duplicated
+   or overridden here.
+
+   NOTE: .format-text (the black -> orange heading gradient)
+   is NOT redefined anywhere in this file -- it is reused
+   exactly as-is from faculty-shared.css.
+========================================================= */
+
+/* =========================================================
+   OUTER CARD
+========================================================= */
+.faculty-settings-card {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 44px 48px 40px;
+  text-align: center;
+}
+
+.faculty-settings-title {
+  font-size: clamp(1.9rem, 4.5vw, 2.6rem);
+  margin-bottom: 28px;
+}
+
+/* =========================================================
+   INNER CARD
+========================================================= */
+.faculty-settings-inner-card {
+  background-color: #ffffff;
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+  padding: 30px 36px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* =========================================================
+   CHECKBOX ROWS
+   Custom-styled checkbox: a real, focusable <input
+   type="checkbox"> visually hidden but still keyboard/
+   screen-reader accessible, paired with a styled box span.
+========================================================= */
+.faculty-settings-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.faculty-settings-checkbox {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.faculty-settings-checkbox-box {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 2px solid var(--color-text-dark);
+  background-color: #ffffff;
+  position: relative;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.faculty-settings-checkbox-box::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 10px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -60%) rotate(45deg);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.faculty-settings-checkbox:checked + .faculty-settings-checkbox-box {
+  background-color: var(--color-red-primary);
+  border-color: var(--color-red-primary);
+}
+
+.faculty-settings-checkbox:checked + .faculty-settings-checkbox-box::after {
+  opacity: 1;
+}
+
+.faculty-settings-checkbox:focus-visible + .faculty-settings-checkbox-box {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 2px;
+}
+
+.faculty-settings-checkbox-label {
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+}
+
+/* =========================================================
+   CHANGE PASSWORD LINK
+========================================================= */
+.faculty-change-password-link {
+  align-self: flex-start;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.faculty-change-password-link:hover {
+  color: var(--color-gradient-end);
+}
+
+/* =========================================================
+   FOOTER: Save button + success message
+   Save button = RED -> ORANGE background gradient. This is
+   separate from format-text (which is a BLACK -> ORANGE text
+   gradient used only for the heading).
+========================================================= */
+.faculty-settings-footer {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-settings-save-button {
+  padding: 13px 46px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-settings-save-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.faculty-save-success {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-status-available);
+
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.faculty-save-success.is-visible {
+  opacity: 1;
+}
+
+.faculty-save-success[hidden] {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 720px) {
+  .faculty-settings-card {
+    padding: 36px 28px 34px;
+  }
+
+  .faculty-settings-inner-card {
+    padding: 26px 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-settings-card {
+    padding: 28px 18px 30px;
+  }
+
+  .faculty-settings-title {
+    font-size: 1.6rem;
+    margin-bottom: 22px;
+  }
+
+  .faculty-settings-inner-card {
+    padding: 22px 18px;
+    gap: 18px;
+  }
+
+  .faculty-settings-checkbox-label {
+    font-size: 0.85rem;
+  }
+
+  .faculty-settings-save-button {
+    width: 100%;
+  }
+}

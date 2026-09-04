@@ -1,0 +1,314 @@
+/* SYSTEM NOTE: Styles the faculty dashboard page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   FACULTY DASHBOARD -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and should not be
+   duplicated or overridden on a per-page basis.
+========================================================= */
+
+.faculty-dashboard-grid {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.faculty-dashboard-column {
+  flex: 1 1 420px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Reused status-dot colors from the shared palette */
+.status-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-available { background-color: var(--color-status-available); }
+.status-teaching { background-color: var(--color-status-teaching); }
+.status-meeting { background-color: var(--color-status-meeting); }
+.status-offline { background-color: var(--color-status-offline); }
+.status-onleave { background-color: var(--color-status-onleave); }
+.status-consultation { background-color: var(--color-status-consultation); }
+
+/* =========================================================
+   TODAY'S STATUS
+========================================================= */
+.faculty-status-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.faculty-status-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 999px;
+  background-color: #f5f1ea;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.faculty-change-status-button {
+  flex-shrink: 0;
+  padding: 14px 22px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-change-status-button:hover,
+.faculty-change-status-button[aria-expanded="true"] {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+/* Status selection popup -- gradient card, white pill options,
+   matches the reference design and the same interaction
+   pattern already used for the Student dashboard's filter */
+.faculty-status-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 150;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-status-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.faculty-status-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.faculty-status-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+}
+
+.faculty-status-radio {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid #c9c9c9;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.faculty-status-option.is-selected .faculty-status-radio {
+  border-color: var(--color-gradient-end);
+  background-color: var(--color-gradient-end);
+}
+
+.faculty-status-save-button {
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px 16px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-status-save-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   TODAY'S SCHEDULE
+========================================================= */
+.faculty-schedule-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faculty-schedule-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.88rem;
+  color: var(--color-text-dark);
+}
+
+.faculty-schedule-empty {
+  color: var(--color-text-muted);
+}
+
+.faculty-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--color-status-available);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+/* =========================================================
+   PENDING CONSULTATION REQUESTS
+========================================================= */
+.faculty-requests-title {
+  max-width: 260px;
+}
+
+.faculty-request-item {
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.faculty-request-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 2px;
+}
+
+.faculty-request-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+.faculty-request-subject-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 2px;
+}
+
+.faculty-request-subject {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  margin-bottom: 16px;
+}
+
+.faculty-request-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.faculty-accept-button,
+.faculty-decline-button {
+  flex: 1;
+  padding: 11px 18px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.faculty-accept-button {
+  background-color: var(--color-checkin);
+}
+
+.faculty-decline-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.faculty-accept-button:hover,
+.faculty-decline-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.faculty-view-more-button {
+  width: 100%;
+  padding: 15px 20px;
+  border-radius: 999px;
+  background-color: #f5f1ea;
+  color: var(--color-text-dark);
+  font-size: 0.88rem;
+  font-weight: 700;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-view-more-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  .faculty-dashboard-grid {
+    flex-direction: column;
+  }
+
+  .faculty-dashboard-column {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .faculty-status-row {
+    flex-wrap: wrap;
+  }
+
+  .faculty-status-pill,
+  .faculty-change-status-button {
+    width: 100%;
+  }
+
+  .faculty-status-panel {
+    width: min(230px, 80vw);
+    right: -4px;
+  }
+
+  .faculty-request-actions {
+    flex-direction: column;
+  }
+}

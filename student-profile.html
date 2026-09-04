@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the student profile page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Student Profile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/student-profile.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       TOP NAVIGATION BAR -- identical to the Student Dashboard
+  ========================================================= -->
+  <header class="dashboard-navbar">
+    <div class="navbar-left">
+      <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+    </div>
+
+    <div class="navbar-right">
+      <!-- Notification bell -- clickable, functionality not implemented yet -->
+      <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <!-- Quick Action trigger -->
+      <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <!-- Quick Action popup: two actions, one shared "View Directory" button -->
+      <div class="quick-action-panel" id="quickActionPanel" hidden>
+        <div class="quick-action-header">
+          <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
+          <div>
+            <p class="format-text quick-action-title">Quick Action</p>
+            <p class="quick-action-subtitle">What would you like to do?</p>
+          </div>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Find Faculty</p>
+            <p class="quick-action-item-text">Search and view real-time faculty availability.</p>
+          </div>
+          <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Request Consultation</p>
+            <p class="quick-action-item-text">Schedule a conversation with your professor.</p>
+          </div>
+          <a href="#" class="quick-action-button" id="requestConsultationButton">Send Request</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       BURGER SIDEBAR -- identical to the Student Dashboard
+  ========================================================= -->
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="student-dashboard.html" class="sidebar-link">Dashboard</a>
+      <a href="faculty-directory.html" class="sidebar-link">Faculty</a>
+      <a href="my-requests.html" class="sidebar-link">My Requests</a>
+      <a href="notifications.html" class="sidebar-link">Notifications</a>
+      <a href="student-profile.html" class="sidebar-link is-active">Profile</a>
+      <a href="settings.html" class="sidebar-link">Settings</a>
+      <a href="student-login.html" class="sidebar-link">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       BACKGROUND -- identical to the Student Dashboard
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       MAIN PROFILE CARD
+  ========================================================= -->
+  <main class="profile-page">
+
+    <div class="profile-card">
+
+      <h1 class="format-text profile-title">Student Profile</h1>
+
+      <!-- Student Information Card -->
+      <div class="profile-info-card">
+
+        <div class="profile-photo-wrapper">
+          <img src="images/student-profile-photo.jpg" alt="Student profile photo" class="profile-photo" id="profilePhoto">
+          <label class="profile-photo-edit" id="profilePhotoEdit" hidden>
+            <input type="file" id="profilePhotoInput" accept="image/*" class="profile-photo-input">
+            <span aria-hidden="true">&#9998;</span>
+          </label>
+        </div>
+
+        <div class="profile-fields">
+
+          <div class="profile-field-row">
+            <label for="profileFullName">Full Name</label>
+            <input type="text" id="profileFullName" class="profile-field profile-field-highlight" value="Loading profile..." readonly>
+          </div>
+
+          <div class="profile-field-row">
+            <label for="profileStudentNumber">Student Number</label>
+            <input type="text" id="profileStudentNumber" class="profile-field" value="" readonly disabled>
+          </div>
+
+          <div class="profile-field-row">
+            <label for="profileCourse">Course</label>
+            <select id="profileCourse" class="profile-field profile-select" disabled>
+              <option value="computer-engineering" selected>BSCPE (Computer Engineering)</option>
+            </select>
+          </div>
+
+          <div class="profile-field-row">
+            <label for="profileYearLevel">Year Level</label>
+            <select id="profileYearLevel" class="profile-field profile-select" disabled>
+              <option value="1">1st Year</option>
+              <option value="2">2nd Year</option>
+              <option value="3" selected>3rd Year</option>
+              <option value="4">4th Year</option>
+              <option value="5">5th Year</option>
+            </select>
+          </div>
+
+          <div class="profile-field-row">
+            <label for="profileEmail">Email</label>
+            <input type="email" id="profileEmail" class="profile-field" value="" readonly>
+          </div>
+
+          <div class="profile-field-row">
+            <label for="profilePhone">Phone Number</label>
+            <div class="profile-phone-group">
+              <span class="profile-phone-prefix">+63</span>
+              <input type="tel" id="profilePhone" class="profile-field profile-phone-input" value="" inputmode="numeric" readonly>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <button type="button" class="btn edit-profile-button" id="editProfileButton">Edit Profile</button>
+
+    </div>
+
+  </main>
+
+  <script src="js/student-profile.js?v=20260903-2345"></script>
+</body>
+</html>

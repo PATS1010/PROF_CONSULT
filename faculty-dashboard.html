@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the faculty dashboard page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Faculty Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Shared Faculty layout styles -- load on every Faculty page -->
+  <link rel="stylesheet" href="css/faculty-shared.css">
+  <!-- Page-specific styles -- only this file changes per page -->
+  <link rel="stylesheet" href="css/faculty-dashboard.css">
+</head>
+<body data-active-page="dashboard">
+
+  <!-- =========================================================
+       TOP NAVIGATION BAR (shared shell -- do not duplicate
+       edits here; change faculty-shared.css/js instead)
+  ========================================================= -->
+  <header class="faculty-navbar">
+    <div class="faculty-navbar-left">
+      <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-navbar-logo">
+    </div>
+
+    <div class="faculty-navbar-right">
+      <!-- Notification bell -- clickable, functionality not implemented yet -->
+      <button type="button" class="faculty-nav-icon-button faculty-notification-bell-button" id="facultyNotificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <!-- Quick Action trigger -->
+      <button type="button" class="faculty-nav-icon-button faculty-quick-action-button" id="facultyQuickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <!-- Quick Action popup -->
+      <div class="faculty-quick-action-panel" id="facultyQuickActionPanel" hidden>
+        <div class="faculty-quick-action-header">
+          <span class="faculty-quick-action-icon-wrap">
+            <img src="images/actionbutton.png" alt="">
+          </span>
+          <p class="format-text faculty-quick-action-title">Quick Action</p>
+        </div>
+
+        <div class="faculty-quick-action-actions">
+          <button type="button" class="faculty-quick-action-item-button faculty-checkin-button" id="facultyCheckInButton">Check In</button>
+          <button type="button" class="faculty-quick-action-item-button faculty-checkout-button" id="facultyCheckOutButton">Check Out</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       BURGER SIDEBAR (shared shell)
+  ========================================================= -->
+  <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
+
+  <aside class="faculty-sidebar" id="facultySidebar">
+    <div class="faculty-sidebar-header">
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-sidebar-logo">
+      <button type="button" class="faculty-sidebar-close" id="facultySidebarClose" aria-label="Close menu">&times;</button>
+    </div>
+
+    <nav class="faculty-sidebar-nav">
+      <a href="faculty-dashboard.html" class="faculty-sidebar-link" data-page="dashboard">Dashboard</a>
+      <a href="faculty-consultation-requests.html" class="faculty-sidebar-link" data-page="consultation-requests">Consultation Requests</a>
+      <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
+      <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
+      <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
+      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       BACKGROUND (shared shell)
+  ========================================================= -->
+  <div class="faculty-page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
+    <div class="faculty-page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       MAIN CONTENT AREA
+       Only this section differs from page to page.
+  ========================================================= -->
+  <main class="faculty-main-content">
+
+    <div class="faculty-page-heading">
+      <h1 class="faculty-page-title">
+        Good day, <span class="format-text" id="facultyLastName">Professor</span>!
+      </h1>
+      <p class="faculty-page-subtitle">Manage your availability, schedules, and student consultations.</p>
+    </div>
+
+    <div class="faculty-dashboard-grid">
+
+      <!-- LEFT COLUMN -->
+      <div class="faculty-dashboard-column">
+
+        <section class="faculty-card faculty-status-card">
+          <h2 class="faculty-card-title">Today's Status</h2>
+
+          <div class="faculty-status-row">
+            <div class="faculty-status-pill">
+              <span class="status-dot status-available" id="currentStatusDot" aria-hidden="true"></span>
+              <span id="currentStatusLabel">Available</span>
+            </div>
+
+            <button type="button" class="faculty-change-status-button" id="changeStatusButton" aria-haspopup="true" aria-expanded="false">
+              Change Status
+            </button>
+
+            <!-- Status selection popup -->
+            <div class="faculty-status-panel" id="statusPanel" hidden>
+              <button type="button" class="faculty-status-option" data-status="available" data-label="Available">
+                <span class="faculty-status-radio" aria-hidden="true"></span> Available
+              </button>
+              <button type="button" class="faculty-status-option" data-status="teaching" data-label="In Class">
+                <span class="faculty-status-radio" aria-hidden="true"></span> In Class
+              </button>
+              <button type="button" class="faculty-status-option" data-status="meeting" data-label="Meeting">
+                <span class="faculty-status-radio" aria-hidden="true"></span> Meeting
+              </button>
+              <button type="button" class="faculty-status-option" data-status="consultation" data-label="Consultation">
+                <span class="faculty-status-radio" aria-hidden="true"></span> Consultation
+              </button>
+              <button type="button" class="faculty-status-option" data-status="onleave" data-label="On Leave">
+                <span class="faculty-status-radio" aria-hidden="true"></span> On Leave
+              </button>
+              <button type="button" class="faculty-status-option" data-status="offline" data-label="Offline">
+                <span class="faculty-status-radio" aria-hidden="true"></span> Offline
+              </button>
+              <button type="button" class="faculty-status-save-button" id="saveStatusButton">Save</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="faculty-card faculty-schedule-card">
+          <h2 class="faculty-card-title">Today's Schedule</h2>
+          <ul class="faculty-schedule-list" id="facultyScheduleList">
+            <li class="faculty-schedule-empty">Loading today's schedule...</li>
+          </ul>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="faculty-dashboard-column">
+
+        <section class="faculty-card faculty-requests-card">
+          <h2 class="faculty-card-title faculty-requests-title">Pending Consultation Requests</h2>
+
+          <div class="faculty-request-item">
+            <p class="faculty-request-name">Loading requests...</p>
+            <p class="faculty-request-meta"></p>
+
+            <p class="faculty-request-subject-label">Subject:</p>
+            <p class="faculty-request-subject"></p>
+
+            <div class="faculty-request-actions">
+              <button type="button" class="faculty-accept-button" id="acceptRequestButton">Accept</button>
+              <button type="button" class="faculty-decline-button" id="declineRequestButton">Decline</button>
+            </div>
+          </div>
+
+          <button type="button" class="faculty-view-more-button" id="viewMoreRequestsButton">View More</button>
+        </section>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Shared Faculty layout behavior -- load on every Faculty page -->
+  <script src="js/faculty-shared.js"></script>
+  <!-- Page-specific behavior -->
+  <script src="js/faculty-dashboard.js?v=20260904-0015"></script>
+</body>
+</html>

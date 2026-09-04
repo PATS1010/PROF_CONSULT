@@ -1,0 +1,814 @@
+/* SYSTEM NOTE: Styles the student dashboard page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d81f26;
+  --color-red-dark: #7a1414;
+
+  --color-gradient-start: #7a0f0f;
+  --color-gradient-end: #e8560f;
+
+  --color-text-dark: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-text-light: #ffffff;
+
+  --color-status-available: #2fae4e;
+  --color-status-teaching: #f2601c;
+  --color-status-meeting: #2a7de1;
+  --color-status-offline: #b9b9b9;
+  --color-status-onleave: #e0405a;
+  --color-status-consultation: #8b3fd6;
+
+  --font-main: 'Montserrat', sans-serif;
+
+  --nav-height: 64px;
+  --content-padding-x: 60px;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  color: var(--color-text-dark);
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* =========================================================
+   FORMATTEXT
+   Reusable heading style used throughout the Prof Consult site
+========================================================= */
+.format-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    var(--color-gradient-end) 78%,
+    var(--color-gradient-end) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   TOP NAVIGATION BAR
+========================================================= */
+.dashboard-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+  padding: 0 var(--content-padding-x);
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.navbar-logo {
+  height: 38px;
+  width: auto;
+}
+
+.nav-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.hamburger-button {
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+}
+
+.hamburger-button span {
+  width: 24px;
+  height: 3px;
+  background-color: var(--color-text-light);
+  border-radius: 2px;
+}
+
+.navbar-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-bell-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.notification-bell-button img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.notification-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.notification-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* =========================================================
+   QUICK ACTION POPUP
+========================================================= */
+.quick-action-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  width: 460px;
+  max-width: 92vw;
+  background-color: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  z-index: 200;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.quick-action-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.quick-action-title {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.quick-action-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Each action is its own row: text on the left, button pinned
+   to the right -- flex row prevents the button from overlapping
+   the item below it. */
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+}
+
+.quick-action-item + .quick-action-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.quick-action-item-text-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-item-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 4px;
+}
+
+.quick-action-item-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.quick-action-button {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   BURGER SIDEBAR
+========================================================= */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 301;
+  width: 300px;
+  max-width: 85vw;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.is-open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-logo {
+  height: 34px;
+  width: auto;
+}
+
+.sidebar-close {
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-text-light);
+  padding: 4px 8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-link:hover,
+.sidebar-link.is-active {
+  background-color: rgba(255, 255, 255, 0.22);
+  color: var(--color-text-light);
+}
+
+/* =========================================================
+   BACKGROUND
+   Slightly blurred, light white overlay for readability
+========================================================= */
+.page-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+  filter: blur(6px);
+}
+
+.page-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.86);
+}
+
+/* =========================================================
+   MAIN DASHBOARD CONTENT
+========================================================= */
+.dashboard-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 40px;
+  padding: 48px var(--content-padding-x) 60px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-main-column {
+  flex: 2 1 500px;
+  min-width: 0;
+}
+
+.dashboard-side-column {
+  flex: 1 1 340px;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =========================================================
+   GREETING
+========================================================= */
+.dashboard-greeting {
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+  color: var(--color-text-dark);
+  margin-bottom: 8px;
+}
+
+.dashboard-datetime {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 14px;
+}
+
+.dashboard-subtitle {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-bottom: 24px;
+}
+
+/* =========================================================
+   SEARCH BAR
+========================================================= */
+.search-bar {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  margin-bottom: 28px;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 14px 52px 14px 48px;
+  border: none;
+  border-radius: 999px;
+  background-color: #e3e3e3;
+  color: var(--color-text-dark);
+  font-size: 0.9rem;
+}
+
+.search-input::placeholder {
+  color: #7a7a7a;
+}
+
+.search-input:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 2px;
+}
+
+/* Filter trigger -- sits on the far right edge of the search bar */
+.filter-button {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.filter-button:hover,
+.filter-button[aria-expanded="true"] {
+  background-color: rgba(0, 0, 0, 0.08);
+  color: var(--color-text-dark);
+}
+
+.filter-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+/* Status filter popup -- gradient card with white pill buttons,
+   matching the system's brand gradient */
+.filter-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 190px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  z-index: 200;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.filter-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.filter-option {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background-color: #ffffff;
+  color: var(--color-text-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.filter-option:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+}
+
+.filter-option.is-active {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+}
+
+/* =========================================================
+   PROFESSOR LIST
+========================================================= */
+.professor-list-container {
+  max-width: 460px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 16px;
+}
+
+.professor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 360px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.no-results-message {
+  padding: 28px 16px;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.professor-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 20px;
+  background-color: #f5f1ea;
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease;
+}
+
+.professor-card[hidden] {
+  display: none;
+}
+
+.professor-card:hover {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px rgba(122, 15, 15, 0.3);
+}
+
+.professor-photo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.professor-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.professor-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.25s ease;
+}
+
+.professor-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.25s ease;
+}
+
+.professor-card:hover .professor-name,
+.professor-card:hover .professor-meta {
+  color: var(--color-text-light);
+}
+
+.status-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-available { background-color: var(--color-status-available); }
+.status-teaching { background-color: var(--color-status-teaching); }
+.status-meeting { background-color: var(--color-status-meeting); }
+.status-offline { background-color: var(--color-status-offline); }
+.status-onleave { background-color: var(--color-status-onleave); }
+.status-consultation { background-color: var(--color-status-consultation); }
+
+/* =========================================================
+   SIDE PANELS
+   Faculty Availability / Recent Notifications
+========================================================= */
+.panel-card {
+  position: relative;
+  background-color: #f5f1ea;
+  border-radius: 22px;
+  box-shadow: var(--shadow-card);
+  padding: 28px 28px 28px 40px;
+  overflow: hidden;
+}
+
+/* Thick red accent bar along the left edge */
+.panel-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-red-primary);
+}
+
+.panel-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 18px;
+}
+
+.availability-list,
+.notifications-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+}
+
+.availability-list li,
+.notifications-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+}
+
+.notification-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--color-status-available);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  :root {
+    --content-padding-x: 32px;
+  }
+
+  .dashboard-content {
+    flex-direction: column;
+  }
+
+  .dashboard-main-column,
+  .dashboard-side-column {
+    max-width: 100%;
+  }
+
+  .professor-list,
+  .search-bar {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --content-padding-x: 18px;
+  }
+
+  .dashboard-navbar {
+    padding: 0 16px;
+  }
+
+  .dashboard-content {
+    padding: 32px 18px 40px;
+  }
+
+  .dashboard-greeting {
+    font-size: 1.5rem;
+    margin-bottom: 18px;
+  }
+
+  .dashboard-datetime {
+    font-size: 0.82rem;
+  }
+
+  .professor-card {
+    padding: 10px 12px;
+  }
+
+  .professor-photo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .panel-card {
+    padding: 22px 20px 22px 32px;
+  }
+
+  /* Sidebar: 75-85% of viewport width on mobile, per spec */
+  .sidebar {
+    width: 80vw;
+    max-width: 80vw;
+  }
+
+  /* Quick Action stays fully visible and doesn't overflow the screen */
+  .quick-action-panel {
+    width: min(400px, 90vw);
+    right: -8px;
+  }
+
+  /* Stack text above button on narrow screens instead of a
+     cramped side-by-side row */
+  .quick-action-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .quick-action-button {
+    align-self: flex-start;
+  }
+
+  .professor-list {
+    max-height: 300px;
+  }
+
+  /* Filter popup stays fully visible and doesn't overflow the screen */
+  .filter-panel {
+    width: min(200px, 70vw);
+    right: -4px;
+  }
+}

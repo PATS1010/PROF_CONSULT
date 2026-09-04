@@ -1,0 +1,574 @@
+/* SYSTEM NOTE: Styles the request submitted page so its layout, spacing, and visual states match the system design. */
+/* =========================================================
+   CSS VARIABLES
+========================================================= */
+:root {
+  --color-red-primary: #d81f26;
+  --color-red-dark: #7a1414;
+
+  --color-gradient-start: #7a0f0f;
+  --color-gradient-end: #e8560f;
+
+  --color-text-dark: #2b2b2b;
+  --color-text-muted: #6b6b6b;
+  --color-text-light: #ffffff;
+
+  --color-status-available: #2fae4e;
+  --color-status-teaching: #f2601c;
+  --color-status-meeting: #2a7de1;
+  --color-status-offline: #b9b9b9;
+  --color-status-onleave: #e0405a;
+  --color-status-pending: #e0b400;
+
+  --font-main: 'Montserrat', sans-serif;
+
+  --nav-height: 64px;
+  --content-padding-x: 60px;
+
+  --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* =========================================================
+   RESET / BASE STYLES
+========================================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-main);
+  color: var(--color-text-dark);
+  overflow-x: hidden;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+}
+
+input {
+  font-family: inherit;
+}
+
+/* =========================================================
+   FORMATTEXT
+   Reusable heading style used throughout the Prof Consult site
+========================================================= */
+.format-text {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    var(--color-gradient-end) 78%,
+    var(--color-gradient-end) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* =========================================================
+   TOP NAVIGATION BAR
+========================================================= */
+.dashboard-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--nav-height);
+  padding: 0 var(--content-padding-x);
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.navbar-logo {
+  height: 38px;
+  width: auto;
+}
+
+.nav-icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.hamburger-button {
+  flex-direction: column;
+  gap: 5px;
+  padding: 8px;
+}
+
+.hamburger-button span {
+  width: 24px;
+  height: 3px;
+  background-color: var(--color-text-light);
+  border-radius: 2px;
+}
+
+/* Notification bell + Quick Action sit side by side, same pill
+   style and vertically centered on one line. */
+.navbar-right {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-bell-button,
+.notification-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+  transition: background-color 0.2s ease;
+}
+
+.notification-bell-button:hover,
+.notification-button:hover {
+  background-color: rgba(255, 255, 255, 0.28);
+}
+
+.notification-bell-button img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.notification-button img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+
+/* =========================================================
+   QUICK ACTION POPUP
+========================================================= */
+.quick-action-panel {
+  position: absolute;
+  top: calc(100% + 14px);
+  right: 0;
+  width: 460px;
+  max-width: 92vw;
+  background-color: #ffffff;
+  border-radius: 22px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  z-index: 200;
+
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-panel.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.quick-action-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.quick-action-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.quick-action-title {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+}
+
+.quick-action-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Each action is its own row: text on the left, button pinned
+   to the right -- flex row prevents the button from overlapping
+   the item below it. */
+.quick-action-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+}
+
+.quick-action-item + .quick-action-item {
+  border-top: 1px solid #f0f0f0;
+}
+
+.quick-action-item-text-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-action-item-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-bottom: 4px;
+}
+
+.quick-action-item-text {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
+.quick-action-button {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.quick-action-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   BURGER SIDEBAR
+========================================================= */
+.sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.sidebar-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 301;
+  width: 300px;
+  max-width: 85vw;
+  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+}
+
+.sidebar.is-open {
+  transform: translateX(0);
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-logo {
+  height: 34px;
+  width: auto;
+}
+
+.sidebar-close {
+  background: transparent;
+  font-size: 1.6rem;
+  line-height: 1;
+  color: var(--color-text-light);
+  padding: 4px 8px;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-light);
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-link:hover,
+.sidebar-link.is-active {
+  background-color: rgba(255, 255, 255, 0.22);
+  color: var(--color-text-light);
+}
+
+/* =========================================================
+   BACKGROUND
+   Slightly blurred, light white overlay for readability
+========================================================= */
+.page-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.page-background-image {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  max-width: none;
+  object-fit: cover;
+  filter: blur(6px);
+}
+
+.page-background-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.86);
+}
+
+/* =========================================================
+   REQUEST SUBMITTED PAGE LAYOUT
+========================================================= */
+.submitted-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 56px var(--content-padding-x) 60px;
+}
+
+.success-icon {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 28px;
+}
+
+.submitted-title {
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  line-height: 1.25;
+  margin-bottom: 20px;
+}
+
+.submitted-message {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  max-width: 560px;
+  margin-bottom: 36px;
+}
+
+.submitted-message strong {
+  color: var(--color-text-dark);
+  font-weight: 700;
+}
+
+/* =========================================================
+   REQUEST SUMMARY CARD
+========================================================= */
+.summary-card {
+  width: 100%;
+  max-width: 420px;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 28px 32px;
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.summary-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 18px;
+}
+
+.summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+}
+
+.summary-row + .summary-row {
+  border-top: 1px solid #f0eee9;
+}
+
+.summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-dark);
+}
+
+.summary-value {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.summary-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.status-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-pending {
+  background-color: var(--color-status-pending);
+}
+
+/* =========================================================
+   BACK TO DASHBOARD BUTTON
+========================================================= */
+.btn {
+  display: inline-block;
+  padding: 14px 40px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-decoration: none;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
+  opacity: 0.95;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  :root {
+    --content-padding-x: 32px;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --content-padding-x: 18px;
+  }
+
+  .dashboard-navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-right {
+    gap: 10px;
+  }
+
+  .submitted-page {
+    padding: 40px 18px 40px;
+  }
+
+  .success-icon {
+    width: 68px;
+    height: 68px;
+  }
+
+  .submitted-title {
+    font-size: 1.4rem;
+  }
+
+  .submitted-message {
+    font-size: 0.82rem;
+  }
+
+  .summary-card {
+    padding: 22px 20px;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
+  .sidebar {
+    width: 80vw;
+    max-width: 80vw;
+  }
+
+  /* Quick Action stays fully visible and doesn't overflow the screen */
+  .quick-action-panel {
+    width: min(400px, 90vw);
+    right: -8px;
+  }
+}

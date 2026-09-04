@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the faculty profile page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Faculty Profile</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Shared Faculty layout -->
+  <link rel="stylesheet" href="css/faculty-shared.css">
+
+  <!-- Profile page styles -->
+  <link rel="stylesheet" href="css/faculty-profile.css">
+</head>
+
+<body data-active-page="profile">
+
+  <!-- ==========================
+       TOP NAVIGATION BAR
+  =========================== -->
+  <header class="faculty-navbar">
+    <div class="faculty-navbar-left">
+      <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-navbar-logo">
+    </div>
+
+    <div class="faculty-navbar-right">
+
+      <button type="button" class="faculty-nav-icon-button faculty-notification-bell-button" id="facultyNotificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <button type="button" class="faculty-nav-icon-button faculty-quick-action-button" id="facultyQuickActionButton" aria-haspopup="true" aria-expanded="false">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <div class="faculty-quick-action-panel" id="facultyQuickActionPanel" hidden>
+
+        <div class="faculty-quick-action-header">
+          <span class="faculty-quick-action-icon-wrap">
+            <img src="images/redactionbutton.png" alt="">
+          </span>
+
+          <p class="format-text faculty-quick-action-title">
+            Quick Action
+          </p>
+        </div>
+
+        <div class="faculty-quick-action-actions">
+          <button type="button" class="faculty-quick-action-item-button faculty-checkin-button" id="facultyCheckInButton">
+            Check In
+          </button>
+
+          <button type="button" class="faculty-quick-action-item-button faculty-checkout-button" id="facultyCheckOutButton">
+            Check Out
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==========================
+       SIDEBAR
+  =========================== -->
+
+  <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
+
+  <aside class="faculty-sidebar" id="facultySidebar">
+
+    <div class="faculty-sidebar-header">
+
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="faculty-sidebar-logo">
+
+      <button type="button" class="faculty-sidebar-close" id="facultySidebarClose">
+        &times;
+      </button>
+
+    </div>
+
+    <nav class="faculty-sidebar-nav">
+      <a href="faculty-dashboard.html" class="faculty-sidebar-link" data-page="dashboard">Dashboard</a>
+      <a href="faculty-consultation-requests.html" class="faculty-sidebar-link" data-page="consultation-requests">Consultation Requests</a>
+      <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
+      <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
+      <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
+      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+    </nav>
+
+  </aside>
+
+  <!-- ==========================
+       BACKGROUND
+  =========================== -->
+
+  <div class="faculty-page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
+    <div class="faculty-page-background-overlay"></div>
+  </div>
+
+  <!-- ==========================
+       PROFILE CONTENT
+  =========================== -->
+
+  <main class="faculty-main-content">
+
+    <!-- Build the Faculty Profile page here -->
+<!-- =========================================================
+<!-- =========================================================
+     FACULTY PROFILE -- MAIN CONTENT
+     Paste this inside <main class="faculty-main-content">...</main>
+     on faculty-profile.html, alongside the shared navbar/
+     sidebar/background shell. Do not duplicate the shell here.
+========================================================= -->
+
+<section class="faculty-card faculty-profile-card">
+
+  <h1 class="faculty-profile-title">Faculty Profile</h1>
+
+  <div class="faculty-profile-body">
+
+    <!-- LEFT: photo + Edit Profile -->
+    <div class="faculty-profile-left">
+      <div class="faculty-profile-photo-wrap">
+        <img
+          src="images/faculty-profile-photo-placeholder.jpg"
+          alt="Faculty profile photo"
+          class="faculty-profile-photo"
+          id="facultyProfilePhoto"
+        >
+        <label class="faculty-profile-photo-edit" id="facultyProfilePhotoEdit" hidden>
+          <input type="file" id="facultyProfilePhotoInput" accept="image/*" class="faculty-profile-photo-input">
+          <span aria-hidden="true">&#9998;</span>
+        </label>
+      </div>
+      <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
+        Edit Profile
+      </button>
+    </div>
+
+    <!-- RIGHT: faculty info card (view mode + edit mode) -->
+    <div class="faculty-profile-right">
+
+      <!-- ================= VIEW MODE ================= -->
+      <div class="faculty-profile-info-card faculty-profile-view" id="facultyProfileView">
+        <p class="faculty-profile-name" id="viewFacultyName">Loading profile...</p>
+        <p class="faculty-profile-id" id="viewFacultyId"></p>
+
+        <dl class="faculty-profile-details">
+          <div class="faculty-profile-detail-row">
+            <dt>Program:</dt>
+            <dd id="viewFacultyProgram"></dd>
+          </div>
+          <div class="faculty-profile-detail-row">
+            <dt>Email:</dt>
+            <dd id="viewFacultyEmail"></dd>
+          </div>
+          <div class="faculty-profile-detail-row">
+            <dt>Phone Number:</dt>
+            <dd id="viewFacultyPhone"></dd>
+          </div>
+        </dl>
+      </div>
+
+      <!-- ================= EDIT MODE ================= -->
+      <form class="faculty-profile-info-card faculty-profile-edit" id="facultyProfileEdit" novalidate hidden>
+
+        <div class="faculty-form-group">
+          <label for="editFacultyName">Faculty Name</label>
+          <input type="text" id="editFacultyName" class="faculty-form-input" autocomplete="off">
+          <p class="faculty-form-error" id="nameError" hidden></p>
+        </div>
+
+        <div class="faculty-form-group">
+          <label for="editFacultyId">Faculty ID</label>
+          <input
+            type="text"
+            id="editFacultyId"
+            class="faculty-form-input faculty-form-input-readonly"
+            readonly
+            aria-readonly="true"
+            tabindex="-1"
+          >
+        </div>
+
+        <div class="faculty-form-group">
+          <label id="programDropdownLabel">Program</label>
+          <div class="faculty-dropdown" id="programDropdown">
+            <button
+              type="button"
+              class="faculty-dropdown-trigger"
+              id="programDropdownTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              aria-labelledby="programDropdownLabel programDropdownValue"
+            >
+              <span id="programDropdownValue"></span>
+              <span class="faculty-dropdown-caret" aria-hidden="true">&#9660;</span>
+            </button>
+            <ul class="faculty-dropdown-list" id="programDropdownList" role="listbox" hidden>
+              <!-- Options rendered by faculty-profile.js from the
+                   PROGRAM_OPTIONS array, so new programs can be
+                   added later without touching this markup. -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="faculty-form-group">
+          <label for="editFacultyEmail">Email</label>
+          <input type="email" id="editFacultyEmail" class="faculty-form-input" autocomplete="off">
+          <p class="faculty-form-error" id="emailError" hidden></p>
+        </div>
+
+        <div class="faculty-form-group">
+          <label for="editFacultyPhone">Phone Number</label>
+          <div class="faculty-phone-input-wrap">
+            <span class="faculty-phone-prefix">+63</span>
+            <input
+              type="text"
+              id="editFacultyPhone"
+              class="faculty-form-input faculty-phone-input"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="912-345-6789"
+              maxlength="12"
+            >
+          </div>
+          <p class="faculty-form-error" id="phoneError" hidden></p>
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+  <div class="faculty-profile-footer">
+    <p class="faculty-save-success" id="saveSuccessMessage" hidden>Profile updated successfully.</p>
+    <button type="button" class="faculty-save-button" id="saveProfileButton">Save</button>
+  </div>
+
+</section>
+  </main>
+
+  <script src="js/faculty-shared.js"></script>
+  <script src="js/faculty-profile.js?v=20260903-2345"></script>
+
+</body>
+</html>

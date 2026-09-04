@@ -1,0 +1,71 @@
+%% SYSTEM NOTE: Documents the database entity relationships for the Prof Consult system.
+erDiagram
+    USER {
+        INT_UNSIGNED User_ID PK
+        VARCHAR_50 Username UK
+        VARCHAR_255 Password
+        VARCHAR_150 Full_Name
+        VARCHAR_190 Email UK
+        VARCHAR_20 Mobile_Number
+        ENUM_Role Role
+        ENUM_Account_Status Account_Status
+    }
+
+    FACULTY {
+        INT_UNSIGNED Faculty_ID PK
+        INT_UNSIGNED User_ID FK
+        VARCHAR_120 Department
+        VARCHAR_120 Office
+        VARCHAR_255 Consultation_Hours
+    }
+
+    STUDENT {
+        INT_UNSIGNED Student_ID PK
+        INT_UNSIGNED User_ID FK
+        VARCHAR_120 Program
+        VARCHAR_20 Year_Level
+        VARCHAR_50 Section
+    }
+
+    NOTIFICATION {
+        INT_UNSIGNED Notification_ID PK
+        INT_UNSIGNED User_ID FK
+        TEXT Message
+        DATETIME Date_Time
+        ENUM_Read_Status Read_Status
+    }
+
+    CONSULTATION_REQUEST {
+        INT_UNSIGNED Request_ID PK
+        INT_UNSIGNED Student_ID FK
+        INT_UNSIGNED Faculty_ID FK
+        TEXT Purpose
+        DATE Request_Date
+        TIME Preferred_Time
+        ENUM_Status Status
+        TEXT Response
+    }
+
+    AVAILABILITY {
+        INT_UNSIGNED Availability_ID PK
+        INT_UNSIGNED Faculty_ID FK
+        ENUM_Status Status
+        DATE Date
+        TIME Time
+    }
+
+    ATTENDANCE_LOG {
+        INT_UNSIGNED Log_ID PK
+        INT_UNSIGNED Faculty_ID FK
+        DATE Date
+        TIME Check_In
+        TIME Check_Out
+    }
+
+    USER ||--o| FACULTY : "has faculty profile"
+    USER ||--o| STUDENT : "has student profile"
+    USER ||--o{ NOTIFICATION : "receives"
+    FACULTY ||--o{ ATTENDANCE_LOG : "records"
+    FACULTY ||--o{ AVAILABILITY : "sets"
+    FACULTY ||--o{ CONSULTATION_REQUEST : "receives"
+    STUDENT ||--o{ CONSULTATION_REQUEST : "submits"

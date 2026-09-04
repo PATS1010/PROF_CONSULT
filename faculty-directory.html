@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the faculty directory page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Faculty Directory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/faculty-directory.css">
+</head>
+<body>
+
+  <!-- =========================================================
+       TOP NAVIGATION BAR
+  ========================================================= -->
+  <header class="dashboard-navbar">
+    <div class="navbar-left">
+      <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+    </div>
+
+    <div class="navbar-right">
+      <!-- Notification bell -- placeholder, navigates to notifications.html -->
+      <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
+        <img src="images/bell.png" alt="">
+      </button>
+
+      <!-- Quick Action trigger -->
+      <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
+        <img src="images/actionbutton.png" alt="">
+      </button>
+
+      <!-- Quick Action popup -->
+      <div class="quick-action-panel" id="quickActionPanel" hidden>
+        <div class="quick-action-header">
+          <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
+          <div>
+            <p class="format-text quick-action-title">Quick Action</p>
+            <p class="quick-action-subtitle">What would you like to do?</p>
+          </div>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Find Faculty</p>
+            <p class="quick-action-item-text">Search and view real-time faculty availability.</p>
+          </div>
+          <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
+        </div>
+
+        <div class="quick-action-item">
+          <div class="quick-action-item-text-block">
+            <p class="quick-action-item-title">Request Consultation</p>
+            <p class="quick-action-item-text">Schedule a conversation with your professor.</p>
+          </div>
+          <a href="#" class="quick-action-button" id="requestConsultationButton">Send Request</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================
+       BURGER SIDEBAR
+  ========================================================= -->
+  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="student-dashboard.html" class="sidebar-link">Dashboard</a>
+      <a href="faculty-directory.html" class="sidebar-link is-active">Faculty</a>
+      <a href="my-requests.html" class="sidebar-link">My Requests</a>
+      <a href="notifications.html" class="sidebar-link">Notifications</a>
+      <a href="student-profile.html" class="sidebar-link">Profile</a>
+      <a href="settings.html" class="sidebar-link">Settings</a>
+      <a href="student-login.html" class="sidebar-link">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       BACKGROUND
+  ========================================================= -->
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <!-- =========================================================
+       MAIN DIRECTORY CONTENT (page-specific)
+  ========================================================= -->
+  <main class="directory-content">
+    <div class="directory-container" id="directoryContainer">
+
+      <!-- LIST PANEL: heading, search, faculty cards -->
+      <section class="directory-list-panel" id="directoryListPanel">
+
+        <h1 class="directory-heading format-text">FACULTY DIRECTORY</h1>
+        <p class="directory-subtitle">Search by name or specialization, then view a professor's profile to request a consultation.</p>
+
+        <div class="search-bar">
+          <span class="search-icon" aria-hidden="true">&#128269;</span>
+          <input
+            type="text"
+            class="search-input"
+            id="facultySearchInput"
+            placeholder="Search faculty name or specialization..."
+            autocomplete="off"
+          >
+
+          <button type="button" class="filter-button" id="filterButton" aria-haspopup="true" aria-expanded="false" aria-label="Filter by status">
+            <span class="filter-icon" aria-hidden="true">&#9660;</span>
+          </button>
+
+          <div class="filter-panel" id="filterPanel" hidden>
+            <button type="button" class="filter-option" data-status="available">Available</button>
+            <button type="button" class="filter-option" data-status="teaching">In Class</button>
+            <button type="button" class="filter-option" data-status="meeting">Meeting</button>
+            <button type="button" class="filter-option" data-status="consultation">Consultation</button>
+            <button type="button" class="filter-option" data-status="onleave">On Leave</button>
+            <button type="button" class="filter-option" data-status="offline">Offline</button>
+          </div>
+        </div>
+
+        <div class="faculty-list-container">
+          <div class="faculty-list" id="facultyList">
+            <!-- Faculty cards are rendered here by faculty-directory.js
+                 from the database-backed faculty directory API -->
+          </div>
+          <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected status.</p>
+        </div>
+
+      </section>
+
+      <!-- PROFILE PANEL: detailed faculty profile, slides in from the right -->
+      <section class="directory-profile-panel" id="directoryProfilePanel" hidden>
+        <!-- Populated by faculty-directory.js when "View Profile" is clicked -->
+      </section>
+
+    </div>
+  </main>
+
+  <script src="js/faculty-directory.js?v=20260904-0005"></script>
+</body>
+</html>

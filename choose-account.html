@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the choose account page structure used by the Prof Consult web app. -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Choose Account Type</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap"
+    rel="stylesheet"
+  >
+
+  <link rel="stylesheet" href="css/choose-account.css">
+</head>
+<body>
+
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <a href="landingpage.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span>
+    Back
+  </a>
+
+  <main class="account-container">
+    <img
+      src="images/long-pc.png"
+      alt="Prof Consult Logo"
+      class="account-logo"
+    >
+
+    <h1 class="account-title">
+      How would you like<br>
+      to continue?
+    </h1>
+
+    <div class="account-cards">
+
+      <article class="account-card">
+        <p class="account-card-label">Continue as</p>
+        <a href="student-login.html" class="account-card-button" data-nav="student">
+          Student
+        </a>
+      </article>
+
+      <article class="account-card">
+        <p class="account-card-label">Continue as</p>
+        <a href="faculty-login.html" class="account-card-button" data-nav="faculty">
+          Professor
+        </a>
+      </article>
+
+    </div>
+  </main>
+
+  <script src="js/choose-account.js"></script>
+</body>
+</html>
