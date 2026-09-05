@@ -220,7 +220,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const declineButton = document.getElementById("declineRequestButton");
   const viewMoreButton = document.getElementById("viewMoreRequestsButton");
   const scheduleListEl = document.getElementById("facultyScheduleList");
+  // Tracks whether the first request load has finished, so later refreshes do not show a loading flicker.
   let hasLoadedDashboardRequests = false;
+  // Prevents multiple overlapping request loads from running at the same time.
   let isLoadingDashboardRequests = false;
 
   function displayYear(value) {
@@ -319,14 +321,22 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadDashboardRequests({ showLoading = false } = {}) {
+    // If a request load is already in progress, skip this call to avoid duplicate API requests.
     if (isLoadingDashboardRequests) return;
+    // Mark the request loader as busy until the try/catch/finally block finishes.
     isLoadingDashboardRequests = true;
 
+    // Show the loading text only for the first visible page load.
     if (showLoading && !hasLoadedDashboardRequests) {
+      // Tell the professor that requests are being loaded.
       if (requestNameEl) requestNameEl.textContent = "Loading requests...";
+      // Hide request metadata until real request data is available.
       if (requestMetaEl) requestMetaEl.style.display = "none";
+      // Hide the "Subject:" label while loading.
       if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "none";
+      // Hide the request subject while loading.
       if (requestSubjectEl) requestSubjectEl.style.display = "none";
+      // Hide Accept/Decline buttons while loading.
       if (requestActionsEl) requestActionsEl.style.display = "none";
     }
 
@@ -351,15 +361,20 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTodaySchedule(apiRequests);
       // Refresh the pending request card from pending requests.
       renderDashboardRequest();
+      // Remember that the dashboard has real request data or a real empty state now.
       hasLoadedDashboardRequests = true;
     } catch (error) {
+      // Only replace the card with an error before the first successful load.
       if (!hasLoadedDashboardRequests && requestNameEl) {
+        // Show a readable failure message in the pending request area.
         requestNameEl.textContent = error.message || "Unable to load requests.";
       }
       if (scheduleListEl) {
+        // Show a schedule-specific error when the same request load fails.
         scheduleListEl.innerHTML = '<li class="faculty-schedule-empty">Unable to load today&apos;s schedule.</li>';
       }
     } finally {
+      // Clear the busy flag so a future manual/visibility refresh can run.
       isLoadingDashboardRequests = false;
     }
   }
