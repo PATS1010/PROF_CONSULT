@@ -23,10 +23,10 @@ function env(string $name, ?string $default = null): string
  */
 define('SMTP_HOST', env('SMTP_HOST', 'smtp-relay.brevo.com'));
 define('SMTP_PORT', (int) env('SMTP_PORT', '587'));
-define('SMTP_USERNAME', env('SMTP_USERNAME'));
-define('SMTP_PASSWORD', env('SMTP_PASSWORD'));
+define('SMTP_USERNAME', env('SMTP_USERNAME', ''));
+define('SMTP_PASSWORD', env('SMTP_PASSWORD', ''));
 define('SMTP_ENCRYPTION', env('SMTP_ENCRYPTION', 'tls'));
-define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL'));
+define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL', ''));
 define('SMTP_FROM_NAME', env('SMTP_FROM_NAME', 'Prof Consult'));
 
 function database(): PDO

@@ -12,7 +12,14 @@ try {
         $sessionUser = requireRole('faculty');
         ensureProfilePhotoColumn($db);
         $refreshUser = $db->prepare(
-            'SELECT User_ID, Username, Full_Name, Email, Mobile_Number, Profile_Photo, Role
+            'SELECT
+                User_ID AS "User_ID",
+                Username AS "Username",
+                Full_Name AS "Full_Name",
+                Email AS "Email",
+                Mobile_Number AS "Mobile_Number",
+                Profile_Photo AS "Profile_Photo",
+                Role AS "Role"
              FROM users
              WHERE User_ID = ? AND Account_Status = ?
              LIMIT 1'
@@ -48,10 +55,11 @@ try {
 
         $statement = $db->prepare(
             'INSERT INTO availability (Faculty_ID, Status, Date, Time)
-             VALUES (?, ?, ?, ?)'
+             VALUES (?, ?, ?, ?)
+             RETURNING Availability_ID AS "Availability_ID"'
         );
         $statement->execute([(int) $profile['profile_id'], $status, $date, preferredTimeStart($time)]);
-        reply(['ok' => true, 'id' => (int) $db->lastInsertId()], 201);
+        reply(['ok' => true, 'id' => (int) $statement->fetchColumn()], 201);
     }
 
     $facultyId = (int) ($_GET['faculty_id'] ?? 0);
@@ -68,7 +76,12 @@ try {
     }
 
     $statement = $db->prepare(
-        'SELECT Availability_ID, Faculty_ID, Status, Date, Time
+        'SELECT
+            Availability_ID AS "Availability_ID",
+            Faculty_ID AS "Faculty_ID",
+            Status AS "Status",
+            Date AS "Date",
+            Time AS "Time"
          FROM availability
          WHERE Faculty_ID = ? AND Date = ?
          ORDER BY Time'

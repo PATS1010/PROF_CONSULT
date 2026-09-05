@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       try {
-        const response = await fetch("api/register.php", {
+        const response = await fetch("/api/register.php", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...stepOne, email: emailInput.value.trim(), phone: contactNumberInput.value, password: passwordInput.value })
         });

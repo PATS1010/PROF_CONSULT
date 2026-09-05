@@ -25,7 +25,7 @@ try {
     ensurePasswordResetTable($db);
 
     $lookup = $db->prepare(
-        'SELECT User_ID, Full_Name, Email
+        'SELECT User_ID AS "User_ID", Full_Name AS "Full_Name", Email AS "Email"
          FROM users
          WHERE Role = ?
            AND (LOWER(Email) = ? OR Mobile_Number = ?)
@@ -48,7 +48,7 @@ try {
 
     $insert = $db->prepare(
         'INSERT INTO password_reset_codes (User_ID, Token, Code_Hash, Expires_At)
-         VALUES (?, ?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))'
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'10 minutes\')'
     );
     $insert->execute([
         (int) $user['User_ID'],
@@ -72,21 +72,21 @@ try {
 
 function ensurePasswordResetTable(PDO $db): void
 {
-    // Creates the OTP table automatically if the current local database has not been updated yet.
+    // Creates the OTP table automatically if the current PostgreSQL database has not been updated yet.
     $db->exec(
         'CREATE TABLE IF NOT EXISTS password_reset_codes (
-            Reset_ID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            User_ID INT UNSIGNED NOT NULL,
+            Reset_ID SERIAL PRIMARY KEY,
+            User_ID INTEGER NOT NULL,
             Token CHAR(64) NOT NULL UNIQUE,
             Code_Hash VARCHAR(255) NOT NULL,
-            Expires_At DATETIME NOT NULL,
-            Verified_At DATETIME NULL,
-            Consumed_At DATETIME NULL,
-            Created_At DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            Expires_At TIMESTAMP NOT NULL,
+            Verified_At TIMESTAMP NULL,
+            Consumed_At TIMESTAMP NULL,
+            Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
             CONSTRAINT fk_password_reset_user
-                FOREIGN KEY (User_ID) REFERENCES users(User_ID) ON DELETE CASCADE,
-            INDEX idx_password_reset_token (Token),
-            INDEX idx_password_reset_user_active (User_ID, Consumed_At)
-        ) ENGINE=InnoDB'
+                FOREIGN KEY (User_ID) REFERENCES users(User_ID) ON DELETE CASCADE
+        )'
     );
+    $db->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_codes (Token)');
+    $db->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_user_active ON password_reset_codes (User_ID, Consumed_At)');
 }

@@ -21,7 +21,7 @@ try {
     $db->beginTransaction();
 
     $lookup = $db->prepare(
-        'SELECT User_ID
+        'SELECT User_ID AS "User_ID"
          FROM password_reset_codes
          WHERE Token = ? AND Verified_At IS NOT NULL AND Consumed_At IS NULL AND Expires_At >= NOW()
          LIMIT 1'

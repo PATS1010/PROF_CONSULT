@@ -27,8 +27,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progre
 # Copy the rest of the Prof Consult project into the container.
 COPY . .
 
-# Give Apache's www-data user ownership of uploaded files.
-RUN chown -R www-data:www-data /var/www/html/uploads
+# Create the uploads folder in the image and give Apache's www-data user ownership of it.
+RUN mkdir -p /var/www/html/uploads/profile-photos \
+    && chown -R www-data:www-data /var/www/html/uploads
 
 # Document that the container listens on HTTP port 80.
 EXPOSE 80

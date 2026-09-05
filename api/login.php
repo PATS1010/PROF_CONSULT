@@ -17,7 +17,15 @@ if (!in_array($role, ['student', 'faculty'], true) || $identifier === '' || $pas
 
 try {
     $statement = database()->prepare(
-        'SELECT User_ID, Username, Password, Full_Name, Email, Mobile_Number, Role, Account_Status
+        'SELECT
+            User_ID AS "User_ID",
+            Username AS "Username",
+            Password AS "Password",
+            Full_Name AS "Full_Name",
+            Email AS "Email",
+            Mobile_Number AS "Mobile_Number",
+            Role AS "Role",
+            Account_Status AS "Account_Status"
          FROM users
          WHERE Role = ? AND (LOWER(Email) = ? OR LOWER(Username) = ?)
          LIMIT 1'

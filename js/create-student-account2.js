@@ -161,11 +161,19 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       try {
-        const response = await fetch("api/register.php", {
+        const response = await fetch("/api/register.php", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...stepOne, email: emailInput.value.trim(), phone: mobileInput.value, password: passwordInput.value })
         });
-        const result = await response.json();
+        const rawResponse = await response.text();
+        let result = { ok: false, message: "The server returned an empty response." };
+        if (rawResponse) {
+          try {
+            result = JSON.parse(rawResponse);
+          } catch {
+            result.message = "The server did not return JSON. Check the Vercel PHP route for /api/register.php.";
+          }
+        }
         if (!response.ok) throw new Error(result.message || "Unable to create account.");
         sessionStorage.removeItem("findprof_registration");
         successMessage.hidden = false;

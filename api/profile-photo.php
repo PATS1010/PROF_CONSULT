@@ -58,7 +58,7 @@ try {
 
     $photoPath = 'uploads/profile-photos/' . $fileName;
 
-    $statement = $db->prepare('SELECT Profile_Photo FROM users WHERE User_ID = ? LIMIT 1');
+    $statement = $db->prepare('SELECT Profile_Photo AS "Profile_Photo" FROM users WHERE User_ID = ? LIMIT 1');
     $statement->execute([(int) $user['id']]);
     $previousPhoto = (string) ($statement->fetchColumn() ?: '');
 

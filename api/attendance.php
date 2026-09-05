@@ -28,18 +28,23 @@ try {
     if ($action === 'check_in') {
         $statement = $db->prepare(
             'INSERT INTO attendance_logs (Faculty_ID, Date, Check_In)
-             VALUES (?, ?, ?)'
+             VALUES (?, ?, ?)
+             RETURNING Log_ID AS "Log_ID"'
         );
         $statement->execute([$facultyId, $today, $now]);
-        reply(['ok' => true, 'id' => (int) $db->lastInsertId(), 'checked_in_at' => $now], 201);
+        reply(['ok' => true, 'id' => (int) $statement->fetchColumn(), 'checked_in_at' => $now], 201);
     }
 
     $statement = $db->prepare(
         'UPDATE attendance_logs
          SET Check_Out = ?
-         WHERE Faculty_ID = ? AND Date = ? AND Check_Out IS NULL
-         ORDER BY Log_ID DESC
-         LIMIT 1'
+         WHERE Log_ID = (
+            SELECT Log_ID
+            FROM attendance_logs
+            WHERE Faculty_ID = ? AND Date = ? AND Check_Out IS NULL
+            ORDER BY Log_ID DESC
+            LIMIT 1
+         )'
     );
     $statement->execute([$now, $facultyId, $today]);
 

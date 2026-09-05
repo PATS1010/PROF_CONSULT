@@ -1,62 +1,75 @@
 %% SYSTEM NOTE: Documents the database entity relationships for the Prof Consult system.
 erDiagram
     USER {
-        INT_UNSIGNED User_ID PK
+        SERIAL User_ID PK
         VARCHAR_50 Username UK
         VARCHAR_255 Password
         VARCHAR_150 Full_Name
         VARCHAR_190 Email UK
         VARCHAR_20 Mobile_Number
-        ENUM_Role Role
-        ENUM_Account_Status Account_Status
+        VARCHAR_255 Profile_Photo
+        VARCHAR_20 Role
+        VARCHAR_20 Account_Status
     }
 
     FACULTY {
-        INT_UNSIGNED Faculty_ID PK
-        INT_UNSIGNED User_ID FK
+        SERIAL Faculty_ID PK
+        INTEGER User_ID FK
         VARCHAR_120 Department
         VARCHAR_120 Office
         VARCHAR_255 Consultation_Hours
     }
 
     STUDENT {
-        INT_UNSIGNED Student_ID PK
-        INT_UNSIGNED User_ID FK
+        SERIAL Student_ID PK
+        INTEGER User_ID FK
         VARCHAR_120 Program
         VARCHAR_20 Year_Level
         VARCHAR_50 Section
     }
 
     NOTIFICATION {
-        INT_UNSIGNED Notification_ID PK
-        INT_UNSIGNED User_ID FK
+        SERIAL Notification_ID PK
+        INTEGER User_ID FK
         TEXT Message
-        DATETIME Date_Time
-        ENUM_Read_Status Read_Status
+        TIMESTAMP Date_Time
+        VARCHAR_20 Read_Status
+    }
+
+    PASSWORD_RESET_CODE {
+        SERIAL Reset_ID PK
+        INTEGER User_ID FK
+        CHAR_64 Token UK
+        VARCHAR_255 Code_Hash
+        TIMESTAMP Expires_At
+        TIMESTAMP Verified_At
+        TIMESTAMP Consumed_At
+        TIMESTAMP Created_At
     }
 
     CONSULTATION_REQUEST {
-        INT_UNSIGNED Request_ID PK
-        INT_UNSIGNED Student_ID FK
-        INT_UNSIGNED Faculty_ID FK
+        SERIAL Request_ID PK
+        INTEGER Student_ID FK
+        INTEGER Faculty_ID FK
         TEXT Purpose
+        TEXT Additional_Message
         DATE Request_Date
         TIME Preferred_Time
-        ENUM_Status Status
+        VARCHAR_20 Status
         TEXT Response
     }
 
     AVAILABILITY {
-        INT_UNSIGNED Availability_ID PK
-        INT_UNSIGNED Faculty_ID FK
-        ENUM_Status Status
+        SERIAL Availability_ID PK
+        INTEGER Faculty_ID FK
+        VARCHAR_20 Status
         DATE Date
         TIME Time
     }
 
     ATTENDANCE_LOG {
-        INT_UNSIGNED Log_ID PK
-        INT_UNSIGNED Faculty_ID FK
+        SERIAL Log_ID PK
+        INTEGER Faculty_ID FK
         DATE Date
         TIME Check_In
         TIME Check_Out
@@ -65,6 +78,7 @@ erDiagram
     USER ||--o| FACULTY : "has faculty profile"
     USER ||--o| STUDENT : "has student profile"
     USER ||--o{ NOTIFICATION : "receives"
+    USER ||--o{ PASSWORD_RESET_CODE : "requests reset"
     FACULTY ||--o{ ATTENDANCE_LOG : "records"
     FACULTY ||--o{ AVAILABILITY : "sets"
     FACULTY ||--o{ CONSULTATION_REQUEST : "receives"

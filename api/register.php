@@ -27,7 +27,7 @@ try {
     $db = database();
     $db->beginTransaction();
 
-    $check = $db->prepare('SELECT User_ID FROM users WHERE Username = ? OR Email = ? LIMIT 1');
+    $check = $db->prepare('SELECT User_ID AS "User_ID" FROM users WHERE Username = ? OR Email = ? LIMIT 1');
     $check->execute([$username, $email]);
     if ($check->fetch()) {
         $db->rollBack();
@@ -36,7 +36,8 @@ try {
 
     $insertUser = $db->prepare(
         'INSERT INTO users (Username, Password, Full_Name, Email, Mobile_Number, Role, Account_Status)
-         VALUES (?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?)
+         RETURNING User_ID AS "User_ID"'
     );
     $insertUser->execute([
         $username,
@@ -47,7 +48,7 @@ try {
         $role,
         'active',
     ]);
-    $userId = (int) $db->lastInsertId();
+    $userId = (int) $insertUser->fetchColumn();
 
     if ($role === 'student') {
         $program = clean((string) ($data['program'] ?? ''));

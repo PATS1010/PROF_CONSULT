@@ -19,7 +19,7 @@ if ($token === '' || !preg_match('/^\d{6}$/', $code)) {
 try {
     $db = database();
     $lookup = $db->prepare(
-        'SELECT Code_Hash
+        'SELECT Code_Hash AS "Code_Hash"
          FROM password_reset_codes
          WHERE Token = ? AND Consumed_At IS NULL AND Expires_At >= NOW()
          LIMIT 1'

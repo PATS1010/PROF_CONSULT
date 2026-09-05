@@ -3,13 +3,31 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Loads shared API helpers for sessions, database access, validation, and JSON responses.
 
+header('Content-Type: application/json; charset=utf-8');
+
+set_exception_handler(static function (Throwable $exception): void {
+    error_log($exception->getMessage());
+    reply(['ok' => false, 'message' => 'A server error occurred.'], 500);
+});
+
+set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+register_shutdown_function(static function (): void {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'message' => 'A server error occurred.']);
+    }
+});
+
 // Shared backend setup for PHP form handlers.
 // Starts the user session, loads the database connection, and provides validation/JSON helper functions.
 
 session_start();
 require __DIR__ . '/config.php';
-
-header('Content-Type: application/json; charset=utf-8');
 
 function reply(array $data, int $status = 200): never
 {
@@ -49,7 +67,7 @@ function validPassword(string $password): bool
 function publicUser(array $row): array
 {
     return [
-        'id' => (int) ($row['User_ID'] ?? $row['id']),
+        'id' => (int) ($row['User_ID'] ?? $row['user_id'] ?? $row['id']),
         'role' => $row['Role'] ?? $row['role'],
         'name' => $row['Full_Name'] ?? $row['full_name'] ?? '',
         'username' => $row['Username'] ?? $row['username'] ?? '',
@@ -59,19 +77,32 @@ function publicUser(array $row): array
     ];
 }
 
+function columnExists(PDO $db, string $table, array $columns): bool
+{
+    $placeholders = implode(', ', array_fill(0, count($columns), '?'));
+    $statement = $db->prepare(
+        "SELECT 1
+         FROM information_schema.columns
+         WHERE table_schema = current_schema()
+           AND table_name = ?
+           AND column_name IN ($placeholders)
+         LIMIT 1"
+    );
+    $statement->execute(array_merge([$table], $columns));
+    return (bool) $statement->fetchColumn();
+}
+
 function ensureProfilePhotoColumn(PDO $db): void
 {
-    $statement = $db->query("SHOW COLUMNS FROM users LIKE 'Profile_Photo'");
-    if (!$statement->fetch()) {
-        $db->exec('ALTER TABLE users ADD Profile_Photo VARCHAR(255) NULL AFTER Mobile_Number');
+    if (!columnExists($db, 'users', ['profile_photo', 'Profile_Photo'])) {
+        $db->exec('ALTER TABLE users ADD COLUMN Profile_Photo VARCHAR(255) NULL');
     }
 }
 
 function ensureConsultationMessageColumn(PDO $db): void
 {
-    $statement = $db->query("SHOW COLUMNS FROM consultation_requests LIKE 'Additional_Message'");
-    if (!$statement->fetch()) {
-        $db->exec('ALTER TABLE consultation_requests ADD Additional_Message TEXT NULL AFTER Purpose');
+    if (!columnExists($db, 'consultation_requests', ['additional_message', 'Additional_Message'])) {
+        $db->exec('ALTER TABLE consultation_requests ADD COLUMN Additional_Message TEXT NULL');
     }
 }
 
@@ -146,12 +177,12 @@ function userProfile(PDO $db, int $userId, string $role): ?array
 {
     if ($role === 'student') {
         $statement = $db->prepare(
-            'SELECT Student_ID AS profile_id, Program, Year_Level, Section
+            'SELECT Student_ID AS profile_id, Program AS "Program", Year_Level AS "Year_Level", Section AS "Section"
              FROM students WHERE User_ID = ? LIMIT 1'
         );
     } elseif ($role === 'faculty') {
         $statement = $db->prepare(
-            'SELECT Faculty_ID AS profile_id, Department, Office, Consultation_Hours
+            'SELECT Faculty_ID AS profile_id, Department AS "Department", Office AS "Office", Consultation_Hours AS "Consultation_Hours"
              FROM faculty WHERE User_ID = ? LIMIT 1'
         );
     } else {

@@ -28,7 +28,7 @@ try {
     }
 
     $faculty = $db->prepare(
-        'SELECT f.Faculty_ID, f.User_ID, u.Full_Name
+        'SELECT f.Faculty_ID AS "Faculty_ID", f.User_ID AS "User_ID", u.Full_Name AS "Full_Name"
          FROM faculty f
          INNER JOIN users u ON u.User_ID = f.User_ID
          WHERE f.Faculty_ID = ? AND u.Role = ? AND u.Account_Status = ?
@@ -45,7 +45,8 @@ try {
     $statement = $db->prepare(
         'INSERT INTO consultation_requests
             (Student_ID, Faculty_ID, Purpose, Additional_Message, Request_Date, Preferred_Time, Status, Response)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         RETURNING Request_ID AS "Request_ID"'
     );
     $statement->execute([
         (int) $student['profile_id'],
@@ -57,7 +58,7 @@ try {
         'pending',
         null,
     ]);
-    $requestId = (int) $db->lastInsertId();
+    $requestId = (int) $statement->fetchColumn();
 
     $notification = $db->prepare(
         'INSERT INTO notifications (User_ID, Message, Read_Status)
