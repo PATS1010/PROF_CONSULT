@@ -18,8 +18,8 @@ function env(string $name, ?string $default = null): string
 }
 
 /*
- * Mail values now come from Vercel environment variables.
- * Add these later in Vercel, not inside this file.
+ * Mail values come from deployment environment variables.
+ * Add these in Render or your local environment, not inside this file.
  */
 define('SMTP_HOST', env('SMTP_HOST', 'smtp-relay.brevo.com'));
 define('SMTP_PORT', (int) env('SMTP_PORT', '587'));
@@ -37,24 +37,7 @@ function database(): PDO
         return $pdo;
     }
 
-    $databaseUrl = env('DATABASE_URL');
-    $parts = parse_url($databaseUrl);
-
-    if (!is_array($parts) || empty($parts['host']) || empty($parts['user'])) {
-        throw new RuntimeException('DATABASE_URL is invalid.');
-    }
-
-    $query = [];
-    parse_str($parts['query'] ?? '', $query);
-
-    $host = $parts['host'];
-    $port = $parts['port'] ?? 5432;
-    $databaseName = ltrim($parts['path'] ?? '/postgres', '/');
-    $username = rawurldecode($parts['user']);
-    $password = rawurldecode($parts['pass'] ?? '');
-    $sslMode = $query['sslmode'] ?? 'require';
-
-    $dsn = "pgsql:host={$host};port={$port};dbname={$databaseName};sslmode={$sslMode}";
+    [$dsn, $username, $password] = postgresConnectionParts(env('DATABASE_URL'));
 
     $pdo = new PDO($dsn, $username, $password, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -63,4 +46,45 @@ function database(): PDO
     ]);
 
     return $pdo;
+}
+
+function postgresConnectionParts(string $databaseUrl): array
+{
+    $parts = parse_url($databaseUrl);
+
+    if (!is_array($parts)) {
+        throw new RuntimeException('DATABASE_URL is invalid.');
+    }
+
+    $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+    if (!in_array($scheme, ['postgres', 'postgresql'], true)) {
+        throw new RuntimeException('DATABASE_URL must use postgres:// or postgresql://.');
+    }
+
+    if (empty($parts['host']) || empty($parts['user']) || !array_key_exists('pass', $parts)) {
+        throw new RuntimeException('DATABASE_URL must include host, username, and password.');
+    }
+
+    $databaseName = ltrim((string) ($parts['path'] ?? ''), '/');
+    if ($databaseName === '') {
+        throw new RuntimeException('DATABASE_URL must include a database name.');
+    }
+
+    $host = (string) $parts['host'];
+    $port = (int) ($parts['port'] ?? 5432);
+    $username = rawurldecode((string) $parts['user']);
+    $password = rawurldecode((string) $parts['pass']);
+
+    if ($username === '' || $password === '') {
+        throw new RuntimeException('DATABASE_URL username and password must not be empty.');
+    }
+
+    $dsn = sprintf(
+        'pgsql:host=%s;port=%d;dbname=%s;sslmode=require',
+        $host,
+        $port,
+        rawurldecode($databaseName)
+    );
+
+    return [$dsn, $username, $password];
 }
