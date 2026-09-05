@@ -144,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadSavedStatus() {
     try {
-      const response = await fetch("api/availability.php?role=faculty", {
+      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(currentDateValue())}`, {
         cache: "no-store",
         credentials: "same-origin",
         headers: { "Accept": "application/json" },

@@ -132,6 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentStatusLabel) currentStatusLabel.textContent = label;
   }
 
+  function markSelectedStatus(status) {
+    statusOptions.forEach((option) => {
+      option.classList.toggle("is-selected", option.dataset.status === status);
+    });
+  }
+
   function redirectToFacultyLogin() {
     window.location.href = "faculty-login.html";
   }
@@ -170,7 +176,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadSavedStatus() {
     try {
-      const response = await fetch("api/availability.php?role=faculty", {
+      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(currentDateValue())}`, {
         cache: "no-store",
         credentials: "same-origin",
         headers: { "Accept": "application/json" },
@@ -184,6 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = statusForUi(latest.Status);
       savedStatus = { status, label: statusLabel(status) };
       renderStatus(savedStatus.status, savedStatus.label);
+      markSelectedStatus(savedStatus.status);
     } catch (error) {
       // Keep the default display if availability cannot be loaded.
     }
@@ -240,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await saveCurrentStatus(selectedOption.dataset.status);
           savedStatus = { status: selectedOption.dataset.status, label: selectedOption.dataset.label };
           renderStatus(savedStatus.status, savedStatus.label);
+          markSelectedStatus(savedStatus.status);
         } catch (error) {
           if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);

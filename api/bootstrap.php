@@ -4,6 +4,7 @@ declare(strict_types=1);
 // SYSTEM NOTE: Loads shared API helpers for sessions, database access, validation, and JSON responses.
 
 header('Content-Type: application/json; charset=utf-8');
+date_default_timezone_set('Asia/Manila');
 
 set_exception_handler(static function (Throwable $exception): void {
     error_log($exception->getMessage());
