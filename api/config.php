@@ -72,18 +72,17 @@ function postgresConnectionParts(string $databaseUrl): array
         throw new RuntimeException('DATABASE_URL must include a database name.');
     }
 
-    $host = (string) $parts['host'];
+    $host = rawurldecode((string) $parts['host']);
     $port = (int) ($parts['port'] ?? 5432);
     $username = rawurldecode((string) $parts['user']);
     $password = rawurldecode((string) $parts['pass']);
-    $requiredPoolerUsername = 'postgres.rkrhnzllereikqclkcdk';
 
     if ($username === '' || $password === '') {
         throw new RuntimeException('DATABASE_URL username and password must not be empty.');
     }
 
-    if ($username !== $requiredPoolerUsername) {
-        throw new RuntimeException('DATABASE_URL must use the Supabase pooler username postgres.rkrhnzllereikqclkcdk.');
+    if ($username === 'postgres' && str_ends_with($host, '.pooler.supabase.com')) {
+        throw new RuntimeException('DATABASE_URL is using the direct database username. Use the Supabase pooler username from the connection string.');
     }
 
     $dsn = sprintf(
