@@ -68,7 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
 
       try {
-        const response = await fetch("api/login.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "faculty", identifier: emailInput.value.trim(), password: passwordInput.value }) });
+        const response = await fetch("api/login.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ role: "faculty", identifier: emailInput.value.trim(), password: passwordInput.value })
+        });
         if (!response.ok) throw new Error();
         loginError.hidden = true;
         window.location.href = "faculty-dashboard.html";

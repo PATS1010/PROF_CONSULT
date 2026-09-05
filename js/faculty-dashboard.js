@@ -25,6 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/session.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const data = await response.json();
@@ -105,9 +106,24 @@ document.addEventListener("DOMContentLoaded", () => {
     ].join("-");
   }
 
+  function redirectToFacultyLogin() {
+    window.location.href = "faculty-login.html";
+  }
+
+  function handleAuthFailure(response, result) {
+    const message = String(result && result.message ? result.message : "").toLowerCase();
+    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
+      redirectToFacultyLogin();
+      return true;
+    }
+
+    return false;
+  }
+
   async function saveCurrentStatus(status) {
     const response = await fetch("api/availability.php", {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({
         status: statusForApi(status),
@@ -116,6 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }),
     });
     const result = await response.json();
+
+    if (handleAuthFailure(response, result)) {
+      throw new Error("AUTH_REQUIRED");
+    }
 
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to save availability status.");
@@ -126,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/availability.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const result = await response.json();
@@ -189,6 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
           currentStatusDot.className = `status-dot status-${pendingStatus}`;
           currentStatusLabel.textContent = pendingLabel;
         } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);
           return;
         }
@@ -344,6 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Load requests as faculty so the API reads the professor session, not a student session.
       const response = await fetch("api/consultation-requests.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       // Parse the API result before updating the dashboard UI.
@@ -351,6 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Show an error if the backend rejects the session or query.
       if (!response.ok || !result.ok) {
+        if (handleAuthFailure(response, result)) return;
         throw new Error(result.message || "Unable to load consultation requests.");
       }
 
@@ -383,6 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Include role=faculty so dashboard Accept/Decline is handled as the logged-in professor.
     const response = await fetch("api/consultation-requests.php?role=faculty", {
       method: "POST",
+      credentials: "same-origin",
       // Send JSON because the PHP API reads the request body with input().
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       // request_id selects the consultation row; status is the new faculty decision.
@@ -393,6 +418,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Bubble API errors back to the button handler.
     if (!response.ok || !result.ok) {
+      if (handleAuthFailure(response, result)) {
+        throw new Error("AUTH_REQUIRED");
+      }
       throw new Error(result.message || "Unable to update consultation request.");
     }
   }
@@ -452,6 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await updateRequestStatus(request.id, "approved");
         request.status = "approved";
       } catch (error) {
+        if (error.message === "AUTH_REQUIRED") return;
         alert(error.message);
         acceptButton.textContent = "Accept";
         acceptButton.disabled = false;
@@ -480,6 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await updateRequestStatus(request.id, "declined");
         request.status = "declined";
       } catch (error) {
+        if (error.message === "AUTH_REQUIRED") return;
         alert(error.message);
         declineButton.textContent = "Decline";
         declineButton.disabled = false;

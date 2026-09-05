@@ -86,6 +86,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
+  function redirectToFacultyLogin() {
+    window.location.href = "faculty-login.html";
+  }
+
+  function handleAuthFailure(response, result) {
+    const message = String(result && result.message ? result.message : "").toLowerCase();
+    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
+      redirectToFacultyLogin();
+      return true;
+    }
+
+    return false;
+  }
+
   async function loadRequests() {
     if (scrollContainer) {
       scrollContainer.innerHTML = "";
@@ -99,6 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Ask the API for faculty requests so the backend uses the professor session.
       const response = await fetch("api/consultation-requests.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       // Parse the JSON reply from the API.
@@ -106,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       // Stop rendering if the API reports an authentication or database problem.
       if (!response.ok || !result.ok) {
+        if (handleAuthFailure(response, result)) return;
         throw new Error(result.message || "Unable to load consultation requests.");
       }
 
@@ -125,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Include role=faculty so Accept/Reschedule/Decline uses the professor session.
     const response = await fetch("api/consultation-requests.php?role=faculty", {
       method: "POST",
+      credentials: "same-origin",
       // Tell PHP that the request body is JSON.
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       // Send the selected request id and the new status to the backend.
@@ -135,6 +152,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Turn API failures into an error message the click handler can alert.
     if (!response.ok || !result.ok) {
+      if (handleAuthFailure(response, result)) {
+        throw new Error("AUTH_REQUIRED");
+      }
       throw new Error(result.message || "Unable to update consultation request.");
     }
   }
@@ -242,6 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await updateRequestStatus(request.id, "rescheduled");
           request.status = "rescheduled";
         } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);
           actionButton.textContent = "Reschedule";
           actionButton.disabled = false;
@@ -268,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await updateRequestStatus(request.id, "approved");
           request.status = "approved";
         } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);
           actionButton.textContent = "Accept";
           actionButton.disabled = false;
@@ -295,6 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await updateRequestStatus(request.id, "declined");
           request.status = "declined";
         } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);
           actionButton.textContent = "Decline";
           actionButton.disabled = false;

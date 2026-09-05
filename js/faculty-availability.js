@@ -132,9 +132,24 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentStatusLabel) currentStatusLabel.textContent = label;
   }
 
+  function redirectToFacultyLogin() {
+    window.location.href = "faculty-login.html";
+  }
+
+  function handleAuthFailure(response, result) {
+    const message = String(result && result.message ? result.message : "").toLowerCase();
+    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
+      redirectToFacultyLogin();
+      return true;
+    }
+
+    return false;
+  }
+
   async function saveCurrentStatus(status) {
     const response = await fetch("api/availability.php", {
       method: "POST",
+      credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({
         status: statusForApi(status),
@@ -143,6 +158,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }),
     });
     const result = await response.json();
+
+    if (handleAuthFailure(response, result)) {
+      throw new Error("AUTH_REQUIRED");
+    }
 
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to save availability status.");
@@ -153,6 +172,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/availability.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const result = await response.json();
@@ -221,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
           savedStatus = { status: selectedOption.dataset.status, label: selectedOption.dataset.label };
           renderStatus(savedStatus.status, savedStatus.label);
         } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);
           renderStatus(savedStatus.status, savedStatus.label);
           return;

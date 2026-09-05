@@ -26,6 +26,14 @@ register_shutdown_function(static function (): void {
 // Shared backend setup for PHP form handlers.
 // Starts the user session, loads the database connection, and provides validation/JSON helper functions.
 
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path' => '/',
+    'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 require __DIR__ . '/config.php';
 
