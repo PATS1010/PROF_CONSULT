@@ -19,10 +19,9 @@
 
 // ---------------------------------------------------------
 // Faculty online/offline status (Quick Action Check In/Out)
-// -- FACULTY TEST ACCOUNT, frontend mock state only. No
-// backend, no localStorage/sessionStorage: a plain in-memory
-// variable that always starts OFFLINE on every page load,
-// per the test-account requirement that nothing here persists.
+// -- Quick Action keeps its own temporary UI state. The saved
+// dashboard availability is loaded and updated by each page's
+// database-backed status code.
 //
 // CHECK_IN_TIMEOUT is the single place that controls how long
 // a Check In lasts before automatically reverting to Offline
@@ -190,26 +189,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Reflects the Quick Action status onto the Faculty Dashboard's
-  // "Today's Status" card, if this page has one (only the
-  // Dashboard does -- this is a no-op everywhere else). Uses the
-  // same status-dot/status-available/status-offline classes the
-  // Dashboard's own Change Status dropdown already uses, so the
-  // two stay visually consistent.
-  function updateDashboardStatusUI() {
-    const dashboardStatusDot = document.getElementById("currentStatusDot");
-    const dashboardStatusLabel = document.getElementById("currentStatusLabel");
-    if (!dashboardStatusDot || !dashboardStatusLabel) return;
-
-    const isAvailable = facultyOnlineStatus === "available";
-    dashboardStatusDot.className = `status-dot status-${isAvailable ? "available" : "offline"}`;
-    dashboardStatusLabel.textContent = isAvailable ? "Available" : "Offline";
-  }
-
   function setFacultyOnlineStatus(newStatus) {
     facultyOnlineStatus = newStatus;
     updateQuickActionUI();
-    updateDashboardStatusUI();
   }
 
   function handleCheckIn(event) {
@@ -246,10 +228,9 @@ document.addEventListener("DOMContentLoaded", () => {
     checkOutButton.addEventListener("click", handleCheckOut);
   }
 
-  // Establish the initial OFFLINE state (status line text/color,
-  // correct button visible, Today's Status synced if present).
+  // Establish the initial Quick Action state without changing
+  // the database-backed Dashboard status card.
   updateQuickActionUI();
-  updateDashboardStatusUI();
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to the Faculty Notifications
