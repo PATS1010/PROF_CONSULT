@@ -1,7 +1,4 @@
 {
-    "config": {
-        "platform-check": false
-    },
     "require": {
         "ext-pdo": "*",
         "ext-pdo_pgsql": "*",
