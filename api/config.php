@@ -76,9 +76,14 @@ function postgresConnectionParts(string $databaseUrl): array
     $port = (int) ($parts['port'] ?? 5432);
     $username = rawurldecode((string) $parts['user']);
     $password = rawurldecode((string) $parts['pass']);
+    $requiredPoolerUsername = 'postgres.rkrhnzllereikqclkcdk';
 
     if ($username === '' || $password === '') {
         throw new RuntimeException('DATABASE_URL username and password must not be empty.');
+    }
+
+    if ($username !== $requiredPoolerUsername) {
+        throw new RuntimeException('DATABASE_URL must use the Supabase pooler username postgres.rkrhnzllereikqclkcdk.');
     }
 
     $dsn = sprintf(
