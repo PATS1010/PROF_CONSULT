@@ -1,36 +1,66 @@
 <?php
+
 declare(strict_types=1);
 
-// SYSTEM NOTE: Stores database and mail configuration used by the backend APIs.
+function env(string $name, ?string $default = null): string
+{
+    $value = getenv($name);
 
-// Database connection settings and the reusable database() function.
-// Every PHP handler uses this file to connect to the Prof Consult MySQL database.
+    if ($value === false || $value === '') {
+        if ($default !== null) {
+            return $default;
+        }
 
-/* Update these settings only if your MySQL credentials differ from XAMPP's defaults. */
-const DB_HOST = '127.0.0.1';
-const DB_NAME = 'prof_consult';
-const DB_USER = 'root';
-const DB_PASS = '';
-
-// SMTP settings used by PHPMailer to send password-reset OTP emails.
-// For Gmail, use smtp.gmail.com, port 587, tls, and an app password.
-const SMTP_HOST = 'smtp-relay.brevo.com';
-const SMTP_PORT = 587;
-const SMTP_USERNAME = 'b6a3e7001@smtp-brevo.com';
-const SMTP_ENCRYPTION = 'tls';
-const SMTP_FROM_EMAIL = 'profconsult2026@gmail.com';
-const SMTP_FROM_NAME = 'Prof Consult';
-
-define('SMTP_PASSWORD', getenv('SMTP_PASSWORD') ?: '');
-
-function database(): PDO {
-    static $pdo;
-    if (!$pdo) {
-        $pdo = new PDO('mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=utf8mb4', DB_USER, DB_PASS, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-            PDO::ATTR_EMULATE_PREPARES => false,
-        ]);
+        throw new RuntimeException("Missing required environment variable: {$name}");
     }
+
+    return $value;
+}
+
+/*
+ * Mail values now come from Vercel environment variables.
+ * Add these later in Vercel, not inside this file.
+ */
+define('SMTP_HOST', env('SMTP_HOST', 'smtp-relay.brevo.com'));
+define('SMTP_PORT', (int) env('SMTP_PORT', '587'));
+define('SMTP_USERNAME', env('SMTP_USERNAME'));
+define('SMTP_PASSWORD', env('SMTP_PASSWORD'));
+define('SMTP_ENCRYPTION', env('SMTP_ENCRYPTION', 'tls'));
+define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL'));
+define('SMTP_FROM_NAME', env('SMTP_FROM_NAME', 'Prof Consult'));
+
+function database(): PDO
+{
+    static $pdo = null;
+
+    if ($pdo instanceof PDO) {
+        return $pdo;
+    }
+
+    $databaseUrl = env('DATABASE_URL');
+    $parts = parse_url($databaseUrl);
+
+    if (!is_array($parts) || empty($parts['host']) || empty($parts['user'])) {
+        throw new RuntimeException('DATABASE_URL is invalid.');
+    }
+
+    $query = [];
+    parse_str($parts['query'] ?? '', $query);
+
+    $host = $parts['host'];
+    $port = $parts['port'] ?? 5432;
+    $databaseName = ltrim($parts['path'] ?? '/postgres', '/');
+    $username = rawurldecode($parts['user']);
+    $password = rawurldecode($parts['pass'] ?? '');
+    $sslMode = $query['sslmode'] ?? 'require';
+
+    $dsn = "pgsql:host={$host};port={$port};dbname={$databaseName};sslmode={$sslMode}";
+
+    $pdo = new PDO($dsn, $username, $password, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+
     return $pdo;
 }
