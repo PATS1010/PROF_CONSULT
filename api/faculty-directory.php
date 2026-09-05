@@ -22,8 +22,8 @@ try {
             (
                 SELECT a.Status
                 FROM availability a
-                WHERE a.Faculty_ID = f.Faculty_ID AND a.Date = CURRENT_DATE
-                ORDER BY a.Time DESC
+                WHERE a.Faculty_ID = f.Faculty_ID
+                ORDER BY a.Date DESC, a.Time DESC, a.Availability_ID DESC
                 LIMIT 1
             ) AS "Current_Status"
          FROM faculty f

@@ -220,6 +220,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const declineButton = document.getElementById("declineRequestButton");
   const viewMoreButton = document.getElementById("viewMoreRequestsButton");
   const scheduleListEl = document.getElementById("facultyScheduleList");
+  let hasLoadedDashboardRequests = false;
+  let isLoadingDashboardRequests = false;
 
   function displayYear(value) {
     const normalized = String(value || "").trim();
@@ -316,12 +318,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
   }
 
-  async function loadDashboardRequests() {
-    if (requestNameEl) requestNameEl.textContent = "Loading requests...";
-    if (requestMetaEl) requestMetaEl.style.display = "none";
-    if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "none";
-    if (requestSubjectEl) requestSubjectEl.style.display = "none";
-    if (requestActionsEl) requestActionsEl.style.display = "none";
+  async function loadDashboardRequests({ showLoading = false } = {}) {
+    if (isLoadingDashboardRequests) return;
+    isLoadingDashboardRequests = true;
+
+    if (showLoading && !hasLoadedDashboardRequests) {
+      if (requestNameEl) requestNameEl.textContent = "Loading requests...";
+      if (requestMetaEl) requestMetaEl.style.display = "none";
+      if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "none";
+      if (requestSubjectEl) requestSubjectEl.style.display = "none";
+      if (requestActionsEl) requestActionsEl.style.display = "none";
+    }
 
     try {
       // Load requests as faculty so the API reads the professor session, not a student session.
@@ -344,11 +351,16 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTodaySchedule(apiRequests);
       // Refresh the pending request card from pending requests.
       renderDashboardRequest();
+      hasLoadedDashboardRequests = true;
     } catch (error) {
-      if (requestNameEl) requestNameEl.textContent = error.message || "Unable to load requests.";
+      if (!hasLoadedDashboardRequests && requestNameEl) {
+        requestNameEl.textContent = error.message || "Unable to load requests.";
+      }
       if (scheduleListEl) {
         scheduleListEl.innerHTML = '<li class="faculty-schedule-empty">Unable to load today&apos;s schedule.</li>';
       }
+    } finally {
+      isLoadingDashboardRequests = false;
     }
   }
 
@@ -409,7 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  loadDashboardRequests();
+  loadDashboardRequests({ showLoading: true });
 
   if (acceptButton) {
     acceptButton.addEventListener("click", async () => {
@@ -465,7 +477,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  window.setInterval(loadDashboardRequests, 5000);
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       loadSavedStatus();
