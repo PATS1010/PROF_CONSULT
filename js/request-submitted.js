@@ -125,15 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // "Send Request" doesn't have a destination page yet --
-  // left wired up but intentionally not navigating anywhere
-  const requestConsultationButton = document.getElementById("requestConsultationButton");
-  if (requestConsultationButton) {
-    requestConsultationButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      // Future: navigate to the consultation request page once it exists
-    });
-  }
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to notifications.html

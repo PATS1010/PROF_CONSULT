@@ -2,6 +2,9 @@
 // =========================================================
 // FACULTY DASHBOARD -- PAGE-SPECIFIC INTERACTIONS
 // - Populates the greeting from the logged-in faculty session.
+// - Real-time Philippine date/time under the greeting, same
+//   component and formatting approach as the Student
+//   Dashboard's #dashboardDateTime.
 // - Today's Status: Change Status opens a gradient popup of
 //   status options; selecting + Save updates the visible
 //   status pill. Frontend-only for now (no persistence).
@@ -41,6 +44,55 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   loadCurrentFaculty();
+
+  // ---------------------------------------------------------
+  // Real-time Philippine date/time, directly below the greeting.
+  // Reuses the exact same approach as the Student Dashboard
+  // (student-dashboard.js #dashboardDateTime): Intl.DateTimeFormat
+  // with the Asia/Manila timezone, built via formatToParts for
+  // exact spacing/punctuation, rendered once immediately and then
+  // re-rendered every second via setInterval so it stays live
+  // without a page refresh -- and keeps working correctly no
+  // matter how long the page stays open.
+  // ---------------------------------------------------------
+  const facultyPageDateTimeEl = document.getElementById("facultyPageDateTime");
+
+  if (facultyPageDateTimeEl) {
+    const facultyPhilippineDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila",
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+
+    function renderFacultyPageDateTime() {
+      const parts = facultyPhilippineDateTimeFormatter.formatToParts(new Date());
+      const get = (type) => {
+        const part = parts.find((p) => p.type === type);
+        return part ? part.value : "";
+      };
+
+      const weekday = get("weekday");
+      const month = get("month");
+      const day = get("day");
+      const year = get("year");
+      const hour = get("hour");
+      const minute = get("minute");
+      const second = get("second");
+      const dayPeriod = get("dayPeriod");
+
+      facultyPageDateTimeEl.textContent =
+        `${weekday}, ${month} ${day}, ${year} ${hour}:${minute}:${second} ${dayPeriod}`;
+    }
+
+    renderFacultyPageDateTime();
+    setInterval(renderFacultyPageDateTime, 1000);
+  }
 
   // ---------------------------------------------------------
   // Today's Status: Change Status popup. Selecting an option
