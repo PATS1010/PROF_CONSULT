@@ -87,27 +87,59 @@
         </div>
       </div>
 
-      <div class="form-field">
-        <label for="yearLevelTrigger">Year Level</label>
-        <div class="custom-select" id="yearLevelSelect" data-name="yearLevel">
-          <button
-            type="button"
-            class="custom-select-trigger"
-            id="yearLevelTrigger"
-            aria-haspopup="listbox"
-            aria-expanded="false"
-          >
-            <span class="custom-select-value" data-placeholder="Year">Year</span>
-          </button>
-          <ul class="custom-select-options" role="listbox" hidden>
-            <li role="option" data-value="1">1st Year</li>
-            <li role="option" data-value="2">2nd Year</li>
-            <li role="option" data-value="3">3rd Year</li>
-            <li role="option" data-value="4">4th Year</li>
-            <li role="option" data-value="5">5th Year</li>
-          </ul>
-          <input type="hidden" id="yearLevel" name="yearLevel" required>
+      <!-- =========================================================
+           Year Level + Section, side by side.
+           Wrapped in .form-row purely for horizontal layout --
+           the Year Level field itself (ids/classes/markup) is
+           untouched from the original.
+      ========================================================= -->
+      <div class="form-row form-row-year-section">
+
+        <div class="form-field">
+          <label for="yearLevelTrigger">Year Level</label>
+          <div class="custom-select" id="yearLevelSelect" data-name="yearLevel">
+            <button
+              type="button"
+              class="custom-select-trigger"
+              id="yearLevelTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span class="custom-select-value" data-placeholder="Year">Year</span>
+            </button>
+            <ul class="custom-select-options" role="listbox" hidden>
+              <li role="option" data-value="1">1st Year</li>
+              <li role="option" data-value="2">2nd Year</li>
+              <li role="option" data-value="3">3rd Year</li>
+              <li role="option" data-value="4">4th Year</li>
+              <li role="option" data-value="5">5th Year</li>
+            </ul>
+            <input type="hidden" id="yearLevel" name="yearLevel" required>
+          </div>
         </div>
+
+        <div class="form-field">
+          <label for="sectionTrigger">Section</label>
+          <div class="custom-select" id="sectionSelect" data-name="section">
+            <button
+              type="button"
+              class="custom-select-trigger"
+              id="sectionTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span class="custom-select-value" data-placeholder="Section">Section</span>
+            </button>
+            <ul class="custom-select-options" role="listbox" hidden>
+              <li role="option" data-value="A">A</li>
+              <li role="option" data-value="B">B</li>
+              <li role="option" data-value="C">C</li>
+              <li role="option" data-value="D">D</li>
+            </ul>
+            <input type="hidden" id="section" name="section" required>
+          </div>
+        </div>
+
       </div>
 
       <button type="submit" class="btn next-button" id="nextButton">

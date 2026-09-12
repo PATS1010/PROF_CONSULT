@@ -1,46 +1,104 @@
 <!DOCTYPE html>
 <!-- SYSTEM NOTE: Defines the create faculty account2 page structure used by the Prof Consult web app. -->
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
   <title>Prof Consult | Create Faculty Account</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/create-faculty-account2.css">
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/create-faculty-account2.css"
+  >
 </head>
+
+
 <body>
 
+
   <!-- =========================================================
-       BACKGROUND -- identical to Create Student Account Page 2
-  ========================================================= -->
-  <div class="page-background" aria-hidden="true">
-    <img src="images/coea.jpg" alt="" class="page-background-image">
+       BACKGROUND
+  ========================================================== -->
+
+  <div
+    class="page-background"
+    aria-hidden="true"
+  >
+
+    <img
+      src="images/coea.jpg"
+      alt=""
+      class="page-background-image"
+    >
+
     <div class="page-background-overlay"></div>
+
   </div>
 
+
+
   <!-- =========================================================
-       BACK BUTTON -> create-faculty-account.html
-  ========================================================= -->
-  <a href="create-faculty-account.html" class="back-button" id="backButton" data-nav="back">
-    <span aria-hidden="true">&larr;</span> Back
+       BACK BUTTON
+  ========================================================== -->
+
+  <a
+    href="create-faculty-account.html"
+    class="back-button"
+    id="backButton"
+    data-nav="back"
+  >
+    <span aria-hidden="true">&larr;</span>
+    Back
   </a>
 
+
+
   <!-- =========================================================
-       MAIN CONTAINER: registration card
-  ========================================================= -->
+       MAIN REGISTRATION CARD
+  ========================================================== -->
+
   <main class="registration-card">
 
-    <h1 class="format-text registration-title">Create Faculty Account</h1>
+    <h1 class="format-text registration-title">
+      Create Faculty Account
+    </h1>
 
-    <form class="registration-form" id="createFacultyAccountStep2Form" novalidate>
 
-      <!-- Email Address -- added to match the Student Account page.
-           Same id/name/placeholder/validation pattern as the Student
-           page's Email Address field. -->
+    <form
+      class="registration-form"
+      id="createFacultyAccountStep2Form"
+      novalidate
+    >
+
+
+      <!-- =====================================================
+           EMAIL ADDRESS
+      ====================================================== -->
+
       <div class="form-field">
-        <label for="emailAddress">Email Address</label>
+
+        <label for="emailAddress">
+          Email Address
+        </label>
+
         <input
           type="email"
           id="emailAddress"
@@ -50,16 +108,40 @@
           autocomplete="email"
           required
         >
-        <p class="field-message field-message-error" id="emailError" hidden>
+
+        <p
+          class="field-message field-message-error"
+          id="emailError"
+          hidden
+        >
           Please enter a valid email address.
         </p>
+
       </div>
 
-      <!-- Contact Number -->
+
+
+      <!-- =====================================================
+           CONTACT NUMBER
+      ====================================================== -->
+
       <div class="form-field">
-        <label for="contactNumber">Contact Number</label>
+
+        <label for="contactNumber">
+          Contact Number
+        </label>
+
+
         <div class="mobile-input-group">
-          <span class="mobile-prefix" aria-hidden="true">+63</span>
+
+          <span
+            class="mobile-prefix"
+            aria-hidden="true"
+          >
+            +63
+          </span>
+
+
           <input
             type="tel"
             id="contactNumber"
@@ -67,20 +149,39 @@
             class="form-input mobile-input"
             placeholder="912-345-6789"
             inputmode="numeric"
-            autocomplete="off"
+            autocomplete="tel"
             maxlength="12"
             required
           >
+
         </div>
-        <p class="field-message field-message-error" id="contactNumberError" hidden>
-          Please enter a valid 10-digit mobile number.
+
+
+        <p
+          class="field-message field-message-error"
+          id="contactNumberError"
+          hidden
+        >
+          Please enter a valid 10-digit Philippine mobile number.
         </p>
+
       </div>
 
-      <!-- Password -->
+
+
+      <!-- =====================================================
+           PASSWORD
+      ====================================================== -->
+
       <div class="form-field">
-        <label for="password">Password</label>
+
+        <label for="password">
+          Password
+        </label>
+
+
         <div class="password-input-group">
+
           <input
             type="password"
             id="password"
@@ -90,22 +191,53 @@
             autocomplete="new-password"
             required
           >
-          <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" data-target="password">
+
+
+          <button
+            type="button"
+            class="password-toggle"
+            id="passwordToggle"
+            aria-label="Show password"
+            data-target="password"
+          >
             Show
           </button>
+
         </div>
-        <p class="field-message field-message-error" id="passwordFieldError" hidden></p>
+
+
+        <p
+          class="field-message field-message-error"
+          id="passwordFieldError"
+          hidden
+        ></p>
+
+
         <ul class="password-requirements">
+
           <li>&check; At least 8 characters</li>
           <li>&check; One uppercase letter</li>
           <li>&check; One number</li>
+
         </ul>
+
       </div>
 
-      <!-- Confirm Password -->
+
+
+      <!-- =====================================================
+           CONFIRM PASSWORD
+      ====================================================== -->
+
       <div class="form-field">
-        <label for="confirmPassword">Confirm Password</label>
+
+        <label for="confirmPassword">
+          Confirm Password
+        </label>
+
+
         <div class="password-input-group">
+
           <input
             type="password"
             id="confirmPassword"
@@ -115,39 +247,145 @@
             autocomplete="new-password"
             required
           >
-          <button type="button" class="password-toggle" id="confirmPasswordToggle" aria-label="Show password" data-target="confirmPassword">
+
+
+          <button
+            type="button"
+            class="password-toggle"
+            id="confirmPasswordToggle"
+            aria-label="Show password"
+            data-target="confirmPassword"
+          >
             Show
           </button>
+
         </div>
-        <p class="field-message field-message-error" id="passwordError" hidden>
+
+
+        <p
+          class="field-message field-message-error"
+          id="passwordError"
+          hidden
+        >
           Password does not match.
         </p>
+
       </div>
 
-      <!-- Terms and Conditions -->
+
+
+      <!-- =====================================================
+           TERMS AND CONDITIONS
+      ====================================================== -->
+
       <label class="terms-checkbox">
-        <input type="checkbox" id="agreeTerms" class="terms-checkbox-input" required>
-        <span class="terms-checkbox-circle" aria-hidden="true"></span>
+
+        <input
+          type="checkbox"
+          id="agreeTerms"
+          class="terms-checkbox-input"
+          required
+        >
+
+        <span
+          class="terms-checkbox-circle"
+          aria-hidden="true"
+        ></span>
+
         I agree to the Terms and Conditions.
+
       </label>
 
-      <button type="submit" class="btn create-account-button" id="createAccountButton">
+
+
+      <!-- =====================================================
+           VERIFY ACCOUNT BUTTON
+
+           IMPORTANT:
+           Email + mobile are checked by JavaScript first.
+
+           The ?from=faculty parameter tells the shared
+           verify-account.html page that this came from
+           the faculty registration flow.
+      ====================================================== -->
+
+      <a
+        href="verify-account.html?from=faculty"
+        class="btn verify-account-button"
+        id="verifyAccountButton"
+      >
+        Verify Account
+      </a>
+
+
+
+      <!-- =====================================================
+           CREATE FACULTY ACCOUNT BUTTON
+      ====================================================== -->
+
+      <button
+        type="submit"
+        class="btn create-account-button"
+        id="createAccountButton"
+      >
         Create Faculty Account
       </button>
 
-      <p class="field-message field-message-success" id="successMessage" hidden>
+
+
+      <!-- =====================================================
+           SUCCESS MESSAGE
+      ====================================================== -->
+
+      <p
+        class="field-message field-message-success"
+        id="successMessage"
+        hidden
+        aria-live="polite"
+      >
         Account successfully created.
       </p>
 
+
+
+      <!-- =====================================================
+           GENERAL ACCOUNT MESSAGE
+      ====================================================== -->
+
+      <p
+        class="field-message field-message-error"
+        id="accountMessage"
+        hidden
+        aria-live="polite"
+      ></p>
+
+
+
+      <!-- =====================================================
+           LOGIN
+      ====================================================== -->
+
       <p class="login-text">
+
         Already have an account?
-        <a href="faculty-login.html" class="login-link" data-nav="login">Login</a>
+
+        <a
+          href="faculty-login.html"
+          class="login-link"
+          data-nav="login"
+        >
+          Login
+        </a>
+
       </p>
 
     </form>
 
   </main>
 
+
   <script src="js/create-faculty-account2.js"></script>
+
 </body>
+
 </html>

@@ -1,0 +1,1041 @@
+  /* =========================================================
+    VERIFY ACCOUNT CODE PAGE
+    Prof Consult
+  ========================================================= */
+
+
+  /* =========================================================
+    CSS VARIABLES
+  ========================================================= */
+
+  :root {
+
+    --color-red-primary: #d81f26;
+
+    --color-maroon-button: #7a1010;
+
+    --color-gradient-maroon: #5c0d0d;
+
+    --color-gradient-orange: #f2601c;
+
+    --color-text-dark: #2b2b2b;
+
+    --color-text-muted: #6b6b6b;
+
+    --color-text-light: #ffffff;
+
+    --color-input: #d9d9d9;
+
+    --color-input-light: #eeeeee;
+
+    --font-main: 'Montserrat', sans-serif;
+
+    --shadow-card:
+      0 25px 60px rgba(0, 0, 0, 0.25);
+
+  }
+
+
+  /* =========================================================
+    RESET
+  ========================================================= */
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+
+  /* =========================================================
+    BASE
+  ========================================================= */
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+
+  body {
+    min-height: 100vh;
+
+    font-family:
+      var(--font-main);
+
+    font-weight: 400;
+
+    color:
+      var(--color-text-dark);
+
+    overflow-x: hidden;
+  }
+
+
+  a {
+    text-decoration: none;
+  }
+
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+
+  button {
+    font-family: inherit;
+
+    cursor: pointer;
+
+    border: none;
+  }
+
+
+  /* =========================================================
+    FORMAT TEXT
+    Black → Orange gradient
+  ========================================================= */
+
+  .format-text {
+
+    font-family:
+      'Montserrat',
+      sans-serif;
+
+    font-weight: 800;
+
+    letter-spacing: 0.5px;
+
+    line-height: 1.15;
+
+    background:
+      linear-gradient(
+        90deg,
+        #000000 0%,
+        #000000 42%,
+        var(--color-gradient-orange) 78%,
+        var(--color-gradient-orange) 100%
+      );
+
+    background-clip: text;
+
+    -webkit-background-clip: text;
+
+    color: transparent;
+
+    -webkit-text-fill-color: transparent;
+  }
+
+
+  /* =========================================================
+    BACKGROUND
+  ========================================================= */
+
+  .page-background {
+
+    position: fixed;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    z-index: 1;
+
+    overflow: hidden;
+  }
+
+
+  .page-background-image {
+
+    position: absolute;
+
+    top: -20px;
+    left: -20px;
+
+    width:
+      calc(100% + 40px);
+
+    height:
+      calc(100% + 40px);
+
+    max-width: none;
+
+    object-fit: cover;
+
+    filter:
+      blur(6px);
+  }
+
+
+  .page-background-overlay {
+
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background:
+      linear-gradient(
+        90deg,
+        var(--color-gradient-maroon) 0%,
+        var(--color-gradient-orange) 100%
+      );
+
+    opacity: 0.88;
+  }
+
+
+  /* =========================================================
+    BACK BUTTON
+  ========================================================= */
+
+  .back-button {
+
+    position: fixed;
+
+    top: 32px;
+    left: 32px;
+
+    z-index: 10;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 8px;
+
+    padding:
+      12px 24px;
+
+    border-radius:
+      999px;
+
+    background-color:
+      var(--color-red-primary);
+
+    color:
+      var(--color-text-light);
+
+    font-size:
+      0.9rem;
+
+    font-weight:
+      600;
+
+    letter-spacing:
+      0.5px;
+
+    text-decoration:
+      underline;
+
+    text-underline-offset:
+      3px;
+
+    box-shadow:
+      0 6px 16px
+      rgba(0, 0, 0, 0.25);
+
+    transition:
+      opacity 0.2s ease,
+      transform 0.2s ease;
+  }
+
+
+  .back-button:hover {
+
+    opacity:
+      0.9;
+
+    transform:
+      translateX(-2px);
+  }
+
+
+  /* =========================================================
+    MAIN CARD
+  ========================================================= */
+
+  .registration-card {
+
+    position: relative;
+
+    z-index: 5;
+
+    width:
+      calc(100% - 40px);
+
+    max-width:
+      680px;
+
+    margin:
+      110px auto 60px;
+
+    background-color:
+      #fdfdf9;
+
+    border:
+      2px solid
+      rgba(242, 96, 28, 0.8);
+
+    border-radius:
+      32px;
+
+    box-shadow:
+      var(--shadow-card);
+
+    padding:
+      48px 60px 56px;
+
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    align-items:
+      center;
+  }
+
+
+  /* =========================================================
+    PAGE TITLE
+  ========================================================= */
+
+  .registration-title {
+
+    text-align:
+      center;
+
+    font-size:
+      clamp(
+        1.6rem,
+        3.4vw,
+        2.4rem
+      );
+
+    margin-bottom:
+      20px;
+  }
+
+
+  /* =========================================================
+    SUBTITLE
+  ========================================================= */
+
+  .verify-subtitle {
+
+    text-align:
+      center;
+
+    font-size:
+      0.9rem;
+
+    font-weight:
+      600;
+
+    color:
+      var(--color-text-dark);
+
+    line-height:
+      1.6;
+
+    max-width:
+      440px;
+
+    margin-bottom:
+      32px;
+  }
+
+
+  /* =========================================================
+    FORM
+  ========================================================= */
+
+  .registration-form {
+
+    width:
+      100%;
+
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    align-items:
+      center;
+  }
+
+
+  .form-field {
+
+    width:
+      100%;
+
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    align-items:
+      center;
+
+    margin-bottom:
+      20px;
+  }
+
+
+  /* =========================================================
+    VERIFICATION LABEL
+  ========================================================= */
+
+  .verification-label {
+
+    font-size:
+      0.85rem;
+
+    font-weight:
+      600;
+
+    color:
+      var(--color-text-dark);
+
+    margin-bottom:
+      14px;
+
+    text-align:
+      center;
+  }
+
+
+  /* =========================================================
+    SIX-DIGIT CODE CONTAINER
+  ========================================================= */
+
+  .verification-code-inputs {
+
+    display:
+      flex;
+
+    justify-content:
+      center;
+
+    align-items:
+      center;
+
+    gap:
+      12px;
+
+    width:
+      100%;
+
+    margin-bottom:
+      8px;
+
+    flex-wrap:
+      nowrap;
+  }
+
+
+  /* =========================================================
+    CODE DIGIT BOX
+  ========================================================= */
+
+  .code-digit {
+
+    width:
+      48px;
+
+    height:
+      56px;
+
+    flex:
+      0 1 48px;
+
+    min-width:
+      0;
+
+    border:
+      none;
+
+    border-radius:
+      14px;
+
+    background-color:
+      var(--color-input);
+
+    color:
+      var(--color-text-dark);
+
+    font-family:
+      inherit;
+
+    font-size:
+      1.2rem;
+
+    font-weight:
+      600;
+
+    text-align:
+      center;
+
+    outline:
+      none;
+
+    transition:
+      background-color 0.2s ease,
+      outline 0.2s ease,
+      transform 0.2s ease;
+  }
+
+
+  /* =========================================================
+    CODE BOX PLACEHOLDER
+  ========================================================= */
+
+  .code-digit::placeholder {
+
+    color:
+      #6f6f6f;
+
+  }
+
+
+  /* =========================================================
+    CODE BOX FOCUS
+  ========================================================= */
+
+  .code-digit:focus {
+
+    outline:
+      2px solid
+      var(--color-red-primary);
+
+    outline-offset:
+      2px;
+
+    background-color:
+      #eeeeee;
+
+    transform:
+      translateY(-1px);
+  }
+
+
+  /* =========================================================
+    VALIDATION MESSAGE
+  ========================================================= */
+
+  .field-message {
+
+    width:
+      100%;
+
+    margin-top:
+      10px;
+
+    text-align:
+      center;
+
+    font-size:
+      0.78rem;
+
+    font-weight:
+      600;
+
+    line-height:
+      1.4;
+  }
+
+
+  .field-message-error {
+
+    color:
+      var(--color-red-primary);
+  }
+
+
+  /* =========================================================
+    RESEND PROMPT
+  ========================================================= */
+
+  .resend-prompt {
+
+    font-size:
+      0.8rem;
+
+    font-weight:
+      400;
+
+    color:
+      var(--color-text-dark);
+
+    text-align:
+      center;
+
+    margin-top:
+      8px;
+
+    margin-bottom:
+      4px;
+  }
+
+
+  /* =========================================================
+    RESEND BUTTON
+  ========================================================= */
+
+  .resend-button {
+
+    display:
+      inline-flex;
+
+    align-items:
+      baseline;
+
+    justify-content:
+      center;
+
+    gap:
+      5px;
+
+    background:
+      transparent;
+
+    border:
+      none;
+
+    appearance:
+      none;
+
+    -webkit-appearance:
+      none;
+
+    padding:
+      0;
+
+    font-family:
+      inherit;
+
+    font-size:
+      0.85rem;
+
+    margin-bottom:
+      28px;
+
+    cursor:
+      pointer;
+
+    color:
+      var(--color-text-dark);
+  }
+
+
+  /* =========================================================
+    RESEND LABEL
+  ========================================================= */
+
+  .resend-label {
+
+    font-size:
+      0.85rem;
+
+    font-weight:
+      700;
+
+    background:
+      linear-gradient(
+        90deg,
+        #000000 0%,
+        #000000 42%,
+        #f2601c 78%,
+        #f2601c 100%
+      );
+
+    background-clip:
+      text;
+
+    -webkit-background-clip:
+      text;
+
+    color:
+      transparent;
+
+    -webkit-text-fill-color:
+      transparent;
+
+    text-decoration:
+      underline;
+
+    text-decoration-color:
+      #f2601c;
+
+    text-underline-offset:
+      3px;
+  }
+
+
+  /* =========================================================
+    RESEND TIMER
+  ========================================================= */
+
+  .resend-timer-text {
+
+    color:
+      #000000;
+
+    font-weight:
+      600;
+
+    font-size:
+      0.85rem;
+  }
+
+
+  /* =========================================================
+    RESEND LOCKED STATE
+  ========================================================= */
+
+  .resend-button.is-locked {
+
+    cursor:
+      default;
+
+    opacity:
+      0.65;
+
+    pointer-events:
+      none;
+  }
+
+
+  /* =========================================================
+    RESEND ACTIVE HOVER
+  ========================================================= */
+
+  .resend-button:not(.is-locked):hover {
+
+    opacity:
+      0.85;
+
+  }
+
+
+  /* =========================================================
+    BUTTON
+  ========================================================= */
+
+  .btn {
+
+    display:
+      inline-flex;
+
+    align-items:
+      center;
+
+    justify-content:
+      center;
+
+    gap:
+      10px;
+
+    padding:
+      14px 36px;
+
+    border-radius:
+      999px;
+
+    color:
+      var(--color-text-light);
+
+    background-color:
+      var(--color-maroon-button);
+
+    font-family:
+      inherit;
+
+    font-size:
+      0.95rem;
+
+    font-weight:
+      600;
+
+    letter-spacing:
+      0.5px;
+
+    box-shadow:
+      0 8px 18px
+      rgba(122, 16, 16, 0.4);
+
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+
+  /* =========================================================
+    BUTTON HOVER
+  ========================================================= */
+
+  .btn:hover {
+
+    transform:
+      translateY(-3px);
+
+    box-shadow:
+      0 12px 24px
+      rgba(122, 16, 16, 0.5);
+
+    opacity:
+      0.95;
+  }
+
+
+  /* =========================================================
+    VERIFY BUTTON
+  ========================================================= */
+
+  .verify-button {
+
+    margin-top:
+      4px;
+
+    width:
+      100%;
+
+    text-align:
+      center;
+  }
+
+
+  /* =========================================================
+    DISABLED BUTTON
+  ========================================================= */
+
+  .btn:disabled {
+
+    cursor:
+      not-allowed;
+
+    opacity:
+      0.65;
+
+    transform:
+      none;
+
+    box-shadow:
+      0 6px 14px
+      rgba(122, 16, 16, 0.25);
+  }
+
+
+  /* =========================================================
+    HIDDEN ELEMENTS
+  ========================================================= */
+
+  [hidden] {
+
+    display:
+      none !important;
+  }
+
+
+  /* =========================================================
+    TABLET
+  ========================================================= */
+
+  @media (max-width: 768px) {
+
+    .registration-card {
+
+      width:
+        calc(100% - 40px);
+
+      margin:
+        100px 20px 40px;
+
+      padding:
+        40px 32px 44px;
+
+      border-radius:
+        26px;
+    }
+
+
+    .back-button {
+
+      top:
+        20px;
+
+      left:
+        20px;
+
+      padding:
+        10px 18px;
+
+      font-size:
+        0.8rem;
+    }
+
+
+    .verification-code-inputs {
+
+      gap:
+        10px;
+    }
+
+
+    .code-digit {
+
+      width:
+        46px;
+
+      height:
+        54px;
+    }
+
+  }
+
+
+  /* =========================================================
+    MOBILE
+  ========================================================= */
+
+  @media (max-width: 480px) {
+
+    .registration-card {
+
+      width:
+        calc(100% - 28px);
+
+      margin:
+        90px 14px 32px;
+
+      padding:
+        32px 22px 36px;
+
+      border-radius:
+        22px;
+    }
+
+
+    .registration-title {
+
+      font-size:
+        1.4rem;
+
+      margin-bottom:
+        24px;
+    }
+
+
+    .verify-subtitle {
+
+      font-size:
+        0.8rem;
+
+      margin-bottom:
+        28px;
+    }
+
+
+    .verification-label {
+
+      font-size:
+        0.78rem;
+
+      margin-bottom:
+        12px;
+    }
+
+
+    .verification-code-inputs {
+
+      width:
+        100%;
+
+      gap:
+        6px;
+
+      margin-bottom:
+        6px;
+    }
+
+
+    .code-digit {
+
+      width:
+        34px;
+
+      height:
+        46px;
+
+      flex:
+        1 1 34px;
+
+      border-radius:
+        11px;
+
+      font-size:
+        1rem;
+    }
+
+
+    .field-message {
+
+      font-size:
+        0.72rem;
+    }
+
+
+    .resend-prompt {
+
+      font-size:
+        0.75rem;
+
+      margin-top:
+        8px;
+    }
+
+
+    .resend-button {
+
+      font-size:
+        0.8rem;
+
+      margin-bottom:
+        24px;
+    }
+
+
+    .resend-label,
+    .resend-timer-text {
+
+      font-size:
+        0.8rem;
+    }
+
+
+    .btn {
+
+      width:
+        100%;
+
+      justify-content:
+        center;
+
+      padding:
+        13px 20px;
+    }
+
+  }

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<!-- SYSTEM NOTE: Defines the shared account verification code page for the Prof Consult web app. -->
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Prof Consult | Verify Your Account</title>
+
+
+  <!-- =======================================================
+       GOOGLE FONT
+  ======================================================== -->
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =======================================================
+       PAGE CSS
+  ======================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="css/verify-account-code.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!-- =========================================================
+       BACKGROUND
+  ========================================================= -->
+
+  <div
+    class="page-background"
+    aria-hidden="true"
+  >
+
+    <img
+      src="images/coea.jpg"
+      alt=""
+      class="page-background-image"
+    >
+
+    <div class="page-background-overlay"></div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       BACK BUTTON
+
+       JavaScript changes the destination depending on:
+
+       ?from=student
+
+       or
+
+       ?from=faculty
+  ========================================================= -->
+
+  <a
+    href="verify-account.html?from=student"
+    class="back-button"
+    id="backButton"
+    data-nav="back"
+  >
+
+    <span aria-hidden="true">
+      &larr;
+    </span>
+
+    Back
+
+  </a>
+
+
+
+  <!-- =========================================================
+       MAIN CARD
+  ========================================================= -->
+
+  <main class="registration-card">
+
+
+    <!-- =======================================================
+         PAGE TITLE
+    ======================================================== -->
+
+    <h1 class="format-text registration-title">
+      Verify Your Account
+    </h1>
+
+
+
+    <!-- =======================================================
+         DESCRIPTION
+
+         JavaScript updates this depending on the saved
+         verification method.
+    ======================================================== -->
+
+    <p
+      class="verify-subtitle"
+      id="verificationSubtitle"
+    >
+      A 6-digit verification code has been sent to your
+      email address.
+    </p>
+
+
+
+    <!-- =======================================================
+         VERIFICATION FORM
+    ======================================================== -->
+
+    <form
+      class="registration-form"
+      id="verificationForm"
+      novalidate
+    >
+
+
+      <!-- =====================================================
+           CODE FIELD
+      ====================================================== -->
+
+      <div class="form-field">
+
+
+        <label
+          for="codeDigit1"
+          class="verification-label"
+        >
+          Enter Verification Code
+        </label>
+
+
+
+        <!-- ===================================================
+             SIX DIGIT INPUTS
+
+             Each box accepts one number.
+        ==================================================== -->
+
+        <div
+          class="verification-code-inputs"
+          role="group"
+          aria-label="6-digit verification code"
+        >
+
+          <input
+            type="text"
+            id="codeDigit1"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            autocomplete="one-time-code"
+            aria-label="Verification code digit 1"
+          >
+
+          <input
+            type="text"
+            id="codeDigit2"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            aria-label="Verification code digit 2"
+          >
+
+          <input
+            type="text"
+            id="codeDigit3"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            aria-label="Verification code digit 3"
+          >
+
+          <input
+            type="text"
+            id="codeDigit4"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            aria-label="Verification code digit 4"
+          >
+
+          <input
+            type="text"
+            id="codeDigit5"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            aria-label="Verification code digit 5"
+          >
+
+          <input
+            type="text"
+            id="codeDigit6"
+            class="code-digit"
+            inputmode="numeric"
+            maxlength="1"
+            aria-label="Verification code digit 6"
+          >
+
+        </div>
+
+
+        <!-- ===================================================
+             VALIDATION MESSAGE
+        ==================================================== -->
+
+        <p
+          id="verificationError"
+          class="field-message field-message-error"
+          hidden
+          aria-live="polite"
+        ></p>
+
+      </div>
+
+
+
+      <!-- =====================================================
+           RESEND CODE
+      ====================================================== -->
+
+      <p class="resend-prompt">
+        Didn't receive the code?
+      </p>
+
+
+      <button
+        type="button"
+        class="resend-button is-locked"
+        id="resendButton"
+        aria-disabled="true"
+      >
+
+        <span class="resend-label">
+          Resend Code
+        </span>
+
+        <span
+          class="resend-timer-text"
+          id="resendTimer"
+        >
+          (01:00)
+        </span>
+
+      </button>
+
+
+
+      <!-- =====================================================
+           VERIFY BUTTON
+      ====================================================== -->
+
+      <button
+        type="submit"
+        class="btn verify-button"
+        id="verifyButton"
+      >
+        Verify Account
+      </button>
+
+
+    </form>
+
+
+  </main>
+
+
+
+  <!-- =========================================================
+       JAVASCRIPT
+  ========================================================= -->
+
+  <script src="js/verify-account-code.js"></script>
+
+
+</body>
+
+</html>

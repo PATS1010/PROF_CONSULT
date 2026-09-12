@@ -1,5 +1,5 @@
 /* =========================================================
-   FORGOT PASSWORD PAGE
+   VERIFY ACCOUNT PAGE
    Prof Consult
 ========================================================= */
 
@@ -83,7 +83,9 @@ img {
 
 button {
   font-family: inherit;
+
   cursor: pointer;
+
   border: none;
 }
 
@@ -296,7 +298,7 @@ button {
    SUBTITLE
 ========================================================= */
 
-.forgot-password-subtitle {
+.verification-subtitle {
   text-align: center;
 
   font-size: 0.9rem;
@@ -348,7 +350,7 @@ button {
 
 
 /* =========================================================
-   EMAIL ADDRESS INPUT
+   EMAIL INPUT
 ========================================================= */
 
 .form-input {
@@ -396,7 +398,7 @@ button {
 
 
 /* =========================================================
-   PHONE NUMBER INPUT CONTAINER
+   MOBILE INPUT CONTAINER
 ========================================================= */
 
 .mobile-input-wrapper {
@@ -416,7 +418,7 @@ button {
 
 
 /* =========================================================
-   +63 COUNTRY CODE
+   COUNTRY CODE
 ========================================================= */
 
 .country-code {
@@ -446,7 +448,7 @@ button {
 
 
 /* =========================================================
-   PHONE NUMBER INPUT
+   MOBILE INPUT
 ========================================================= */
 
 .mobile-input {
@@ -621,7 +623,7 @@ button {
 
 
 /* =========================================================
-   EMAIL ADDRESS / PHONE NUMBER SWITCH
+   EMAIL / MOBILE SWITCH
 ========================================================= */
 
 .login-text {
@@ -760,14 +762,14 @@ button {
   }
 
 
-  .forgot-password-subtitle {
+  .verification-subtitle {
     font-size: 0.8rem;
 
     margin-bottom: 28px;
   }
 
 
-  /* Email Address */
+  /* Email */
   .form-input {
     padding:
       13px 18px;
@@ -776,7 +778,7 @@ button {
   }
 
 
-  /* Phone Number container */
+  /* Mobile container */
   .mobile-input-wrapper {
     width: 100%;
   }
@@ -794,7 +796,7 @@ button {
   }
 
 
-  /* Phone Number */
+  /* Mobile number */
   .mobile-input {
     padding:
       13px 12px;
