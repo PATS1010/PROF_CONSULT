@@ -52,6 +52,6 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
         $mail->send();
     } catch (Exception $exception) {
         error_log('OTP email failed: ' . $mail->ErrorInfo);
-        throw new RuntimeException('Unable to send verification code right now.');
+        throw new RuntimeException('Unable to send verification code: ' . $mail->ErrorInfo);
     }
 }
