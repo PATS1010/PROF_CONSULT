@@ -8,6 +8,24 @@ function buildNotificationRow(notification) {
   li.tabIndex = 0;
   li.setAttribute("role", "link");
 
+  const icon = document.createElement("span");
+  icon.className = "notification-consultation-icon";
+  icon.setAttribute("aria-hidden", "true");
+  const gradientId = `facultyNotificationIconGradient-${String(notification.id || "item").replace(/\W/g, "")}`;
+  icon.innerHTML = `
+    <svg viewBox="0 0 32 32" focusable="false">
+      <defs>
+        <linearGradient id="${gradientId}" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#e71d2b"></stop>
+          <stop offset="100%" stop-color="#f97316"></stop>
+        </linearGradient>
+      </defs>
+      <path d="M9 5.5 5.5 9M23 5.5 26.5 9" stroke="url(#${gradientId})" />
+      <circle cx="16" cy="17" r="9.5" stroke="url(#${gradientId})" />
+      <path d="M16 11v6l4.5 3.2M10.2 26.2 7 29M21.8 26.2 25 29" stroke="url(#${gradientId})" />
+    </svg>
+  `;
+
   const content = document.createElement("div");
   content.className = "notification-content";
 
@@ -23,6 +41,7 @@ function buildNotificationRow(notification) {
     content.appendChild(timestamp);
   }
 
+  li.appendChild(icon);
   li.appendChild(content);
   return li;
 }

@@ -113,6 +113,23 @@
   outline: none;
 }
 
+.notification-consultation-icon {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  margin-top: 1px;
+}
+
+.notification-consultation-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke-width: 2.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .notification-content {
   display: flex;
   flex-direction: column;
