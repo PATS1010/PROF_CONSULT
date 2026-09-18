@@ -25,6 +25,8 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
         $mail->SMTPAuth = true;
         $mail->Username = SMTP_USERNAME;
         $mail->Password = SMTP_PASSWORD;
+        $mail->Timeout = 10;
+        $mail->SMTPKeepAlive = false;
         $mail->SMTPSecure = SMTP_ENCRYPTION === 'ssl'
             ? PHPMailer::ENCRYPTION_SMTPS
             : PHPMailer::ENCRYPTION_STARTTLS;
