@@ -5,7 +5,6 @@ DROP TABLE IF EXISTS availability CASCADE;
 DROP TABLE IF EXISTS consultation_requests CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS password_reset_codes CASCADE;
-DROP TABLE IF EXISTS student_settings CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS faculty CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -54,23 +53,6 @@ CREATE TABLE students (
 );
 
 CREATE INDEX idx_students_program_year ON students (Program, Year_Level);
-
--- ============================================================
--- STUDENT SETTINGS TABLE
--- Stores account settings from the student settings page.
--- ============================================================
-CREATE TABLE student_settings (
-  Settings_ID SERIAL PRIMARY KEY,
-  Student_ID INTEGER NOT NULL UNIQUE,
-  Email_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
-  Push_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
-  Dark_Mode BOOLEAN NOT NULL DEFAULT FALSE,
-  Updated_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_student_settings_student
-    FOREIGN KEY (Student_ID) REFERENCES students(Student_ID) ON DELETE CASCADE
-);
-
-CREATE INDEX idx_student_settings_student ON student_settings (Student_ID);
 
 -- ============================================================
 -- NOTIFICATION TABLE

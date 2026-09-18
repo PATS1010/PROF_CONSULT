@@ -126,15 +126,6 @@ CREATE TABLE IF NOT EXISTS students (
   Section VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS student_settings (
-  Settings_ID SERIAL PRIMARY KEY,
-  Student_ID INTEGER NOT NULL UNIQUE,
-  Email_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
-  Push_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
-  Dark_Mode BOOLEAN NOT NULL DEFAULT FALSE,
-  Updated_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS notifications (
   Notification_ID SERIAL PRIMARY KEY,
   User_ID INTEGER NOT NULL,
@@ -204,13 +195,6 @@ ALTER TABLE students ADD COLUMN IF NOT EXISTS Program VARCHAR(120);
 ALTER TABLE students ADD COLUMN IF NOT EXISTS Year_Level VARCHAR(20);
 ALTER TABLE students ADD COLUMN IF NOT EXISTS Section VARCHAR(50);
 
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Settings_ID SERIAL;
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Student_ID INTEGER;
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Email_Notifications BOOLEAN DEFAULT TRUE;
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Push_Notifications BOOLEAN DEFAULT TRUE;
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Dark_Mode BOOLEAN DEFAULT FALSE;
-ALTER TABLE student_settings ADD COLUMN IF NOT EXISTS Updated_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
-
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS Notification_ID SERIAL;
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS User_ID INTEGER;
 ALTER TABLE notifications ADD COLUMN IF NOT EXISTS Message TEXT;
@@ -250,7 +234,6 @@ ALTER TABLE attendance_logs ADD COLUMN IF NOT EXISTS Check_Out TIME NULL;
 
 CREATE INDEX IF NOT EXISTS idx_faculty_department ON faculty (Department);
 CREATE INDEX IF NOT EXISTS idx_students_program_year ON students (Program, Year_Level);
-CREATE INDEX IF NOT EXISTS idx_student_settings_student ON student_settings (Student_ID);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (User_ID, Read_Status);
 CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_codes (Token);
 CREATE INDEX IF NOT EXISTS idx_password_reset_user_active ON password_reset_codes (User_ID, Consumed_At);
