@@ -64,20 +64,17 @@
    INNER SCROLLABLE CONTAINER
 ========================================================= */
 .notifications-list-container {
-  background-color: #f4f4f6;
-  border-radius: 20px;
-  padding: 32px 28px;
+  background-color: #f2f0eb;
+  border-radius: 22px;
+  padding: 12px 8px;
+  max-height: 420px;
+  overflow-y: auto;
 }
 
 .notifications-list {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  max-height: 320px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 4px;
 }
 
 .no-notifications-message {
@@ -94,36 +91,59 @@
 /* =========================================================
    NOTIFICATION ROW
 ========================================================= */
-.notification-row {
+.notification-item {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  padding: 18px 20px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
-.notification-icon {
+.notification-item + .notification-item {
+  border-top: 1px solid #e6e3dc;
+}
+
+.notification-item:hover,
+.notification-item:focus-visible {
+  background-color: #ffffff;
+  outline: none;
+}
+
+.notification-check {
   flex-shrink: 0;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: #4a5568;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: var(--color-status-available);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
 .notification-message {
-  font-size: 0.92rem;
+  font-size: 0.88rem;
   font-weight: 500;
-  color: #4a5568;
-  line-height: 1.6;
+  color: var(--color-text-dark);
+  line-height: 1.5;
 }
 
-.notification-view-link {
-  margin-left: 4px;
-  color: #4a5568;
-  font-weight: 700;
-  text-decoration: underline;
-  transition: color 0.2s ease;
-}
-
-.notification-view-link:hover {
-  color: var(--color-red-primary);
+.notification-timestamp {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
 }
 
 /* =========================================================
@@ -145,8 +165,7 @@
   }
 
   .notifications-list {
-    max-height: 280px;
-    gap: 18px;
+    gap: 0;
   }
 
   .notification-message {

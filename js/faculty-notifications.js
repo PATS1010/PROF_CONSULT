@@ -2,29 +2,62 @@
 
 function buildNotificationRow(notification) {
   const li = document.createElement("li");
-  li.className = "notification-row";
+  li.className = "notification-item";
   li.dataset.id = String(notification.id || "");
+  li.dataset.href = notificationHref(notification.message);
+  li.tabIndex = 0;
+  li.setAttribute("role", "link");
 
   const icon = document.createElement("span");
-  icon.className = "notification-icon";
+  icon.className = "notification-check";
   icon.setAttribute("aria-hidden", "true");
   icon.textContent = "\u2714";
+
+  const content = document.createElement("div");
+  content.className = "notification-content";
 
   const message = document.createElement("p");
   message.className = "notification-message";
   message.textContent = notification.message;
+  content.appendChild(message);
 
-  if (/consultation request/i.test(notification.message)) {
-    const link = document.createElement("a");
-    link.className = "notification-view-link";
-    link.href = "faculty-consultation-requests.html";
-    link.textContent = "View";
-    message.appendChild(link);
+  if (notification.timestamp) {
+    const timestamp = document.createElement("p");
+    timestamp.className = "notification-timestamp";
+    timestamp.textContent = notification.timestamp;
+    content.appendChild(timestamp);
   }
 
   li.appendChild(icon);
-  li.appendChild(message);
+  li.appendChild(content);
   return li;
+}
+
+function notificationHref(message) {
+  if (/consultation request/i.test(message)) {
+    return "faculty-consultation-requests.html";
+  }
+
+  if (/completed|finished/i.test(message)) {
+    return "faculty-dashboard.html";
+  }
+
+  return "faculty-dashboard.html";
+}
+
+function formatTimestamp(value) {
+  if (!value) return "";
+  const normalized = String(value).replace(" ", "T");
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 function renderFacultyNotifications(notifications) {
@@ -76,6 +109,7 @@ async function loadFacultyNotifications() {
     const notifications = (result.notifications || []).map((notification) => ({
       id: Number(notification.Notification_ID || 0),
       message: notification.Message || "",
+      timestamp: formatTimestamp(notification.Date_Time),
       readStatus: notification.Read_Status || "read",
     }));
 
@@ -94,3 +128,20 @@ async function loadFacultyNotifications() {
 }
 
 document.addEventListener("DOMContentLoaded", loadFacultyNotifications);
+
+document.addEventListener("click", (event) => {
+  const row = event.target.closest(".notification-item[data-href]");
+  if (!row) return;
+
+  window.location.href = row.dataset.href;
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter" && event.key !== " ") return;
+
+  const row = event.target.closest(".notification-item[data-href]");
+  if (!row) return;
+
+  event.preventDefault();
+  window.location.href = row.dataset.href;
+});
