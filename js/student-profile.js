@@ -119,6 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // both the shared user row and the student-specific profile row.
       const response = await fetch("api/session.php?role=student", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
 

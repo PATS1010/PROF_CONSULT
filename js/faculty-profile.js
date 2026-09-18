@@ -134,6 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/session.php?role=faculty", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
 

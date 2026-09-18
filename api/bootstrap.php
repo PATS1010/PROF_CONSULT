@@ -27,8 +27,11 @@ register_shutdown_function(static function (): void {
 // Shared backend setup for PHP form handlers.
 // Starts the user session, loads the database connection, and provides validation/JSON helper functions.
 
+$sessionLifetime = 60 * 60 * 24 * 7;
+ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
+ini_set('session.cookie_lifetime', (string) $sessionLifetime);
 session_set_cookie_params([
-    'lifetime' => 0,
+    'lifetime' => $sessionLifetime,
     'path' => '/',
     'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
         || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'),

@@ -91,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/session.php?role=student", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const data = await response.json();

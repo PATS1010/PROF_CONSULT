@@ -39,6 +39,7 @@ try {
         fail('Incorrect email/ID number or password.', 401);
     }
 
+    session_regenerate_id(true);
     $_SESSION['user'] = rememberUserSession(publicUser($record));
     reply(['ok' => true, 'user' => $_SESSION['user']]);
 } catch (PDOException $exception) {
