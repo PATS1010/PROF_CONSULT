@@ -39,7 +39,7 @@ try {
 
     $insert = $db->prepare(
         'INSERT INTO account_verification_codes (Email, Role, Token, Code_Hash, Expires_At)
-         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'30 minutes\')'
+         VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'2 hours\')'
     );
     $insert->execute([
         $email,

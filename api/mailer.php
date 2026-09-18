@@ -25,13 +25,13 @@ function otpEmailHtml(string $toName, string $otpCode): string
         <p>Hello ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>
         <p>Your Prof Consult verification code is:</p>
         <h2 style="letter-spacing: 4px;">' . htmlspecialchars($otpCode, ENT_QUOTES, 'UTF-8') . '</h2>
-        <p>This code will expire in 30 minutes. If you did not request this, you can ignore this email.</p>
+        <p>This code will expire in 2 hours. If you did not request this, you can ignore this email.</p>
     ';
 }
 
 function otpEmailText(string $otpCode): string
 {
-    return "Your Prof Consult verification code is {$otpCode}. This code will expire in 30 minutes.";
+    return "Your Prof Consult verification code is {$otpCode}. This code will expire in 2 hours.";
 }
 
 function brevoErrorMessage(?string $response): string
