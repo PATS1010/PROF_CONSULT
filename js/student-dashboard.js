@@ -366,6 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/notifications.php", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const result = await response.json();

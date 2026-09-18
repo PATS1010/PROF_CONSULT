@@ -167,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const response = await fetch("api/notifications.php", {
         cache: "no-store",
+        credentials: "same-origin",
         headers: { "Accept": "application/json" },
       });
       const result = await response.json();
@@ -176,9 +177,30 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       renderNotifications((result.notifications || []).map((notification) => ({
+        id: Number(notification.Notification_ID || 0),
         message: notification.Message || "",
         timestamp: formatTimestamp(notification.Date_Time),
+        readStatus: notification.Read_Status || "read",
       })));
+
+      const hasUnread = (result.notifications || []).some((notification) => {
+        return notification.Read_Status === "unread";
+      });
+      if (hasUnread) {
+        await fetch("api/notifications.php", {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ mark_all: true }),
+        });
+        if (typeof window.setNotificationBellUnread === "function") {
+          window.setNotificationBellUnread(false);
+        }
+      }
     } catch (error) {
       renderNotifications([{ message: error.message || "Unable to load notifications.", timestamp: "" }]);
     }
