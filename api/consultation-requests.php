@@ -22,6 +22,7 @@ $db = database();
 try {
     // Make sure older databases have the message column before reading requests.
     ensureConsultationMessageColumn($db);
+    markFinishedApprovedRequestsCompleted($db);
 
     // Get the student or faculty profile row connected to the logged-in user.
     $profile = userProfile($db, $user['id'], $user['role']);
@@ -140,4 +141,17 @@ try {
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     fail('Unable to load consultation requests.', 500);
+}
+
+function markFinishedApprovedRequestsCompleted(PDO $db): void
+{
+    $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+
+    $statement = $db->prepare(
+        "UPDATE consultation_requests
+         SET Status = 'completed'
+         WHERE Status = 'approved'
+           AND (Request_Date::timestamp + Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+    );
+    $statement->execute([$now]);
 }

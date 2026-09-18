@@ -62,8 +62,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentNameInput = document.getElementById("studentName");
   const studentIdInput = document.getElementById("studentId");
   const programYearInput = document.getElementById("programYear");
+  const preferredDateInput = document.getElementById("preferredDate");
 
   if (facultyMemberInput) facultyMemberInput.textContent = SELECTED_FACULTY_MEMBER;
+
+  function todayValue() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+    const day = String(now.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+
+  if (preferredDateInput) {
+    preferredDateInput.min = todayValue();
+  }
 
   function displayCourse(value) {
     return COURSE_LABELS[value] || value || "";
@@ -211,6 +224,33 @@ document.addEventListener("DOMContentLoaded", () => {
     return slots;
   }
 
+  function selectedTimeStartMinutes(value) {
+    const startLabel = String(value || "").split("\u2013")[0].trim();
+    const match = startLabel.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return null;
+
+    let hour = Number(match[1]);
+    const minute = Number(match[2]);
+    const period = match[3].toUpperCase();
+
+    if (period === "PM" && hour < 12) hour += 12;
+    if (period === "AM" && hour === 12) hour = 0;
+
+    return hour * 60 + minute;
+  }
+
+  function isPastSchedule(dateValue, timeValue) {
+    if (!dateValue || !timeValue) return false;
+
+    const startMinutes = selectedTimeStartMinutes(timeValue);
+    if (startMinutes === null) return false;
+
+    const scheduledEnd = new Date(`${dateValue}T00:00:00`);
+    scheduledEnd.setMinutes(startMinutes + 30);
+
+    return scheduledEnd <= new Date();
+  }
+
   const preferredTimeOptions = document.getElementById("preferredTimeOptions");
   if (preferredTimeOptions) {
     buildTimeSlots().forEach((label) => {
@@ -295,6 +335,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!purpose || !preferredDate || !preferredTime) {
         alert("Please complete the purpose, preferred date, and preferred time.");
+        return;
+      }
+
+      if (preferredDate < todayValue()) {
+        alert("Preferred date cannot be in the past.");
+        return;
+      }
+
+      if (isPastSchedule(preferredDate, preferredTime)) {
+        alert("Preferred date and time must be in the future.");
         return;
       }
 

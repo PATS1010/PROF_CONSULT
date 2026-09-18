@@ -23,6 +23,16 @@ if ($preferredTimeStart < '07:00:00' || $preferredTimeStart >= '19:00:00') {
     fail('Preferred time must be between 7:00 AM and 7:00 PM.');
 }
 
+$scheduledStart = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $date . ' ' . $preferredTimeStart);
+$scheduledEnd = $scheduledStart instanceof DateTimeImmutable
+    ? $scheduledStart->modify('+30 minutes')
+    : false;
+$now = new DateTimeImmutable('now');
+
+if (!$scheduledEnd || $scheduledEnd <= $now) {
+    fail('Preferred date and time must be in the future.');
+}
+
 try {
     $db = database();
     ensureConsultationMessageColumn($db);
