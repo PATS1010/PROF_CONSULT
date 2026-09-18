@@ -355,6 +355,22 @@ document.addEventListener("DOMContentLoaded", () => {
       VERIFICATION_KEY
     );
 
+    sessionStorage.removeItem(
+      "accountVerified"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerificationToken"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerificationEmail"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerificationRole"
+    );
+
     updateVerifyButton();
     updateCreateButton();
   }
@@ -771,7 +787,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     contactNumberInput.value,
 
                   password:
-                    passwordInput.value
+                    passwordInput.value,
+
+                  account_verification_token:
+                    sessionStorage.getItem(
+                      "accountVerificationToken"
+                    ) || ""
                 })
               }
             );
@@ -829,6 +850,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             VERIFICATION_KEY
+          );
+
+          sessionStorage.removeItem(
+            "accountVerified"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationToken"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationEmail"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationRole"
           );
 
           sessionStorage.removeItem(
