@@ -6,11 +6,15 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 requirePost();
 
-$_SESSION = [];
-if (ini_get('session.use_cookies')) {
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+try {
+    $sessionUser = !empty($_SESSION['user']) ? normalizeSessionUser($_SESSION['user']) : null;
+    if ($sessionUser && $sessionUser['role'] === 'faculty' && $sessionUser['id'] > 0) {
+        saveFacultyAvailabilityForUser(database(), $sessionUser['id'], 'offline');
+    }
+} catch (PDOException $exception) {
+    error_log($exception->getMessage());
 }
-session_destroy();
+
+clearLoginSession();
 
 reply(['ok' => true, 'message' => 'Logged out.']);

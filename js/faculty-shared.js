@@ -79,6 +79,19 @@ function facultyCurrentTimeValue() {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
+function isFacultyClassHoursNow() {
+  const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  return minutes >= 7 * 60 && minutes < 19 * 60;
+}
+
+function millisecondsUntilFacultyClassHoursEnd() {
+  const now = new Date();
+  const end = new Date(now);
+  end.setHours(19, 0, 0, 0);
+  return Math.max(0, end.getTime() - now.getTime());
+}
+
 async function saveFacultyAvailabilityStatus(status) {
   const uiStatus = facultyStatusForUi(status);
   const response = await fetch("api/availability.php", {
@@ -117,6 +130,42 @@ window.FacultyAvailability = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  let classHoursLogoutTimeoutId = null;
+
+  async function logoutFacultyOutsideClassHours() {
+    try {
+      await saveFacultyAvailabilityStatus("offline");
+    } catch (error) {
+      // Continue logging out even if the status save fails.
+    }
+
+    try {
+      await fetch("api/logout.php", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+    } catch (error) {
+      // Redirect still clears the protected page from view.
+    }
+
+    window.location.href = "faculty-login.html";
+  }
+
+  function scheduleFacultyClassHoursLogout() {
+    if (classHoursLogoutTimeoutId) {
+      window.clearTimeout(classHoursLogoutTimeoutId);
+    }
+
+    if (!isFacultyClassHoursNow()) {
+      logoutFacultyOutsideClassHours();
+      return;
+    }
+
+    classHoursLogoutTimeoutId = window.setTimeout(() => {
+      logoutFacultyOutsideClassHours();
+    }, millisecondsUntilFacultyClassHoursEnd());
+  }
 
   // ---------------------------------------------------------
   // Burger sidebar: slides in from the left, dims/blurs the
@@ -354,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // the database-backed Dashboard status card.
   updateQuickActionUI();
   loadSavedFacultyStatus();
+  scheduleFacultyClassHoursLogout();
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to the Faculty Notifications

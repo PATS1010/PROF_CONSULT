@@ -118,6 +118,47 @@ function ensureConsultationMessageColumn(PDO $db): void
     }
 }
 
+function currentManilaDateTime(): DateTimeImmutable
+{
+    return new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
+}
+
+function isFacultyClassHours(?DateTimeImmutable $now = null): bool
+{
+    $time = ($now ?? currentManilaDateTime())->format('H:i:s');
+    return $time >= '07:00:00' && $time < '19:00:00';
+}
+
+function saveFacultyAvailabilityForUser(PDO $db, int $userId, string $status, ?DateTimeImmutable $now = null): void
+{
+    $profile = userProfile($db, $userId, 'faculty');
+    if (!$profile) {
+        return;
+    }
+
+    $timestamp = $now ?? currentManilaDateTime();
+    $statement = $db->prepare(
+        'INSERT INTO availability (Faculty_ID, Status, Date, Time)
+         VALUES (?, ?, ?, ?)'
+    );
+    $statement->execute([
+        (int) $profile['profile_id'],
+        $status,
+        $timestamp->format('Y-m-d'),
+        $timestamp->format('H:i:s'),
+    ]);
+}
+
+function clearLoginSession(): void
+{
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_destroy();
+}
+
 function normalizeSessionUser(array $user): array
 {
     return [
