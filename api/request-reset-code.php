@@ -50,7 +50,7 @@ try {
 
     $insert = $db->prepare(
         'INSERT INTO password_reset_codes (User_ID, Token, Code_Hash, Expires_At)
-         VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'10 minutes\')'
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'30 minutes\')'
     );
     $insert->execute([
         (int) $user['User_ID'],
