@@ -158,7 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!isFacultyClassHoursNow()) {
-      logoutFacultyOutsideClassHours();
+      saveFacultyAvailabilityStatus("offline").catch(() => {});
       return;
     }
 

@@ -40,15 +40,14 @@ try {
         fail('Incorrect email/ID number or password.', 401);
     }
 
-    if ($role === 'faculty' && !isFacultyClassHours()) {
-        saveFacultyAvailabilityForUser($db, (int) $record['User_ID'], 'offline');
-        fail('Faculty login is available from 7:00 AM to 7:00 PM only.', 403);
-    }
-
     session_regenerate_id(true);
     $_SESSION['user'] = rememberUserSession(publicUser($record));
     if ($role === 'faculty') {
-        saveFacultyAvailabilityForUser($db, (int) $record['User_ID'], 'available');
+        saveFacultyAvailabilityForUser(
+            $db,
+            (int) $record['User_ID'],
+            isFacultyClassHours() ? 'available' : 'offline'
+        );
     }
     reply(['ok' => true, 'user' => $_SESSION['user']]);
 } catch (PDOException $exception) {
