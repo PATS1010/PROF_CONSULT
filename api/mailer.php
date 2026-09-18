@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Builds and sends email messages for OTP verification flows.
 
-// Uses Brevo's HTTPS API when BREVO_API_KEY is configured. SMTP remains as a local fallback.
+// Uses Brevo's HTTPS API so Railway does not need outbound SMTP ports.
 
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -12,12 +12,11 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
 {
-    if (BREVO_API_KEY !== '') {
-        sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
-        return;
+    if (BREVO_API_KEY === '') {
+        throw new RuntimeException('BREVO_API_KEY is not configured in Railway.');
     }
 
-    sendOtpEmailWithSmtp($toEmail, $toName, $otpCode);
+    sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
 }
 
 function otpEmailHtml(string $toName, string $otpCode): string
@@ -76,7 +75,7 @@ function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCo
 
     if (!preg_match('/\s2\d\d\s/', $statusLine)) {
         error_log('Brevo email failed: ' . $statusLine . ' ' . (string) $response);
-        throw new RuntimeException('Unable to send verification code. Please check the Brevo API key and sender email.');
+        throw new RuntimeException('Brevo rejected the email request. Check BREVO_API_KEY and SMTP_FROM_EMAIL.');
     }
 }
 
