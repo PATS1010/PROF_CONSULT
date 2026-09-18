@@ -6,7 +6,8 @@ RUN apt-get update \
         libpq-dev \
         unzip \
     && docker-php-ext-install pdo_pgsql pgsql \
-    && a2enmod rewrite \
+    && a2dismod -f mpm_event mpm_worker \
+    && a2enmod mpm_prefork rewrite \
     && sed -ri 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf \
     && sed -ri 's/<VirtualHost \*:80>/<VirtualHost *:10000>/' /etc/apache2/sites-available/000-default.conf \
     && rm -rf /var/lib/apt/lists/*
