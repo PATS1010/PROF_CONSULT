@@ -34,6 +34,30 @@ function otpEmailText(string $otpCode): string
     return "Your Prof Consult verification code is {$otpCode}. This code will expire in 10 minutes.";
 }
 
+function brevoErrorMessage(?string $response): string
+{
+    $fallback = 'Brevo rejected the email request. Check BREVO_API_KEY and SMTP_FROM_EMAIL.';
+    if (!$response) {
+        return $fallback;
+    }
+
+    $data = json_decode($response, true);
+    if (!is_array($data)) {
+        return $fallback;
+    }
+
+    $message = (string) ($data['message'] ?? '');
+    $code = (string) ($data['code'] ?? '');
+
+    if ($message === '') {
+        return $fallback;
+    }
+
+    return $code !== ''
+        ? "Brevo rejected the email request ({$code}): {$message}"
+        : "Brevo rejected the email request: {$message}";
+}
+
 function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCode): void
 {
     if (SMTP_FROM_EMAIL === '') {
@@ -75,7 +99,7 @@ function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCo
 
     if (!preg_match('/\s2\d\d\s/', $statusLine)) {
         error_log('Brevo email failed: ' . $statusLine . ' ' . (string) $response);
-        throw new RuntimeException('Brevo rejected the email request. Check BREVO_API_KEY and SMTP_FROM_EMAIL.');
+        throw new RuntimeException(brevoErrorMessage($response === false ? null : $response));
     }
 }
 
