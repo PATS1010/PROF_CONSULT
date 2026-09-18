@@ -19,8 +19,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const nameEl = document.getElementById("facultyLastName");
 
   function lastNameFrom(fullName) {
-    const cleaned = String(fullName || "").replace(/^engr\.\s*/i, "").trim();
+    const cleaned = String(fullName || "")
+      .replace(/^engr\.\s*/i, "")
+      .trim();
+
+    if (cleaned.includes(",")) {
+      const commaLastName = cleaned.split(",")[0].trim();
+      return commaLastName || "Professor";
+    }
+
     const parts = cleaned.split(/\s+/).filter(Boolean);
+    while (parts.length > 1 && /^[A-Z]\.?$/i.test(parts[parts.length - 1])) {
+      parts.pop();
+    }
+
     return parts.length ? parts[parts.length - 1] : "Professor";
   }
 
