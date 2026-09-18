@@ -1,28 +1,18 @@
-FROM php:8.3-apache
+FROM php:8.3-cli
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        git \
-        libpq-dev \
-        unzip \
+    && apt-get install -y --no-install-recommends git libpq-dev unzip \
     && docker-php-ext-install pdo_pgsql pgsql \
-    && rm -f /etc/apache2/mods-enabled/mpm_*.load /etc/apache2/mods-enabled/mpm_*.conf \
-    && a2enmod mpm_prefork rewrite \
-    && apache2ctl -M \
-    && sed -ri 's/Listen 80/Listen 10000/' /etc/apache2/ports.conf \
-    && sed -ri 's/<VirtualHost \*:80>/<VirtualHost *:10000>/' /etc/apache2/sites-available/000-default.conf \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-
 COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress \
-    && mkdir -p uploads/profile-photos \
-    && chown -R www-data:www-data uploads
+    && mkdir -p uploads/profile-photos
 
 EXPOSE 10000
 
-CMD ["apache2-foreground"]
+CMD ["php", "-S", "0.0.0.0:10000", "-t", "/var/www/html"]
