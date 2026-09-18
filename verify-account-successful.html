@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+  VERIFY ACCOUNT SUCCESSFUL PAGE
+  Prof Consult
+
+  FRONTEND ONLY
+
+  Flow:
+
+  Student:
+    create-student-account2.html
+          ↓
+    verify-account.html?from=student
+          ↓
+    verify-account-successful.html?from=student
+          ↓
+    Proceed
+          ↓
+    verify-account.html?from=student
+
+  Faculty:
+    create-faculty-account2.html
+          ↓
+    verify-account.html?from=faculty
+          ↓
+    verify-account-successful.html?from=faculty
+          ↓
+    Proceed
+          ↓
+    verify-account.html?from=faculty
+-->
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>
+    Prof Consult | Account Verification Successful
+  </title>
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/verify-account-successful.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!-- =========================================================
+       BACKGROUND
+  ========================================================= -->
+
+  <div
+    class="page-background"
+    aria-hidden="true"
+  >
+
+    <img
+      src="images/coea.jpg"
+      alt=""
+      class="page-background-image"
+    >
+
+    <div class="page-background-overlay"></div>
+
+  </div>
+
+
+
+  <!-- =========================================================
+       BACK BUTTON
+
+       Student:
+       create-student-account2.html
+
+       Faculty:
+       create-faculty-account2.html
+  ========================================================= -->
+
+  <a
+    href="create-student-account2.html"
+    class="back-button"
+    id="backButton"
+    data-nav="back"
+  >
+
+    <span aria-hidden="true">
+      &larr;
+    </span>
+
+    Back
+
+  </a>
+
+
+
+  <!-- =========================================================
+       MAIN CARD
+  ========================================================= -->
+
+  <main class="registration-card">
+
+
+    <!-- =======================================================
+         TITLE
+    ======================================================= -->
+
+    <h1
+      class="format-text registration-title"
+    >
+
+      Account Verification Successful!
+
+    </h1>
+
+
+
+    <!-- =======================================================
+         MESSAGE
+    ======================================================= -->
+
+    <p class="verification-successful-message">
+
+      Your account has been verified successfully.<br>
+
+      You can now proceed to complete your account.
+
+    </p>
+
+
+
+    <!-- =======================================================
+         PROCEED BUTTON
+
+         Goes back to:
+
+         verify-account.html?from=student
+
+         OR
+
+         verify-account.html?from=faculty
+
+         The Verify Account page can then display:
+
+         "Account Verified"
+    ======================================================= -->
+
+    <a
+      href="verify-account.html?from=student"
+      class="btn proceed-button"
+      id="proceedButton"
+      data-nav="proceed"
+    >
+
+      Proceed
+
+    </a>
+
+
+  </main>
+
+
+
+  <!-- =========================================================
+       JAVASCRIPT
+  ========================================================= -->
+
+  <script src="js/verify-account-successful.js"></script>
+
+
+</body>
+
+</html>

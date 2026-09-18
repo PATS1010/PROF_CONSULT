@@ -115,13 +115,20 @@
 
   <main class="faculty-main-content">
 
-    <!-- Build the Faculty Profile page here -->
-<!-- =========================================================
 <!-- =========================================================
      FACULTY PROFILE -- MAIN CONTENT
      Paste this inside <main class="faculty-main-content">...</main>
      on faculty-profile.html, alongside the shared navbar/
      sidebar/background shell. Do not duplicate the shell here.
+
+     UPDATED: "Edit Profile" button moved out of
+     .faculty-profile-left and placed as its own element below
+     .faculty-profile-body (still above .faculty-profile-footer),
+     so it renders full-width/centered under the whole card like
+     the Student Profile reference. Same id (editProfileButton),
+     same attributes -- faculty-profile.js's existing listener is
+     unaffected by the move. Photo-edit pencil icon/input and all
+     dynamically-loaded profile fields are unchanged.
 ========================================================= -->
 
 <section class="faculty-card faculty-profile-card">
@@ -130,7 +137,7 @@
 
   <div class="faculty-profile-body">
 
-    <!-- LEFT: photo + Edit Profile -->
+    <!-- LEFT: photo only -->
     <div class="faculty-profile-left">
       <div class="faculty-profile-photo-wrap">
         <img
@@ -144,9 +151,6 @@
           <span aria-hidden="true">&#9998;</span>
         </label>
       </div>
-      <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
-        Edit Profile
-      </button>
     </div>
 
     <!-- RIGHT: faculty info card (view mode + edit mode) -->
@@ -244,6 +248,14 @@
     </div>
 
   </div>
+
+  <!-- Edit Profile button: now a direct child of the card, so
+       .faculty-profile-card's align-items:center centers it
+       full-width below the whole card, matching the Student
+       Profile reference. -->
+  <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
+    Edit Profile
+  </button>
 
   <div class="faculty-profile-footer">
     <p class="faculty-save-success" id="saveSuccessMessage" hidden>Profile updated successfully.</p>

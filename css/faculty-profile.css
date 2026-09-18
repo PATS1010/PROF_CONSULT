@@ -5,26 +5,40 @@
    is defined here. Navbar/sidebar/quick action/background
    styling lives in faculty-shared.css and is not duplicated
    or overridden here.
+
+   UPDATED: visual design (spacing, card proportions, shadows,
+   typography) now matches the Student Profile reference.
+   No HTML structure or JS-facing classes were changed --
+   only property values inside existing selectors.
 ========================================================= */
 
 /* =========================================================
    OUTER CARD
    One large white rounded card holding everything: title,
    photo + Edit Profile, faculty info, and the Save button.
+   Sizing/shape now matches Student Profile's .profile-card.
 ========================================================= */
 .faculty-profile-card {
-  max-width: 900px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 40px 44px 44px;
+  padding: 48px 56px;
+  background-color: #ffffff;
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .faculty-profile-title {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
   letter-spacing: 0.5px;
-  font-size: clamp(1.9rem, 4vw, 2.6rem);
+  font-size: clamp(1.6rem, 3vw, 2.1rem);
   margin-bottom: 32px;
-  display: inline-block;
+  display: block;
+  width: 100%;
+  text-align: center;
 
   /* Page-local black -> orange fade, fully self-contained (no
      dependency on faculty-shared.css variables, and no
@@ -49,12 +63,20 @@
 
 /* =========================================================
    BODY: photo/Edit Profile on the left, info card on the right
+   Now styled as the single light "inner card" (matches Student
+   Profile's beige .profile-info-card) that wraps both columns.
 ========================================================= */
 .faculty-profile-body {
+  width: 100%;
   display: flex;
   align-items: flex-start;
-  gap: 36px;
+  gap: 32px;
   flex-wrap: wrap;
+  background-color: #f7f4ee;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 32px;
+  margin-bottom: 32px;
 }
 
 /* ---- LEFT: photo + Edit Profile ---- */
@@ -68,10 +90,10 @@
 
 .faculty-profile-photo-wrap {
   position: relative;
-  width: 148px;
-  height: 148px;
+  width: 110px;
+  height: 110px;
   border-radius: 50%;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
@@ -84,17 +106,17 @@
 
 .faculty-profile-photo-edit {
   position: absolute;
-  right: 4px;
-  bottom: 4px;
-  width: 36px;
-  height: 36px;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
@@ -112,19 +134,22 @@
 }
 
 .faculty-edit-profile-button {
-  padding: 10px 22px;
+  display: inline-block;
+  padding: 12px 32px;
   border-radius: 999px;
-  background-color: #f5f1ea;
-  color: var(--color-text-dark);
-  font-size: 0.85rem;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.9rem;
   font-weight: 600;
-  box-shadow: var(--shadow-card);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.3px;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
 .faculty-edit-profile-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
+  opacity: 0.95;
 }
 
 .faculty-edit-profile-button[hidden] {
@@ -137,11 +162,16 @@
   min-width: 260px;
 }
 
+/* Flattened: this now sits directly inside the beige
+   .faculty-profile-body wrapper, so it no longer needs its
+   own white background/shadow/padding (avoids a double-card
+   look and matches the Student Profile reference, where
+   fields sit directly in the single inner card). */
 .faculty-profile-info-card {
-  background-color: #ffffff;
-  border-radius: 22px;
-  box-shadow: var(--shadow-card);
-  padding: 26px 30px;
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .faculty-profile-info-card[hidden] {
@@ -150,14 +180,14 @@
 
 /* View mode */
 .faculty-profile-name {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-red-primary);
   margin-bottom: 6px;
 }
 
 .faculty-profile-id {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-red-primary);
   margin-bottom: 18px;
@@ -166,23 +196,28 @@
 .faculty-profile-details {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 16px;
 }
 
 .faculty-profile-detail-row {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 4px;
   font-size: 0.9rem;
 }
 
 .faculty-profile-detail-row dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--color-text-muted);
-  font-weight: 500;
 }
 
 .faculty-profile-detail-row dd {
+  font-size: 0.95rem;
   color: var(--color-text-dark);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* =========================================================
@@ -383,7 +418,7 @@
    FOOTER: Save button + success message
 ========================================================= */
 .faculty-profile-footer {
-  margin-top: 32px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -427,13 +462,16 @@
 ========================================================= */
 @media (max-width: 720px) {
   .faculty-profile-card {
-    padding: 32px 26px 36px;
+    padding: 36px 28px;
+    border-radius: 26px;
   }
 
   .faculty-profile-body {
     flex-direction: column;
     align-items: center;
     gap: 24px;
+    padding: 26px;
+    text-align: center;
   }
 
   .faculty-profile-right {
@@ -441,23 +479,32 @@
   }
 
   .faculty-profile-info-card {
-    padding: 22px 20px;
+    padding: 0;
+  }
+
+  .faculty-profile-details {
+    text-align: left;
   }
 }
 
 @media (max-width: 480px) {
   .faculty-profile-card {
-    padding: 26px 18px 30px;
+    padding: 28px 18px;
   }
 
   .faculty-profile-title {
-    font-size: 1.5rem;
+    font-size: 1.4rem;
     margin-bottom: 24px;
   }
 
   .faculty-profile-photo-wrap {
-    width: 120px;
-    height: 120px;
+    width: 88px;
+    height: 88px;
+  }
+
+  .faculty-edit-profile-button {
+    width: 100%;
+    text-align: center;
   }
 
   .faculty-save-button {

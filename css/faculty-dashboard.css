@@ -23,6 +23,17 @@
   gap: 24px;
 }
 
+/* Real-time Philippine date/time, directly under the greeting.
+   Matches the Student Dashboard's .dashboard-datetime exactly
+   (same font-size, weight, color, spacing) so both dashboards
+   present this component identically. */
+.faculty-page-datetime {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 14px;
+}
+
 /* Reused status-dot colors from the shared palette */
 .status-dot {
   flex-shrink: 0;
@@ -196,9 +207,37 @@
 
 /* =========================================================
    PENDING CONSULTATION REQUESTS
+   Restyled to match the Student Dashboard's right-side panel
+   cards (.panel-card): beige background, solid red accent bar
+   down the left edge, red bold title. Scoped to this card only
+   (.faculty-requests-card) so the left-column cards (Today's
+   Status / Today's Schedule) keep their existing white look.
 ========================================================= */
+.faculty-requests-card {
+  position: relative;
+  background-color: #f5f1ea;
+  padding: 28px 28px 28px 40px;
+  overflow: hidden;
+}
+
+/* Thick red accent bar along the left edge, same treatment as
+   the Student Dashboard's .panel-card::before */
+.faculty-requests-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-red-primary);
+}
+
 .faculty-requests-title {
   max-width: 260px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 18px;
 }
 
 .faculty-request-item {
@@ -308,7 +347,15 @@
     right: -4px;
   }
 
+  .faculty-requests-card {
+    padding: 22px 20px 22px 32px;
+  }
+
   .faculty-request-actions {
     flex-direction: column;
+  }
+
+  .faculty-page-datetime {
+    font-size: 0.82rem;
   }
 }

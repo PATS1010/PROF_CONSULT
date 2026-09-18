@@ -57,12 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const requestConsultationButton = document.getElementById("requestConsultationButton");
-  if (requestConsultationButton) {
-    requestConsultationButton.addEventListener("click", (event) => {
-      event.preventDefault();
-    });
-  }
 
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {

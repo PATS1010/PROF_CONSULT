@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!--
+  Prof Consult
+  Account Verification - First Page
+
+  Shared by:
+    Student
+    Faculty
+
+  URL examples:
+    verify-account.html?from=student
+    verify-account.html?from=faculty
+
+  Frontend only for now.
+-->
+
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Prof Consult | Verify Your Account</title>
+
+
+  <!-- Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- Page CSS -->
+  <link
+    rel="stylesheet"
+    href="css/verify-account.css"
+  >
+
+</head>
+
+
+<body>
+
+
+  <!-- =======================================================
+       BACKGROUND
+  ======================================================== -->
+
+  <div
+    class="page-background"
+    aria-hidden="true"
+  >
+
+    <img
+      src="images/coea.jpg"
+      alt=""
+      class="page-background-image"
+    >
+
+    <div class="page-background-overlay"></div>
+
+  </div>
+
+
+
+  <!-- =======================================================
+       BACK BUTTON
+
+       Student:
+       create-student-account2.html
+
+       Faculty:
+       create-faculty-account2.html
+
+       JavaScript changes this destination based on:
+       ?from=student
+       ?from=faculty
+  ======================================================== -->
+
+  <a
+    href="create-student-account2.html"
+    class="back-button"
+    id="backButton"
+    data-nav="back"
+  >
+
+    <span aria-hidden="true">
+      &larr;
+    </span>
+
+    Back
+
+  </a>
+
+
+
+  <!-- =======================================================
+       MAIN CARD
+  ======================================================== -->
+
+  <main class="registration-card">
+
+
+    <!-- =====================================================
+         TITLE
+    ====================================================== -->
+
+    <h1 class="format-text registration-title">
+      Verify Your Account
+    </h1>
+
+
+
+    <!-- =====================================================
+         DESCRIPTION
+    ====================================================== -->
+
+    <p
+      class="verification-subtitle"
+      id="verificationSubtitle"
+    >
+      Enter your email address to receive a verification code.
+    </p>
+
+
+
+    <!-- =====================================================
+         FORM
+    ====================================================== -->
+
+    <form
+      class="registration-form"
+      id="verificationForm"
+      novalidate
+    >
+
+
+      <div class="form-field">
+
+
+        <!-- =================================================
+             EMAIL INPUT
+        ================================================== -->
+
+        <div
+          class="identifier-wrapper"
+          id="emailInputWrapper"
+        >
+
+          <input
+            type="email"
+            id="emailInput"
+            name="email"
+            class="form-input"
+            placeholder="Enter Email"
+            autocomplete="email"
+            maxlength="254"
+          >
+
+        </div>
+
+
+
+        <!-- =================================================
+             MOBILE INPUT
+
+             +63 is displayed separately.
+             User enters only the 10-digit number.
+        ================================================== -->
+
+        <div
+          class="mobile-input-wrapper"
+          id="mobileInputWrapper"
+          hidden
+        >
+
+          <div class="country-code">
+            +63
+          </div>
+
+          <input
+            type="tel"
+            id="mobileInput"
+            name="mobile"
+            class="mobile-input"
+            placeholder="Enter Mobile Number"
+            autocomplete="tel"
+            inputmode="numeric"
+            maxlength="10"
+          >
+
+        </div>
+
+
+
+        <!-- =================================================
+             VALIDATION MESSAGE
+        ================================================== -->
+
+        <p
+          id="verificationMessage"
+          class="field-message field-message-error"
+          hidden
+          aria-live="polite"
+        ></p>
+
+
+      </div>
+
+
+
+      <!-- =====================================================
+           SEND VERIFICATION CODE BUTTON
+      ====================================================== -->
+
+      <button
+        type="submit"
+        class="btn send-code-button"
+        id="sendCodeButton"
+      >
+        Send Verification Code
+      </button>
+
+
+    </form>
+
+
+
+    <!-- =====================================================
+         EMAIL / MOBILE SWITCH
+    ====================================================== -->
+
+    <p class="login-text reset-method-text">
+
+      <span id="methodText">
+        Enter
+      </span>
+
+      <a
+        href="#"
+        class="login-link"
+        id="switchMethod"
+      >
+        Mobile Number
+      </a>
+
+      <span id="methodSuffix">
+        instead
+      </span>
+
+    </p>
+
+
+  </main>
+
+
+
+  <!-- =======================================================
+       JAVASCRIPT
+  ======================================================== -->
+
+  <script src="js/verify-account.js"></script>
+
+
+</body>
+
+</html>
