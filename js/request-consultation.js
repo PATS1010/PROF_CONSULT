@@ -9,8 +9,8 @@
 //   hardcoded to a specific professor
 // - Student Name/ID/Program & Year auto-fill from the current
 //   logged-in student session
-// - Preferred Time: custom dropdown populated with every
-//   30-minute slot across a full 24-hour day
+// - Preferred Time: custom dropdown populated with 30-minute
+//   slots from 7:00 AM through 7:00 PM
 // - Submit Request -> request-submitted.html
 // =========================================================
 
@@ -185,9 +185,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
-  // Preferred Time: build every 30-minute slot covering a full
-  // 24-hour day (12:00 AM - 12:30 AM, 12:30 AM - 1:00 AM, ...
-  // through 11:30 PM - 12:00 AM), then populate the dropdown.
+  // Preferred Time: build every 30-minute slot from 7:00 AM
+  // through 7:00 PM, then populate the dropdown.
   // ---------------------------------------------------------
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
@@ -201,7 +200,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function buildTimeSlots() {
     const slots = [];
-    for (let start = 0; start < 24 * 60; start += 30) {
+    const firstSlotStart = 7 * 60;
+    const lastSlotStart = (19 * 60) - 30;
+
+    for (let start = firstSlotStart; start <= lastSlotStart; start += 30) {
       const end = start + 30;
       const label = `${formatHourMinute(start)} \u2013 ${formatHourMinute(end)}`;
       slots.push(label);

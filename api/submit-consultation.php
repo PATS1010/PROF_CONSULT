@@ -18,6 +18,11 @@ if ($facultyId <= 0 || $purpose === '' || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $
     fail('Please complete all required request fields.');
 }
 
+$preferredTimeStart = preferredTimeStart($time);
+if ($preferredTimeStart < '07:00:00' || $preferredTimeStart >= '19:00:00') {
+    fail('Preferred time must be between 7:00 AM and 7:00 PM.');
+}
+
 try {
     $db = database();
     ensureConsultationMessageColumn($db);
@@ -54,7 +59,7 @@ try {
         $purpose,
         $message !== '' ? $message : null,
         $date,
-        preferredTimeStart($time),
+        $preferredTimeStart,
         'pending',
         null,
     ]);
