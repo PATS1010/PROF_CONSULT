@@ -8,11 +8,6 @@ function buildNotificationRow(notification) {
   li.tabIndex = 0;
   li.setAttribute("role", "link");
 
-  const icon = document.createElement("span");
-  icon.className = "notification-check";
-  icon.setAttribute("aria-hidden", "true");
-  icon.textContent = "\u2714";
-
   const content = document.createElement("div");
   content.className = "notification-content";
 
@@ -28,7 +23,6 @@ function buildNotificationRow(notification) {
     content.appendChild(timestamp);
   }
 
-  li.appendChild(icon);
   li.appendChild(content);
   return li;
 }
