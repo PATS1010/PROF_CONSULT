@@ -107,49 +107,33 @@ document.addEventListener("DOMContentLoaded", () => {
   let pendingLabel = null;
 
   function statusForApi(status) {
-    const map = {
-      teaching: "in class",
-      onleave: "on leave",
-    };
-
-    return map[status] || status;
+    return window.FacultyAvailability
+      ? window.FacultyAvailability.statusForApi(status)
+      : status;
   }
 
   function statusForUi(status) {
-    const map = {
-      "in class": "teaching",
-      "on leave": "onleave",
-      unavailable: "offline",
-    };
-
-    return map[String(status || "").toLowerCase()] || String(status || "offline").toLowerCase();
+    return window.FacultyAvailability
+      ? window.FacultyAvailability.statusForUi(status)
+      : String(status || "offline").toLowerCase();
   }
 
   function statusLabel(status) {
-    const labels = {
-      available: "Available",
-      teaching: "In Class",
-      meeting: "Meeting",
-      consultation: "Consultation",
-      onleave: "On Leave",
-      offline: "Offline",
-    };
-
-    return labels[status] || "Offline";
+    return window.FacultyAvailability
+      ? window.FacultyAvailability.statusLabel(status)
+      : "Offline";
   }
 
   function currentTimeValue() {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    return window.FacultyAvailability
+      ? window.FacultyAvailability.currentTimeValue()
+      : "";
   }
 
   function currentDateValue() {
-    const now = new Date();
-    return [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, "0"),
-      String(now.getDate()).padStart(2, "0"),
-    ].join("-");
+    return window.FacultyAvailability
+      ? window.FacultyAvailability.currentDateValue()
+      : "";
   }
 
   function redirectToFacultyLogin() {
@@ -202,14 +186,23 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!latest) return;
 
       const status = statusForUi(latest.Status);
-      if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
-      if (currentStatusLabel) currentStatusLabel.textContent = statusLabel(status);
+      applyCurrentStatus(status, statusLabel(status));
     } catch (error) {
       // Keep the default display if availability cannot be loaded.
     }
   }
 
   loadSavedStatus();
+
+  function applyCurrentStatus(status, label) {
+    if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
+    if (currentStatusLabel) currentStatusLabel.textContent = label || statusLabel(status);
+  }
+
+  document.addEventListener("facultyavailabilitychange", (event) => {
+    const status = statusForUi(event.detail && event.detail.status);
+    applyCurrentStatus(status, event.detail && event.detail.label);
+  });
 
   function openStatusPanel() {
     statusPanel.hidden = false;
@@ -253,8 +246,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (pendingStatus && currentStatusDot && currentStatusLabel) {
         try {
           await saveCurrentStatus(pendingStatus);
-          currentStatusDot.className = `status-dot status-${pendingStatus}`;
-          currentStatusLabel.textContent = pendingLabel;
+          applyCurrentStatus(pendingStatus, pendingLabel);
+          document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
+            detail: {
+              status: pendingStatus,
+              label: pendingLabel,
+            },
+          }));
         } catch (error) {
           if (error.message === "AUTH_REQUIRED") return;
           alert(error.message);

@@ -19,9 +19,9 @@
 
 // ---------------------------------------------------------
 // Faculty online/offline status (Quick Action Check In/Out)
-// -- Quick Action keeps its own temporary UI state. The saved
-// dashboard availability is loaded and updated by each page's
-// database-backed status code.
+// -- Quick Action uses the same availability API as Today's
+// Status, so the dashboard card and student availability list
+// stay in sync after every status change.
 //
 // CHECK_IN_TIMEOUT is the single place that controls how long
 // a Check In lasts before automatically reverting to Offline
@@ -30,8 +30,91 @@
 // ---------------------------------------------------------
 const CHECK_IN_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
-let facultyOnlineStatus = "offline"; // "offline" | "available"
+let facultyOnlineStatus = "offline";
 let checkInTimeoutId = null;
+
+function facultyStatusForApi(status) {
+  const map = {
+    teaching: "in class",
+    onleave: "on leave",
+  };
+
+  return map[status] || status;
+}
+
+function facultyStatusForUi(status) {
+  const map = {
+    "in class": "teaching",
+    "on leave": "onleave",
+    unavailable: "offline",
+  };
+
+  return map[String(status || "").toLowerCase()] || String(status || "offline").toLowerCase();
+}
+
+function facultyStatusLabel(status) {
+  const labels = {
+    available: "Available",
+    teaching: "In Class",
+    meeting: "Meeting",
+    consultation: "Consultation",
+    onleave: "On Leave",
+    offline: "Offline",
+  };
+
+  return labels[status] || "Offline";
+}
+
+function facultyCurrentDateValue() {
+  const now = new Date();
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function facultyCurrentTimeValue() {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+}
+
+async function saveFacultyAvailabilityStatus(status) {
+  const uiStatus = facultyStatusForUi(status);
+  const response = await fetch("api/availability.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      status: facultyStatusForApi(uiStatus),
+      date: facultyCurrentDateValue(),
+      time: facultyCurrentTimeValue(),
+    }),
+  });
+  const result = await response.json();
+
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to save availability status.");
+  }
+
+  document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
+    detail: {
+      status: uiStatus,
+      label: facultyStatusLabel(uiStatus),
+    },
+  }));
+
+  return result;
+}
+
+window.FacultyAvailability = {
+  statusForApi: facultyStatusForApi,
+  statusForUi: facultyStatusForUi,
+  statusLabel: facultyStatusLabel,
+  currentDateValue: facultyCurrentDateValue,
+  currentTimeValue: facultyCurrentTimeValue,
+  saveStatus: saveFacultyAvailabilityStatus,
+};
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -179,7 +262,7 @@ document.addEventListener("DOMContentLoaded", () => {
       quickActionStatusDot.style.backgroundColor = isAvailable ? "#2fae4e" : "#b9b9b9";
     }
     if (quickActionStatusLabel) {
-      quickActionStatusLabel.textContent = isAvailable ? "Available" : "Offline";
+      quickActionStatusLabel.textContent = facultyStatusLabel(facultyOnlineStatus);
     }
     if (checkInButton) {
       checkInButton.hidden = isAvailable;
@@ -190,30 +273,69 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setFacultyOnlineStatus(newStatus) {
-    facultyOnlineStatus = newStatus;
+    facultyOnlineStatus = facultyStatusForUi(newStatus);
     updateQuickActionUI();
   }
 
-  function handleCheckIn(event) {
+  async function loadSavedFacultyStatus() {
+    try {
+      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(facultyCurrentDateValue())}`, {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) return;
+
+      const latest = (result.availability || []).slice(-1)[0];
+      if (!latest) return;
+
+      setFacultyOnlineStatus(latest.Status);
+    } catch (error) {
+      // Keep the default quick action status if the saved status cannot be loaded.
+    }
+  }
+
+  document.addEventListener("facultyavailabilitychange", (event) => {
+    if (event.detail && event.detail.status) {
+      setFacultyOnlineStatus(event.detail.status);
+    }
+  });
+
+  async function handleCheckIn(event) {
     event.preventDefault();
-    setFacultyOnlineStatus("available");
+    try {
+      await saveFacultyAvailabilityStatus("available");
+      setFacultyOnlineStatus("available");
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
 
     if (checkInTimeoutId) {
       window.clearTimeout(checkInTimeoutId);
     }
-    // Forgot-to-Check-Out safeguard: automatically revert to
-    // Offline after CHECK_IN_TIMEOUT if Check Out was never
-    // clicked. Frontend-only simulation of what a real session
-    // timeout will eventually do once there's a backend.
-    checkInTimeoutId = window.setTimeout(() => {
-      setFacultyOnlineStatus("offline");
+    // Forgot-to-Check-Out safeguard: automatically save Offline
+    // after CHECK_IN_TIMEOUT if Check Out was never clicked.
+    checkInTimeoutId = window.setTimeout(async () => {
+      try {
+        await saveFacultyAvailabilityStatus("offline");
+      } catch (error) {
+        setFacultyOnlineStatus("offline");
+      }
       checkInTimeoutId = null;
     }, CHECK_IN_TIMEOUT);
   }
 
-  function handleCheckOut(event) {
+  async function handleCheckOut(event) {
     event.preventDefault();
-    setFacultyOnlineStatus("offline");
+    try {
+      await saveFacultyAvailabilityStatus("offline");
+      setFacultyOnlineStatus("offline");
+    } catch (error) {
+      alert(error.message);
+      return;
+    }
 
     if (checkInTimeoutId) {
       window.clearTimeout(checkInTimeoutId);
@@ -231,6 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Establish the initial Quick Action state without changing
   // the database-backed Dashboard status card.
   updateQuickActionUI();
+  loadSavedFacultyStatus();
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to the Faculty Notifications
