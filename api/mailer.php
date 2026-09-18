@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// SYSTEM NOTE: Builds and sends email messages for password reset flows.
+// SYSTEM NOTE: Builds and sends email messages for OTP verification flows.
 
-// Builds and sends OTP emails using PHPMailer so password reset codes are delivered through SMTP.
+// Uses Brevo's HTTPS API when BREVO_API_KEY is configured. SMTP remains as a local fallback.
 
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\PHPMailer;
@@ -12,8 +12,78 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
 {
+    if (BREVO_API_KEY !== '') {
+        sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
+        return;
+    }
+
+    sendOtpEmailWithSmtp($toEmail, $toName, $otpCode);
+}
+
+function otpEmailHtml(string $toName, string $otpCode): string
+{
+    return '
+        <p>Hello ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>
+        <p>Your Prof Consult verification code is:</p>
+        <h2 style="letter-spacing: 4px;">' . htmlspecialchars($otpCode, ENT_QUOTES, 'UTF-8') . '</h2>
+        <p>This code will expire in 10 minutes. If you did not request this, you can ignore this email.</p>
+    ';
+}
+
+function otpEmailText(string $otpCode): string
+{
+    return "Your Prof Consult verification code is {$otpCode}. This code will expire in 10 minutes.";
+}
+
+function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCode): void
+{
+    if (SMTP_FROM_EMAIL === '') {
+        throw new RuntimeException('SMTP_FROM_EMAIL is not configured.');
+    }
+
+    $payload = [
+        'sender' => [
+            'name' => SMTP_FROM_NAME,
+            'email' => SMTP_FROM_EMAIL,
+        ],
+        'to' => [
+            [
+                'email' => $toEmail,
+                'name' => $toName,
+            ],
+        ],
+        'subject' => 'Your Prof Consult verification code',
+        'htmlContent' => otpEmailHtml($toName, $otpCode),
+        'textContent' => otpEmailText($otpCode),
+    ];
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => [
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'api-key: ' . BREVO_API_KEY,
+            ],
+            'content' => json_encode($payload),
+            'ignore_errors' => true,
+            'timeout' => 15,
+        ],
+    ]);
+
+    $response = file_get_contents('https://api.brevo.com/v3/smtp/email', false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+
+    if (!preg_match('/\s2\d\d\s/', $statusLine)) {
+        error_log('Brevo email failed: ' . $statusLine . ' ' . (string) $response);
+        throw new RuntimeException('Unable to send verification code. Please check the Brevo API key and sender email.');
+    }
+}
+
+function sendOtpEmailWithSmtp(string $toEmail, string $toName, string $otpCode): void
+{
     if (SMTP_USERNAME === '' || SMTP_PASSWORD === '' || SMTP_FROM_EMAIL === '') {
-        throw new RuntimeException('SMTP environment variables are not configured.');
+        throw new RuntimeException('Email environment variables are not configured.');
     }
 
     ini_set('default_socket_timeout', '10');
@@ -41,17 +111,12 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
         // The HTML body is what most email apps show; AltBody is the plain-text fallback.
         $mail->isHTML(true);
         $mail->Subject = 'Your Prof Consult verification code';
-        $mail->Body = '
-            <p>Hello ' . htmlspecialchars($toName, ENT_QUOTES, 'UTF-8') . ',</p>
-            <p>Your Prof Consult verification code is:</p>
-            <h2 style="letter-spacing: 4px;">' . htmlspecialchars($otpCode, ENT_QUOTES, 'UTF-8') . '</h2>
-            <p>This code will expire in 10 minutes. If you did not request this, you can ignore this email.</p>
-        ';
-        $mail->AltBody = "Your Prof Consult verification code is {$otpCode}. This code will expire in 10 minutes.";
+        $mail->Body = otpEmailHtml($toName, $otpCode);
+        $mail->AltBody = otpEmailText($otpCode);
 
         $mail->send();
     } catch (Exception $exception) {
         error_log('OTP email failed: ' . $mail->ErrorInfo);
-        throw new RuntimeException('Unable to send verification code: ' . $mail->ErrorInfo);
+        throw new RuntimeException('Unable to send verification code. Please check the email service settings.');
     }
 }

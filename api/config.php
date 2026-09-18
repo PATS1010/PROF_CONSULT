@@ -28,6 +28,7 @@ define('SMTP_PASSWORD', env('SMTP_PASSWORD', ''));
 define('SMTP_ENCRYPTION', env('SMTP_ENCRYPTION', 'tls'));
 define('SMTP_FROM_EMAIL', env('SMTP_FROM_EMAIL', ''));
 define('SMTP_FROM_NAME', env('SMTP_FROM_NAME', 'Prof Consult'));
+define('BREVO_API_KEY', env('BREVO_API_KEY', ''));
 
 function database(): PDO
 {
