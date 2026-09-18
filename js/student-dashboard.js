@@ -239,6 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const availabilityList = document.getElementById("availabilityList");
   const notificationsList = document.getElementById("notificationsList");
   const noResultsMessage = document.getElementById("noResultsMessage");
+  const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
   let activeStatus = null;
   let facultyDirectoryData = [];
@@ -325,6 +326,22 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="status-dot status-${escapeHtml(faculty.status)}" aria-hidden="true"></span>
       </article>
     `).join("");
+  }
+
+  function openFacultyFromDashboard(facultyId) {
+    const faculty = facultyDirectoryData.find((item) => item.id === facultyId);
+    if (!faculty) return;
+
+    try {
+      sessionStorage.setItem(SELECTED_FACULTY_STORAGE_KEY, JSON.stringify({
+        ...faculty,
+        program: faculty.department,
+      }));
+    } catch (error) {
+      // The query string still carries the numeric Faculty_ID as fallback.
+    }
+
+    window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(faculty.id)}`;
   }
 
   function renderAvailability() {
@@ -438,6 +455,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFilters);
+  }
+
+  if (professorList) {
+    professorList.addEventListener("click", (event) => {
+      const card = event.target.closest(".professor-card");
+      if (!card || card.hidden) return;
+
+      openFacultyFromDashboard(card.dataset.facultyId);
+    });
   }
 
   filterOptions.forEach((option) => {

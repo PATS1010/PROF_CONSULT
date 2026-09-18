@@ -156,8 +156,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("facultySearchInput");
   const directoryContainer = document.getElementById("directoryContainer");
   const profilePanel = document.getElementById("directoryProfilePanel");
+  const facultyIdFromUrl = new URLSearchParams(window.location.search).get("facultyId");
 
   let facultyDirectoryData = [];
+  let selectedFacultyId = facultyIdFromUrl ? String(facultyIdFromUrl) : "";
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (character) => ({
@@ -349,6 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openProfile(facultyId) {
     const faculty = facultyDirectoryData.find((item) => item.id === facultyId);
     if (!faculty) return;
+    selectedFacultyId = facultyId;
 
     Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
       card.classList.toggle("is-selected", card.dataset.facultyId === facultyId);
@@ -394,6 +397,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       renderFacultyList();
       applyFilters();
+      if (selectedFacultyId) {
+        openProfile(selectedFacultyId);
+      }
     } catch (error) {
       if (showLoading || facultyDirectoryData.length === 0) {
         renderEmpty(error.message || "Unable to load faculty directory.");
