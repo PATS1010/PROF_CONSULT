@@ -6,6 +6,10 @@
       || document.getElementById("facultyNotificationBellButton");
   }
 
+  function notificationRole() {
+    return document.getElementById("facultyNotificationBellButton") ? "faculty" : "student";
+  }
+
   function getDot(button) {
     let dot = button.querySelector(".notification-unread-dot");
     if (dot) return dot;
@@ -51,7 +55,7 @@
     if (!button) return;
 
     try {
-      const response = await fetch("api/notifications.php", {
+      const response = await fetch(`api/notifications.php?role=${encodeURIComponent(notificationRole())}`, {
         cache: "no-store",
         credentials: "same-origin",
         headers: { "Accept": "application/json" },

@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
     notificationsList.innerHTML = "<li>Loading notifications...</li>";
 
     try {
-      const response = await fetch("api/notifications.php", {
+      const response = await fetch("api/notifications.php?role=student", {
         cache: "no-store",
         credentials: "same-origin",
         headers: { "Accept": "application/json" },

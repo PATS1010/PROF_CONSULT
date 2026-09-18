@@ -147,6 +147,38 @@ function markFinishedApprovedRequestsCompleted(PDO $db): void
 {
     $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
 
+    $studentNotifications = $db->prepare(
+        "INSERT INTO notifications (User_ID, Message, Read_Status)
+         SELECT
+            student_user.User_ID,
+            'Your consultation with ' || faculty_user.Full_Name || ' has been completed.',
+            'unread'
+         FROM consultation_requests cr
+         INNER JOIN students s ON s.Student_ID = cr.Student_ID
+         INNER JOIN users student_user ON student_user.User_ID = s.User_ID
+         INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
+         INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
+         WHERE cr.Status = 'approved'
+           AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+    );
+    $studentNotifications->execute([$now]);
+
+    $facultyNotifications = $db->prepare(
+        "INSERT INTO notifications (User_ID, Message, Read_Status)
+         SELECT
+            faculty_user.User_ID,
+            'Your consultation with ' || student_user.Full_Name || ' has been completed.',
+            'unread'
+         FROM consultation_requests cr
+         INNER JOIN students s ON s.Student_ID = cr.Student_ID
+         INNER JOIN users student_user ON student_user.User_ID = s.User_ID
+         INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
+         INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
+         WHERE cr.Status = 'approved'
+           AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+    );
+    $facultyNotifications->execute([$now]);
+
     $statement = $db->prepare(
         "UPDATE consultation_requests
          SET Status = 'completed'

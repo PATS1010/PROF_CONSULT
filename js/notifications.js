@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadNotifications() {
     try {
-      const response = await fetch("api/notifications.php", {
+      const response = await fetch("api/notifications.php?role=student", {
         cache: "no-store",
         credentials: "same-origin",
         headers: { "Accept": "application/json" },
@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
             "Accept": "application/json",
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ mark_all: true }),
+          body: JSON.stringify({ role: "student", mark_all: true }),
         });
         if (typeof window.setNotificationBellUnread === "function") {
           window.setNotificationBellUnread(false);

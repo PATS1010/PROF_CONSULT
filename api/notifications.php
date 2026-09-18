@@ -5,12 +5,20 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 
-$user = currentUser();
+$requestBody = [];
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $requestBody = input();
+}
+
+$requestedRole = clean((string) ($_GET['role'] ?? ($requestBody['role'] ?? '')));
+$user = in_array($requestedRole, ['student', 'faculty'], true)
+    ? currentUser($requestedRole)
+    : currentUser();
 $db = database();
 
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $data = input();
+        $data = $requestBody;
         if (!empty($data['mark_all'])) {
             $statement = $db->prepare(
                 'UPDATE notifications

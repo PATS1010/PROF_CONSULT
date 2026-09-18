@@ -52,7 +52,7 @@ async function markNotificationsSeen() {
       "Accept": "application/json",
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ mark_all: true }),
+    body: JSON.stringify({ role: "faculty", mark_all: true }),
   });
 
   if (typeof window.setNotificationBellUnread === "function") {
@@ -62,7 +62,7 @@ async function markNotificationsSeen() {
 
 async function loadFacultyNotifications() {
   try {
-    const response = await fetch("api/notifications.php", {
+    const response = await fetch("api/notifications.php?role=faculty", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
