@@ -14,23 +14,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const lastNameEl = document.getElementById("studentFirstName");
-
-  function lastNameFrom(fullName) {
-    const cleaned = String(fullName || "").trim();
-
-    if (cleaned.includes(",")) {
-      const commaLastName = cleaned.split(",")[0].trim();
-      return commaLastName || "Student";
-    }
-
-    const parts = cleaned.split(/\s+/).filter(Boolean);
-    while (parts.length > 1 && /^[A-Z]\.?$/i.test(parts[parts.length - 1])) {
-      parts.pop();
-    }
-
-    return parts.length ? parts[parts.length - 1] : "Student";
-  }
+  const studentGreetingEl = document.getElementById("studentFirstName");
 
   async function loadCurrentStudent() {
     try {
@@ -44,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Student session unavailable");
       }
 
-      if (lastNameEl) lastNameEl.textContent = lastNameFrom(data.user.name);
+      if (studentGreetingEl) studentGreetingEl.textContent = "Student";
     } catch (error) {
       window.location.href = "student-login.html";
     }

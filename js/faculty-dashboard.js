@@ -18,24 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const nameEl = document.getElementById("facultyLastName");
 
-  function lastNameFrom(fullName) {
-    const cleaned = String(fullName || "")
-      .replace(/^engr\.\s*/i, "")
-      .trim();
-
-    if (cleaned.includes(",")) {
-      const commaLastName = cleaned.split(",")[0].trim();
-      return commaLastName || "Professor";
-    }
-
-    const parts = cleaned.split(/\s+/).filter(Boolean);
-    while (parts.length > 1 && /^[A-Z]\.?$/i.test(parts[parts.length - 1])) {
-      parts.pop();
-    }
-
-    return parts.length ? parts[parts.length - 1] : "Professor";
-  }
-
   async function loadCurrentFaculty() {
     try {
       const response = await fetch("api/session.php?role=faculty", {
@@ -49,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Faculty session unavailable");
       }
 
-      if (nameEl) nameEl.textContent = lastNameFrom(data.user.name);
+      if (nameEl) nameEl.textContent = "Prof";
     } catch (error) {
       window.location.href = "faculty-login.html";
     }
