@@ -45,6 +45,7 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   min-height: 100svh;
   display: flex;
   align-items: center;
@@ -261,14 +262,20 @@ body {
 
   .prof-consult-logo {
     width: min(82vw, 300px);
-    max-height: 48vh;
+    max-height: 42dvh;
     max-width: none;
   }
 
   .bottom-area {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: max(28px, env(safe-area-inset-bottom));
+    z-index: 5;
     width: 100%;
     min-height: 56px;
-    margin-bottom: max(20px, env(safe-area-inset-bottom));
+    margin-bottom: 0;
+    padding: 0 20px;
   }
 
   .continue-button {
@@ -291,6 +298,6 @@ body {
 
   .prof-consult-logo {
     width: min(76vw, 260px);
-    max-height: 42vh;
+    max-height: 36dvh;
   }
 }
