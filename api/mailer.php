@@ -16,6 +16,8 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
         throw new RuntimeException('SMTP environment variables are not configured.');
     }
 
+    ini_set('default_socket_timeout', '10');
+
     $mail = new PHPMailer(true);
 
     try {

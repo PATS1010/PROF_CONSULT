@@ -7,6 +7,8 @@ require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/mailer.php';
 requirePost();
 
+set_time_limit(20);
+
 // Receives an email/mobile number, creates a 6-digit OTP, stores only its hash, then emails the code.
 
 $data = input();
