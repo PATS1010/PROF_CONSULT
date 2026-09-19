@@ -1,8 +1,8 @@
 // =========================================================
 // FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC INTERACTIONS
-// - Email Notifications / Auto Check-In Reminder: frontend
-//   state only for now, stored so a future backend can read
-//   the same shape without changes here.
+// - Email Notifications / Push Notifications / Auto Check-In
+//   Reminder: frontend state only for now, stored so a future
+//   backend can read the same shape without changes here.
 // - Dark Mode: state is tracked and persisted, but checking
 //   it intentionally does NOT alter the page's appearance --
 //   actual dark mode theming is future work.
@@ -24,6 +24,7 @@ const FACULTY_SETTINGS_STORAGE_KEY = "profconsult_faculty_settings";
 // ---------------------------------------------------------
 const DEFAULT_FACULTY_SETTINGS = {
   emailNotifications: false,
+  pushNotifications: false,
   darkMode: false,
   autoCheckInReminder: false,
 };
@@ -51,6 +52,7 @@ function saveFacultySettings(settings) {
 document.addEventListener("DOMContentLoaded", () => {
 
   const emailNotificationsCheckbox = document.getElementById("emailNotificationsCheckbox");
+  const pushNotificationsCheckbox = document.getElementById("pushNotificationsCheckbox");
   const darkModeCheckbox = document.getElementById("darkModeCheckbox");
   const autoCheckInCheckbox = document.getElementById("autoCheckInCheckbox");
   const saveButton = document.getElementById("saveSettingsButton");
@@ -63,6 +65,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (emailNotificationsCheckbox) {
     emailNotificationsCheckbox.checked = currentSettings.emailNotifications;
+  }
+  if (pushNotificationsCheckbox) {
+    pushNotificationsCheckbox.checked = currentSettings.pushNotifications;
   }
   if (darkModeCheckbox) {
     darkModeCheckbox.checked = currentSettings.darkMode;
@@ -79,6 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleSaveSettings() {
     const updatedSettings = {
       emailNotifications: !!(emailNotificationsCheckbox && emailNotificationsCheckbox.checked),
+      pushNotifications: !!(pushNotificationsCheckbox && pushNotificationsCheckbox.checked),
       // Dark Mode state is saved, but intentionally has no visual
       // effect yet -- actual theming is future work.
       darkMode: !!(darkModeCheckbox && darkModeCheckbox.checked),

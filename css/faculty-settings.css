@@ -40,16 +40,62 @@
 }
 
 /* =========================================================
-   CHECKBOX ROWS
-   Custom-styled checkbox: a real, focusable <input
-   type="checkbox"> visually hidden but still keyboard/
-   screen-reader accessible, paired with a styled box span.
+   SETTINGS OPTIONS
+   Same layout as the Student Account Settings card:
+   title (+ description) on the left, checkbox on the right,
+   a thin divider between options.
 ========================================================= */
+.faculty-settings-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .faculty-settings-checkbox-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 20px;
   cursor: pointer;
+}
+
+.faculty-settings-checkbox-row + .faculty-settings-checkbox-row {
+  padding-top: 20px;
+  border-top: 1px solid #e6e3dc;
+}
+
+.faculty-settings-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.faculty-settings-checkbox-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.faculty-settings-option-description {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 380px;
+}
+
+/* =========================================================
+   CHECKBOX
+   Custom-styled checkbox: a real, focusable <input
+   type="checkbox"> visually hidden but still keyboard/
+   screen-reader accessible, paired with a styled box span.
+   Rounded square, gradient fill when checked (same as the
+   Student settings checkbox).
+========================================================= */
+.faculty-settings-checkbox-control {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
 }
 
 .faculty-settings-checkbox {
@@ -66,13 +112,13 @@
 
 .faculty-settings-checkbox-box {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  border: 2px solid var(--color-text-dark);
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid #c8c8c8;
   background-color: #ffffff;
   position: relative;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .faculty-settings-checkbox-box::after {
@@ -80,33 +126,26 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 5px;
-  height: 10px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: translate(-50%, -60%) rotate(45deg);
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  width: 12px;
+  height: 8px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -60%) rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
 }
 
 .faculty-settings-checkbox:checked + .faculty-settings-checkbox-box {
-  background-color: var(--color-red-primary);
-  border-color: var(--color-red-primary);
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  border-color: transparent;
 }
 
 .faculty-settings-checkbox:checked + .faculty-settings-checkbox-box::after {
-  opacity: 1;
+  transform: translate(-50%, -60%) rotate(-45deg) scale(1);
 }
 
 .faculty-settings-checkbox:focus-visible + .faculty-settings-checkbox-box {
   outline: 2px solid var(--color-gradient-end);
   outline-offset: 2px;
-}
-
-.faculty-settings-checkbox-label {
-  font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--color-text-dark);
 }
 
 /* =========================================================
@@ -182,6 +221,10 @@
   .faculty-settings-inner-card {
     padding: 26px 22px;
   }
+
+  .faculty-settings-checkbox-row {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 480px) {
@@ -197,6 +240,12 @@
   .faculty-settings-inner-card {
     padding: 22px 18px;
     gap: 18px;
+  }
+
+  .faculty-settings-checkbox-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .faculty-settings-checkbox-label {

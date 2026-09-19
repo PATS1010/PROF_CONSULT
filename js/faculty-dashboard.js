@@ -16,6 +16,11 @@
 //   same status values), so accepting/declining here is
 //   reflected on the Consultation Requests page and vice
 //   versa. View More still just navigates there.
+// - Auto Check In Reminder: if that setting is checked AND
+//   saved on Faculty Settings, the Quick Action popup opens
+//   by itself when the faculty lands here after logging in
+//   (see the AUTO CHECK IN REMINDER section at the bottom).
+//   Dashboard only.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
@@ -796,6 +801,141 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
+  }
+
+
+  // =========================================================
+  // AUTO CHECK IN REMINDER  (ADDED)
+  //
+  // If "Auto Check In Reminder" is checked AND saved on the
+  // Faculty Settings page, the Quick Action popup (Check In /
+  // Check Out) opens by itself when the faculty lands on this
+  // Dashboard after logging in -- for easy access. Unchecked
+  // (or never saved) = nothing happens.
+  //
+  // - Dashboard ONLY: no other Faculty page auto-opens it.
+  // - Once per login: it does not pop open again every time
+  //   the faculty comes back to the Dashboard from another
+  //   page. The "already shown" flag lives in sessionStorage
+  //   and is cleared by the login page (see the one-line
+  //   snippet for faculty-login.html), so the next login
+  //   shows it again.
+  // - Reads the SAME saved setting Faculty Settings writes
+  //   (profconsult_faculty_settings -> autoCheckInReminder);
+  //   no new setting/storage is created for the on/off state.
+  // - Reuses the existing Quick Action toggle from
+  //   faculty-shared.js by clicking its button, so none of the
+  //   popup open/close logic is duplicated here.
+  // =========================================================
+
+  const AUTO_CHECKIN_SETTINGS_STORAGE_KEY =
+    "profconsult_faculty_settings";
+
+  const AUTO_CHECKIN_SHOWN_SESSION_KEY =
+    "profconsult_faculty_auto_checkin_shown";
+
+
+  function isAutoCheckInReminderOn() {
+
+    try {
+
+      const raw =
+        localStorage.getItem(
+          AUTO_CHECKIN_SETTINGS_STORAGE_KEY
+        );
+
+      if (!raw) return false;
+
+      const parsed = JSON.parse(raw);
+
+      return !!(
+        parsed &&
+        parsed.autoCheckInReminder === true
+      );
+
+    } catch (error) {
+
+      return false;
+    }
+  }
+
+
+  // True only the first time in this login session that the
+  // reminder should open. Marks it as shown when it says yes.
+  function shouldAutoOpenQuickAction() {
+
+    if (!isAutoCheckInReminderOn()) return false;
+
+    try {
+
+      if (
+        sessionStorage.getItem(
+          AUTO_CHECKIN_SHOWN_SESSION_KEY
+        ) === "true"
+      ) {
+
+        return false;
+      }
+
+      sessionStorage.setItem(
+        AUTO_CHECKIN_SHOWN_SESSION_KEY,
+        "true"
+      );
+
+      return true;
+
+    } catch (error) {
+
+      // Can't remember it -> skip, rather than pop open on
+      // every single Dashboard visit.
+      return false;
+    }
+  }
+
+
+  if (shouldAutoOpenQuickAction()) {
+
+    // Short delay so the page paints first and the popup's
+    // fade/slide-in is actually visible.
+    window.setTimeout(
+      () => {
+
+        const autoQuickActionButton =
+          document.getElementById(
+            "facultyQuickActionButton"
+          );
+
+        const autoQuickActionPanel =
+          document.getElementById(
+            "facultyQuickActionPanel"
+          );
+
+        if (
+          !autoQuickActionButton ||
+          !autoQuickActionPanel
+        ) {
+
+          return;
+        }
+
+
+        // Already open (e.g. the faculty clicked it first)?
+        // Leave it -- clicking would toggle it CLOSED.
+        if (
+          autoQuickActionPanel.classList.contains(
+            "is-open"
+          )
+        ) {
+
+          return;
+        }
+
+
+        autoQuickActionButton.click();
+
+      },
+      350
+    );
   }
 
 });

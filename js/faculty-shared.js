@@ -853,6 +853,48 @@ document.addEventListener(
 
 
     // =======================================================
+    // LOGOUT RESETS THE DASHBOARD "AUTO CHECK IN REMINDER"  (ADDED)
+    //
+    // The Dashboard opens Quick Action once per login (see
+    // faculty-dashboard.js) when Auto Check In Reminder is on.
+    // Logging out clears that "already shown" flag, so the NEXT
+    // login shows it again.
+    //
+    // Traveling between pages does NOT clear it, so coming back
+    // to the Dashboard from another page never re-opens the
+    // popup.
+    // =======================================================
+
+    const logoutLink =
+      sidebar
+        ? sidebar.querySelector(
+            '.faculty-sidebar-link[data-page="logout"]'
+          )
+        : null;
+
+
+    if (logoutLink) {
+
+      logoutLink.addEventListener(
+        "click",
+        () => {
+
+          try {
+
+            sessionStorage.removeItem(
+              "profconsult_faculty_auto_checkin_shown"
+            );
+
+          } catch (error) {
+
+            // Ignore storage errors.
+          }
+        }
+      );
+    }
+
+
+    // =======================================================
     // QUICK ACTION
     // =======================================================
 
