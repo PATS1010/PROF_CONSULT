@@ -1,4 +1,3 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty settings page, including UI events and API calls.
 // =========================================================
 // FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC INTERACTIONS
 // - Email Notifications / Auto Check-In Reminder: frontend

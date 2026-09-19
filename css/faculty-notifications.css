@@ -1,17 +1,16 @@
-/* SYSTEM NOTE: Styles the faculty notifications page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY NOTIFICATIONS -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+
+   Only the main content area is defined here.
+   Navbar/sidebar/quick action/background styling lives in
+   faculty-shared.css.
 ========================================================= */
+
 
 /* =========================================================
    PAGE HEADING
-   Left-aligned, matching the reference design (unlike the
-   Dashboard's centered heading).
 ========================================================= */
+
 .notifications-page-heading {
   margin-bottom: 28px;
 }
@@ -39,11 +38,14 @@
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
+
+
 /* =========================================================
    NOTIFICATIONS CARD
-   White rounded card with a thick red left accent bar,
-   matching the Student module's .panel-card treatment.
+
+   White rounded card with a thick red left accent bar.
 ========================================================= */
+
 .notifications-card {
   position: relative;
   overflow: hidden;
@@ -52,38 +54,64 @@
 
 .notifications-card::before {
   content: "";
+
   position: absolute;
+
   top: 0;
   left: 0;
   bottom: 0;
+
   width: 14px;
+
   background-color: var(--color-red-primary);
 }
 
+
 /* =========================================================
-   INNER SCROLLABLE CONTAINER
+   INNER CONTAINER
 ========================================================= */
+
 .notifications-list-container {
   background-color: #f4f4f6;
+
   border-radius: 20px;
+
   padding: 32px 28px;
 }
 
+
+/* =========================================================
+   NOTIFICATION LIST
+========================================================= */
+
 .notifications-list {
   list-style: none;
+
   display: flex;
   flex-direction: column;
+
   gap: 24px;
+
   max-height: 320px;
+
   overflow-y: auto;
   overflow-x: hidden;
+
   padding-right: 4px;
 }
 
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
 .no-notifications-message {
   padding: 24px 4px;
+
   text-align: center;
+
   font-size: 0.85rem;
+
   color: var(--color-text-muted);
 }
 
@@ -91,34 +119,63 @@
   display: none;
 }
 
+
 /* =========================================================
    NOTIFICATION ROW
 ========================================================= */
+
 .notification-row {
   display: flex;
+
   align-items: flex-start;
+
   gap: 12px;
 }
 
+
+/* =========================================================
+   NOTIFICATION ICON
+========================================================= */
+
 .notification-icon {
   flex-shrink: 0;
+
   font-size: 0.95rem;
+
   line-height: 1.6;
+
   color: #4a5568;
 }
+
+
+/* =========================================================
+   NOTIFICATION MESSAGE
+========================================================= */
 
 .notification-message {
   font-size: 0.92rem;
+
   font-weight: 500;
+
   color: #4a5568;
+
   line-height: 1.6;
 }
 
+
+/* =========================================================
+   VIEW LINK
+========================================================= */
+
 .notification-view-link {
   margin-left: 4px;
+
   color: #4a5568;
+
   font-weight: 700;
+
   text-decoration: underline;
+
   transition: color 0.2s ease;
 }
 
@@ -126,16 +183,22 @@
   color: var(--color-red-primary);
 }
 
+
 /* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */
+
 @media (max-width: 1024px) {
+
   .notifications-list-container {
     padding: 26px 20px;
   }
+
 }
 
+
 @media (max-width: 480px) {
+
   .notifications-card {
     padding: 22px 20px 22px 34px;
   }
@@ -152,5 +215,5 @@
   .notification-message {
     font-size: 0.85rem;
   }
-}
 
+}

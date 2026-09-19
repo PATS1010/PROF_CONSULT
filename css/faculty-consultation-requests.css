@@ -1,4 +1,3 @@
-/* SYSTEM NOTE: Styles the faculty consultation requests page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY CONSULTATION REQUESTS -- PAGE-SPECIFIC STYLES
    Only the main content area (inside .faculty-main-content)
@@ -67,7 +66,7 @@
 }
 
 /* =========================================================
-   HORIZONTAL SCROLL CONTAINER
+   HORIZONTAL SCROLL CONTAINER (Pending Requests)
 ========================================================= */
 .requests-scroll-container {
   display: flex;
@@ -88,6 +87,84 @@
 
 .no-requests-message[hidden] {
   display: none;
+}
+
+/* =========================================================
+   UPCOMING / COMPLETED CONSULTATIONS
+   Two-column grid on desktop, single column (Upcoming first,
+   by source order) on smaller screens. Each section is its
+   own white panel with a distinct accent color so the two
+   are easy to tell apart at a glance.
+========================================================= */
+.consultation-sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.section-heading {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.section-heading-upcoming {
+  color: var(--color-red-primary);
+}
+
+.section-heading-completed {
+  color: var(--color-status-available);
+}
+
+.upcoming-card-panel,
+.completed-card-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 24px 24px 24px 40px;
+}
+
+.upcoming-card-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-status-meeting);
+}
+
+.completed-card-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-status-available);
+}
+
+.upcoming-card-list,
+.completed-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cards in the Upcoming/Completed vertical lists fill their
+   column instead of using the Pending section's fixed
+   horizontal-scroll card width. */
+.upcoming-card-list .request-card,
+.completed-card-list .request-card {
+  width: 100%;
+}
+
+.upcoming-card-list .request-card.is-expanded,
+.completed-card-list .request-card.is-expanded {
+  width: 100%;
 }
 
 /* =========================================================
@@ -212,6 +289,15 @@
   word-break: break-word;
 }
 
+/* Completed-only: green confirmation line shown inside the
+   expanded details, alongside the same info as other sections */
+.request-complete-text {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-status-available);
+  margin-top: 8px;
+}
+
 /* =========================================================
    ACTION BUTTONS
 ========================================================= */
@@ -259,7 +345,16 @@
   opacity: 0.6;
 }
 
-/* Small inline toast for the Reschedule placeholder action */
+/* Completed cards show only a single full-width View More/View
+   Less button -- no actions row, since there are no other buttons. */
+.request-view-more-button--full {
+  width: 100%;
+  margin-top: 4px;
+}
+
+/* Small inline toast, kept for any future transient feedback on
+   a card (not currently used by Reschedule, which now navigates
+   to reschedule-consultation.html instead of showing a toast). */
 .request-toast {
   font-size: 0.72rem;
   font-weight: 600;
@@ -304,12 +399,27 @@
   max-width: 240px;
 }
 
+/* Completed cards keep their single View More/View Less button
+   visible even while expanded (it becomes the collapse control). */
+.completed-card-list .request-card.is-expanded .request-view-more-button--full {
+  display: block;
+}
+
 /* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */
 @media (max-width: 1024px) {
   .requests-card {
     padding: 24px 20px 24px 36px;
+  }
+
+  .consultation-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .upcoming-card-panel,
+  .completed-card-panel {
+    padding: 20px 20px 20px 34px;
   }
 }
 
@@ -334,5 +444,21 @@
   .request-card.is-expanded .request-actions {
     flex-direction: column;
     max-width: none;
+  }
+
+  .upcoming-card-panel,
+  .completed-card-panel {
+    padding: 18px 16px 18px 28px;
+  }
+
+  /* Upcoming/Completed cards are already width:100% of their
+     column, so no fixed 220px override is needed here -- this
+     just keeps their expanded state from forcing a fixed width
+     the way the Pending horizontal-scroll cards do. */
+  .upcoming-card-list .request-card,
+  .completed-card-list .request-card,
+  .upcoming-card-list .request-card.is-expanded,
+  .completed-card-list .request-card.is-expanded {
+    width: 100%;
   }
 }

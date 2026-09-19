@@ -1,13 +1,33 @@
-// SYSTEM NOTE: Controls client-side behavior for the notifications page, including UI events and API calls.
 // =========================================================
 // NOTIFICATIONS PAGE INTERACTIONS
 // - Burger menu + Quick Action: copied verbatim from the
 //   proven-working Student Dashboard implementation
-// - Notification bell: keeps the user on notifications.html
-// - Renders database-backed notifications, newest first.
+// - Notification bell icon: already on this page, so its click
+//   does nothing; still renders the shared badge (which will
+//   already be cleared below by the time it renders)
+// - Viewing this page is what marks the shared notification
+//   state as READ (see notification-state.js /
+//   window.ProfConsultNotifications). Every other Student
+//   Dashboard page only READS this state -- this is the one
+//   and only place that clears it.
+// - Renders the sample notification list, newest first.
+//   Structured so future real notifications can simply be
+//   pushed into SAMPLE_NOTIFICATIONS (or, once a backend
+//   exists, fetched and passed to renderNotifications())
+//   without changing how the list itself renders.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
+
+  // ---------------------------------------------------------
+  // Viewing the Notifications page is what actually marks the
+  // shared notification state as read, whether the student
+  // arrived here via the bell or via the sidebar link -- both
+  // paths land here, so both paths produce the same result.
+  // ---------------------------------------------------------
+  if (window.ProfConsultNotifications) {
+    window.ProfConsultNotifications.markRead();
+  }
 
   // ---------------------------------------------------------
   // Burger sidebar: slides in from the left, dims/blurs the
@@ -92,46 +112,40 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
   // ---------------------------------------------------------
-  // Notification bell
+  // Notification bell -- already on this page, so clicking it
+  // does nothing; still renders the shared badge (read-only
+  // call, same as every other page -- it will render as absent
+  // since markRead() above already ran).
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
-      window.location.href = "notifications.html";
+      // Already on Notifications -- nothing to navigate to
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
   // ---------------------------------------------------------
   // Notifications list
+  // Sample data for the current test student account. Already
+  // listed newest-first; once real notifications exist, sort
+  // by their actual timestamp before rendering instead of
+  // relying on insertion order.
   // ---------------------------------------------------------
-  function formatTimestamp(value) {
-    if (!value) return "";
-    const normalized = String(value).replace(" ", "T");
-    const date = new Date(normalized);
-    if (Number.isNaN(date.getTime())) return value;
-
-    return date.toLocaleString("en-US", {
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
+  const SAMPLE_NOTIFICATIONS = [
+    { message: "Professor accepted your consultation request.", timestamp: "2 minutes ago" },
+    { message: "Professor changed availability.", timestamp: "Today" },
+    { message: "Consultation moved to 3:00 PM.", timestamp: "Yesterday" },
+    { message: "New announcement.", timestamp: "" },
+  ];
 
   function renderNotifications(notifications) {
     const listEl = document.getElementById("notificationsList");
     if (!listEl) return;
 
     listEl.innerHTML = "";
-
-    if (notifications.length === 0) {
-      const li = document.createElement("li");
-      li.className = "notification-item";
-      li.textContent = "No notifications yet.";
-      listEl.appendChild(li);
-      return;
-    }
 
     notifications.forEach((notification) => {
       const li = document.createElement("li");
@@ -163,27 +177,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function loadNotifications() {
-    try {
-      const response = await fetch("api/notifications.php", {
-        cache: "no-store",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load notifications.");
-      }
-
-      renderNotifications((result.notifications || []).map((notification) => ({
-        message: notification.Message || "",
-        timestamp: formatTimestamp(notification.Date_Time),
-      })));
-    } catch (error) {
-      renderNotifications([{ message: error.message || "Unable to load notifications.", timestamp: "" }]);
-    }
-  }
-
-  loadNotifications();
+  renderNotifications(SAMPLE_NOTIFICATIONS);
 
 });

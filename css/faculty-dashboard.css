@@ -1,4 +1,3 @@
-/* SYSTEM NOTE: Styles the faculty dashboard page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY DASHBOARD -- PAGE-SPECIFIC STYLES
    Only the main content area (inside .faculty-main-content)
@@ -23,10 +22,10 @@
   gap: 24px;
 }
 
-/* Real-time Philippine date/time, directly under the greeting.
-   Matches the Student Dashboard's .dashboard-datetime exactly
-   (same font-size, weight, color, spacing) so both dashboards
-   present this component identically. */
+/* =========================================================
+   REAL-TIME DATE/TIME
+========================================================= */
+
 .faculty-page-datetime {
   font-size: 0.95rem;
   font-weight: 700;
@@ -34,7 +33,10 @@
   margin-bottom: 14px;
 }
 
-/* Reused status-dot colors from the shared palette */
+/* =========================================================
+   STATUS DOT COLORS
+========================================================= */
+
 .status-dot {
   flex-shrink: 0;
   width: 10px;
@@ -42,16 +44,34 @@
   border-radius: 50%;
 }
 
-.status-available { background-color: var(--color-status-available); }
-.status-teaching { background-color: var(--color-status-teaching); }
-.status-meeting { background-color: var(--color-status-meeting); }
-.status-offline { background-color: var(--color-status-offline); }
-.status-onleave { background-color: var(--color-status-onleave); }
-.status-consultation { background-color: var(--color-status-consultation); }
+.status-available {
+  background-color: var(--color-status-available);
+}
+
+.status-teaching {
+  background-color: var(--color-status-teaching);
+}
+
+.status-meeting {
+  background-color: var(--color-status-meeting);
+}
+
+.status-offline {
+  background-color: var(--color-status-offline);
+}
+
+.status-onleave {
+  background-color: var(--color-status-onleave);
+}
+
+.status-consultation {
+  background-color: var(--color-status-consultation);
+}
 
 /* =========================================================
    TODAY'S STATUS
 ========================================================= */
+
 .faculty-status-row {
   position: relative;
   display: flex;
@@ -76,7 +96,11 @@
   flex-shrink: 0;
   padding: 14px 22px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
   color: var(--color-text-light);
   font-size: 0.85rem;
   font-weight: 700;
@@ -90,9 +114,10 @@
   transform: translateY(-2px);
 }
 
-/* Status selection popup -- gradient card, white pill options,
-   matches the reference design and the same interaction
-   pattern already used for the Student dashboard's filter */
+/* =========================================================
+   STATUS SELECTION POPUP
+========================================================= */
+
 .faculty-status-panel {
   position: absolute;
   top: calc(100% + 10px);
@@ -103,7 +128,11 @@
   gap: 8px;
   padding: 14px;
   border-radius: 20px;
-  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
   z-index: 150;
 
@@ -157,7 +186,11 @@
   margin-top: 4px;
   padding: 11px 16px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
   color: var(--color-text-light);
   font-size: 0.82rem;
   font-weight: 700;
@@ -172,6 +205,7 @@
 /* =========================================================
    TODAY'S SCHEDULE
 ========================================================= */
+
 .faculty-schedule-list {
   list-style: none;
   display: flex;
@@ -207,21 +241,23 @@
 
 /* =========================================================
    PENDING CONSULTATION REQUESTS
-   Restyled to match the Student Dashboard's right-side panel
-   cards (.panel-card): beige background, solid red accent bar
-   down the left edge, red bold title. Scoped to this card only
-   (.faculty-requests-card) so the left-column cards (Today's
-   Status / Today's Schedule) keep their existing white look.
+   MATCHES THE STUDENT DASHBOARD CARD STYLE
 ========================================================= */
+
 .faculty-requests-card {
   position: relative;
+
+  /* Student dashboard style background */
   background-color: #f5f1ea;
+
+  /* Extra left padding so content sits beside red accent */
   padding: 28px 28px 28px 40px;
+
+  /* Keeps red accent contained inside the card */
   overflow: hidden;
 }
 
-/* Thick red accent bar along the left edge, same treatment as
-   the Student Dashboard's .panel-card::before */
+/* Red vertical accent on the far-left side */
 .faculty-requests-card::before {
   content: "";
   position: absolute;
@@ -232,6 +268,7 @@
   background-color: var(--color-red-primary);
 }
 
+/* Red Student Dashboard-style heading */
 .faculty-requests-title {
   max-width: 260px;
   font-size: 1.3rem;
@@ -293,7 +330,11 @@
 }
 
 .faculty-decline-button {
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
 }
 
 .faculty-accept-button:hover,
@@ -320,8 +361,9 @@
 }
 
 /* =========================================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE
 ========================================================= */
+
 @media (max-width: 1024px) {
   .faculty-dashboard-grid {
     flex-direction: column;

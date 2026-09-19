@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Prof Consult | Consultation Requests</title>
+  <title>Prof Consult | Reschedule Consultation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Shared Faculty layout styles -- load on every Faculty page -->
   <link rel="stylesheet" href="css/faculty-shared.css">
-  <!-- Page-specific styles -- only this file changes per page -->
-  <link rel="stylesheet" href="css/faculty-consultation-requests.css">
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="css/reschedule-consultation.css">
 </head>
 <body data-active-page="consultation-requests">
 
   <!-- =========================================================
-       TOP NAVIGATION BAR (shared shell -- do not duplicate
-       edits here; change faculty-shared.css/js instead)
+       TOP NAVIGATION BAR (shared shell -- identical to every
+       other Faculty page; do not edit here)
   ========================================================= -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
@@ -87,75 +87,109 @@
   </div>
 
   <!-- =========================================================
-       MAIN CONTENT AREA
-       Only this section differs from page to page.
+       MAIN CONTENT
   ========================================================= -->
   <main class="faculty-main-content">
-<!-- =========================================================
-     FACULTY CONSULTATION REQUESTS -- MAIN CONTENT
-     Paste this inside <main class="faculty-main-content">...</main>
-     on faculty-consultation-requests.html, alongside the shared
-     navbar/sidebar/background shell. Do not duplicate the shell
-     here, and do not touch faculty-shared.css/faculty-shared.js.
-========================================================= -->
 
-<div class="requests-page-heading">
-  <h1 class="requests-title">Consultation Requests</h1>
-  <p class="requests-subtitle">Pending Requests</p>
-</div>
-
-<section class="faculty-card requests-card">
-  <div class="requests-scroll-container" id="requestsScrollContainer">
-    <!-- Request cards are rendered by faculty-consultation-requests.js
-         from the shared consultations state, so new/incoming requests
-         can be added later without touching this markup. -->
-  </div>
-
-  <p class="no-requests-message" id="noRequestsMessage" hidden>
-    No pending consultation requests right now.
-  </p>
-</section>
-
-<!-- =========================================================
-     UPCOMING / COMPLETED CONSULTATIONS
-     Side-by-side on desktop, stacked (Upcoming first) on mobile.
-     Both are rendered from the same consultations state as the
-     Pending section above -- an accepted request moves here by
-     changing its status, not by being duplicated.
-========================================================= -->
-<div class="consultation-sections-grid">
-
-  <section class="upcoming-consultations-section">
-    <h2 class="section-heading section-heading-upcoming">Upcoming Consultations</h2>
-    <div class="faculty-card upcoming-card-panel">
-      <div class="upcoming-card-list" id="upcomingScrollContainer">
-        <!-- Rendered by faculty-consultation-requests.js -->
-      </div>
-      <p class="no-requests-message" id="noUpcomingMessage" hidden>
-        No upcoming consultations right now.
+    <div class="reschedule-page-heading">
+      <h1 class="reschedule-title">Reschedule Consultation</h1>
+      <p class="reschedule-subtitle">
+        <p class="reschedule-subtitle">
+  Complete the form below to reschedule the consultation. The student will be
+  notified of your updated consultation schedule through FINDPROF.
+</p>
       </p>
     </div>
-  </section>
 
-  <section class="completed-consultations-section">
-    <h2 class="section-heading section-heading-completed">Completed Consultations</h2>
-    <div class="faculty-card completed-card-panel">
-      <div class="completed-card-list" id="completedScrollContainer">
-        <!-- Rendered by faculty-consultation-requests.js -->
+    <form class="faculty-card reschedule-card" id="rescheduleConsultationForm" novalidate>
+
+      <div class="reschedule-columns">
+
+        <!-- =========================================================
+             LEFT COLUMN -- read-only, from the original request
+        ========================================================= -->
+        <div class="reschedule-column">
+
+          <div class="info-row">
+            <span class="info-label">Purpose of Consultation</span>
+            <span class="info-value" id="reschedulePurpose"></span>
+          </div>
+
+          <div class="message-block">
+            <div class="info-row info-row-label-only">
+              <span class="info-label">Additional Message</span>
+            </div>
+            <p class="message-display" id="rescheduleMessage"></p>
+          </div>
+
+        </div>
+
+        <!-- =========================================================
+             RIGHT COLUMN -- Preferred Date/Time are editable
+        ========================================================= -->
+        <div class="reschedule-column">
+
+          <div class="info-row">
+            <span class="info-label">Student Name</span>
+            <span class="info-value" id="rescheduleStudentName"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Year and Set</span>
+            <span class="info-value" id="rescheduleYearSet"></span>
+          </div>
+
+          <div class="info-row">
+            <span class="info-label">Preferred Date</span>
+            <input
+              type="date"
+              id="reschedulePreferredDate"
+              name="reschedulePreferredDate"
+              class="info-value info-input"
+              required
+            >
+          </div>
+          <p class="date-availability-hint" id="reschedulePreferredDateHint">Available days: Monday, Wednesday, Friday</p>
+
+          <div class="info-row info-row-select">
+            <span class="info-label">Preferred Time</span>
+            <div class="custom-select" id="reschedulePreferredTimeSelect">
+              <button
+                type="button"
+                class="custom-select-trigger"
+                id="reschedulePreferredTimeTrigger"
+                aria-haspopup="listbox"
+                aria-expanded="false"
+              >
+                <span class="custom-select-value" data-placeholder="Select Time">Select Time</span>
+              </button>
+              <ul class="custom-select-options" id="reschedulePreferredTimeOptions" role="listbox" hidden>
+                <!-- Populated by reschedule-consultation.js with 30-minute slots, 8:00 AM - 8:00 PM -->
+              </ul>
+              <input type="hidden" id="reschedulePreferredTime" name="reschedulePreferredTime" required>
+            </div>
+          </div>
+
+          <!-- =========================================================
+               BUTTONS
+          ========================================================= -->
+          <div class="reschedule-buttons">
+            <a href="faculty-consultation-requests.html" class="btn btn-cancel" data-nav="cancel">Cancel</a>
+            <button type="submit" class="btn btn-submit" id="submitRescheduleButton">Submit New Schedule</button>
+          </div>
+          <p class="reschedule-countdown" id="rescheduleCountdown" aria-live="polite"></p>
+
+        </div>
+
       </div>
-      <p class="no-requests-message" id="noCompletedMessage" hidden>
-        No completed consultations yet.
-      </p>
-    </div>
-  </section>
 
-</div>
+    </form>
 
-</main>
+  </main>
 
   <!-- Shared Faculty layout behavior -- load on every Faculty page -->
   <script src="js/faculty-shared.js"></script>
   <!-- Page-specific behavior -->
-  <script src="js/faculty-consultation-requests.js"></script>
+  <script src="js/reschedule-consultation.js"></script>
 </body>
 </html>

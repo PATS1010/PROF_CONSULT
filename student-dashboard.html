@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the student dashboard page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -28,7 +27,9 @@
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- navigates to notifications.html on click (see student-dashboard.js). -->
+      <!-- Notification bell -- navigates to notifications.html on click (see student-dashboard.js).
+           TEST/DEMO ONLY: no real notification data or backend yet.
+           Image is a placeholder -- swap the src below for the real icon whenever it's ready. -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="Notifications">
       </button>
@@ -56,7 +57,7 @@
           <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
         </div>
 
-       
+        
       </div>
     </div>
   </header>
@@ -105,7 +106,7 @@
     <section class="dashboard-main-column">
 
       <h1 class="dashboard-greeting">
-        Good day, <span class="format-text" id="studentFirstName">Student</span>!
+        Good day, <span class="format-text" id="studentFirstName">John</span>!
       </h1>
 
       <p class="dashboard-datetime" id="dashboardDateTime" aria-live="off"></p>
@@ -140,7 +141,47 @@
 
       <div class="professor-list-container">
         <div class="professor-list" id="professorList">
-          <!-- Professor cards are rendered here from api/faculty-directory.php. -->
+
+          <!-- data-faculty-id added on each card below: matches the
+               same id used in faculty-directory.js's FACULTY_DIRECTORY_DATA,
+               so a click can hand off which faculty was selected (see
+               student-dashboard.js). No visual/markup change otherwise. -->
+          <article class="professor-card" data-status="available" data-faculty-id="maria-nina-sales">
+            <img src="images/nina.png" alt="Engr. Maria Nina Sales" class="professor-photo">
+            <div class="professor-info">
+              <p class="professor-name">Engr. Maria Nina Sales</p>
+              <p class="professor-meta">Computer Engineering | Available</p>
+            </div>
+            <span class="status-dot status-available" aria-hidden="true"></span>
+          </article>
+
+          <article class="professor-card" data-status="onleave" data-faculty-id="bernard-bisuecos">
+            <img src="images/bis.png" alt="Engr. Bernard Bisuecos" class="professor-photo">
+            <div class="professor-info">
+              <p class="professor-name">Engr. Bernard Bisuecos</p>
+              <p class="professor-meta">Computer Engineering | On Leave</p>
+            </div>
+            <span class="status-dot status-onleave" aria-hidden="true"></span>
+          </article>
+
+          <article class="professor-card" data-status="teaching" data-faculty-id="mervin-molina">
+            <img src="images/mervin.png" alt="Engr. Mervin Molina" class="professor-photo">
+            <div class="professor-info">
+              <p class="professor-name">Engr. Mervin Molina</p>
+              <p class="professor-meta">Computer Engineering | Teaching Class</p>
+            </div>
+            <span class="status-dot status-teaching" aria-hidden="true"></span>
+          </article>
+
+          <article class="professor-card" data-status="offline" data-faculty-id="melody-paned">
+            <img src="images/paned.jpg" alt="Engr. Melody Paned" class="professor-photo">
+            <div class="professor-info">
+              <p class="professor-name">Engr. Melody Paned</p>
+              <p class="professor-meta">Computer Engineering | Offline</p>
+            </div>
+            <span class="status-dot status-offline" aria-hidden="true"></span>
+          </article>
+
         </div>
 
         <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected status.</p>
@@ -156,14 +197,17 @@
       <div class="panel-card">
         <h2 class="panel-title">Faculty Availability</h2>
         <ul class="availability-list" id="availabilityList">
-          <li>Loading faculty...</li>
+          <li><span class="status-dot status-available" aria-hidden="true"></span> Engr. Maria Nina Sales | Available</li>
+          <li><span class="status-dot status-teaching" aria-hidden="true"></span> Engr. Mervin Molina | Teaching Class</li>
+          <li><span class="status-dot status-meeting" aria-hidden="true"></span> Engr. Rose Onate | Meeting</li>
+          <li><span class="status-dot status-offline" aria-hidden="true"></span> Engr. Melody Paned | Offline</li>
         </ul>
       </div>
 
       <div class="panel-card">
         <h2 class="panel-title">Recent Notifications</h2>
         <ul class="notifications-list" id="notificationsList">
-          <li>Loading notifications...</li>
+          <li><span class="notification-check" aria-hidden="true">&check;</span> Your consultation request was accepted.</li>
         </ul>
       </div>
 
@@ -171,6 +215,7 @@
 
   </main>
 
-  <script src="js/student-dashboard.js?v=20260906-0315"></script>
+  <script src="js/notification-state.js"></script>
+  <script src="js/student-dashboard.js"></script>
 </body>
 </html>

@@ -1,11 +1,12 @@
-// SYSTEM NOTE: Controls client-side behavior for the settings page, including UI events and API calls.
 // =========================================================
 // ACCOUNT SETTINGS PAGE INTERACTIONS
 // - Burger menu + Quick Action: copied verbatim from the
 //   proven-working Student Dashboard implementation
 // - Notification bell icon: navigates to notifications.html
 //   on click (TEST/DEMO ONLY -- no real notification data or
-//   backend yet)
+//   backend yet), and renders the shared unread-indicator
+//   badge (see notification-state.js /
+//   window.ProfConsultNotifications)
 // - Settings checkboxes: persisted via localStorage as a
 //   frontend-only stand-in until a real backend exists
 // - Save button: persists settings and shows a green success
@@ -94,9 +95,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html.
+  // Notification bell -- navigates to notifications.html, and
+  // renders the shared unread-indicator badge (read-only here;
+  // only notifications.js clears the state).
   // TEST/DEMO ONLY: no real notification data or backend yet,
   // this just routes the whole button (not only the image) to
   // the Notifications page.
@@ -106,6 +110,9 @@ document.addEventListener("DOMContentLoaded", () => {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
   // ---------------------------------------------------------

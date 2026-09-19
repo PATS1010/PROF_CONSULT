@@ -1,45 +1,80 @@
-// SYSTEM NOTE: Controls client-side behavior for the student dashboard page, including UI events and API calls.
 // =========================================================
 // STUDENT DASHBOARD INTERACTIONS
-// - Populates the greeting from the logged-in student session
+// - Populates the greeting from the SAME stored name fields as
+//   Student Profile (see STUDENT_NAME_STORAGE_KEY below) -- the
+//   greeting uses ONLY the stored First Name, never derived by
+//   splitting a combined full-name string, so the two pages can
+//   never disagree about what the student's first name is, and
+//   a multi-word first name (e.g. "Mary Jane") is preserved as-is.
 // - Live Philippine date and time, updated every second
 // - Burger menu: slide-in sidebar with dim/blur overlay
 // - Quick Action: fade/slide popup with Find Faculty and
 //   Request Consultation actions
-// - Notification bell: navigates to notifications.html
+// - Notification bell: navigates to notifications.html, and
+//   shows a shared unread-indicator badge (see
+//   notification-state.js / window.ProfConsultNotifications)
 // - Search Professor: real-time, case-insensitive, partial-match
 //   filtering, combined with an optional status filter, with a
 //   shared empty state when nothing matches
+// - Clicking a faculty card navigates to Faculty Directory with
+//   that same faculty pre-selected (see the FACULTY CARD CLICK
+//   section below) -- generic for any card with data-faculty-id,
+//   no per-faculty special-casing.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const firstNameEl = document.getElementById("studentFirstName");
+  // ---------------------------------------------------------
+  // Sample student account -- replace with real session/user
+  // data once backend authentication exists
+  // ---------------------------------------------------------
+  const SAMPLE_STUDENT = {
+    studentId: "24-00001",
+    program: "BSCPE (Computer Engineering)",
+    yearLevel: "3rd Year",
+  };
 
-  function firstNameFrom(fullName) {
-    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
-    return parts[0] || "Student";
-  }
+  // ---------------------------------------------------------
+  // Name -- read from the same localStorage key Student Profile
+  // saves to (STUDENT_NAME_STORAGE_KEY), so this page and the
+  // Profile page always show a consistent first name and the
+  // greeting survives a refresh once the student has edited it.
+  // ---------------------------------------------------------
+  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
 
-  async function loadCurrentStudent() {
+  const DEFAULT_STUDENT_NAME = {
+    firstName: "John",
+    middleInitial: "D",
+    lastName: "Cruz",
+  };
+
+  function loadStudentName() {
     try {
-      const response = await fetch("api/session.php?role=student", {
-        cache: "no-store",
-        headers: { "Accept": "application/json" },
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.ok || !data.user || data.user.role !== "student") {
-        throw new Error("Student session unavailable");
+      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          return {
+            firstName: parsed.firstName || "",
+            middleInitial: parsed.middleInitial || "",
+            lastName: parsed.lastName || "",
+          };
+        }
       }
-
-      if (firstNameEl) firstNameEl.textContent = firstNameFrom(data.user.name);
     } catch (error) {
-      window.location.href = "student-login.html";
+      // fall through to defaults
     }
+    return { ...DEFAULT_STUDENT_NAME };
   }
 
-  loadCurrentStudent();
+  const studentName = loadStudentName();
+
+  const firstNameEl = document.getElementById("studentFirstName");
+  if (firstNameEl) {
+    // First Name is the source of truth for the greeting --
+    // never derived by splitting a connected full name.
+    firstNameEl.textContent = studentName.firstName;
+  }
 
   // ---------------------------------------------------------
   // Live Philippine date and time, directly below the greeting.
@@ -103,8 +138,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     sidebar.classList.add("is-open");
     sidebarOverlay.hidden = false;
-    // Let the browser paint `hidden` removal first so the
-    // opacity transition on the overlay actually animates in
     requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
   }
 
@@ -113,7 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.classList.remove("is-open");
     window.setTimeout(() => {
       sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
+    }, 250);
   }
 
   if (hamburgerButton) {
@@ -144,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quickActionButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (quickActionButton) {
@@ -159,10 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  
+
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html.
+  // Notification bell -- navigates to notifications.html, and
+  // renders the shared unread-indicator badge (read-only here;
+  // only notifications.js clears the state).
   // TEST/DEMO ONLY: no real notification data or backend yet,
   // this just routes the whole button (not only the image) to
   // the Notifications page.
@@ -172,6 +207,9 @@ document.addEventListener("DOMContentLoaded", () => {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
   // ---------------------------------------------------------
@@ -196,7 +234,7 @@ document.addEventListener("DOMContentLoaded", () => {
     filterButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       filterPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (filterButton) {
@@ -235,167 +273,27 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------
-  // Search Professor + Status Filter: the cards are loaded from
-  // the real faculty accounts returned by api/faculty-directory.php.
+  // Search Professor + Status Filter: real-time, case-insensitive,
+  // partial-match search combined with an optional status filter.
+  // Both apply together -- a professor must match the search text
+  // AND the selected status (when one is active) to stay visible.
+  // Shows a shared empty-state message when nothing matches;
+  // empty search and/or no active filter restores the full list.
   // ---------------------------------------------------------
   const searchInput = document.getElementById("professorSearchInput");
-  const professorList = document.getElementById("professorList");
-  const availabilityList = document.getElementById("availabilityList");
-  const notificationsList = document.getElementById("notificationsList");
+  const professorCards = Array.from(document.querySelectorAll(".professor-card"));
   const noResultsMessage = document.getElementById("noResultsMessage");
 
   let activeStatus = null;
-  let facultyDirectoryData = [];
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;",
-    }[character]));
-  }
-
-  function normalizeStatus(value) {
-    const normalized = String(value || "offline").trim().toLowerCase();
-    const map = {
-      "available": "available",
-      "in class": "teaching",
-      "teaching": "teaching",
-      "meeting": "meeting",
-      "consultation": "consultation",
-      "on leave": "onleave",
-      "onleave": "onleave",
-      "unavailable": "offline",
-      "offline": "offline",
-    };
-
-    return map[normalized] || "offline";
-  }
-
-  function statusLabel(status) {
-    const labels = {
-      available: "Available",
-      teaching: "Teaching Class",
-      meeting: "Meeting",
-      consultation: "Consultation",
-      onleave: "On Leave",
-      offline: "Offline",
-    };
-
-    return labels[status] || "Offline";
-  }
-
-  function displayName(userName) {
-    const name = String(userName || "Unnamed Faculty").trim();
-    return /^engr\./i.test(name) ? name : `Engr. ${name}`;
-  }
-
-  function facultyFromApi(row) {
-    const status = normalizeStatus(row.Current_Status);
-    const profilePhoto = String(row.Profile_Photo || row.profile_photo || "").trim();
-
-    return {
-      id: String(row.Faculty_ID),
-      fullName: displayName(row.Full_Name),
-      department: row.Department || "Department not set",
-      office: row.Office || "Office not set",
-      status,
-      statusLabel: statusLabel(status),
-      photo: profilePhoto || "images/user1.png",
-    };
-  }
-
-  function renderEmpty(message) {
-    if (professorList) professorList.innerHTML = "";
-    if (availabilityList) availabilityList.innerHTML = `<li>${message}</li>`;
-    if (noResultsMessage) {
-      noResultsMessage.textContent = message;
-      noResultsMessage.hidden = false;
-    }
-  }
-
-  function renderFacultyCards() {
-    if (!professorList) return;
-
-    professorList.innerHTML = facultyDirectoryData.map((faculty) => `
-      <article class="professor-card" data-status="${escapeHtml(faculty.status)}" data-faculty-id="${escapeHtml(faculty.id)}">
-        <img src="${escapeHtml(faculty.photo)}" alt="${escapeHtml(faculty.fullName)}" class="professor-photo">
-        <div class="professor-info">
-          <p class="professor-name">${escapeHtml(faculty.fullName)}</p>
-          <p class="professor-meta">${escapeHtml(faculty.department)} | ${escapeHtml(faculty.statusLabel)}</p>
-        </div>
-        <span class="status-dot status-${escapeHtml(faculty.status)}" aria-hidden="true"></span>
-      </article>
-    `).join("");
-  }
-
-  function renderAvailability() {
-    if (!availabilityList) return;
-
-    availabilityList.innerHTML = facultyDirectoryData.map((faculty) => `
-      <li>
-        <span class="status-dot status-${escapeHtml(faculty.status)}" aria-hidden="true"></span>
-        ${escapeHtml(faculty.fullName)} | ${escapeHtml(faculty.statusLabel)}
-      </li>
-    `).join("");
-  }
-
-  function renderNotifications(notifications) {
-    if (!notificationsList) return;
-
-    notificationsList.innerHTML = "";
-
-    if (notifications.length === 0) {
-      notificationsList.innerHTML = "<li>No notifications yet.</li>";
-      return;
-    }
-
-    notifications.slice(0, 3).forEach((notification) => {
-      notificationsList.innerHTML += `
-        <li>
-          <span class="notification-check" aria-hidden="true">&check;</span>
-          ${escapeHtml(notification.Message || "")}
-        </li>
-      `;
-    });
-  }
-
-  async function loadNotifications() {
-    if (!notificationsList) return;
-
-    notificationsList.innerHTML = "<li>Loading notifications...</li>";
-
-    try {
-      const response = await fetch("api/notifications.php", {
-        cache: "no-store",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load notifications.");
-      }
-
-      renderNotifications(result.notifications || []);
-    } catch (error) {
-      notificationsList.innerHTML = `<li>${escapeHtml(error.message || "Unable to load notifications.")}</li>`;
-    }
-  }
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
-    const professorCards = professorList
-      ? Array.from(professorList.querySelectorAll(".professor-card"))
-      : [];
     let visibleCount = 0;
 
     professorCards.forEach((card) => {
       const name = card.querySelector(".professor-name").textContent.toLowerCase();
-      const meta = card.querySelector(".professor-meta").textContent.toLowerCase();
       const status = card.dataset.status || "";
-      const matchesSearch = query === "" || name.includes(query) || meta.includes(query);
+      const matchesSearch = query === "" || name.includes(query);
       const matchesStatus = !activeStatus || status === activeStatus;
       const matches = matchesSearch && matchesStatus;
 
@@ -404,38 +302,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (noResultsMessage) {
-      noResultsMessage.textContent = "No faculty members match your search or selected status.";
       noResultsMessage.hidden = visibleCount > 0;
-    }
-  }
-
-  async function loadFacultyDirectory(showLoading = false) {
-    if (showLoading) {
-      renderEmpty("Loading faculty...");
-    }
-
-    try {
-      const response = await fetch("api/faculty-directory.php", { cache: "no-store" });
-      const result = await response.json();
-
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load faculty directory.");
-      }
-
-      facultyDirectoryData = (result.faculty || []).map(facultyFromApi);
-
-      if (facultyDirectoryData.length === 0) {
-        renderEmpty("No faculty accounts have been created yet.");
-        return;
-      }
-
-      renderFacultyCards();
-      renderAvailability();
-      applyFilters();
-    } catch (error) {
-      if (showLoading || facultyDirectoryData.length === 0) {
-        renderEmpty(error.message || "Unable to load faculty directory.");
-      }
     }
   }
 
@@ -462,17 +329,29 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  loadFacultyDirectory(true);
-  loadNotifications();
+  // ---------------------------------------------------------
+  // FACULTY CARD CLICK -> Faculty Directory, same faculty selected.
+  //
+  // Reuses the exact same "?facultyId=" query-param hand-off
+  // mechanism already used elsewhere in the project (e.g.
+  // faculty-directory.js's own Request Consultation link uses
+  // "request-consultation.html?facultyId=..."), and relies on
+  // Faculty Directory's EXISTING openProfile() selection logic
+  // to actually show the profile once it arrives there (see
+  // faculty-directory.js) -- nothing about faculty selection is
+  // duplicated here.
+  //
+  // Generic for any card that has a data-faculty-id attribute --
+  // no specific faculty name is referenced or special-cased, so
+  // this works for every current and future card the same way.
+  // ---------------------------------------------------------
+  professorCards.forEach((card) => {
+    const facultyId = card.dataset.facultyId;
+    if (!facultyId) return;
 
-  window.setInterval(() => {
-    loadFacultyDirectory(false);
-  }, 5000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      loadFacultyDirectory(false);
-      loadNotifications();
-    }
+    card.addEventListener("click", () => {
+      window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
+    });
   });
+
 });
