@@ -11,10 +11,21 @@
 // - Accept moves a request from Pending -> Upcoming.
 // - Complete (Upcoming cards only) moves a request from
 //   Upcoming -> Completed.
-// - Decline (Pending) / Cancel (Upcoming) are the same underlying
-//   cancellation logic -- only the button label differs by section.
+// - Decline (Pending) sets status "declined"; Cancel (Upcoming)
+//   sets status "cancelled" -- two distinct outcomes (previously
+//   both wrote "declined", since neither was ever rendered
+//   anywhere; History now needs to tell them apart, so this is
+//   the one status-model change this feature required).
 // - Reschedule navigates to reschedule-consultation.html for that
 //   exact consultation.
+// - History: an in-page view (no navigation/reload) listing every
+//   request whose status is "declined", "cancelled", or
+//   "completed" -- i.e. it reads the exact same REQUESTS array as
+//   everything else above, just filtered differently. Clear All
+//   removes those entries from REQUESTS entirely (after an inline
+//   confirm), which is also why it empties the Completed
+//   Consultations panel for any consultation cleared this way --
+//   same record, two views of it.
 //
 // STATE / STORAGE:
 // Consultations persist in localStorage under CONSULTATIONS_STORAGE_KEY
@@ -22,12 +33,13 @@
 // page and have it reflected back here. Still no backend -- once one
 // exists, loadConsultations()/saveConsultations() are the two
 // functions to swap for real API calls; everything else (rendering,
-// actions) stays the same.
+// actions, History) stays the same.
 //
 // MOCK/TEST RESET ON REFRESH:
 // This is currently a mock/test account, so an actual browser refresh
 // (not the normal navigate-away-and-back-from-reschedule flow) wipes
-// any Accept/Complete/Decline/Reschedule test changes and restores
+// any Accept/Complete/Decline/Cancel/Reschedule test changes (History
+// included, since it's the same data) and restores
 // DEFAULT_CONSULTATIONS. isPageReload() distinguishes a real refresh
 // from ordinary navigation using the Navigation Timing API. Once real
 // accounts/backend exist, this reset behavior is the one thing to
@@ -41,6 +53,17 @@
 
 const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
+
+// ---------------------------------------------------------
+// History status labels -- maps a consultation's stored
+// `status` to the plain label History shows for it. Only
+// these three statuses ever appear in History.
+// ---------------------------------------------------------
+const HISTORY_STATUS_LABELS = {
+  declined: "Rejected",
+  cancelled: "Cancelled",
+  completed: "Completed",
+};
 
 // ---------------------------------------------------------
 // Mock consultations -- replace with real data from the backend
@@ -173,6 +196,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const noCompletedMessage = document.getElementById("noCompletedMessage");
 
   // ---------------------------------------------------------
+  // History view elements
+  // ---------------------------------------------------------
+  const historyToggleButton = document.getElementById("historyToggleButton");
+  const requestsSubtitle = document.getElementById("requestsSubtitle");
+  const pendingSectionCard = document.getElementById("pendingSectionCard");
+  const consultationSectionsGrid = document.getElementById("consultationSectionsGrid");
+  const historyCard = document.getElementById("historyCard");
+  const historyEntriesList = document.getElementById("historyEntriesList");
+  const historyEmptyMessage = document.getElementById("historyEmptyMessage");
+  const historyClearButton = document.getElementById("historyClearButton");
+  const historyConfirmRow = document.getElementById("historyConfirmRow");
+  const historyConfirmYesButton = document.getElementById("historyConfirmYesButton");
+  const historyConfirmCancelButton = document.getElementById("historyConfirmCancelButton");
+
+  // ---------------------------------------------------------
   // Render
   // One card-builder shared by all three sections -- they're
   // "almost identical", per spec, so the differences (which
@@ -257,6 +295,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ---------------------------------------------------------
+  // History
+  // Plain, non-interactive entries -- no Accept/Decline/
+  // Reschedule/Complete/View More, per spec. Just the student
+  // name, purpose, and the outcome label.
+  // ---------------------------------------------------------
+  function buildHistoryEntry(request) {
+    const entry = document.createElement("article");
+    entry.className = "history-entry";
+    entry.dataset.id = request.id;
+
+    const statusLabel = HISTORY_STATUS_LABELS[request.status] || "";
+    const statusModifierClass = `history-entry-status--${request.status}`;
+
+    entry.innerHTML = `
+      <p class="history-entry-name">${request.name}</p>
+      <p class="history-entry-type">${request.type}</p>
+      <p class="history-entry-date">Preferred Date: ${request.date}</p>
+      <p class="history-entry-status ${statusModifierClass}">${statusLabel}</p>
+    `;
+
+    return entry;
+  }
+
+  function renderHistory() {
+    if (!historyEntriesList) return;
+    historyEntriesList.innerHTML = "";
+
+    const historyItems = REQUESTS.filter(
+      (request) => Object.prototype.hasOwnProperty.call(HISTORY_STATUS_LABELS, request.status)
+    );
+
+    historyItems.forEach((request) => {
+      historyEntriesList.appendChild(buildHistoryEntry(request));
+    });
+
+    if (historyEmptyMessage) {
+      historyEmptyMessage.hidden = historyItems.length > 0;
+    }
+
+    // Nothing to clear -- hide Clear All (and make sure any open
+    // confirm prompt from a previous state doesn't linger).
+    if (historyClearButton) {
+      historyClearButton.hidden = historyItems.length === 0;
+    }
+    if (historyConfirmRow) {
+      historyConfirmRow.hidden = true;
+    }
+  }
+
   function renderAll() {
     renderSection(pendingContainer, noPendingMessage, "pending", "pending");
     renderSection(upcomingContainer, noUpcomingMessage, "upcoming", "upcoming");
@@ -264,6 +352,81 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderAll();
+
+  // ---------------------------------------------------------
+  // History / Back toggle
+  // Shows/hides in place -- no navigation, no reload.
+  // ---------------------------------------------------------
+  let isHistoryOpen = false;
+
+  function showHistoryView() {
+    isHistoryOpen = true;
+
+    if (requestsSubtitle) requestsSubtitle.hidden = true;
+    if (pendingSectionCard) pendingSectionCard.hidden = true;
+    if (consultationSectionsGrid) consultationSectionsGrid.hidden = true;
+
+    if (historyCard) historyCard.hidden = false;
+    if (historyToggleButton) historyToggleButton.textContent = "Back";
+
+    renderHistory();
+  }
+
+  function showPendingView() {
+    isHistoryOpen = false;
+
+    if (historyCard) historyCard.hidden = true;
+    if (historyToggleButton) historyToggleButton.textContent = "History";
+
+    if (requestsSubtitle) requestsSubtitle.hidden = false;
+    if (pendingSectionCard) pendingSectionCard.hidden = false;
+    if (consultationSectionsGrid) consultationSectionsGrid.hidden = false;
+  }
+
+  if (historyToggleButton) {
+    historyToggleButton.addEventListener("click", () => {
+      if (isHistoryOpen) {
+        showPendingView();
+      } else {
+        showHistoryView();
+      }
+    });
+  }
+
+  // ---------------------------------------------------------
+  // Clear All -- inline confirm/cancel, nothing removed until
+  // the confirm button is actually clicked.
+  // ---------------------------------------------------------
+  if (historyClearButton) {
+    historyClearButton.addEventListener("click", () => {
+      historyClearButton.hidden = true;
+      if (historyConfirmRow) historyConfirmRow.hidden = false;
+    });
+  }
+
+  if (historyConfirmCancelButton) {
+    historyConfirmCancelButton.addEventListener("click", () => {
+      if (historyConfirmRow) historyConfirmRow.hidden = true;
+      if (historyClearButton) historyClearButton.hidden = false;
+    });
+  }
+
+  if (historyConfirmYesButton) {
+    historyConfirmYesButton.addEventListener("click", () => {
+      // Remove every declined/cancelled/completed record entirely.
+      // This is the same underlying data the Completed Consultations
+      // panel reads, so clearing History also empties that panel for
+      // any consultation removed this way.
+      REQUESTS = REQUESTS.filter(
+        (request) => !Object.prototype.hasOwnProperty.call(HISTORY_STATUS_LABELS, request.status)
+      );
+
+      saveConsultations(REQUESTS);
+
+      renderHistory();
+      renderAll();
+    });
+  }
 
   // ---------------------------------------------------------
   // Card interactions -- delegated per section container so
@@ -338,7 +501,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (action === "decline") {
-      actionButton.textContent = section === "upcoming" ? "Cancelled" : "Declined";
+      const isCancel = section === "upcoming";
+
+      actionButton.textContent = isCancel ? "Cancelled" : "Declined";
       actionButton.disabled = true;
       actionButton.classList.add("is-declined");
 
@@ -349,11 +514,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const rescheduleButton = card.querySelector(".request-reschedule-button");
       if (rescheduleButton) rescheduleButton.disabled = true;
 
-      // Same cancellation logic for Pending's Decline and Upcoming's
-      // Cancel -- only the button label differs by section.
-      request.status = "declined";
+      // Pending's Decline and Upcoming's Cancel are different real
+      // outcomes -- distinct statuses so History can label them
+      // correctly ("Rejected" vs "Cancelled").
+      request.status = isCancel ? "cancelled" : "declined";
       saveConsultations(REQUESTS);
-      notifyRequestAnswered(request, section === "upcoming" ? "cancelled" : "declined");
+      notifyRequestAnswered(request, isCancel ? "cancelled" : "declined");
 
       window.setTimeout(renderAll, 900);
       return;

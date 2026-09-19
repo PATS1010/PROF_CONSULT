@@ -101,10 +101,21 @@
 
 <div class="requests-page-heading">
   <h1 class="requests-title">Consultation Requests</h1>
-  <p class="requests-subtitle">Pending Requests</p>
+  <p class="requests-subtitle" id="requestsSubtitle">Pending Requests</p>
 </div>
 
-<section class="faculty-card requests-card">
+<!-- History / Back toggle -- switches between the normal Pending/
+     Upcoming/Completed view and the in-page History view below.
+     No navigation, no reload. -->
+<button
+  type="button"
+  class="history-toggle-button"
+  id="historyToggleButton"
+>
+  History
+</button>
+
+<section class="faculty-card requests-card" id="pendingSectionCard">
   <div class="requests-scroll-container" id="requestsScrollContainer">
     <!-- Request cards are rendered by faculty-consultation-requests.js
          from the shared consultations state, so new/incoming requests
@@ -123,7 +134,7 @@
      Pending section above -- an accepted request moves here by
      changing its status, not by being duplicated.
 ========================================================= -->
-<div class="consultation-sections-grid">
+<div class="consultation-sections-grid" id="consultationSectionsGrid">
 
   <section class="upcoming-consultations-section">
     <h2 class="section-heading section-heading-upcoming">Upcoming Consultations</h2>
@@ -150,6 +161,70 @@
   </section>
 
 </div>
+
+<!-- =========================================================
+     HISTORY VIEW
+     Hidden by default. Shown in place of the Pending card and
+     the Upcoming/Completed grid above when History is toggled
+     on -- same middle section, no separate page, no reload.
+     Reuses the exact same consultations state as everything
+     above: an entry here is simply a request whose status is
+     "declined" (Rejected), "cancelled" (Cancelled) or
+     "completed" (Completed).
+========================================================= -->
+<section class="faculty-card history-card" id="historyCard" hidden>
+
+  <h2 class="requests-title history-title">History</h2>
+
+  <div class="history-entries-list" id="historyEntriesList">
+    <!-- Rendered by faculty-consultation-requests.js -->
+  </div>
+
+  <p class="no-requests-message history-empty-message" id="historyEmptyMessage" hidden>
+    No consultation history yet.
+  </p>
+
+  <div class="history-footer" id="historyFooter">
+
+    <button
+      type="button"
+      class="history-clear-button"
+      id="historyClearButton"
+    >
+      Clear All
+    </button>
+
+    <!-- Inline confirm/cancel -- shown in place of the Clear All
+         button above; nothing is removed until Yes is clicked. -->
+    <div class="history-confirm-row" id="historyConfirmRow" hidden>
+
+      <p class="history-confirm-text">Remove all history?</p>
+
+      <div class="history-confirm-actions">
+
+        <button
+          type="button"
+          class="history-confirm-yes-button"
+          id="historyConfirmYesButton"
+        >
+          Yes, Clear
+        </button>
+
+        <button
+          type="button"
+          class="history-confirm-cancel-button"
+          id="historyConfirmCancelButton"
+        >
+          Cancel
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
 
 </main>
 

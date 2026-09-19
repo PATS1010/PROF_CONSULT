@@ -45,6 +45,28 @@
 }
 
 /* =========================================================
+   HISTORY / BACK TOGGLE
+   Neutral pill, matching the light rounded-button treatment
+   used elsewhere for secondary/utility actions.
+========================================================= */
+.history-toggle-button {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 9px 24px;
+  border-radius: 999px;
+  background-color: #eee8dd;
+  color: var(--color-text-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.history-toggle-button:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
    REQUESTS CARD
    White rounded card with a thick red left accent bar,
    matching the Notifications/Student panel-card treatment.
@@ -101,6 +123,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 24px;
   margin-top: 32px;
+}
+
+.consultation-sections-grid[hidden] {
+  display: none;
 }
 
 .section-heading {
@@ -406,6 +432,158 @@
 }
 
 /* =========================================================
+   HISTORY VIEW
+   Plain, non-interactive entries -- no action buttons, no
+   expand/collapse. Reuses the requests-card white-card shell
+   spacing but WITHOUT the colored left accent bar, matching
+   the reference design (a plain white/cream card).
+========================================================= */
+.history-card {
+  padding: 28px;
+}
+
+.history-title {
+  display: block;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  margin-bottom: 20px;
+}
+
+.history-entries-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.history-empty-message {
+  padding: 24px 4px 8px;
+}
+
+.history-entry {
+  flex: 1 1 240px;
+  max-width: 320px;
+  background-color: #f5f1ea;
+  border-radius: 20px;
+  box-shadow: var(--shadow-card);
+  padding: 18px 20px;
+}
+
+.history-entry-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 6px;
+}
+
+.history-entry-type {
+  font-size: 0.82rem;
+  color: var(--color-text-dark);
+  margin-bottom: 2px;
+}
+
+.history-entry-date {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-bottom: 14px;
+}
+
+.history-entry-status {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.history-entry-status--rejected {
+  color: var(--color-red-primary);
+}
+
+.history-entry-status--cancelled {
+  color: var(--color-status-onleave);
+}
+
+.history-entry-status--completed {
+  color: var(--color-status-available);
+}
+
+/* =========================================================
+   HISTORY FOOTER: Clear All + confirm/cancel
+========================================================= */
+.history-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.history-clear-button {
+  padding: 10px 30px;
+  border-radius: 999px;
+  background-color: #eee8dd;
+  color: var(--color-text-dark);
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.history-clear-button:hover {
+  opacity: 0.85;
+  transform: translateY(-1px);
+}
+
+.history-clear-button[hidden] {
+  display: none;
+}
+
+.history-confirm-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.history-confirm-row[hidden] {
+  display: none;
+}
+
+.history-confirm-text {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.history-confirm-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.history-confirm-yes-button,
+.history-confirm-cancel-button {
+  padding: 9px 22px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.history-confirm-yes-button {
+  background-color: var(--color-red-dark);
+  color: var(--color-text-light);
+}
+
+.history-confirm-cancel-button {
+  background-color: #eee8dd;
+  color: var(--color-text-dark);
+}
+
+.history-confirm-yes-button:hover,
+.history-confirm-cancel-button:hover {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+/* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */
 @media (max-width: 1024px) {
@@ -459,6 +637,20 @@
   .completed-card-list .request-card,
   .upcoming-card-list .request-card.is-expanded,
   .completed-card-list .request-card.is-expanded {
+    width: 100%;
+  }
+
+  .history-card {
+    padding: 20px 16px;
+  }
+
+  .history-entry {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+
+  .history-confirm-actions {
+    flex-direction: column;
     width: 100%;
   }
 }

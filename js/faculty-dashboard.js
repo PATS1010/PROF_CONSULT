@@ -10,12 +10,135 @@
 //   faculty status (see faculty-shared.js) instead of only
 //   this page's own status pill, so Quick Action and
 //   faculty-availability stay in sync.
-// - Accept / Decline / View More: clickable placeholders,
-//   functionality not implemented yet.
+// - Pending Consultation Requests: Accept / Decline now read
+//   and write the SAME consultation data as
+//   faculty-consultation-requests.js (same localStorage key,
+//   same status values), so accepting/declining here is
+//   reflected on the Consultation Requests page and vice
+//   versa. View More still just navigates there.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
+
+// ---------------------------------------------------------
+// SHARED CONSULTATION DATA
+//
+// Same storage key, same default dataset, and the same
+// mock/test reset-on-refresh behavior as
+// faculty-consultation-requests.js -- this is intentionally
+// kept in sync with that file so both pages agree on what a
+// "fresh" test account's pending requests look like and on
+// what counts as a real browser refresh.
+//
+// This page only ever reads "pending" requests and moves one
+// to "upcoming" (Accept) or "declined" (Decline) -- it does
+// not render Upcoming/Completed/History, so it doesn't need
+// anything else from that file.
+// ---------------------------------------------------------
+
+const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
+
+const DEFAULT_CONSULTATIONS = [
+  {
+    id: "req-1",
+    name: "Juan Dela Cruz",
+    studentId: "22-00145",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
+    status: "pending",
+  },
+  {
+    id: "req-2",
+    name: "Joselita Rizal",
+    studentId: "22-00098",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
+    status: "pending",
+  },
+  {
+    id: "req-3",
+    name: "Mark Santos",
+    studentId: "21-00567",
+    type: "Thesis Defense Prep",
+    date: "July 21, 1:00 PM",
+    preferredDateISO: "2026-07-21",
+    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
+    program: "BS Computer Engineering",
+    yearSet: "4A",
+    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
+    status: "pending",
+  },
+  {
+    id: "req-4",
+    name: "Angela Cruz",
+    studentId: "23-00212",
+    type: "Grade Concern",
+    date: "July 22, 9:30 AM",
+    preferredDateISO: "2026-07-22",
+    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
+    program: "BS Computer Engineering",
+    yearSet: "2A",
+    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
+    status: "pending",
+  },
+];
+
+// ---------------------------------------------------------
+// Detects a real browser refresh (F5 / reload button / Ctrl+R)
+// as opposed to arriving here via ordinary navigation. Only a
+// true reload resets the mock/test data -- matches
+// faculty-consultation-requests.js exactly, so refreshing
+// either page behaves the same way for this shared data.
+// ---------------------------------------------------------
+function isPageReload() {
+  try {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0) return navEntries[0].type === "reload";
+    if (performance.navigation) {
+      return performance.navigation.type === performance.navigation.TYPE_RELOAD;
+    }
+  } catch (error) {
+    // fall through -- if we can't tell, don't force a reset
+  }
+  return false;
+}
+
+function loadConsultations() {
+  try {
+    if (isPageReload()) {
+      saveConsultations(DEFAULT_CONSULTATIONS);
+      return DEFAULT_CONSULTATIONS.slice();
+    }
+    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (error) {
+    // fall through to seeding defaults below
+  }
+  saveConsultations(DEFAULT_CONSULTATIONS);
+  return DEFAULT_CONSULTATIONS.slice();
+}
+
+function saveConsultations(list) {
+  try {
+    localStorage.setItem(CONSULTATIONS_STORAGE_KEY, JSON.stringify(list));
+  } catch (error) {
+    // Storage unavailable -- state just won't persist across reload/navigation
+  }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -345,72 +468,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   // Pending Consultation Requests
   //
-  // Frontend-only mock data.
-  //
-  // No localStorage.
-  // No sessionStorage.
-  // No API.
-  // No PHP.
-  // No backend.
-  //
-  // Everything resets when the page is refreshed.
+  // Reads/writes the SAME consultation data as
+  // faculty-consultation-requests.js (see the top of this
+  // file). Accept moves a request to "upcoming" -- the same
+  // status that page's Accept uses -- and Decline sets
+  // "declined", so the change shows up correctly on that page
+  // (Upcoming Consultations, or gone from Pending) without
+  // needing to touch that file at all.
   // ---------------------------------------------------------
 
-  let requests = [
-
-    {
-      id: "req-1",
-      name: "Juan Dela Cruz",
-      studentId: "22-00145",
-      type: "Research Proposal",
-      date: "July 20, 10:00 AM",
-      program: "BS Computer Engineering",
-      yearSet: "3B",
-      message:
-        "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-      status: "pending",
-    },
-
-    {
-      id: "req-2",
-      name: "Joselita Rizal",
-      studentId: "22-00098",
-      type: "Research Proposal",
-      date: "July 20, 10:00 AM",
-      program: "BS Computer Engineering",
-      yearSet: "3B",
-      message:
-        "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-      status: "pending",
-    },
-
-    {
-      id: "req-3",
-      name: "Mark Santos",
-      studentId: "21-00567",
-      type: "Thesis Defense Prep",
-      date: "July 21, 1:00 PM",
-      program: "BS Computer Engineering",
-      yearSet: "4A",
-      message:
-        "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-      status: "pending",
-    },
-
-    {
-      id: "req-4",
-      name: "Angela Cruz",
-      studentId: "23-00212",
-      type: "Grade Concern",
-      date: "July 22, 9:30 AM",
-      program: "BS Computer Engineering",
-      yearSet: "2A",
-      message:
-        "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-      status: "pending",
-    },
-
-  ];
+  let requests = loadConsultations();
 
 
   // ---------------------------------------------------------
@@ -630,9 +697,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
+        // "upcoming" -- same status
+        // faculty-consultation-requests.js's Accept uses, so
+        // this request correctly shows up there under
+        // Upcoming Consultations.
         request.status =
-          "accepted";
+          "upcoming";
 
+        saveConsultations(requests);
 
         notifyRequestAnswered(
           request,
@@ -689,6 +761,7 @@ document.addEventListener("DOMContentLoaded", () => {
         request.status =
           "declined";
 
+        saveConsultations(requests);
 
         notifyRequestAnswered(
           request,
