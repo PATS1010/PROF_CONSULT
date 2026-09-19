@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the faculty profile page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -124,11 +123,17 @@
      UPDATED: "Edit Profile" button moved out of
      .faculty-profile-left and placed as its own element below
      .faculty-profile-body (still above .faculty-profile-footer),
-     so it renders full-width/centered under the whole card like
-     the Student Profile reference. Same id (editProfileButton),
-     same attributes -- faculty-profile.js's existing listener is
-     unaffected by the move. Photo-edit pencil icon/input and all
-     dynamically-loaded profile fields are unchanged.
+     so it renders full-width/centered under the whole card,
+     matching the Student Profile reference. Same id
+     (editProfileButton), same attributes -- faculty-profile.js's
+     existing listener is unaffected by the move.
+
+     UPDATED (name fields): the separate Save button is gone.
+     #editProfileButton is now the ONLY profile action button:
+     it reads "Edit Profile" in view mode and "Save Changes" in
+     edit mode (label + behavior toggled by faculty-profile.js).
+     The single Faculty Name input in edit mode is replaced by
+     three inputs: First Name / Middle Initial / Last Name.
 ========================================================= -->
 
 <section class="faculty-card faculty-profile-card">
@@ -146,10 +151,6 @@
           class="faculty-profile-photo"
           id="facultyProfilePhoto"
         >
-        <label class="faculty-profile-photo-edit" id="facultyProfilePhotoEdit" hidden>
-          <input type="file" id="facultyProfilePhotoInput" accept="image/*" class="faculty-profile-photo-input">
-          <span aria-hidden="true">&#9998;</span>
-        </label>
       </div>
     </div>
 
@@ -158,21 +159,21 @@
 
       <!-- ================= VIEW MODE ================= -->
       <div class="faculty-profile-info-card faculty-profile-view" id="facultyProfileView">
-        <p class="faculty-profile-name" id="viewFacultyName">Loading profile...</p>
-        <p class="faculty-profile-id" id="viewFacultyId"></p>
+        <p class="faculty-profile-name" id="viewFacultyName">Juan Dela Cruz</p>
+        <p class="faculty-profile-id" id="viewFacultyId">24-00001</p>
 
         <dl class="faculty-profile-details">
           <div class="faculty-profile-detail-row">
             <dt>Program:</dt>
-            <dd id="viewFacultyProgram"></dd>
+            <dd id="viewFacultyProgram">Computer Engineering</dd>
           </div>
           <div class="faculty-profile-detail-row">
             <dt>Email:</dt>
-            <dd id="viewFacultyEmail"></dd>
+            <dd id="viewFacultyEmail">juan.delacruz@cvsu.edu.ph</dd>
           </div>
           <div class="faculty-profile-detail-row">
             <dt>Phone Number:</dt>
-            <dd id="viewFacultyPhone"></dd>
+            <dd id="viewFacultyPhone">+63 912-345-6789</dd>
           </div>
         </dl>
       </div>
@@ -180,9 +181,27 @@
       <!-- ================= EDIT MODE ================= -->
       <form class="faculty-profile-info-card faculty-profile-edit" id="facultyProfileEdit" novalidate hidden>
 
+        <!-- Name: three independent inputs on one row.
+             Nothing is auto-split; First Name may hold several words. -->
         <div class="faculty-form-group">
-          <label for="editFacultyName">Faculty Name</label>
-          <input type="text" id="editFacultyName" class="faculty-form-input" autocomplete="off">
+          <div class="faculty-name-row">
+
+            <div class="faculty-name-field">
+              <label for="editFirstName">First Name</label>
+              <input type="text" id="editFirstName" class="faculty-form-input" autocomplete="off">
+            </div>
+
+            <div class="faculty-name-field">
+              <label for="editMiddleInitial">Middle Initial</label>
+              <input type="text" id="editMiddleInitial" class="faculty-form-input" autocomplete="off" maxlength="1">
+            </div>
+
+            <div class="faculty-name-field">
+              <label for="editLastName">Last Name</label>
+              <input type="text" id="editLastName" class="faculty-form-input" autocomplete="off">
+            </div>
+
+          </div>
           <p class="faculty-form-error" id="nameError" hidden></p>
         </div>
 
@@ -209,7 +228,7 @@
               aria-expanded="false"
               aria-labelledby="programDropdownLabel programDropdownValue"
             >
-              <span id="programDropdownValue"></span>
+              <span id="programDropdownValue">Computer Engineering</span>
               <span class="faculty-dropdown-caret" aria-hidden="true">&#9660;</span>
             </button>
             <ul class="faculty-dropdown-list" id="programDropdownList" role="listbox" hidden>
@@ -249,24 +268,23 @@
 
   </div>
 
-  <!-- Edit Profile button: now a direct child of the card, so
-       .faculty-profile-card's align-items:center centers it
-       full-width below the whole card, matching the Student
-       Profile reference. -->
+  <!-- Single profile action button. View mode: "Edit Profile".
+       Edit mode: "Save Changes". It is a direct child of the card,
+       so .faculty-profile-card's align-items:center centers it
+       below the whole card, matching the Student Profile reference. -->
   <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
     Edit Profile
   </button>
 
   <div class="faculty-profile-footer">
     <p class="faculty-save-success" id="saveSuccessMessage" hidden>Profile updated successfully.</p>
-    <button type="button" class="faculty-save-button" id="saveProfileButton">Save</button>
   </div>
 
 </section>
   </main>
 
   <script src="js/faculty-shared.js"></script>
-  <script src="js/faculty-profile.js?v=20260903-2345"></script>
+  <script src="js/faculty-profile.js"></script>
 
 </body>
 </html>

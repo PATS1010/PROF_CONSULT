@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the request consultation page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -172,6 +171,7 @@
               required
             >
           </div>
+          <p class="date-availability-hint" id="preferredDateHint">Available days: Monday, Wednesday, Friday</p>
 
           <div class="info-row info-row-select">
             <span class="info-label">Preferred Time</span>
@@ -186,7 +186,7 @@
                 <span class="custom-select-value" data-placeholder="Select Time">Select Time</span>
               </button>
               <ul class="custom-select-options" id="preferredTimeOptions" role="listbox" hidden>
-                <!-- Populated by request-consultation.js with 30-minute slots covering the full day -->
+                <!-- Populated by request-consultation.js with 30-minute slots, 8:00 AM - 8:00 PM -->
               </ul>
               <input type="hidden" id="preferredTime" name="preferredTime" required>
             </div>
@@ -208,6 +208,7 @@
 
   </main>
 
-  <script src="js/request-consultation.js?v=20260903-2345"></script>
+  <script src="js/notification-state.js"></script>
+  <script src="js/request-consultation.js"></script>
 </body>
 </html>

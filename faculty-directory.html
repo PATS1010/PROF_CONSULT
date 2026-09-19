@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the faculty directory page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -128,7 +127,7 @@
         <div class="faculty-list-container">
           <div class="faculty-list" id="facultyList">
             <!-- Faculty cards are rendered here by faculty-directory.js
-                 from the database-backed faculty directory API -->
+                 from the FACULTY_DIRECTORY_DATA test data array -->
           </div>
           <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected status.</p>
         </div>
@@ -143,6 +142,8 @@
     </div>
   </main>
 
-  <script src="js/faculty-directory.js?v=20260906-0315"></script>
+  <script src="js/notification-state.js"></script>
+  <script src="js/student-shared.js"></script>
+  <script src="js/faculty-directory.js"></script>
 </body>
 </html>

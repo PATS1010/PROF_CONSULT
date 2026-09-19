@@ -1,4 +1,3 @@
-/* SYSTEM NOTE: Styles the student profile page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    CSS VARIABLES
 ========================================================= */
@@ -458,10 +457,6 @@ input {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
-.profile-photo-edit[hidden] {
-  display: none;
-}
-
 .profile-photo-input {
   position: absolute;
   width: 1px;
@@ -527,6 +522,46 @@ input {
 
 .profile-phone-input {
   flex: 1;
+}
+
+/* =========================================================
+   FULL NAME -- view mode shows one connected name (a plain
+   paragraph, not an input); edit mode swaps in three
+   independently-editable inputs (First/Middle/Last), each
+   with its own label, laid out side by side.
+========================================================= */
+.profile-fullname-view label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.profile-fullname-edit {
+  display: flex;
+  gap: 14px;
+}
+
+.profile-fullname-edit[hidden] {
+  display: none;
+}
+
+.profile-fullname-part {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-fullname-part label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
 }
 
 /* Editing state -- applied to the whole info card via JS when
@@ -648,5 +683,12 @@ input {
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
+  }
+
+  /* Full Name edit inputs stack on very small screens instead of
+     squeezing three fields into one row */
+  .profile-fullname-edit {
+    flex-direction: column;
+    gap: 10px;
   }
 }

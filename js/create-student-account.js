@@ -3,6 +3,9 @@
 // CREATE STUDENT ACCOUNT (PAGE 1) INTERACTIONS
 // - Back -> student-login.html
 // - Student Number field: numbers only
+// - Name fields: First Name / Middle Initial / Last Name (separate)
+// - Restores previously entered information when returning here
+//   via Back from create-student-account2.html
 // - Form submit -> create-student-account2.html
 // =========================================================
 
@@ -38,7 +41,34 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
-  // Custom dropdowns (Course/Program, Year Level)
+  // Name fields: First Name / Middle Initial / Last Name
+  // - Each field is stored exactly as entered; nothing is split
+  //   or merged automatically (multi-word first names such as
+  //   "Juan Carlos" stay intact in First Name).
+  // - Middle Initial: one letter only, uppercased, and no period
+  //   is ever added.
+  // ---------------------------------------------------------
+  const firstNameInput = document.getElementById("firstName");
+  const middleInitialInput = document.getElementById("middleInitial");
+  const lastNameInput = document.getElementById("lastName");
+
+  // Trims the ends and collapses repeated spaces to one.
+  // Internal single spaces are preserved.
+  function normalizeName(value) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = middleInitialInput.value
+        .replace(/[^\p{L}]/gu, "")
+        .toUpperCase()
+        .slice(0, 1);
+    });
+  }
+
+  // ---------------------------------------------------------
+  // Custom dropdowns (Course/Program, Year Level, Section)
   // Replaces native <select> so the options list is a normal
   // HTML element we fully control -- it can never be sized or
   // positioned by the browser/OS in a way that overflows the
@@ -98,6 +128,79 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", () => closeAllDropdowns());
 
   // ---------------------------------------------------------
+  // Programmatically select a custom-dropdown option by its
+  // data-value -- same end state as a real click on that
+  // option (label text, hidden input, is-active), used below
+  // to restore a previously chosen Program / Year / Section.
+  // ---------------------------------------------------------
+  function setCustomSelectValue(selectId, value) {
+    if (!value) return;
+
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const valueLabel = select.querySelector(".custom-select-value");
+    const hiddenInput = select.querySelector('input[type="hidden"]');
+    const options = select.querySelectorAll("li[role='option']");
+
+    const matchingOption = Array.from(options).find(
+      (option) => option.getAttribute("data-value") === value
+    );
+
+    if (!matchingOption) return;
+
+    options.forEach((option) => option.classList.remove("is-active"));
+    matchingOption.classList.add("is-active");
+
+    valueLabel.textContent = matchingOption.textContent;
+    valueLabel.removeAttribute("data-is-placeholder");
+    hiddenInput.value = value;
+  }
+
+  // ---------------------------------------------------------
+  // Restore previously entered information
+  //
+  // So clicking Back from create-student-account2.html shows
+  // what was already filled in here instead of a blank form.
+  // Only restores when the saved step-one data actually
+  // belongs to the student flow (not a leftover faculty
+  // registration attempt).
+  // ---------------------------------------------------------
+  function restoreSavedInformation() {
+    let saved = {};
+
+    try {
+      saved = JSON.parse(sessionStorage.getItem("findprof_registration") || "{}");
+    } catch (error) {
+      saved = {};
+    }
+
+    if (saved.role !== "student") return;
+
+    if (saved.id_number) {
+      studentNumberInput.value = saved.id_number;
+    }
+
+    if (saved.firstName) {
+      firstNameInput.value = saved.firstName;
+    }
+
+    if (saved.middleInitial) {
+      middleInitialInput.value = saved.middleInitial;
+    }
+
+    if (saved.lastName) {
+      lastNameInput.value = saved.lastName;
+    }
+
+    setCustomSelectValue("courseProgramSelect", saved.program);
+    setCustomSelectValue("yearLevelSelect", saved.year_level);
+    setCustomSelectValue("sectionSelect", saved.section);
+  }
+
+  restoreSavedInformation();
+
+  // ---------------------------------------------------------
   // Form submit -> create-student-account2.html
   // (page not built yet -- this link will 404 until it exists)
   // ---------------------------------------------------------
@@ -105,16 +208,37 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+
+      // Clean the name fields first so whitespace-only input
+      // is treated as empty by the required check below.
+      firstNameInput.value = normalizeName(firstNameInput.value);
+      lastNameInput.value = normalizeName(lastNameInput.value);
+
       if (!form.checkValidity() || !document.getElementById("courseProgram").value || !document.getElementById("yearLevel").value) {
         form.reportValidity();
         return;
       }
+
+      const firstName = firstNameInput.value;
+      const middleInitial = middleInitialInput.value;
+      const lastName = lastNameInput.value;
+
       sessionStorage.setItem("findprof_registration", JSON.stringify({
         role: "student",
         id_number: studentNumberInput.value.trim(),
-        full_name: document.getElementById("fullName").value.trim(),
+        firstName: firstName,
+        middleInitial: middleInitial,
+        lastName: lastName,
+        // Legacy field kept only so create-student-account2 keeps working
+        // until it reads the three fields above. Plain space-joined: no
+        // commas, periods or dashes are added.
+        full_name: [firstName, middleInitial, lastName].filter(Boolean).join(" "),
         program: document.getElementById("courseProgram").value,
-        year_level: document.getElementById("yearLevel").value
+        year_level: document.getElementById("yearLevel").value,
+        // Was previously collected but never saved, so Section
+        // could never be restored on Back -- included now so
+        // restoreSavedInformation() above has something to read.
+        section: document.getElementById("section").value
       }));
       window.location.href = "create-student-account2.html";
     });

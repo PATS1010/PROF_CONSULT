@@ -151,6 +151,7 @@ body {
   max-width: var(--logo-width-brand);
   height: auto;
   object-fit: contain;
+  transform: translateX(-12px);
 }
 
 /* =========================================================
@@ -243,6 +244,7 @@ body {
   .prof-consult-logo {
     width: min(88vw, 380px);
     max-width: none;
+    transform: translate(-8px, -10px);
   }
 }
 

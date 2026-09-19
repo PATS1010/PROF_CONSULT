@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the notifications page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -29,7 +28,7 @@
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- clickable, functionality not implemented yet -->
+      <!-- Notification bell -- already on this page; still renders the badge -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
@@ -112,6 +111,7 @@
 
   </main>
 
-  <script src="js/notifications.js?v=20260903-2330"></script>
+  <script src="js/notification-state.js"></script>
+  <script src="js/notifications.js"></script>
 </body>
 </html>
