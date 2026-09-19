@@ -30,6 +30,38 @@ const FACULTY_NOTIFICATION_STORAGE_KEY =
 
 
 // =========================================================
+// INCOMING NOTIFICATION (ADDED)
+//
+// Written at the exact moment something is sent to the
+// faculty (e.g. a student submits a consultation request).
+// The sender raises the unread count first (so the red dot
+// shows on the bell of every open Faculty page), then
+// writes the incoming notification:
+//
+// const count =
+//   Number(localStorage.getItem("facultyTestNotifications")) || 0;
+//
+// localStorage.setItem("facultyTestNotifications", String(count + 1));
+//
+// localStorage.setItem(
+//   "facultyTestIncomingNotification",
+//   JSON.stringify({
+//     id: Date.now() + "-" + Math.random(),
+//     message: "Juan Dela Cruz sent a request for consultation."
+//   })
+// );
+//
+// Whichever Faculty page is open at that moment hears the
+// browser's "storage" event and shows ONE toast card. Pages
+// opened later do not replay it. Frontend-only stand-in for
+// a real push from the backend.
+// =========================================================
+
+const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
+  "facultyTestIncomingNotification";
+
+
+// =========================================================
 // TEST ACCOUNT FLAG
 //
 // This project has no backend/login system yet, so there is
@@ -322,6 +354,338 @@ window.setFacultyNotificationCount =
 
 window.getFacultyNotificationCount =
   getFacultyNotificationCount;
+
+
+// =========================================================
+// NEW NOTIFICATION TOAST CARDS  (ADDED)
+//
+// Bottom-right cards shown on every Faculty page.
+//
+// - A new card slides in from the right edge.
+// - Cards stack: the newest is in front, older ones sit
+//   behind it (only the front card is clickable).
+// - Each card removes itself after 10 seconds by sliding
+//   back out through the right edge (reverse of entrance).
+//   Every card has its own 10-second timer.
+// - The X button removes a card instantly (no animation).
+// - View More opens faculty-notifications.html.
+//
+// Other Faculty scripts can show one with:
+//
+// window.showFacultyNotificationToast(
+//   "Juan Dela Cruz sent a request for consultation."
+// );
+//
+// Styling lives in faculty-shared.css (.faculty-toast*).
+// =========================================================
+
+const FACULTY_TOAST_DURATION = 10 * 1000;
+
+const FACULTY_TOAST_EXIT_MS = 400;
+
+// How many stacked cards can be seen at once. Extra cards
+// stay in the stack (and keep their timers) but are hidden
+// until the cards in front of them are gone.
+const FACULTY_TOAST_MAX_VISIBLE = 3;
+
+let facultyToastStackEl = null;
+
+// Index 0 = newest (front of the stack)
+const facultyToasts = [];
+
+
+function getFacultyToastStack() {
+
+  if (
+    facultyToastStackEl &&
+    document.body.contains(facultyToastStackEl)
+  ) {
+
+    return facultyToastStackEl;
+  }
+
+
+  facultyToastStackEl =
+    document.createElement("div");
+
+  facultyToastStackEl.className =
+    "faculty-toast-stack";
+
+  facultyToastStackEl.setAttribute(
+    "role",
+    "status"
+  );
+
+  facultyToastStackEl.setAttribute(
+    "aria-live",
+    "polite"
+  );
+
+  document.body.appendChild(
+    facultyToastStackEl
+  );
+
+
+  return facultyToastStackEl;
+}
+
+
+// Positions every card that is still in the stack.
+// (A card that is sliding out is no longer in the array,
+// so it keeps whatever position it had.)
+function layoutFacultyToasts() {
+
+  facultyToasts.forEach(
+    (toast, depth) => {
+
+      const el = toast.el;
+
+      const isVisible =
+        depth < FACULTY_TOAST_MAX_VISIBLE;
+
+
+      el.style.setProperty(
+        "--stack-y",
+        `${-depth * 12}px`
+      );
+
+      el.style.setProperty(
+        "--stack-scale",
+        String(1 - depth * 0.05)
+      );
+
+      el.style.setProperty(
+        "--stack-opacity",
+        isVisible
+          ? String(1 - depth * 0.2)
+          : "0"
+      );
+
+      el.style.setProperty(
+        "--stack-z",
+        String(1000 - depth)
+      );
+
+      el.style.pointerEvents =
+        depth === 0
+          ? "auto"
+          : "none";
+    }
+  );
+}
+
+
+function removeFacultyToast(
+  toast,
+  animate
+) {
+
+  const index =
+    facultyToasts.indexOf(toast);
+
+
+  if (index === -1) {
+
+    return;
+  }
+
+
+  facultyToasts.splice(index, 1);
+
+  window.clearTimeout(
+    toast.timerId
+  );
+
+  layoutFacultyToasts();
+
+
+  if (!animate) {
+
+    toast.el.remove();
+
+    return;
+  }
+
+
+  toast.el.style.pointerEvents =
+    "none";
+
+  toast.el.classList.add(
+    "is-leaving"
+  );
+
+  window.setTimeout(
+    () => {
+
+      toast.el.remove();
+
+    },
+    FACULTY_TOAST_EXIT_MS + 50
+  );
+}
+
+
+function showFacultyNotificationToast(
+  message,
+  title
+) {
+
+  const stack =
+    getFacultyToastStack();
+
+
+  const el =
+    document.createElement("div");
+
+  el.className =
+    "faculty-toast";
+
+
+  // Header: title + X
+  const header =
+    document.createElement("div");
+
+  header.className =
+    "faculty-toast-header";
+
+
+  const titleEl =
+    document.createElement("p");
+
+  titleEl.className =
+    "faculty-toast-title";
+
+  titleEl.textContent =
+    title || "New Notification";
+
+
+  const closeButton =
+    document.createElement("button");
+
+  closeButton.type =
+    "button";
+
+  closeButton.className =
+    "faculty-toast-close";
+
+  closeButton.setAttribute(
+    "aria-label",
+    "Dismiss notification"
+  );
+
+  closeButton.textContent =
+    "\u00d7";
+
+
+  header.appendChild(titleEl);
+
+  header.appendChild(closeButton);
+
+
+  // Body: message + View More
+  const body =
+    document.createElement("div");
+
+  body.className =
+    "faculty-toast-body";
+
+
+  const messageEl =
+    document.createElement("p");
+
+  messageEl.className =
+    "faculty-toast-message";
+
+  messageEl.textContent =
+    message || "";
+
+
+  const viewMoreLink =
+    document.createElement("a");
+
+  viewMoreLink.className =
+    "faculty-toast-view-more";
+
+  viewMoreLink.href =
+    "faculty-notifications.html";
+
+  viewMoreLink.textContent =
+    "View More";
+
+
+  // Same as the bell: viewing notifications clears the
+  // red dot. The link itself then opens the page.
+  viewMoreLink.addEventListener(
+    "click",
+    () => {
+
+      setFacultyNotificationCount(0);
+    }
+  );
+
+
+  body.appendChild(messageEl);
+
+  body.appendChild(viewMoreLink);
+
+
+  el.appendChild(header);
+
+  el.appendChild(body);
+
+
+  const toast = {
+    el: el,
+    timerId: null,
+  };
+
+
+  // X = remove instantly
+  closeButton.addEventListener(
+    "click",
+    () => {
+
+      removeFacultyToast(
+        toast,
+        false
+      );
+    }
+  );
+
+
+  // Newest goes to the front of the stack.
+  facultyToasts.unshift(toast);
+
+  stack.appendChild(el);
+
+  layoutFacultyToasts();
+
+
+  // Force a reflow so the card starts off-screen on the
+  // right, then slides in.
+  void el.offsetWidth;
+
+  el.classList.add("is-in");
+
+
+  // Each card removes itself after 10 seconds.
+  toast.timerId =
+    window.setTimeout(
+      () => {
+
+        removeFacultyToast(
+          toast,
+          true
+        );
+
+      },
+      FACULTY_TOAST_DURATION
+    );
+}
+
+
+window.showFacultyNotificationToast =
+  showFacultyNotificationToast;
 
 
 // =========================================================
@@ -1102,24 +1466,63 @@ document.addEventListener(
 
 
     // =======================================================
-    // TEST ACCOUNT: RE-ARM THE TEST NOTIFICATION
+    // VIEWING THE NOTIFICATIONS PAGE = NOTIFICATIONS SEEN
     //
-    // For the designated test account only, every page load
-    // simulates a fresh unread notification so the red
-    // indicator can be tested repeatedly. This resets the
-    // existing unread COUNT -- it never inserts a new
-    // notification record, so nothing accumulates/duplicates
-    // across repeated refreshes.
+    // Covers every way of getting there (bell, View More,
+    // sidebar link): the red dot on the bell is cleared.
     //
-    // Normal/real accounts (TEST_FACULTY_ACCOUNT = false)
-    // skip this entirely, so their notification count stays
-    // exactly as whatever was last legitimately set (0 for a
-    // fresh account).
+    // Moved above the TEST ONLY block below so that when the
+    // test block re-arms the badge, it can correctly check
+    // "did this same load already mark it read" via activePage.
     // =======================================================
 
-    if (window.TEST_FACULTY_ACCOUNT === true) {
+    if (activePage === "notifications") {
 
-      setFacultyNotificationCount(1);
+      setFacultyNotificationCount(0);
+    }
+
+
+    // =======================================================
+    // TEST ONLY (ADDED)
+    //
+    // Shows a demo toast card EVERY time a Faculty page loads
+    // (not gated by sessionStorage), for the designated test
+    // account only, so the pop-up keeps appearing while you're
+    // testing it instead of showing just once. Also re-arms
+    // the red bell badge each load (unless you're currently on
+    // the Notifications page, which already marked it read
+    // just above) since otherwise the badge only ever gets set
+    // once (on the very first load ever) and stays cleared
+    // forever after the first visit to Notifications.
+    //
+    // This entire block, including the badge re-arm, is gated
+    // by FACULTY_TOAST_TEST_DEMO and TEST_FACULTY_ACCOUNT, so
+    // it has NO effect on real accounts/backend behavior: once
+    // a backend exists (TEST_FACULTY_ACCOUNT = false, or this
+    // block deleted), the badge goes back to only being driven
+    // by real notification counts -- viewed stays viewed, and
+    // red only reappears when an actual new notification is
+    // written via FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY.
+    //
+    // Delete this whole block (or set the flag to false) once
+    // real notifications arrive through that storage-event path.
+    // =======================================================
+
+    const FACULTY_TOAST_TEST_DEMO = true;
+
+    if (
+      FACULTY_TOAST_TEST_DEMO &&
+      window.TEST_FACULTY_ACCOUNT === true
+    ) {
+
+      showFacultyNotificationToast(
+        "Juan Dela Cruz sent a request for consultation."
+      );
+
+      if (activePage !== "notifications") {
+
+        setFacultyNotificationCount(1);
+      }
     }
 
 
@@ -1216,6 +1619,38 @@ document.addEventListener(
         ) {
 
           updateFacultyNotificationBadge();
+        }
+
+
+        // A notification was just sent to the faculty:
+        // show ONE toast on whichever page is open now.
+        if (
+          event.key ===
+            FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY &&
+          event.newValue
+        ) {
+
+          try {
+
+            const incoming =
+              JSON.parse(event.newValue);
+
+
+            if (
+              incoming &&
+              typeof incoming.message === "string" &&
+              incoming.message
+            ) {
+
+              showFacultyNotificationToast(
+                incoming.message
+              );
+            }
+
+          } catch (error) {
+
+            // Ignore malformed data.
+          }
         }
       }
     );

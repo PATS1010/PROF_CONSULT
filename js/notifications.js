@@ -10,11 +10,13 @@
 //   window.ProfConsultNotifications). Every other Student
 //   Dashboard page only READS this state -- this is the one
 //   and only place that clears it.
-// - Renders the sample notification list, newest first.
-//   Structured so future real notifications can simply be
-//   pushed into SAMPLE_NOTIFICATIONS (or, once a backend
-//   exists, fetched and passed to renderNotifications())
-//   without changing how the list itself renders.
+// - Renders the notification list, newest first. ONLY three
+//   kinds of notification are shown: accepted, declined, and
+//   rescheduled (see the NOTIFICATIONS LIST section below).
+//   The wording comes from
+//   window.formatStudentNotificationMessage (defined in
+//   student-notification-toast.js), so this list and the
+//   pop-up card always say the same thing.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -127,19 +129,164 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // =========================================================
+  // NOTIFICATIONS LIST
+  //
+  // Only THREE kinds of notification are accepted here:
+  //
+  //   type "accepted"    -> Engr. Sales accepted your consultation request.
+  //   type "declined"    -> Engr. Sales declined your consultation request.
+  //   type "rescheduled" -> accepted: true
+  //                           Engr. Sales accepted and moved your consultation
+  //                           at 3:00 PM - 3:30 PM, September 19, 2026.
+  //                         accepted: false
+  //                           Engr. Sales moved your consultation request
+  //                           at 3:00 PM - 3:30 PM, September 19, 2026.
+  //
+  // Each one has a time line under it: "2 minutes ago", then
+  // "Today", "Yesterday", and after that the date.
+  //
+  // Record shape (see student-notification-toast.js for how the
+  // faculty side writes one):
+  //   { id, type, facultyName, accepted, dateISO, timeLabel, createdAt }
+  //
+  // Records the faculty side saved are read from localStorage
+  // ("studentTestNotificationRecords", newest first). Once a
+  // backend exists, fetch the records and pass them through
+  // buildNotificationRows() -- the rendering below doesn't change.
+  // =========================================================
+
+  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
+
+  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
+
+  function isSupportedRecord(record) {
+    return (
+      record &&
+      typeof record === "object" &&
+      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
+    );
+  }
+
+  function loadStoredRecords() {
+    try {
+      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (error) {
+      // fall through to no stored records
+    }
+    return [];
+  }
+
   // ---------------------------------------------------------
-  // Notifications list
-  // Sample data for the current test student account. Already
-  // listed newest-first; once real notifications exist, sort
-  // by their actual timestamp before rendering instead of
-  // relying on insertion order.
+  // TEST DATA ONLY: sample records for the test student
+  // account, shown after any real (stored) records. createdAt
+  // is relative to "now" so the time lines read like the real
+  // thing. Delete this function (and its use below) once real
+  // notifications exist.
   // ---------------------------------------------------------
-  const SAMPLE_NOTIFICATIONS = [
-    { message: "Professor accepted your consultation request.", timestamp: "2 minutes ago" },
-    { message: "Professor changed availability.", timestamp: "Today" },
-    { message: "Consultation moved to 3:00 PM.", timestamp: "Yesterday" },
-    { message: "New announcement.", timestamp: "" },
-  ];
+  function getSampleRecords() {
+    const now = Date.now();
+    const MINUTE = 60 * 1000;
+    const DAY = 24 * 60 * MINUTE;
+
+    return [
+      {
+        id: "sample-1",
+        type: "accepted",
+        facultyName: "Engr. Sales",
+        createdAt: now - 2 * MINUTE,
+      },
+      {
+        id: "sample-2",
+        type: "rescheduled",
+        accepted: true,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - 90 * MINUTE,
+      },
+      {
+        id: "sample-3",
+        type: "rescheduled",
+        accepted: false,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - DAY,
+      },
+      {
+        id: "sample-4",
+        type: "declined",
+        facultyName: "Engr. Sales",
+        createdAt: now - 3 * DAY,
+      },
+    ];
+  }
+
+  // ---------------------------------------------------------
+  // Time line under each notification. Philippine time.
+  //   under 1 minute   -> "Just now"
+  //   under 1 hour     -> "2 minutes ago"
+  //   same day         -> "Today"
+  //   previous day     -> "Yesterday"
+  //   older            -> "September 16, 2026"
+  // ---------------------------------------------------------
+  const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function formatTimeAgo(createdAt) {
+    const created = Number(createdAt);
+    if (!Number.isFinite(created)) return "";
+
+    const now = Date.now();
+    const diffMinutes = Math.floor((now - created) / 60000);
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) {
+      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+    }
+
+    const createdDay = PH_DAY_KEY_FORMATTER.format(new Date(created));
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now))) {
+      return "Today";
+    }
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
+      return "Yesterday";
+    }
+    return PH_DATE_LABEL_FORMATTER.format(new Date(created));
+  }
+
+  // ---------------------------------------------------------
+  // Record -> { message, timestamp } row for renderNotifications()
+  // ---------------------------------------------------------
+  function buildNotificationRows(records) {
+    return records.filter(isSupportedRecord).map((record) => {
+      const message =
+        typeof window.formatStudentNotificationMessage === "function"
+          ? window.formatStudentNotificationMessage(record)
+          : (record.message || "");
+
+      return {
+        message,
+        timestamp: formatTimeAgo(record.createdAt),
+      };
+    });
+  }
 
   function renderNotifications(notifications) {
     const listEl = document.getElementById("notificationsList");
@@ -177,6 +324,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  renderNotifications(SAMPLE_NOTIFICATIONS);
+  // Real (stored) records first, newest first; then the test samples.
+  const storedRecords = loadStoredRecords()
+    .filter(isSupportedRecord)
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+
+  renderNotifications(
+    buildNotificationRows(storedRecords.concat(getSampleRecords()))
+  );
 
 });

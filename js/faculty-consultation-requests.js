@@ -26,6 +26,12 @@
 //   confirm), which is also why it empties the Completed
 //   Consultations panel for any consultation cleared this way --
 //   same record, two views of it.
+// - Faculty Notifications reads this same localStorage data to
+//   build its "sent a request for consultation" / "is today at"
+//   notifications (see faculty-notifications.js). A notification's
+//   "View" link stores which request/section to open under
+//   NOTIFICATION_VIEW_TARGET_STORAGE_KEY (ADDED below); on load
+//   here we check for that and auto-expand/scroll to that card.
 //
 // STATE / STORAGE:
 // Consultations persist in localStorage under CONSULTATIONS_STORAGE_KEY
@@ -53,6 +59,14 @@
 
 const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
+
+// ---------------------------------------------------------
+// (ADDED) Read by this page on load to auto-expand/scroll to
+// the exact request a Faculty Notifications "View" link pointed
+// at. Written by faculty-notifications.js right before it
+// navigates here -- see applyNotificationViewTarget() below.
+// ---------------------------------------------------------
+const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
 
 // ---------------------------------------------------------
 // History status labels -- maps a consultation's stored
@@ -184,6 +198,56 @@ function notifyRequestAnswered(request, decision) {
   // Placeholder only -- wire this to the real notification
   // system once the backend exists. Intentionally does nothing
   // and stores nothing beyond REQUESTS itself.
+}
+
+// ---------------------------------------------------------
+// (ADDED) Auto-expand/scroll to the request a Faculty
+// Notifications "View" link pointed at. Searches across
+// whichever section the card actually rendered in (its status
+// may have changed since the notification was shown), not just
+// the section that was stored, so this stays correct even if
+// stale. One-time use: the stored target is removed immediately
+// so a later real page refresh/navigation never re-triggers it.
+// ---------------------------------------------------------
+function applyNotificationViewTarget() {
+  let target = null;
+
+  try {
+    const stored = sessionStorage.getItem(NOTIFICATION_VIEW_TARGET_STORAGE_KEY);
+    if (stored) target = JSON.parse(stored);
+  } catch (error) {
+    target = null;
+  }
+
+  if (!target || !target.id) return;
+
+  try {
+    sessionStorage.removeItem(NOTIFICATION_VIEW_TARGET_STORAGE_KEY);
+  } catch (error) {
+    // ignore
+  }
+
+  const card = document.querySelector(`.request-card[data-id="${target.id}"]`);
+  if (!card) return;
+
+  // Same "only one expanded at a time" rule as a normal View More click.
+  document.querySelectorAll(".request-card.is-expanded").forEach((c) => {
+    if (c !== card) {
+      c.classList.remove("is-expanded");
+      if (c.dataset.section === "completed") {
+        const btn = c.querySelector('[data-action="view-more"]');
+        if (btn) btn.textContent = "View More";
+      }
+    }
+  });
+
+  card.classList.add("is-expanded");
+  if (card.dataset.section === "completed") {
+    const btn = card.querySelector('[data-action="view-more"]');
+    if (btn) btn.textContent = "View Less";
+  }
+
+  card.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -352,6 +416,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderAll();
+
+  // (ADDED) After the very first render, check whether we arrived
+  // here from a Faculty Notifications "View" link and, if so,
+  // auto-expand/scroll to that exact card.
+  applyNotificationViewTarget();
 
   // ---------------------------------------------------------
   // History / Back toggle

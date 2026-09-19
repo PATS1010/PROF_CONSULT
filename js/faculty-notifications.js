@@ -1,149 +1,230 @@
 // =========================================================
 // FACULTY NOTIFICATIONS
 //
-// TEST ACCOUNT ONLY.
+// SYNCED WITH CONSULTATION REQUESTS STATE.
 //
-// These notifications are frontend test data.
-// They are NOT backend notifications.
+// Notifications are no longer a separate hardcoded test list --
+// they are derived live from the same consultations data that
+// faculty-consultation-requests.js reads/writes in localStorage
+// (CONSULTATIONS_STORAGE_KEY below). Only two kinds are shown:
 //
-// Whether they are actually shown is gated by
-// window.TEST_FACULTY_ACCOUNT (set in faculty-shared.js).
-// For any other account, this page renders empty --
-// "You have no notifications yet."
+//   1. A "pending" consultation  ->
+//        "<Name> sent a request for consultation."
 //
-// IMPORTANT:
+//   2. An "upcoming" consultation whose preferredDateISO is
+//      today (Asia/Manila) ->
+//        "Your consultation with <Name> is today at <time>."
 //
-// The notifications remain visible on this page.
+// Each has a "View" link that:
+//   1. Remembers which request/section to open (sessionStorage),
+//   2. Navigates to faculty-consultation-requests.html, which
+//      reads that on load and expands/scrolls to that exact card.
 //
-// Opening this page marks the notifications as VIEWED,
-// so the shared navbar red dot is removed.
+// Gated by window.TEST_FACULTY_ACCOUNT (set in faculty-shared.js) --
+// for any other account this renders empty, same as before.
 //
-// The notification data itself is NOT deleted.
+// Opening this page still marks notifications as viewed (clears
+// the shared navbar red dot) via window.setFacultyNotificationCount(0).
 // =========================================================
 
 
 // =========================================================
-// TEST NOTIFICATIONS
-//
-// Only ever rendered when window.TEST_FACULTY_ACCOUNT is
-// true. This array is not persisted anywhere, so a full
-// page reload always resets it back to exactly these three
-// items -- refreshing repeatedly can never duplicate or
-// accumulate entries.
+// SHARED STORAGE KEYS
 // =========================================================
 
-const NOTIFICATIONS = [
+// Must match CONSULTATIONS_STORAGE_KEY in
+// faculty-consultation-requests.js -- this is the single
+// source of truth both pages read from.
+const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 
+// Written by this page right before navigating via a
+// notification's "View" link; read by
+// faculty-consultation-requests.js on load to expand/scroll to
+// the matching card.
+const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
+
+
+// =========================================================
+// MOCK/TEST CONSULTATIONS (READ-ONLY FALLBACK)
+//
+// Only used if this page is opened before
+// faculty-consultation-requests.html has ever seeded
+// localStorage. Must stay identical to DEFAULT_CONSULTATIONS
+// in faculty-consultation-requests.js so both pages agree on
+// the same test data. This page NEVER writes this back to
+// localStorage -- it only reads, so it can never conflict with
+// the requests page's own seeding/reset logic.
+// =========================================================
+
+const DEFAULT_CONSULTATIONS = [
   {
-    id: "notif-1",
-    type: "consultation-request",
-    message: "New consultation request.",
-    linkText: "View",
-    linkHref:
-      "faculty-consultation-requests.html",
+    id: "req-1",
+    name: "Juan Dela Cruz",
+    studentId: "22-00145",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
+    status: "pending",
   },
-
-
   {
-    id: "notif-2",
-    type: "consultation-cancelled",
-    message:
-      "Student canceled appointment.",
+    id: "req-2",
+    name: "Joselita Rizal",
+    studentId: "22-00098",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
+    status: "pending",
   },
-
-
   {
-    id: "notif-3",
-    type: "schedule-reminder",
-    message:
-      "Schedule reminder.",
+    id: "req-3",
+    name: "Mark Santos",
+    studentId: "21-00567",
+    type: "Thesis Defense Prep",
+    date: "July 21, 1:00 PM",
+    preferredDateISO: "2026-07-21",
+    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
+    program: "BS Computer Engineering",
+    yearSet: "4A",
+    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
+    status: "pending",
   },
-
+  {
+    id: "req-4",
+    name: "Angela Cruz",
+    studentId: "23-00212",
+    type: "Grade Concern",
+    date: "July 22, 9:30 AM",
+    preferredDateISO: "2026-07-22",
+    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
+    program: "BS Computer Engineering",
+    yearSet: "2A",
+    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
+    status: "pending",
+  },
 ];
 
 
 // =========================================================
-// GET VISIBLE NOTIFICATIONS
+// READ CONSULTATIONS (READ-ONLY)
 //
-// For the designated test account, show the test data above.
-// For every other (normal/fresh) account, there is no test
-// data and no backend yet, so the page has nothing to show.
+// Never writes back to localStorage -- this page only reads
+// the requests page's state so the two can never fight over
+// who owns the data.
 // =========================================================
 
-function getVisibleNotifications() {
-
-  const isTestAccount =
-    window.TEST_FACULTY_ACCOUNT === true;
-
-
-  return isTestAccount
-    ? NOTIFICATIONS
-    : [];
-}
-
-
-// =========================================================
-// IS THIS A RELOAD?
-//
-// Distinguishes:
-//
-// - Arriving here by clicking the top bell / sidebar link
-//   (navigation type "navigate") -- a genuine "view", so the
-//   indicator should stay cleared.
-//
-// - Hitting the browser's refresh button while already on
-//   this page (navigation type "reload") -- for the test
-//   account, treated as "test the indicator again", so it
-//   re-arms right after being cleared below.
-//
-// Uses the standard Navigation Timing API; if unavailable,
-// safely assumes "not a reload" (the existing, safe default).
-// =========================================================
-
-function isReloadNavigation() {
+function loadConsultationsReadOnly() {
 
   try {
 
-    if (
-      typeof performance.getEntriesByType ===
-      "function"
-    ) {
-
-      const entries =
-        performance.getEntriesByType(
-          "navigation"
-        );
-
-
-      if (
-        entries &&
-        entries[0]
-      ) {
-
-        return (
-          entries[0].type ===
-          "reload"
-        );
-      }
-    }
-
-
-    // Fallback for older browsers.
-    if (performance.navigation) {
-
-      return (
-        performance.navigation
-          .type === 1
+    const stored =
+      localStorage.getItem(
+        CONSULTATIONS_STORAGE_KEY
       );
+
+
+    if (stored) {
+
+      const parsed =
+        JSON.parse(stored);
+
+
+      if (Array.isArray(parsed)) {
+
+        return parsed;
+      }
     }
 
   } catch (error) {
 
-    // Detection unavailable -- treat as not a reload.
+    // fall through to defaults below
   }
 
 
-  return false;
+  return DEFAULT_CONSULTATIONS.slice();
+}
+
+
+// =========================================================
+// "IS THIS TODAY?" (Philippine time)
+// =========================================================
+
+const PH_TODAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function getTodayISO() {
+
+  return PH_TODAY_KEY_FORMATTER.format(new Date());
+}
+
+
+// =========================================================
+// BUILD NOTIFICATIONS FROM CONSULTATION STATE
+//
+// Only two kinds, in this order: pending requests first, then
+// today's upcoming consultations.
+// =========================================================
+
+function buildFacultyNotifications() {
+
+  const consultations =
+    loadConsultationsReadOnly();
+
+
+  const todayISO =
+    getTodayISO();
+
+
+  const notifications = [];
+
+
+  consultations
+    .filter((request) => request.status === "pending")
+    .forEach((request) => {
+
+      notifications.push({
+        id: `pending-${request.id}`,
+        message: `${request.name} sent a request for consultation.`,
+        linkText: "View",
+        targetId: request.id,
+        targetSection: "pending",
+      });
+    });
+
+
+  consultations
+    .filter(
+      (request) =>
+        request.status === "upcoming" &&
+        request.preferredDateISO === todayISO
+    )
+    .forEach((request) => {
+
+      const timeLabel =
+        request.preferredTimeLabel || "";
+
+      notifications.push({
+        id: `today-${request.id}`,
+        message: `Your consultation with ${request.name} is today at ${timeLabel}.`,
+        linkText: "View",
+        targetId: request.id,
+        targetSection: "upcoming",
+      });
+    });
+
+
+  return notifications;
 }
 
 
@@ -151,103 +232,89 @@ function isReloadNavigation() {
 // BUILD NOTIFICATION ROW
 // =========================================================
 
-function buildNotificationRow(
-  notification
-) {
+function buildNotificationRow(notification) {
 
   const li =
-    document.createElement(
-      "li"
-    );
-
+    document.createElement("li");
 
   li.className =
     "notification-row";
-
-
-  li.dataset.type =
-    notification.type;
-
 
   li.dataset.id =
     notification.id;
 
 
   const icon =
-    document.createElement(
-      "span"
-    );
-
+    document.createElement("span");
 
   icon.className =
     "notification-icon";
-
 
   icon.setAttribute(
     "aria-hidden",
     "true"
   );
 
-
   icon.textContent =
     "\u2714";
 
 
   const message =
-    document.createElement(
-      "p"
-    );
-
+    document.createElement("p");
 
   message.className =
     "notification-message";
 
-
+  // Set as plain text first (never innerHTML), then append the
+  // link element after it -- trailing space keeps "message. View"
+  // from running together.
   message.textContent =
-    notification.message;
+    `${notification.message} `;
 
 
-  // =======================================================
-  // OPTIONAL VIEW LINK
-  // =======================================================
+  const link =
+    document.createElement("a");
 
-  if (
-    notification.linkText &&
-    notification.linkHref
-  ) {
+  link.className =
+    "notification-view-link";
 
-    const link =
-      document.createElement(
-        "a"
-      );
+  link.href =
+    "faculty-consultation-requests.html";
+
+  link.textContent =
+    notification.linkText;
 
 
-    link.className =
-      "notification-view-link";
+  // Remember exactly which request/section to open on the
+  // Consultation Requests page, right before navigating there.
+  link.addEventListener(
+    "click",
+    () => {
 
+      try {
 
-    link.href =
-      notification.linkHref;
+        sessionStorage.setItem(
+          NOTIFICATION_VIEW_TARGET_STORAGE_KEY,
+          JSON.stringify({
+            id: notification.targetId,
+            section: notification.targetSection,
+          })
+        );
 
+      } catch (error) {
 
-    link.textContent =
-      notification.linkText;
-
-
-    message.appendChild(
-      link
-    );
-  }
-
-
-  li.appendChild(
-    icon
+        // sessionStorage unavailable -- link still navigates
+        // normally, it just won't auto-open the matching card.
+      }
+    }
   );
 
 
-  li.appendChild(
-    message
-  );
+  message.appendChild(link);
+
+  li.appendChild(icon);
+
+  li.appendChild(message);
 
 
   return li;
@@ -257,18 +324,9 @@ function buildNotificationRow(
 // =========================================================
 // RENDER NOTIFICATIONS
 //
-// IMPORTANT:
-//
-// This function displays the visible notifications for this
-// account (test data for the test account, empty otherwise).
-//
-// It does NOT set the notification count based on how many
-// notifications are shown.
-//
-// Instead, opening this page marks them as viewed and sets
-// the shared navbar notification count to 0 -- for the test
-// account, faculty-shared.js re-arms this count back to 1 on
-// the NEXT page load, not this one.
+// Displays the live notifications for the test account (empty
+// for any other account), then marks them viewed by clearing
+// the shared navbar notification count -- same as before.
 // =========================================================
 
 function renderFacultyNotifications() {
@@ -277,7 +335,6 @@ function renderFacultyNotifications() {
     document.getElementById(
       "notificationsList"
     );
-
 
   const emptyMessageEl =
     document.getElementById(
@@ -291,23 +348,20 @@ function renderFacultyNotifications() {
   }
 
 
-  // =======================================================
-  // CLEAR CURRENT LIST
-  // =======================================================
-
   listEl.innerHTML =
     "";
 
 
-  // =======================================================
-  // RENDER VISIBLE NOTIFICATIONS ONLY
-  // =======================================================
+  const isTestAccount =
+    window.TEST_FACULTY_ACCOUNT === true;
 
-  const visibleNotifications =
-    getVisibleNotifications();
+  const notifications =
+    isTestAccount
+      ? buildFacultyNotifications()
+      : [];
 
 
-  visibleNotifications.forEach(
+  notifications.forEach(
     (notification) => {
 
       listEl.appendChild(
@@ -315,36 +369,16 @@ function renderFacultyNotifications() {
           notification
         )
       );
-
     }
   );
 
 
-  // =======================================================
-  // EMPTY MESSAGE
-  // =======================================================
-
   if (emptyMessageEl) {
 
     emptyMessageEl.hidden =
-      visibleNotifications.length > 0;
+      notifications.length > 0;
   }
 
-
-  // =======================================================
-  // MARK NOTIFICATIONS AS VIEWED
-  //
-  // IMPORTANT:
-  //
-  // We DO NOT delete the notifications.
-  //
-  // We ONLY clear the unread count.
-  //
-  // Therefore:
-  //
-  // Notifications stay visible.
-  // Red dot disappears.
-  // =======================================================
 
   if (
     typeof window.setFacultyNotificationCount ===
@@ -359,91 +393,7 @@ function renderFacultyNotifications() {
 
 
 // =========================================================
-// ADD NEW TEST NOTIFICATION
-//
-// Other frontend pages can call:
-//
-// window.addFacultyNotification({...});
-//
-// Example:
-//
-// window.addFacultyNotification({
-//   id: "notif-4",
-//   type: "new-request",
-//   message: "New consultation request.",
-//   linkText: "View",
-//   linkHref: "faculty-consultation-requests.html"
-// });
-//
-// Note: like the rest of this file, this is test-account
-// behavior -- getVisibleNotifications() only shows anything
-// when window.TEST_FACULTY_ACCOUNT is true.
-// =========================================================
-
-window.addFacultyNotification =
-  function addFacultyNotification(
-    notification
-  ) {
-
-    if (
-      !notification ||
-      typeof notification !==
-        "object"
-    ) {
-
-      return;
-    }
-
-
-    // =====================================================
-    // ADD NEW NOTIFICATION
-    // =====================================================
-
-    NOTIFICATIONS.unshift(
-      notification
-    );
-
-
-    // =====================================================
-    // SHOW THE NEW NOTIFICATION AS UNREAD
-    //
-    // If another page calls this function while this page
-    // is active, the new notification becomes unread.
-    // =====================================================
-
-    if (
-      typeof window.setFacultyNotificationCount ===
-      "function"
-    ) {
-
-      window.setFacultyNotificationCount(
-        1
-      );
-    }
-
-
-    // =====================================================
-    // REFRESH THE NOTIFICATION LIST
-    //
-    // If the user is currently on this page, the newly
-    // added notification is immediately displayed.
-    //
-    // renderFacultyNotifications() will then mark the
-    // page as viewed again and clear the dot.
-    // =====================================================
-
-    renderFacultyNotifications();
-  };
-
-
-// =========================================================
 // PAGE LOAD
-//
-// When the Notifications page opens:
-//
-// 1. Display notifications.
-// 2. Mark them as viewed.
-// 3. Remove the red dot.
 // =========================================================
 
 document.addEventListener(

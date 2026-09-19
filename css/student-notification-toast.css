@@ -1,0 +1,222 @@
+/* =========================================================
+   STUDENT NEW NOTIFICATION TOAST CARDS
+   Standalone file -- does not depend on (or change) any
+   existing student CSS. All class names start with
+   .student-toast so nothing collides.
+
+   Bottom-right cards that slide in from the right edge,
+   stack (newest in front, older ones behind), auto-remove
+   after 10 seconds by sliding back out to the right, and
+   can be dismissed instantly with the X button.
+
+   Built by student-notification-toast.js. Stack position is
+   driven by the --stack-* variables the JS sets on each card;
+   the slide in/out is driven by --toast-x.
+
+   z-index 250: above the navbar (100) and Quick Action popup
+   (200), below the sidebar overlay/sidebar (300+).
+
+   Uses the existing --color-gradient-* / --font-main
+   variables, with the same values as fallbacks in case a
+   page doesn't define them.
+========================================================= */
+
+.student-toast-stack {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+
+  width: min(360px, calc(100vw - 40px));
+  height: 0;
+
+  z-index: 250;
+
+  /* Only the cards themselves catch clicks */
+  pointer-events: none;
+}
+
+.student-toast,
+.student-toast * {
+  box-sizing: border-box;
+}
+
+.student-toast {
+  --toast-off: calc(100% + 40px);
+  --toast-x: var(--toast-off);
+  --stack-y: 0px;
+  --stack-scale: 1;
+  --stack-opacity: 1;
+  --stack-z: 1;
+
+  position: absolute;
+  right: 0;
+  bottom: 0;
+
+  width: 100%;
+
+  z-index: var(--stack-z);
+
+  border-radius: 22px;
+  overflow: hidden;
+
+  background-color: #f4c5ae;
+
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+
+  font-family: var(--font-main, 'Montserrat', sans-serif);
+
+  transform-origin: bottom center;
+
+  transform:
+    translateX(var(--toast-x))
+    translateY(var(--stack-y))
+    scale(var(--stack-scale));
+
+  opacity: var(--stack-opacity);
+
+  transition:
+    transform 0.4s cubic-bezier(0.22, 0.9, 0.3, 1),
+    opacity 0.4s ease;
+
+  pointer-events: auto;
+}
+
+/* Slid in */
+.student-toast.is-in {
+  --toast-x: 0px;
+}
+
+/* Reverse of the entrance: back out through the right edge */
+.student-toast.is-leaving {
+  --toast-x: var(--toast-off);
+}
+
+.student-toast-header {
+  position: relative;
+
+  padding: 12px 46px;
+
+  text-align: center;
+
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start, #7a0f0f) 0%,
+    var(--color-gradient-end, #e8560f) 100%
+  );
+}
+
+.student-toast-title {
+  margin: 0;
+
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  color: #ffffff;
+}
+
+.student-toast-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+
+  transform: translateY(-50%);
+
+  width: 28px;
+  height: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  border: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1;
+
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  transition: background-color 0.2s ease;
+}
+
+.student-toast-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.student-toast-close:focus-visible,
+.student-toast-view-more:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+.student-toast-body {
+  padding: 16px 20px 18px;
+
+  text-align: center;
+}
+
+.student-toast-message {
+  margin: 0;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+
+  color: var(--color-text-dark, #2b2b2b);
+}
+
+.student-toast-view-more {
+  display: inline-block;
+
+  margin-top: 10px;
+  padding: 6px 16px;
+
+  border-radius: 999px;
+
+  background-color: #ececec;
+
+  color: var(--color-text-dark, #2b2b2b);
+
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  text-decoration: none;
+
+  transition:
+    transform 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.student-toast-view-more:hover {
+  background-color: #ffffff;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .student-toast-stack {
+    right: 12px;
+    bottom: 12px;
+
+    width: calc(100vw - 24px);
+  }
+
+  .student-toast {
+    --toast-off: calc(100% + 24px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .student-toast {
+    transition-duration: 0.01s;
+  }
+}
