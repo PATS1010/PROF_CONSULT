@@ -13,6 +13,10 @@
 // object should feed the Faculty Directory and other faculty
 // pages so there's a single source of truth per account.
 //
+// UPDATED: FACULTY_ACCOUNT is now persisted to localStorage so
+// Save Changes survives a page refresh instead of resetting
+// back to the hardcoded prototype values below.
+//
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
@@ -36,6 +40,42 @@ const FACULTY_ACCOUNT = {
   email: "juan.delacruz@cvsu.edu.ph",
   phone: "912-345-6789", // local part only; +63 prefix is fixed in the UI
 };
+
+// ---------------------------------------------------------
+// Persistence -- same reasoning as the Student Profile page's
+// localStorage use: without this, Save Changes only updates the
+// in-memory object above, so a refresh silently discards it.
+// ---------------------------------------------------------
+const FACULTY_ACCOUNT_STORAGE_KEY = "profconsult_faculty_account";
+
+function loadStoredFacultyAccount() {
+  try {
+    const stored = localStorage.getItem(FACULTY_ACCOUNT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    // fall through -- keep the prototype defaults above
+  }
+  return null;
+}
+
+function saveFacultyAccount() {
+  try {
+    localStorage.setItem(FACULTY_ACCOUNT_STORAGE_KEY, JSON.stringify(FACULTY_ACCOUNT));
+  } catch (error) {
+    // Storage unavailable -- the change just won't persist/sync
+  }
+}
+
+// Apply any previously-saved account data over the defaults above.
+const storedFacultyAccount = loadStoredFacultyAccount();
+if (storedFacultyAccount) {
+  Object.assign(FACULTY_ACCOUNT, storedFacultyAccount);
+}
 
 // Structured so more programs can be added later without
 // touching any markup or logic -- just extend this array.
@@ -397,6 +437,9 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.phone = phoneInput.value.trim();
     // FACULTY_ACCOUNT.facultyId intentionally left untouched --
     // the Faculty ID field is never a source of updates.
+
+    // Persist so the change survives a refresh.
+    saveFacultyAccount();
 
     renderViewMode();
     exitEditMode();

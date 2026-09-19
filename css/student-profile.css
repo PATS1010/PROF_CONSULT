@@ -525,6 +525,33 @@ input {
 }
 
 /* =========================================================
+   FIELD VALIDATION ERROR STATE
+   Used by Email and Phone Number -- an inline message appears
+   below the field, and the field itself gets a red underline
+   (or, for the phone group, a red border) when invalid.
+========================================================= */
+.profile-field-error {
+  width: 100%;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-status-onleave);
+  margin-top: 4px;
+}
+
+.profile-field-error[hidden] {
+  display: none;
+}
+
+.profile-field.has-error {
+  border-bottom-color: var(--color-status-onleave);
+}
+
+.profile-phone-group.has-error {
+  border-bottom: 1px solid var(--color-status-onleave);
+  border-radius: 4px;
+}
+
+/* =========================================================
    FULL NAME -- view mode shows one connected name (a plain
    paragraph, not an input); edit mode swaps in three
    independently-editable inputs (First/Middle/Last), each

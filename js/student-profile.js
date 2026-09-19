@@ -12,13 +12,21 @@
 // - Notification bell: navigates to notifications.html and
 //   renders the shared unread-indicator badge (see
 //   notification-state.js / window.ProfConsultNotifications)
+//
+// UPDATED: Course/Year Level/Section/Email/Phone are now
+// persisted to localStorage (same idea as the existing name
+// persistence below) so edits survive a page refresh instead
+// of resetting back to SAMPLE_STUDENT. Email and Phone are now
+// validated on Save -- invalid values show an inline error and
+// keep the page in edit mode instead of saving.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
-  // Sample student account -- replace with real session/user
-  // data once backend authentication exists
+  // Sample student account -- used as the DEFAULT/fallback
+  // values only. Replace with real session/user data once
+  // backend authentication exists.
   // ---------------------------------------------------------
   const SAMPLE_STUDENT = {
     studentNumber: "24-00001",
@@ -28,6 +36,51 @@ document.addEventListener("DOMContentLoaded", () => {
     email: "john.delacruz@example.com",
     phone: "912-345-6789",
   };
+
+  // ---------------------------------------------------------
+  // Course/Year Level/Section/Email/Phone -- persisted to
+  // localStorage so edits survive a refresh, the same way the
+  // Full Name fields already do below. Student Number is never
+  // included here since it's always read-only/never editable.
+  // ---------------------------------------------------------
+  const STUDENT_DETAILS_STORAGE_KEY = "profconsult_student_details";
+
+  function loadStudentDetails() {
+    try {
+      const stored = localStorage.getItem(STUDENT_DETAILS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          return {
+            course: parsed.course || SAMPLE_STUDENT.course,
+            yearLevel: parsed.yearLevel || SAMPLE_STUDENT.yearLevel,
+            section: parsed.section || SAMPLE_STUDENT.section,
+            email: parsed.email || SAMPLE_STUDENT.email,
+            phone: parsed.phone || SAMPLE_STUDENT.phone,
+          };
+        }
+      }
+    } catch (error) {
+      // fall through to defaults
+    }
+    return {
+      course: SAMPLE_STUDENT.course,
+      yearLevel: SAMPLE_STUDENT.yearLevel,
+      section: SAMPLE_STUDENT.section,
+      email: SAMPLE_STUDENT.email,
+      phone: SAMPLE_STUDENT.phone,
+    };
+  }
+
+  function saveStudentDetails(details) {
+    try {
+      localStorage.setItem(STUDENT_DETAILS_STORAGE_KEY, JSON.stringify(details));
+    } catch (error) {
+      // Storage unavailable -- the change just won't persist/sync
+    }
+  }
+
+  let studentDetails = loadStudentDetails();
 
   // ---------------------------------------------------------
   // Name -- stored as three independent parts (First Name,
@@ -130,14 +183,92 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearLevelSelect = document.getElementById("profileYearLevel");
   const sectionSelect = document.getElementById("profileSection");
   const emailInput = document.getElementById("profileEmail");
+  const emailError = document.getElementById("emailError");
   const phoneInput = document.getElementById("profilePhone");
+  const phoneError = document.getElementById("phoneError");
+  const phoneGroup = document.getElementById("profilePhoneGroup");
 
   if (studentNumberInput) studentNumberInput.value = SAMPLE_STUDENT.studentNumber;
-  if (courseSelect) courseSelect.value = SAMPLE_STUDENT.course;
-  if (yearLevelSelect) yearLevelSelect.value = SAMPLE_STUDENT.yearLevel;
-  if (sectionSelect) sectionSelect.value = SAMPLE_STUDENT.section;
-  if (emailInput) emailInput.value = SAMPLE_STUDENT.email;
-  if (phoneInput) phoneInput.value = SAMPLE_STUDENT.phone;
+  if (courseSelect) courseSelect.value = studentDetails.course;
+  if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
+  if (sectionSelect) sectionSelect.value = studentDetails.section;
+  if (emailInput) emailInput.value = studentDetails.email;
+  if (phoneInput) phoneInput.value = studentDetails.phone;
+
+  // ---------------------------------------------------------
+  // Phone number formatting -- digits only, auto-hyphenated as
+  // 3-3-4 (matches the Philippine mobile format used elsewhere
+  // in Prof Consult, e.g. 912-345-6789).
+  // ---------------------------------------------------------
+  function formatPhoneInput(rawValue) {
+    const digits = rawValue.replace(/\D/g, "").slice(0, 10);
+    const part1 = digits.slice(0, 3);
+    const part2 = digits.slice(3, 6);
+    const part3 = digits.slice(6, 10);
+    return [part1, part2, part3].filter(Boolean).join("-");
+  }
+
+  if (phoneInput) {
+    phoneInput.addEventListener("input", () => {
+      phoneInput.value = formatPhoneInput(phoneInput.value);
+    });
+  }
+
+  // ---------------------------------------------------------
+  // Field error helpers (same pattern used on Faculty Profile)
+  // ---------------------------------------------------------
+  function showFieldError(inputEl, errorEl, message, wrapEl) {
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
+    }
+    if (inputEl) inputEl.classList.add("has-error");
+    if (wrapEl) wrapEl.classList.add("has-error");
+  }
+
+  function clearFieldError(inputEl, errorEl, wrapEl) {
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.hidden = true;
+    }
+    if (inputEl) inputEl.classList.remove("has-error");
+    if (wrapEl) wrapEl.classList.remove("has-error");
+  }
+
+  // ---------------------------------------------------------
+  // Validation -- required before Save Changes is allowed to
+  // apply and exit edit mode.
+  // ---------------------------------------------------------
+  function validateEmail() {
+    const value = emailInput.value.trim();
+    // Requires a non-empty local part, an @, a domain with at
+    // least one dot, and a TLD of 2+ letters.
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (value === "" || !emailPattern.test(value)) {
+      showFieldError(emailInput, emailError, "Enter a valid email address.");
+      return false;
+    }
+    clearFieldError(emailInput, emailError);
+    return true;
+  }
+
+  function validatePhone() {
+    const value = phoneInput.value.trim();
+    // Philippine mobile local part: 9XX-XXX-XXXX (10 digits,
+    // starts with 9 -- the digit that follows the +63 prefix).
+    const phonePattern = /^9\d{2}-\d{3}-\d{4}$/;
+    if (!phonePattern.test(value)) {
+      showFieldError(
+        phoneInput,
+        phoneError,
+        "Enter a valid Philippine mobile number (e.g. 912-345-6789).",
+        phoneGroup
+      );
+      return false;
+    }
+    clearFieldError(phoneInput, phoneError, phoneGroup);
+    return true;
+  }
 
   // ---------------------------------------------------------
   // Burger sidebar (same behavior as the Student Dashboard)
@@ -228,9 +359,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   // Edit Profile: toggles all fields except Student Number
   // between read-only and editable. No backend yet, so
-  // "Save Changes" just exits edit mode -- the values already
-  // live on the page's own inputs, ready for a real save call
-  // to be wired in later.
+  // "Save Changes" validates Email/Phone, then persists the
+  // updated values to localStorage and exits edit mode -- the
+  // values are ready for a real save call to be wired in later.
   // ---------------------------------------------------------
   const editProfileButton = document.getElementById("editProfileButton");
   const profileInfoCard = document.querySelector(".profile-info-card");
@@ -257,6 +388,10 @@ document.addEventListener("DOMContentLoaded", () => {
     populateNameEditInputs();
     if (fullNameViewGroup) fullNameViewGroup.hidden = true;
     if (fullNameEditGroup) fullNameEditGroup.hidden = false;
+
+    // Clear any leftover validation state from a previous attempt
+    clearFieldError(emailInput, emailError);
+    clearFieldError(phoneInput, phoneError, phoneGroup);
 
     profileInfoCard.classList.add("is-editing");
     profilePhotoEdit.hidden = false;
@@ -289,6 +424,17 @@ document.addEventListener("DOMContentLoaded", () => {
     saveStudentName(studentName);
     renderFullNameDisplay();
 
+    // Course/Year Level/Section/Email/Phone: persist so the
+    // change survives a refresh (same reasoning as the name above).
+    studentDetails = {
+      course: courseSelect ? courseSelect.value : studentDetails.course,
+      yearLevel: yearLevelSelect ? yearLevelSelect.value : studentDetails.yearLevel,
+      section: sectionSelect ? sectionSelect.value : studentDetails.section,
+      email: emailInput ? emailInput.value.trim() : studentDetails.email,
+      phone: phoneInput ? phoneInput.value.trim() : studentDetails.phone,
+    };
+    saveStudentDetails(studentDetails);
+
     if (fullNameEditGroup) fullNameEditGroup.hidden = true;
     if (fullNameViewGroup) fullNameViewGroup.hidden = false;
 
@@ -302,6 +448,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editProfileButton) {
     editProfileButton.addEventListener("click", () => {
       if (isEditing) {
+        // Validate before allowing Save Changes to apply and
+        // exit edit mode. Invalid fields show an inline error
+        // and the page stays in edit mode.
+        const isEmailValid = validateEmail();
+        const isPhoneValid = validatePhone();
+        if (!isEmailValid || !isPhoneValid) {
+          return;
+        }
         exitEditMode();
       } else {
         enterEditMode();
