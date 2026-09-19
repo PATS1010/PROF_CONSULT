@@ -63,16 +63,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("studentPassword");
   const loginError = document.getElementById("loginError");
 
+  // ---------------------------------------------------------
+  // TEST ACCOUNT CREDENTIALS (frontend-only, no backend yet)
+  // ---------------------------------------------------------
+  const TEST_STUDENT_EMAIL = "student@test.com";
+  const TEST_STUDENT_PASSWORD = "Student123";
+
   if (loginForm) {
-    loginForm.addEventListener("submit", async (event) => {
+    loginForm.addEventListener("submit", (event) => {
       event.preventDefault();
 
-      try {
-        const response = await fetch("api/login.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "student", identifier: emailInput.value.trim(), password: passwordInput.value }) });
-        if (!response.ok) throw new Error();
+      const enteredEmail = emailInput.value.trim();
+      const enteredPassword = passwordInput.value;
+
+      const isValid =
+        enteredEmail === TEST_STUDENT_EMAIL &&
+        enteredPassword === TEST_STUDENT_PASSWORD;
+
+      if (isValid) {
         loginError.hidden = true;
         window.location.href = "student-dashboard.html";
-      } catch (error) {
+      } else {
         loginError.hidden = false;
       }
     });
