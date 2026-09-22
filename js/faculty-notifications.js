@@ -20,6 +20,10 @@
 //   2. Navigates to faculty-consultation-requests.html, which
 //      reads that on load and expands/scrolls to that exact card.
 //
+// The student's name is now ALSO a separate link, to the (not yet
+// built) page where the faculty views that student's profile --
+// see STUDENT NAME LINKS below.
+//
 // Gated by window.TEST_FACULTY_ACCOUNT (set in faculty-shared.js) --
 // for any other account this renders empty, same as before.
 //
@@ -42,6 +46,29 @@ const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 // faculty-consultation-requests.js on load to expand/scroll to
 // the matching card.
 const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
+
+// ---------------------------------------------------------
+// STUDENT NAME LINKS
+// A student's name links to the (not yet built) page where the
+// faculty views that student's profile. Change
+// STUDENT_PROFILE_PAGE_URL once the real page exists -- nothing
+// else needs to change. The student is identified by the same
+// studentId already stored on every consultation.
+// ---------------------------------------------------------
+const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
+
+// This file only ever links from Faculty Notifications, so the origin
+// is fixed here -- it's what lets faculty-student-profile.html's Back
+// button know to return to faculty-notifications.html.
+const STUDENT_PROFILE_ORIGIN = "notifications";
+
+function getStudentProfileUrl(studentId) {
+  const params = new URLSearchParams({
+    studentId: studentId,
+    from: STUDENT_PROFILE_ORIGIN,
+  });
+  return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
+}
 
 
 // =========================================================
@@ -173,7 +200,9 @@ function getTodayISO() {
 // BUILD NOTIFICATIONS FROM CONSULTATION STATE
 //
 // Only two kinds, in this order: pending requests first, then
-// today's upcoming consultations.
+// today's upcoming consultations. Each notification also
+// carries the student's studentId, so the row can be built
+// with a clickable student name (see buildNotificationRow).
 // =========================================================
 
 function buildFacultyNotifications() {
@@ -195,7 +224,10 @@ function buildFacultyNotifications() {
 
       notifications.push({
         id: `pending-${request.id}`,
-        message: `${request.name} sent a request for consultation.`,
+        studentName: request.name,
+        studentId: request.studentId,
+        messageBefore: "",
+        messageAfter: " sent a request for consultation.",
         linkText: "View",
         targetId: request.id,
         targetSection: "pending",
@@ -216,7 +248,10 @@ function buildFacultyNotifications() {
 
       notifications.push({
         id: `today-${request.id}`,
-        message: `Your consultation with ${request.name} is today at ${timeLabel}.`,
+        studentName: request.name,
+        studentId: request.studentId,
+        messageBefore: "Your consultation with ",
+        messageAfter: ` is today at ${timeLabel}.`,
         linkText: "View",
         targetId: request.id,
         targetSection: "upcoming",
@@ -230,6 +265,12 @@ function buildFacultyNotifications() {
 
 // =========================================================
 // BUILD NOTIFICATION ROW
+//
+// The row's text is built in three pieces so the student's name
+// can be its own clickable link:
+//   "<messageBefore>" + "<Name link>" + "<messageAfter>" + "<View link>"
+// e.g. "Your consultation with " + "Juan Dela Cruz" + " is today at
+// 10:00 AM – 10:30 AM." + " " + "View"
 // =========================================================
 
 function buildNotificationRow(notification) {
@@ -265,11 +306,56 @@ function buildNotificationRow(notification) {
   message.className =
     "notification-message";
 
-  // Set as plain text first (never innerHTML), then append the
-  // link element after it -- trailing space keeps "message. View"
-  // from running together.
-  message.textContent =
-    `${notification.message} `;
+
+  // Leading plain-text piece, if any (e.g. "Your consultation with ")
+  if (notification.messageBefore) {
+
+    message.appendChild(
+      document.createTextNode(
+        notification.messageBefore
+      )
+    );
+  }
+
+
+  // Student's name -- its own link to the (not yet built) student
+  // profile page. Falls back to plain text if this notification
+  // somehow has no studentId.
+  if (notification.studentId) {
+
+    const nameLink =
+      document.createElement("a");
+
+    nameLink.className =
+      "notification-student-link";
+
+    nameLink.href =
+      getStudentProfileUrl(
+        notification.studentId
+      );
+
+    nameLink.textContent =
+      notification.studentName;
+
+    message.appendChild(nameLink);
+
+  } else {
+
+    message.appendChild(
+      document.createTextNode(
+        notification.studentName
+      )
+    );
+  }
+
+
+  // Trailing plain-text piece, then a trailing space so
+  // "message. View" doesn't run together.
+  message.appendChild(
+    document.createTextNode(
+      `${notification.messageAfter} `
+    )
+  );
 
 
   const link =

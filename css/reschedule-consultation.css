@@ -170,7 +170,8 @@ input[type="date"].info-input {
 
 /* =========================================================
    ADDITIONAL MESSAGE -- read-only display (not an editable
-   textarea; only Preferred Date/Time are editable per spec)
+   textarea; only Preferred Date/Time and the new Message for
+   the Student field below are editable per spec)
 ========================================================= */
 .message-block {
   display: flex;
@@ -190,6 +191,29 @@ input[type="date"].info-input {
   font-size: 0.8rem;
   color: var(--color-text-dark);
   line-height: 1.6;
+}
+
+/* =========================================================
+   MESSAGE FOR THE STUDENT -- optional, editable. Same white
+   rounded box look as the read-only Additional Message display
+   above, but a real <textarea> so the faculty can type into it.
+========================================================= */
+.message-textarea {
+  display: block;
+  min-height: 90px;
+  resize: vertical;
+  border: none;
+  outline: none;
+  cursor: text;
+}
+
+.message-textarea::placeholder {
+  color: #9a9a9a;
+}
+
+.message-textarea:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: -2px;
 }
 
 /* =========================================================

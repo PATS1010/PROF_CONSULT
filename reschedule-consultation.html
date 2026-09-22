@@ -106,7 +106,8 @@
       <div class="reschedule-columns">
 
         <!-- =========================================================
-             LEFT COLUMN -- read-only, from the original request
+             LEFT COLUMN -- read-only, from the original request, plus
+             the optional Message for the Student at the bottom
         ========================================================= -->
         <div class="reschedule-column">
 
@@ -120,6 +121,22 @@
               <span class="info-label">Additional Message</span>
             </div>
             <p class="message-display" id="rescheduleMessage"></p>
+          </div>
+
+          <!-- Optional -- faculty can leave this blank. If left blank,
+               no message is included with the student's reschedule
+               notification (see reschedule-consultation.js). -->
+          <div class="message-block">
+            <div class="info-row info-row-label-only">
+              <span class="info-label">Message for the Student</span>
+            </div>
+            <textarea
+              class="message-display message-textarea"
+              id="rescheduleMessageForStudent"
+              name="rescheduleMessageForStudent"
+              rows="4"
+              placeholder="Type here..."
+            ></textarea>
           </div>
 
         </div>

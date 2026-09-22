@@ -20,6 +20,12 @@
 //   that same faculty pre-selected (see the FACULTY CARD CLICK
 //   section below) -- generic for any card with data-faculty-id,
 //   no per-faculty special-casing.
+// - Recent Notifications: renders from the SAME notification
+//   data/store as the Notifications page (notifications.js), so
+//   this never shows something different from the full page --
+//   see the RECENT NOTIFICATIONS section below. Its heading is a
+//   plain link to notifications.html (styled in the HTML/CSS,
+//   nothing to wire up here).
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -353,5 +359,212 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
     });
   });
+
+  // =========================================================
+  // RECENT NOTIFICATIONS
+  //
+  // Reads/formats notifications EXACTLY the way notifications.js
+  // does (same storage key, same supported types, same sample
+  // fallback, same time-ago wording, same optional "Professor's
+  // message" line for a rescheduled record) so this panel can
+  // never disagree with the full Notifications page. It's
+  // mirrored here rather than imported since this is a separate
+  // static page with no build step/shared JS module system in
+  // this project -- if that ever changes, this block and
+  // notifications.js's equivalent block are the two places to
+  // consolidate.
+  //
+  // Only the topmost few are shown here ("recent"), taken from
+  // the exact same ordered list notifications.js renders in full
+  // (real/stored records first, newest first, then the test
+  // samples) -- so "recent" is always the literal top of the full
+  // page, never a separately-decided subset.
+  // =========================================================
+
+  const RECENT_NOTIFICATIONS_LIMIT = 3;
+
+  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
+  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
+
+  function isSupportedNotificationRecord(record) {
+    return (
+      record &&
+      typeof record === "object" &&
+      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
+    );
+  }
+
+  function loadStoredNotificationRecords() {
+    try {
+      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (error) {
+      // fall through to no stored records
+    }
+    return [];
+  }
+
+  // TEST DATA ONLY -- identical to notifications.js's
+  // getSampleRecords(), so Recent Notifications and the full
+  // Notifications page always agree on the test account's sample
+  // data too. Delete this function (and its use below) at the
+  // same time it's deleted from notifications.js.
+  function getSampleNotificationRecords() {
+    const now = Date.now();
+    const MINUTE = 60 * 1000;
+    const DAY = 24 * 60 * MINUTE;
+
+    return [
+      {
+        id: "sample-1",
+        type: "accepted",
+        facultyName: "Engr. Sales",
+        createdAt: now - 2 * MINUTE,
+      },
+      {
+        id: "sample-2",
+        type: "rescheduled",
+        accepted: true,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - 90 * MINUTE,
+      },
+      {
+        id: "sample-3",
+        type: "rescheduled",
+        accepted: false,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - DAY,
+      },
+      {
+        id: "sample-4",
+        type: "declined",
+        facultyName: "Engr. Sales",
+        createdAt: now - 3 * DAY,
+      },
+    ];
+  }
+
+  const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function formatNotificationTimeAgo(createdAt) {
+    const created = Number(createdAt);
+    if (!Number.isFinite(created)) return "";
+
+    const now = Date.now();
+    const diffMinutes = Math.floor((now - created) / 60000);
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) {
+      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+    }
+
+    const createdDay = PH_DAY_KEY_FORMATTER.format(new Date(created));
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now))) {
+      return "Today";
+    }
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
+      return "Yesterday";
+    }
+    return PH_DATE_LABEL_FORMATTER.format(new Date(created));
+  }
+
+  function buildRecentNotificationRows(records) {
+    return records.filter(isSupportedNotificationRecord).map((record) => {
+      const message =
+        typeof window.formatStudentNotificationMessage === "function"
+          ? window.formatStudentNotificationMessage(record)
+          : (record.message || "");
+
+      const hasProfessorMessage =
+        record.type === "rescheduled" &&
+        typeof record.message === "string" &&
+        record.message.trim() !== "";
+
+      return {
+        message,
+        professorMessage: hasProfessorMessage ? record.message.trim() : "",
+        timestamp: formatNotificationTimeAgo(record.createdAt),
+      };
+    });
+  }
+
+  function renderRecentNotifications(notifications) {
+    const listEl = document.getElementById("notificationsList");
+    if (!listEl) return;
+
+    listEl.innerHTML = "";
+
+    if (notifications.length === 0) {
+      const emptyItem = document.createElement("li");
+      emptyItem.className = "no-notifications-message";
+      emptyItem.textContent = "You have no notifications yet.";
+      listEl.appendChild(emptyItem);
+      return;
+    }
+
+    notifications.forEach((notification) => {
+      const li = document.createElement("li");
+
+      const check = document.createElement("span");
+      check.className = "notification-check";
+      check.setAttribute("aria-hidden", "true");
+      check.innerHTML = "&check;";
+
+      const content = document.createElement("div");
+      content.className = "notification-content";
+
+      const message = document.createElement("p");
+      message.className = "notification-message";
+      message.textContent = notification.message;
+      content.appendChild(message);
+
+      if (notification.professorMessage) {
+        const professorMessage = document.createElement("p");
+        professorMessage.className = "notification-professor-message";
+        professorMessage.textContent = `Professor's message: ${notification.professorMessage}`;
+        content.appendChild(professorMessage);
+      }
+
+      if (notification.timestamp) {
+        const timestamp = document.createElement("p");
+        timestamp.className = "notification-timestamp";
+        timestamp.textContent = notification.timestamp;
+        content.appendChild(timestamp);
+      }
+
+      li.appendChild(check);
+      li.appendChild(content);
+      listEl.appendChild(li);
+    });
+  }
+
+  const storedNotificationRecords = loadStoredNotificationRecords()
+    .filter(isSupportedNotificationRecord)
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+
+  const allNotificationsInPageOrder = storedNotificationRecords.concat(getSampleNotificationRecords());
+
+  renderRecentNotifications(
+    buildRecentNotificationRows(allNotificationsInPageOrder.slice(0, RECENT_NOTIFICATIONS_LIMIT))
+  );
 
 });

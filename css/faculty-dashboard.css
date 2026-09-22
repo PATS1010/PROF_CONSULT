@@ -239,6 +239,81 @@
   font-weight: 700;
 }
 
+/* ---------------------------------------------------------
+   Detailed schedule entry: name + "View" link on one line,
+   then the purpose, then the time. Same text styling as the
+   cards on Faculty Consultation Requests.
+--------------------------------------------------------- */
+
+.faculty-schedule-list .faculty-schedule-item {
+  align-items: flex-start;
+}
+
+.faculty-schedule-item .faculty-check {
+  margin-top: 3px;
+}
+
+.faculty-schedule-details {
+  min-width: 0;
+}
+
+.faculty-schedule-name-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.faculty-schedule-name {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+}
+
+/* Plain underlined text -- no background, no button styling */
+.faculty-schedule-view-link {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+.faculty-schedule-view-link:hover {
+  color: var(--color-gradient-end);
+}
+
+.faculty-schedule-purpose {
+  font-size: 0.82rem;
+  color: var(--color-text-dark);
+  margin-bottom: 2px;
+}
+
+.faculty-schedule-time {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* =========================================================
+   STUDENT NAME LINKS
+   Keeps the name's existing look (color, size, weight) --
+   it only becomes clickable, with an underline on hover/focus.
+========================================================= */
+
+.student-name-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.student-name-link:hover,
+.student-name-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 /* =========================================================
    PENDING CONSULTATION REQUESTS
    MATCHES THE STUDENT DASHBOARD CARD STYLE

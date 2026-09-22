@@ -520,6 +520,16 @@ input {
   line-height: 1.5;
 }
 
+/* Optional second line for a "rescheduled" notification that
+   included a message from the faculty -- only ever rendered
+   when that message exists (see notifications.js). */
+.notification-professor-message {
+  font-size: 0.82rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+}
+
 .notification-timestamp {
   font-size: 0.72rem;
   color: var(--color-text-muted);

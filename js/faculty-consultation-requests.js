@@ -32,6 +32,12 @@
 //   "View" link stores which request/section to open under
 //   NOTIFICATION_VIEW_TARGET_STORAGE_KEY (ADDED below); on load
 //   here we check for that and auto-expand/scroll to that card.
+// - Student names (on the cards and in History) are links to the
+//   student profile page -- see STUDENT NAME LINKS below.
+// - The Preferred Date line shows the full time range (start AND
+//   end, e.g. "July 20, 10:00 AM – 10:30 AM"). See
+//   formatPreferredDateTime() below -- display only, the stored
+//   data is not changed.
 //
 // STATE / STORAGE:
 // Consultations persist in localStorage under CONSULTATIONS_STORAGE_KEY
@@ -67,6 +73,34 @@ const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
 // navigates here -- see applyNotificationViewTarget() below.
 // ---------------------------------------------------------
 const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
+
+// ---------------------------------------------------------
+// STUDENT NAME LINKS
+// A student's name links to the (not yet built) page where the
+// faculty views that student's profile. Change
+// STUDENT_PROFILE_PAGE_URL once the real page exists -- nothing
+// else needs to change. The student is identified by the same
+// studentId already stored on every consultation.
+// ---------------------------------------------------------
+const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
+
+function getStudentProfileUrl(studentId, from) {
+  const params = new URLSearchParams({ studentId: studentId });
+  if (from) params.set("from", from);
+  return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
+}
+
+// This file only ever links from Consultation Requests (cards and
+// History both live on this page), so the origin is fixed here --
+// it's what lets faculty-student-profile.html's Back button know to
+// return to faculty-consultation-requests.html.
+const STUDENT_PROFILE_ORIGIN = "consultation-requests";
+
+function studentNameLinkHtml(request) {
+  if (!request) return "";
+  if (!request.studentId) return request.name;
+  return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
+}
 
 // ---------------------------------------------------------
 // History status labels -- maps a consultation's stored
@@ -187,6 +221,63 @@ function saveConsultations(list) {
 }
 
 let REQUESTS = loadConsultations();
+
+// ---------------------------------------------------------
+// Preferred Date display: shows the start AND end time.
+//   "July 20, 10:00 AM"  ->  "July 20, 10:00 AM – 10:30 AM"
+//
+// Display only -- request.date is never modified, so it works for
+// both the original request and a rescheduled one (Reschedule
+// replaces request.date with the new start time).
+//   1. If request.date already contains a range, it is shown as is.
+//   2. Else, if request.preferredTimeLabel is a range that starts at
+//      the same time as request.date, its end time is used.
+//   3. Else the end time is the start time plus one consultation
+//      slot (30 minutes).
+// ---------------------------------------------------------
+const CONSULTATION_SLOT_MINUTES = 30;
+
+function formatPreferredDateTime(request) {
+  const raw = String((request && request.date) || "");
+
+  // Already a range -- nothing to add
+  if (/\d\s*(AM|PM)\s*[\u2013\u2014-]\s*\d/i.test(raw)) return raw;
+
+  // Split "July 20, 10:00 AM" into the date part and the start time
+  const match = raw.match(/^(.*?)(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i);
+  if (!match) return raw;
+
+  const datePrefix = match[1];
+  const startHour = parseInt(match[2], 10);
+  const startMinute = parseInt(match[3], 10);
+  const startPeriod = match[4].toUpperCase();
+  const startLabel = `${startHour}:${match[3]} ${startPeriod}`;
+
+  const normalize = (text) => String(text).replace(/\s+/g, "").toUpperCase();
+
+  // Prefer the stored range's end time when it belongs to this start time
+  const label = String((request && request.preferredTimeLabel) || "");
+  const labelParts = label.split(/\s*[\u2013\u2014-]\s*/);
+  if (
+    labelParts.length === 2 &&
+    labelParts[1].trim() &&
+    normalize(labelParts[0]) === normalize(startLabel)
+  ) {
+    return `${datePrefix}${startLabel} \u2013 ${labelParts[1].trim()}`;
+  }
+
+  // Otherwise: start time + one 30-minute slot
+  const startTotalMinutes =
+    ((startHour % 12) + (startPeriod === "PM" ? 12 : 0)) * 60 + startMinute;
+  const endTotalMinutes = (startTotalMinutes + CONSULTATION_SLOT_MINUTES) % (24 * 60);
+  const endHour24 = Math.floor(endTotalMinutes / 60);
+  const endMinute = endTotalMinutes % 60;
+  const endPeriod = endHour24 >= 12 ? "PM" : "AM";
+  const endHour12 = endHour24 % 12 || 12;
+  const endLabel = `${endHour12}:${String(endMinute).padStart(2, "0")} ${endPeriod}`;
+
+  return `${datePrefix}${startLabel} \u2013 ${endLabel}`;
+}
 
 // ---------------------------------------------------------
 // Notification hook -- intentionally a no-op placeholder for
@@ -324,7 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     card.innerHTML = `
       <div class="request-card-header">
-        <p class="request-name">${request.name}</p>
+        <p class="request-name">${studentNameLinkHtml(request)}</p>
         <span class="request-avatar" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="8" r="4"></circle>
@@ -335,7 +426,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
 
       <p class="request-type">${request.type}</p>
-      <p class="request-date">Preferred Date: ${request.date}</p>
+      <p class="request-date">Preferred Date: ${formatPreferredDateTime(request)}</p>
 
       ${expandedInfoHtml}
 
@@ -374,9 +465,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const statusModifierClass = `history-entry-status--${request.status}`;
 
     entry.innerHTML = `
-      <p class="history-entry-name">${request.name}</p>
+      <p class="history-entry-name">${studentNameLinkHtml(request)}</p>
       <p class="history-entry-type">${request.type}</p>
-      <p class="history-entry-date">Preferred Date: ${request.date}</p>
+      <p class="history-entry-date">Preferred Date: ${formatPreferredDateTime(request)}</p>
       <p class="history-entry-status ${statusModifierClass}">${statusLabel}</p>
     `;
 

@@ -14,10 +14,15 @@
 //   no build step/shared JS module system in this project -- if
 //   that ever changes, this block and request-consultation.js's
 //   equivalent block are the two places to consolidate.
+// - Message for the Student (optional): a plain textarea the
+//   faculty can leave blank. See the STUDENT NOTIFICATION section
+//   below for how/when it's included.
 // - Submit New Schedule updates that consultation's date/time in
-//   place (status untouched), turns the submit button green, then
-//   redirects back to faculty-consultation-requests.html after a
-//   3-2-1 countdown.
+//   place (status untouched), writes a "rescheduled" notification
+//   record for the student (same store/shape notifications.js and
+//   student-dashboard.js already read), turns the submit button
+//   green, then redirects back to faculty-consultation-requests.html
+//   after a 3-2-1 countdown.
 // - Cancel just navigates back without changing anything.
 //
 // Frontend/prototype only -- no backend. Shared shell behavior
@@ -72,6 +77,49 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
+  // STUDENT NOTIFICATION -- same storage key/record shape the
+  // Student side already reads (see notifications.js and
+  // student-dashboard.js's SUPPORTED_NOTIFICATION_TYPES /
+  // isSupportedRecord / buildNotificationRows). Written here,
+  // read there -- no separate/duplicate notification system.
+  //
+  // "message" is the professor's optional note to the student.
+  // It is only ever added to the record when the faculty actually
+  // typed something -- an empty/whitespace-only textarea means the
+  // record has NO "message" property at all, so the Notifications
+  // page's "Professor's message: ..." line never renders empty.
+  // ---------------------------------------------------------
+  const STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
+
+  // Matches the faculty name already used elsewhere in the test
+  // data (e.g. notifications.js's sample records, faculty-dashboard.js's
+  // SAMPLE_FACULTY "Engr. Maria Nina Sales"). Replace with the real
+  // logged-in faculty's display name once accounts/backend exist --
+  // nothing else about this record needs to change.
+  const RESCHEDULE_NOTIFICATION_FACULTY_NAME = "Engr. Sales";
+
+  function loadStudentNotificationRecords() {
+    try {
+      const stored = localStorage.getItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (error) {
+      // fall through
+    }
+    return [];
+  }
+
+  function saveStudentNotificationRecords(list) {
+    try {
+      localStorage.setItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY, JSON.stringify(list));
+    } catch (error) {
+      // Storage unavailable -- the notification just won't persist
+    }
+  }
+
+  // ---------------------------------------------------------
   // Populate read-only fields from the selected consultation
   // ---------------------------------------------------------
   const purposeEl = document.getElementById("reschedulePurpose");
@@ -80,6 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearSetEl = document.getElementById("rescheduleYearSet");
   const dateInput = document.getElementById("reschedulePreferredDate");
   const dateHint = document.getElementById("reschedulePreferredDateHint");
+  const messageForStudentInput = document.getElementById("rescheduleMessageForStudent");
 
   if (purposeEl) purposeEl.textContent = request.type;
   if (messageEl) messageEl.textContent = request.message;
@@ -320,6 +369,32 @@ document.addEventListener("DOMContentLoaded", () => {
       request.date = formatDisplayDate(newDateISO, newTimeLabel);
 
       saveConsultations(consultations);
+
+      // ---------------------------------------------------------
+      // Notify the student -- one "rescheduled" record, written to
+      // the same store the Notifications page and Dashboard read.
+      // The optional message is only attached when the faculty
+      // actually typed one (trimmed, non-empty).
+      // ---------------------------------------------------------
+      const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
+
+      const notificationRecord = {
+        id: `reschedule-${request.id}-${Date.now()}`,
+        type: "rescheduled",
+        accepted: false,
+        facultyName: RESCHEDULE_NOTIFICATION_FACULTY_NAME,
+        dateISO: newDateISO,
+        timeLabel: newTimeLabel,
+        createdAt: Date.now(),
+      };
+
+      if (messageForStudentRaw) {
+        notificationRecord.message = messageForStudentRaw;
+      }
+
+      const studentNotificationRecords = loadStudentNotificationRecords();
+      studentNotificationRecords.unshift(notificationRecord); // newest first
+      saveStudentNotificationRecords(studentNotificationRecords);
 
       try {
         sessionStorage.removeItem(RESCHEDULE_TARGET_STORAGE_KEY);

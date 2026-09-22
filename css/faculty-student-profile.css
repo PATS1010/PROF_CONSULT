@@ -1,0 +1,171 @@
+/* =========================================================
+   FACULTY STUDENT PROFILE -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content)
+   is defined here. Navbar/sidebar/quick action/background
+   styling lives in faculty-shared.css and is not duplicated
+   or overridden here.
+========================================================= */
+
+/* =========================================================
+   BACK BUTTON
+   Sits outside the profile card, near the top of the content
+   area. Red -> orange gradient pill, matching the rest of the
+   Faculty side's primary buttons.
+========================================================= */
+.student-profile-back-button {
+  display: inline-block;
+  margin-bottom: 24px;
+  padding: 10px 26px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.student-profile-back-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+/* =========================================================
+   OUTER PROFILE CARD
+========================================================= */
+.student-profile-outer-card {
+  max-width: 920px;
+  margin: 0 auto;
+  background-color: #f5f1ea;
+  border-radius: 32px;
+  box-shadow: var(--shadow-card);
+  padding: 40px 44px;
+}
+
+/* =========================================================
+   HEADER: photo + name
+========================================================= */
+.student-profile-header {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  margin-bottom: 28px;
+}
+
+.student-profile-photo {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.student-profile-name {
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: clamp(1.6rem, 4vw, 2.3rem);
+  color: var(--color-red-primary);
+  word-break: break-word;
+}
+
+/* =========================================================
+   INNER INFO CARD
+   White card with a red vertical accent bar on the left edge,
+   same pattern already used on the requests/upcoming/completed
+   cards elsewhere in the Faculty side.
+========================================================= */
+.student-profile-info-card {
+  position: relative;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 24px;
+  box-shadow: var(--shadow-card);
+  padding: 32px 32px 32px 46px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 26px 40px;
+}
+
+.student-profile-info-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-red-primary);
+}
+
+.student-profile-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  min-width: 0;
+}
+
+.student-profile-field-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  margin-bottom: 4px;
+}
+
+.student-profile-field-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  word-break: break-word;
+}
+
+/* =========================================================
+   NOT FOUND STATE
+========================================================= */
+.student-profile-not-found {
+  padding: 28px 4px;
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.student-profile-not-found[hidden] {
+  display: none;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 720px) {
+  .student-profile-outer-card {
+    padding: 32px 26px;
+  }
+
+  .student-profile-info-card {
+    grid-template-columns: 1fr;
+    padding: 26px 22px 26px 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .student-profile-outer-card {
+    padding: 26px 18px;
+    border-radius: 24px;
+  }
+
+  .student-profile-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .student-profile-photo {
+    width: 96px;
+    height: 96px;
+  }
+
+  .student-profile-info-card {
+    padding: 22px 18px 22px 30px;
+  }
+}

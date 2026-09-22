@@ -2,10 +2,17 @@
 // FACULTY-DIRECTORY.JS
 // Page-specific behavior for the Faculty Directory:
 // - Renders faculty cards from FACULTY_DIRECTORY_DATA
+// - Each card shows a status dot (same colors as the Student
+//   Dashboard) driven by that faculty's `status` value
 // - Search-as-you-type by name or specialization/program
 // - Combines with the shared status filter (student-shared.js)
-// - "View Profile" opens the split-view profile panel with an
-//   animation and populates it from the same data object
+// - "View Profile" switches the page (in-page, no navigation) to
+//   a profile view: the search bar and faculty list are hidden,
+//   and the selected faculty's profile card is shown directly
+//   below the heading/description with a Back button above it.
+//   The profile is populated from the same data object.
+// - "Back" hides the profile and restores the search bar and
+//   faculty list exactly as they were
 // - "Request Consultation" persists the selected professor's
 //   full record to sessionStorage so request-consultation.html
 //   (and, after submitting, request-submitted.html) can display
@@ -23,8 +30,8 @@
 // here. Once real faculty accounts exist, this array (and the
 // render/lookup functions that use it) should be replaced by
 // data fetched from those accounts -- the rest of the page
-// logic (search, filter, profile panel, animation, selected-
-// faculty hand-off) should not need to change.
+// logic (search, filter, profile panel, status display,
+// selected-faculty hand-off) should not need to change.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,10 +39,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   // TEST DATA -- replace with real faculty account data later
   // ---------------------------------------------------------
-  // All faculty currently share one test office/room. Change this
-  // single constant when real office assignments exist per faculty.
-  const DEFAULT_OFFICE = "Room 305";
+  // All faculty currently share one placeholder office label. Change
+  // this single constant when real office assignments exist per faculty.
+  const DEFAULT_OFFICE = "Faculty Room";
 
+  // STATUS: each faculty's `status` (one of the existing values:
+  // available, teaching, meeting, consultation, onleave, offline)
+  // picks the dot color, and `statusLabel` is the text shown after
+  // "Status:" in the profile. Both the list and the profile read
+  // these SAME two fields -- update them here (or from the backend
+  // later) and every view updates on the next render.
   const FACULTY_DIRECTORY_DATA = [
     {
       id: "maria-nina-sales",
@@ -137,6 +150,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("facultySearchInput");
   const directoryContainer = document.getElementById("directoryContainer");
   const profilePanel = document.getElementById("directoryProfilePanel");
+  const backRow = document.getElementById("directoryBackRow");
+  const backButton = document.getElementById("directoryBackButton");
 
   let selectedFacultyId = null;
 
@@ -152,11 +167,9 @@ document.addEventListener("DOMContentLoaded", () => {
       card.dataset.status = faculty.status;
       card.dataset.facultyId = faculty.id;
 
-      // Availability status is no longer shown here -- this page is now
-      // purely for identifying/selecting a professor for consultation.
-      // faculty.status/statusLabel are kept in the data model (and still
-      // power the existing filter panel under the hood) but are not
-      // rendered as a dot or label anymore.
+      // The status dot uses the shared .status-dot + .status-<status>
+      // classes (same colors as the Student Dashboard), so its color
+      // always comes from faculty.status -- nothing is hardcoded here.
       card.innerHTML = `
         <img src="${faculty.photo}" alt="${faculty.fullName}" class="faculty-photo">
         <div class="faculty-info">
@@ -168,6 +181,12 @@ document.addEventListener("DOMContentLoaded", () => {
           </p>
         </div>
         <button type="button" class="view-profile-button" data-faculty-id="${faculty.id}">View Profile</button>
+        <span
+          class="status-dot faculty-status-dot status-${faculty.status}"
+          role="img"
+          aria-label="Status: ${faculty.statusLabel}"
+          title="${faculty.statusLabel}"
+        ></span>
       `;
 
       facultyListEl.appendChild(card);
@@ -229,8 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
   // Profile panel: builds the markup for the selected faculty,
-  // then animates the layout into the split (list-left,
-  // profile-right) view.
+  // then switches the page into the profile view (search + list
+  // hidden, profile shown under the heading).
   // ---------------------------------------------------------
   function buildProfileMarkup(faculty) {
     const hoursRows = faculty.hours.map((entry) => `
@@ -240,13 +259,18 @@ document.addEventListener("DOMContentLoaded", () => {
       </li>
     `).join("");
 
-    // Availability status is no longer shown in the profile -- this page
-    // is now purely for identifying/selecting a professor for consultation.
+    // Status sits directly below the office/room line. It reads the same
+    // faculty.status / faculty.statusLabel fields as the list dot, so the
+    // list and profile can never disagree.
     return `
       <img src="${faculty.photo}" alt="${faculty.fullName}" class="profile-photo">
       <p class="profile-name">${faculty.fullName}</p>
       <p class="profile-program">${faculty.program}</p>
       <p class="profile-office">${faculty.office}</p>
+      <p class="profile-status-row">
+        <span class="status-dot status-${faculty.status}" aria-hidden="true"></span>
+        <span class="profile-status-label">Status: ${faculty.statusLabel}</span>
+      </p>
 
       <h2 class="profile-section-title">Available Hours</h2>
       <ul class="profile-hours-list">
@@ -268,14 +292,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
     selectedFacultyId = facultyId;
 
-    // Highlight the selected card
+    // Highlight the selected card (it is hidden in the profile view, but
+    // this keeps the existing selection state consistent)
     Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
       card.classList.toggle("is-selected", card.dataset.facultyId === facultyId);
     });
 
     profilePanel.innerHTML = buildProfileMarkup(faculty);
     profilePanel.hidden = false;
-    directoryContainer.classList.add("is-split");
+
+    // Profile view: CSS hides the search bar + faculty list and stacks
+    // the profile card under the heading. The Back button appears above it.
+    directoryContainer.classList.add("is-profile-view");
+    if (backRow) backRow.hidden = false;
 
     // Persist the selected faculty so request-consultation.html (and,
     // after submission, request-submitted.html) can display the same
@@ -294,9 +323,40 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // Start at the top so the heading, Back button and profile are in
+    // view (the list above it is no longer in the way)
+    window.scrollTo(0, 0);
+
     // Let the browser paint `hidden` removal first so the
     // opacity/transform transition actually animates in
     requestAnimationFrame(() => profilePanel.classList.add("is-visible"));
+  }
+
+  // ---------------------------------------------------------
+  // Back: leave the profile view and restore the normal directory
+  // (search bar + faculty list). Purely in-page -- no navigation
+  // or reload. The search text / status filter the student had
+  // before opening the profile are left as they were.
+  // ---------------------------------------------------------
+  function closeProfile() {
+    selectedFacultyId = null;
+
+    profilePanel.classList.remove("is-visible");
+    profilePanel.hidden = true;
+    profilePanel.innerHTML = "";
+
+    Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
+      card.classList.remove("is-selected");
+    });
+
+    directoryContainer.classList.remove("is-profile-view");
+    if (backRow) backRow.hidden = true;
+
+    window.scrollTo(0, 0);
+  }
+
+  if (backButton) {
+    backButton.addEventListener("click", closeProfile);
   }
 
   // ---------------------------------------------------------

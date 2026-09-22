@@ -684,6 +684,22 @@ input {
   margin-bottom: 18px;
 }
 
+/* Recent Notifications' heading is now a link to notifications.html
+   (Faculty Availability's heading is plain text and unaffected --
+   this rule only applies where the HTML wraps the text in an
+   anchor). Same color/size/weight as before via inherit; only the
+   underline is new, to signal it's clickable. */
+.panel-title-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.panel-title-link:hover {
+  opacity: 0.85;
+}
+
 .availability-list,
 .notifications-list {
   list-style: none;
@@ -705,6 +721,42 @@ input {
   color: var(--color-text-dark);
 }
 
+/* Recent Notifications items can carry an optional second (message)
+   line and a timestamp line below the main text -- align to the
+   top instead of centering when that happens. */
+.notifications-list li {
+  align-items: flex-start;
+}
+
+.notifications-list .notification-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notifications-list .notification-message {
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+  line-height: 1.4;
+}
+
+.notifications-list .notification-professor-message {
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.notifications-list .notification-timestamp {
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.notifications-list .no-notifications-message {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
 .notification-check {
   flex-shrink: 0;
   display: inline-flex;
@@ -717,6 +769,7 @@ input {
   color: #ffffff;
   font-size: 0.7rem;
   font-weight: 700;
+  margin-top: 2px;
 }
 
 /* =========================================================

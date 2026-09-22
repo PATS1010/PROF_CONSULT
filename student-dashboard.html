@@ -207,9 +207,14 @@
       </div>
 
       <div class="panel-card">
-        <h2 class="panel-title">Recent Notifications</h2>
+        <h2 class="panel-title">
+          <a href="notifications.html" class="panel-title-link" id="recentNotificationsLink">Recent Notifications</a>
+        </h2>
         <ul class="notifications-list" id="notificationsList">
-          <li><span class="notification-check" aria-hidden="true">&check;</span> Your consultation request was accepted.</li>
+          <!-- Populated by student-dashboard.js from the SAME
+               notification data notifications.js reads, so this
+               never shows something different from the full
+               Notifications page. -->
         </ul>
       </div>
 

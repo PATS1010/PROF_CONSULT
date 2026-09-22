@@ -150,18 +150,20 @@
 
 /* =========================================================
    CHANGE PASSWORD LINK
+   Matches the Student Settings link: centered, black -> orange
+   text from the shared .format-text class (added in the HTML),
+   and underlined. The underline color is set explicitly because
+   .format-text makes the text color transparent, which would
+   otherwise make the underline invisible.
 ========================================================= */
 .faculty-change-password-link {
-  align-self: flex-start;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-red-primary);
+  align-self: center;
+  font-size: 1.05rem;
   text-decoration: underline;
-  transition: color 0.2s ease;
-}
-
-.faculty-change-password-link:hover {
-  color: var(--color-gradient-end);
+  text-decoration-color: var(--color-gradient-end);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
 }
 
 /* =========================================================

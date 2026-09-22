@@ -593,8 +593,9 @@ input {
 /* =========================================================
    CONTAINER
    Centered single column by default. When a profile is open,
-   .is-split shifts the list panel left and reveals the
-   profile panel on the right.
+   .is-profile-view hides the search + list and stacks the
+   Back button and profile card under the heading (see the
+   PROFILE VIEW section below).
 ========================================================= */
 .directory-container {
   display: flex;
@@ -649,6 +650,65 @@ input {
 /* Center the search bar under the heading in the initial state */
 .directory-list-panel .search-bar {
   margin-bottom: 28px;
+}
+
+/* =========================================================
+   PROFILE VIEW
+   Applied to .directory-container by faculty-directory.js when
+   "View Profile" is clicked. The heading + description stay;
+   the search bar and faculty list are hidden; the Back button
+   and profile card stack directly beneath. Removing the class
+   (Back button) restores the normal directory view.
+========================================================= */
+.directory-container.is-profile-view {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+/* Reset the row-layout flex-basis values so they don't turn into
+   heights once the container is a column */
+.directory-container.is-profile-view .directory-list-panel,
+.directory-container.is-profile-view .directory-profile-panel {
+  flex: 0 0 auto;
+}
+
+.directory-container.is-profile-view .directory-list-panel .search-bar,
+.directory-container.is-profile-view .faculty-list-container {
+  display: none;
+}
+
+/* Back button row -- same width as the profile card, button on the left */
+.directory-back-row {
+  width: 100%;
+  max-width: 460px;
+  margin-bottom: 14px;
+}
+
+.directory-back-row[hidden] {
+  display: none;
+}
+
+.directory-back-button {
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7a0f0f 0%, #e8560f 100%);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(122, 15, 15, 0.25);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.directory-back-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.directory-back-button:focus-visible {
+  outline: 2px solid #e8560f;
+  outline-offset: 2px;
 }
 
 /* =========================================================
@@ -806,8 +866,8 @@ input {
 
 /* =========================================================
    PROFILE PANEL
-   Hidden/off-canvas by default; slides + fades in from the
-   right when a faculty card's "View Profile" is clicked.
+   Hidden by default; fades + slides in when a faculty card's
+   "View Profile" is clicked (shown in place of the list).
 ========================================================= */
 .directory-profile-panel {
   flex: 1 1 460px;
@@ -844,11 +904,12 @@ input {
   margin-bottom: 6px;
 }
 
+/* Status sits directly below the Faculty Room line */
 .profile-status-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
 }
 
 .profile-status-label {
@@ -866,7 +927,7 @@ input {
 .profile-office {
   font-size: 0.82rem;
   color: #6b6b6b;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .profile-section-title {
@@ -959,6 +1020,11 @@ input {
 
   .directory-profile-panel.is-visible {
     transform: translateY(0);
+  }
+
+  /* Keep the Back row the same width as the profile card */
+  .directory-back-row {
+    max-width: 100%;
   }
 }
 

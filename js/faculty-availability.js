@@ -18,34 +18,82 @@
 //   restores the previously saved hours, hides the arrows again,
 //   and turns Cancel back into Edit.
 //
-// FACULTY TEST ACCOUNT -- no backend yet. Current status now
-// lives in faculty-shared.js's shared status (persisted via
-// localStorage) instead of a page-local variable. The weekly
-// available hours remain frontend/mock state only: a plain JS
-// variable, no localStorage/sessionStorage/persistence of any
-// kind, so a page reload resets the hours back to the default
-// mock schedule below. Structured so this can later be
-// connected to the real logged-in faculty account's data once
-// the backend exists.
+// FACULTY TEST ACCOUNT -- no backend yet. Current status lives
+// in faculty-shared.js's shared status (persisted via
+// localStorage) instead of a page-local variable.
+//
+// SAVED HOURS PERSIST: clicking Save writes the weekly hours to
+// localStorage (AVAILABLE_HOURS_STORAGE_KEY), and they are loaded
+// back on every page load, so a refresh no longer resets them.
+// A faculty account that has never saved any hours (e.g. a newly
+// created account) starts with every day showing "No hours set"
+// (NOT_SET_LABEL) -- different from "Unavailable", which is a
+// choice the faculty makes on purpose. Once a backend exists,
+// loadAvailableHours()/saveAvailableHours() are the two functions
+// to swap for real API calls; nothing else here needs to change.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
 
 // ---------------------------------------------------------
-// Mock weekly schedule -- replace with the logged-in faculty's
-// real saved hours once the backend exists. `time` is the
+// Storage key for the saved weekly hours (frontend-only
+// stand-in until a backend exists).
+// ---------------------------------------------------------
+const AVAILABLE_HOURS_STORAGE_KEY = "profconsult_faculty_available_hours";
+
+// Shown for a day the faculty has not set any hours for yet
+const NOT_SET_LABEL = "No hours set";
+
+// ---------------------------------------------------------
+// Default weekly schedule for an account that has never saved
+// its hours: every day is "No hours set". `time` is the
 // currently SAVED value for that day; "Unavailable" is a valid
 // saved value, same as any time range.
 // ---------------------------------------------------------
-let AVAILABLE_HOURS = [
-  { day: "Monday", short: "Mon", time: "11:00 AM - 1:00 PM" },
-  { day: "Tuesday", short: "Tue", time: "11:00 AM - 1:00 PM" },
-  { day: "Wednesday", short: "Wed", time: "11:00 AM - 1:00 PM" },
-  { day: "Thursday", short: "Thurs", time: "11:00 AM - 1:00 PM" },
-  { day: "Friday", short: "Fri", time: "11:00 AM - 1:00 PM" },
-  { day: "Saturday", short: "Sat", time: "11:00 AM - 1:00 PM" },
+const DEFAULT_AVAILABLE_HOURS = [
+  { day: "Monday", short: "Mon", time: NOT_SET_LABEL },
+  { day: "Tuesday", short: "Tue", time: NOT_SET_LABEL },
+  { day: "Wednesday", short: "Wed", time: NOT_SET_LABEL },
+  { day: "Thursday", short: "Thurs", time: NOT_SET_LABEL },
+  { day: "Friday", short: "Fri", time: NOT_SET_LABEL },
+  { day: "Saturday", short: "Sat", time: NOT_SET_LABEL },
 ];
+
+function loadAvailableHours() {
+  const defaults = DEFAULT_AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+
+  try {
+    const raw = localStorage.getItem(AVAILABLE_HOURS_STORAGE_KEY);
+    if (!raw) return defaults;
+
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return defaults;
+
+    // Match by day so a missing/invalid entry just falls back to
+    // "No hours set" for that day instead of breaking the page
+    return defaults.map((entry) => {
+      const match = saved.find((item) => item && item.day === entry.day);
+      if (match && typeof match.time === "string" && match.time) {
+        return { ...entry, time: match.time };
+      }
+      return entry;
+    });
+  } catch (error) {
+    // Nothing saved yet, or storage unavailable -- use the defaults
+    return defaults;
+  }
+}
+
+function saveAvailableHours(hours) {
+  try {
+    localStorage.setItem(AVAILABLE_HOURS_STORAGE_KEY, JSON.stringify(hours));
+  } catch (error) {
+    // Storage unavailable -- hours just won't persist across reloads
+  }
+}
+
+let AVAILABLE_HOURS = loadAvailableHours();
 
 const TIME_OPTIONS = [
   "8:00 AM - 10:00 AM",
@@ -240,7 +288,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const timeText = document.createElement("span");
       timeText.className = "availability-time-text";
-      if (entry.time === UNAVAILABLE_LABEL) timeText.classList.add("is-unavailable");
+      // "Unavailable" and "No hours set" share the same muted,
+      // italic look (existing .is-unavailable style)
+      if (entry.time === UNAVAILABLE_LABEL || entry.time === NOT_SET_LABEL) {
+        timeText.classList.add("is-unavailable");
+      }
       timeText.textContent = entry.time;
       timeWrap.appendChild(timeText);
 
@@ -323,6 +375,9 @@ document.addEventListener("DOMContentLoaded", () => {
         // differ from AVAILABLE_HOURS; unchanged days are
         // written back identically, so nothing is lost.
         AVAILABLE_HOURS = draftHours.map((entry) => ({ ...entry }));
+
+        // Persist so the saved hours survive a page refresh
+        saveAvailableHours(AVAILABLE_HOURS);
       }
 
       isEditingHours = false;

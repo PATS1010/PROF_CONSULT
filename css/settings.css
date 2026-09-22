@@ -555,10 +555,17 @@ input {
 
 /* =========================================================
    CHANGE PASSWORD LINK
+   Underlined so it reads as a link. The underline color is
+   set explicitly because .format-text makes the text color
+   transparent, which would otherwise make the underline
+   invisible.
 ========================================================= */
 .change-password-link {
   font-size: 1.05rem;
-  text-decoration: none;
+  text-decoration: underline;
+  text-decoration-color: var(--color-gradient-end);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
 

@@ -17,6 +17,12 @@
 //   window.formatStudentNotificationMessage (defined in
 //   student-notification-toast.js), so this list and the
 //   pop-up card always say the same thing.
+// - A "rescheduled" notification can also carry an optional
+//   `message` from the faculty (see reschedule-consultation.js).
+//   When present, it's shown as a second line, "Professor's
+//   message: <text>", below the main notification text -- see
+//   buildNotificationRows()/renderNotifications() below. When
+//   absent, no such line is rendered at all.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -143,12 +149,18 @@ document.addEventListener("DOMContentLoaded", () => {
   //                           Engr. Sales moved your consultation request
   //                           at 3:00 PM - 3:30 PM, September 19, 2026.
   //
+  //                         A "rescheduled" record can also carry an
+  //                         optional `message` from the faculty (see
+  //                         reschedule-consultation.js) -- when present,
+  //                         it's shown as a second line, "Professor's
+  //                         message: <text>", below the line above.
+  //
   // Each one has a time line under it: "2 minutes ago", then
   // "Today", "Yesterday", and after that the date.
   //
   // Record shape (see student-notification-toast.js for how the
   // faculty side writes one):
-  //   { id, type, facultyName, accepted, dateISO, timeLabel, createdAt }
+  //   { id, type, facultyName, accepted, dateISO, timeLabel, createdAt, message? }
   //
   // Records the faculty side saved are read from localStorage
   // ("studentTestNotificationRecords", newest first). Once a
@@ -272,7 +284,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
-  // Record -> { message, timestamp } row for renderNotifications()
+  // Record -> { message, professorMessage, timestamp } row for
+  // renderNotifications(). professorMessage is only set for a
+  // "rescheduled" record that actually has a non-empty `message`
+  // (see reschedule-consultation.js -- it omits the property
+  // entirely when the faculty left the field blank), so a
+  // reschedule with no message never renders an empty
+  // "Professor's message:" line.
   // ---------------------------------------------------------
   function buildNotificationRows(records) {
     return records.filter(isSupportedRecord).map((record) => {
@@ -281,8 +299,14 @@ document.addEventListener("DOMContentLoaded", () => {
           ? window.formatStudentNotificationMessage(record)
           : (record.message || "");
 
+      const hasProfessorMessage =
+        record.type === "rescheduled" &&
+        typeof record.message === "string" &&
+        record.message.trim() !== "";
+
       return {
         message,
+        professorMessage: hasProfessorMessage ? record.message.trim() : "",
         timestamp: formatTimeAgo(record.createdAt),
       };
     });
@@ -310,6 +334,13 @@ document.addEventListener("DOMContentLoaded", () => {
       message.className = "notification-message";
       message.textContent = notification.message;
       content.appendChild(message);
+
+      if (notification.professorMessage) {
+        const professorMessage = document.createElement("p");
+        professorMessage.className = "notification-professor-message";
+        professorMessage.textContent = `Professor's message: ${notification.professorMessage}`;
+        content.appendChild(professorMessage);
+      }
 
       if (notification.timestamp) {
         const timestamp = document.createElement("p");

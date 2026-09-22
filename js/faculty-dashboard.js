@@ -10,12 +10,22 @@
 //   faculty status (see faculty-shared.js) instead of only
 //   this page's own status pill, so Quick Action and
 //   faculty-availability stay in sync.
+// - Today's Schedule: lists every UPCOMING (accepted)
+//   consultation scheduled for today (Philippine date) from the
+//   same shared consultation data, showing the student's name,
+//   purpose, and time range. Each entry has an underlined "View"
+//   link that opens Faculty Consultation Requests with that
+//   student's card in Upcoming Consultations already expanded
+//   (see the TODAY'S SCHEDULE section below).
 // - Pending Consultation Requests: Accept / Decline now read
 //   and write the SAME consultation data as
 //   faculty-consultation-requests.js (same localStorage key,
 //   same status values), so accepting/declining here is
 //   reflected on the Consultation Requests page and vice
 //   versa. View More still just navigates there.
+// - Student names (Pending Consultation Requests and Today's
+//   Schedule) are links to the student profile page -- see
+//   STUDENT NAME LINKS near the top of this file.
 // - Auto Check In Reminder: if that setting is checked AND
 //   saved on Faculty Settings, the Quick Action popup opens
 //   by itself when the faculty lands here after logging in
@@ -39,10 +49,47 @@
 // This page only ever reads "pending" requests and moves one
 // to "upcoming" (Accept) or "declined" (Decline) -- it does
 // not render Upcoming/Completed/History, so it doesn't need
-// anything else from that file.
+// anything else from that file. (Today's Schedule also reads
+// "upcoming" requests, read-only.)
 // ---------------------------------------------------------
 
 const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
+
+// ---------------------------------------------------------
+// Same sessionStorage key faculty-consultation-requests.js
+// already reads on load (NOTIFICATION_VIEW_TARGET_STORAGE_KEY)
+// to auto-expand and scroll to one specific request card. The
+// Today's Schedule "View" link writes to it right before
+// navigating there, so that page needs no changes.
+// ---------------------------------------------------------
+const SCHEDULE_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
+
+// ---------------------------------------------------------
+// STUDENT NAME LINKS
+// A student's name links to the (not yet built) page where the
+// faculty views that student's profile. Change
+// STUDENT_PROFILE_PAGE_URL once the real page exists -- nothing
+// else needs to change. The student is identified by the same
+// studentId already stored on every consultation.
+// ---------------------------------------------------------
+const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
+
+function getStudentProfileUrl(studentId, from) {
+  const params = new URLSearchParams({ studentId: studentId });
+  if (from) params.set("from", from);
+  return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
+}
+
+// This file only ever links from the Dashboard, so the origin is
+// fixed here -- it's what lets faculty-student-profile.html's Back
+// button know to return to faculty-dashboard.html.
+const STUDENT_PROFILE_ORIGIN = "dashboard";
+
+function studentNameLinkHtml(request) {
+  if (!request) return "";
+  if (!request.studentId) return request.name;
+  return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
+}
 
 const DEFAULT_CONSULTATIONS = [
   {
@@ -143,6 +190,64 @@ function saveConsultations(list) {
   } catch (error) {
     // Storage unavailable -- state just won't persist across reload/navigation
   }
+}
+
+// ---------------------------------------------------------
+// Preferred Date display: shows the start AND end time.
+//   "July 20, 10:00 AM"  ->  "July 20, 10:00 AM – 10:30 AM"
+//
+// Same helper as faculty-consultation-requests.js, so Today's
+// Schedule shows the time exactly the way the Consultation
+// Requests cards do. Display only -- request.date is never
+// modified.
+//   1. If request.date already contains a range, it is shown as is.
+//   2. Else, if request.preferredTimeLabel is a range that starts at
+//      the same time as request.date, its end time is used.
+//   3. Else the end time is the start time plus one consultation
+//      slot (30 minutes).
+// ---------------------------------------------------------
+const CONSULTATION_SLOT_MINUTES = 30;
+
+function formatPreferredDateTime(request) {
+  const raw = String((request && request.date) || "");
+
+  // Already a range -- nothing to add
+  if (/\d\s*(AM|PM)\s*[\u2013\u2014-]\s*\d/i.test(raw)) return raw;
+
+  // Split "July 20, 10:00 AM" into the date part and the start time
+  const match = raw.match(/^(.*?)(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i);
+  if (!match) return raw;
+
+  const datePrefix = match[1];
+  const startHour = parseInt(match[2], 10);
+  const startMinute = parseInt(match[3], 10);
+  const startPeriod = match[4].toUpperCase();
+  const startLabel = `${startHour}:${match[3]} ${startPeriod}`;
+
+  const normalize = (text) => String(text).replace(/\s+/g, "").toUpperCase();
+
+  // Prefer the stored range's end time when it belongs to this start time
+  const label = String((request && request.preferredTimeLabel) || "");
+  const labelParts = label.split(/\s*[\u2013\u2014-]\s*/);
+  if (
+    labelParts.length === 2 &&
+    labelParts[1].trim() &&
+    normalize(labelParts[0]) === normalize(startLabel)
+  ) {
+    return `${datePrefix}${startLabel} \u2013 ${labelParts[1].trim()}`;
+  }
+
+  // Otherwise: start time + one 30-minute slot
+  const startTotalMinutes =
+    ((startHour % 12) + (startPeriod === "PM" ? 12 : 0)) * 60 + startMinute;
+  const endTotalMinutes = (startTotalMinutes + CONSULTATION_SLOT_MINUTES) % (24 * 60);
+  const endHour24 = Math.floor(endTotalMinutes / 60);
+  const endMinute = endTotalMinutes % 60;
+  const endPeriod = endHour24 >= 12 ? "PM" : "AM";
+  const endHour12 = endHour24 % 12 || 12;
+  const endLabel = `${endHour12}:${String(endMinute).padStart(2, "0")} ${endPeriod}`;
+
+  return `${datePrefix}${startLabel} \u2013 ${endLabel}`;
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -616,8 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     if (requestNameEl) {
-      requestNameEl.textContent =
-        request.name;
+      requestNameEl.innerHTML =
+        studentNameLinkHtml(request);
     }
 
 
@@ -667,6 +772,214 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Render the first request immediately.
   renderDashboardRequest();
+
+
+  // =========================================================
+  // TODAY'S SCHEDULE  (ADDED)
+  //
+  // Replaces the old hardcoded "10:00 AM Consultation" line with
+  // real entries built from the SAME consultation data as
+  // everything else on this page. An entry appears here when a
+  // request is:
+  //   - "upcoming" (accepted, not yet completed/cancelled), AND
+  //   - scheduled for TODAY's date in Philippine time
+  //     (Asia/Manila, same timezone as the date/time above).
+  //
+  // Each entry shows the student's name, the purpose, and the time
+  // range, in the same format as the Consultation Requests cards.
+  // Because it reads request.date, a consultation that was
+  // Rescheduled to today shows up here with its new time.
+  //
+  // The underlined "View" link stores which request to open, then
+  // navigates to Faculty Consultation Requests, where that
+  // student's card in Upcoming Consultations is expanded
+  // automatically (that page already supports this -- see
+  // SCHEDULE_VIEW_TARGET_STORAGE_KEY at the top of this file).
+  // =========================================================
+
+  const scheduleListEl =
+    document.querySelector(
+      ".faculty-schedule-list"
+    );
+
+  const philippineTodayFormatter =
+    new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila",
+      month: "long",
+      day: "numeric",
+    });
+
+
+  // Today's month + day in Philippine time
+  function getPhilippineToday() {
+
+    const parts =
+      philippineTodayFormatter.formatToParts(
+        new Date()
+      );
+
+    const monthPart =
+      parts.find((p) => p.type === "month");
+
+    const dayPart =
+      parts.find((p) => p.type === "day");
+
+    return {
+      month: monthPart
+        ? monthPart.value.slice(0, 3).toLowerCase()
+        : "",
+      day: dayPart
+        ? parseInt(dayPart.value, 10)
+        : 0,
+    };
+  }
+
+
+  // True when request.date (e.g. "September 21, 10:00 AM") falls
+  // on today's Philippine date
+  function isScheduledToday(request, today) {
+
+    const match =
+      String(request.date || "").match(
+        /([A-Za-z]{3,9})\.?\s+(\d{1,2})\b/
+      );
+
+    if (!match) return false;
+
+    return (
+      match[1].slice(0, 3).toLowerCase() ===
+        today.month &&
+      parseInt(match[2], 10) === today.day
+    );
+  }
+
+
+  // Start time in minutes, used only to list today's
+  // consultations in time order
+  function getStartMinutes(request) {
+
+    const match =
+      String(request.date || "").match(
+        /(\d{1,2}):(\d{2})\s*(AM|PM)/i
+      );
+
+    if (!match) return 24 * 60;
+
+    const hour24 =
+      (parseInt(match[1], 10) % 12) +
+      (match[3].toUpperCase() === "PM" ? 12 : 0);
+
+    return hour24 * 60 + parseInt(match[2], 10);
+  }
+
+
+  function renderTodaysSchedule() {
+
+    if (!scheduleListEl) return;
+
+    const today = getPhilippineToday();
+
+    const todaysConsultations =
+      requests
+        .filter(
+          (request) =>
+            request.status === "upcoming" &&
+            isScheduledToday(request, today)
+        )
+        .sort(
+          (a, b) =>
+            getStartMinutes(a) -
+            getStartMinutes(b)
+        );
+
+
+    scheduleListEl.innerHTML = "";
+
+
+    if (todaysConsultations.length === 0) {
+
+      const emptyItem =
+        document.createElement("li");
+
+      emptyItem.className =
+        "faculty-schedule-empty";
+
+      emptyItem.textContent =
+        "No consultations scheduled for today.";
+
+      scheduleListEl.appendChild(emptyItem);
+
+      return;
+    }
+
+
+    todaysConsultations.forEach((request) => {
+
+      const item =
+        document.createElement("li");
+
+      item.className =
+        "faculty-schedule-item";
+
+      item.innerHTML = `
+        <span class="faculty-check" aria-hidden="true">&check;</span>
+        <div class="faculty-schedule-details">
+          <div class="faculty-schedule-name-row">
+            <p class="faculty-schedule-name">${studentNameLinkHtml(request)}</p>
+            <a
+              href="faculty-consultation-requests.html"
+              class="faculty-schedule-view-link"
+              data-request-id="${request.id}"
+            >View</a>
+          </div>
+          <p class="faculty-schedule-purpose">${request.type}</p>
+          <p class="faculty-schedule-time">Preferred Date: ${formatPreferredDateTime(request)}</p>
+        </div>
+      `;
+
+      scheduleListEl.appendChild(item);
+    });
+  }
+
+
+  // "View": remember which consultation to open, then let the
+  // link navigate normally to Faculty Consultation Requests
+  if (scheduleListEl) {
+
+    scheduleListEl.addEventListener(
+      "click",
+      (event) => {
+
+        const viewLink =
+          event.target.closest(
+            ".faculty-schedule-view-link"
+          );
+
+        if (!viewLink) return;
+
+        try {
+
+          sessionStorage.setItem(
+            SCHEDULE_VIEW_TARGET_STORAGE_KEY,
+            JSON.stringify({
+              id: viewLink.dataset.requestId,
+              section: "upcoming",
+            })
+          );
+
+        } catch (error) {
+
+          // sessionStorage unavailable -- the link still
+          // navigates, just without auto-opening the card
+        }
+
+      }
+    );
+  }
+
+
+  // Render today's schedule immediately.
+  renderTodaysSchedule();
 
 
   // ---------------------------------------------------------
@@ -719,8 +1032,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Give the person a moment to see
         // "Accepted" before the next request.
+        // (Today's Schedule refreshes too, in case the request
+        // just accepted is scheduled for today.)
         window.setTimeout(
-          renderDashboardRequest,
+          () => {
+            renderDashboardRequest();
+            renderTodaysSchedule();
+          },
           900
         );
 

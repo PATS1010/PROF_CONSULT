@@ -221,6 +221,25 @@
   color: var(--color-red-primary);
 }
 
+/* =========================================================
+   STUDENT NAME LINKS
+   Used for the student's name on the request cards and in
+   History. Keeps the name's existing look (color, size,
+   weight) -- it only becomes clickable, with an underline
+   on hover/focus.
+========================================================= */
+.student-name-link {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.student-name-link:hover,
+.student-name-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .request-avatar {
   display: none;
   flex-shrink: 0;

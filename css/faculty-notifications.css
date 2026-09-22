@@ -164,6 +164,27 @@
 
 
 /* =========================================================
+   STUDENT NAME LINK
+   The student's name inside the notification message. Keeps
+   the surrounding text's weight/color -- it's just bolded
+   slightly and underlines on hover/focus to read as a link.
+========================================================= */
+
+.notification-student-link {
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.notification-student-link:hover,
+.notification-student-link:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+
+/* =========================================================
    VIEW LINK
 ========================================================= */
 

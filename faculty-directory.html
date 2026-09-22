@@ -136,7 +136,14 @@
 
       </section>
 
-      <!-- PROFILE PANEL: detailed faculty profile, slides in from the right -->
+      <!-- BACK BUTTON: only shown while a faculty profile is being viewed
+           (toggled by faculty-directory.js). Returns to the list/search
+           in-page -- no navigation or reload. -->
+      <div class="directory-back-row" id="directoryBackRow" hidden>
+        <button type="button" class="directory-back-button" id="directoryBackButton">Back</button>
+      </div>
+
+      <!-- PROFILE PANEL: detailed faculty profile, shown in place of the list -->
       <section class="directory-profile-panel" id="directoryProfilePanel" hidden>
         <!-- Populated by faculty-directory.js when "View Profile" is clicked -->
       </section>
