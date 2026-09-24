@@ -123,7 +123,7 @@ async function saveFacultyAvailabilityStatus(status) {
     },
   }));
 
-  return result;
+  return savedUiStatus;
 }
 
 window.FacultyAvailability = {
@@ -349,9 +349,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleCheckIn(event) {
     event.preventDefault();
+    if (!isFacultyClassHoursNow()) {
+      alert("Check In is only available from 7:00 AM to 12:00 PM and 1:00 PM to 7:00 PM.");
+      setFacultyOnlineStatus("offline");
+      return;
+    }
+
     try {
-      await saveFacultyAvailabilityStatus("available");
-      setFacultyOnlineStatus("available");
+      const savedStatus = await saveFacultyAvailabilityStatus("available");
+      setFacultyOnlineStatus(savedStatus);
     } catch (error) {
       alert(error.message);
       return;
@@ -363,8 +369,8 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleCheckOut(event) {
     event.preventDefault();
     try {
-      await saveFacultyAvailabilityStatus("offline");
-      setFacultyOnlineStatus("offline");
+      const savedStatus = await saveFacultyAvailabilityStatus("offline");
+      setFacultyOnlineStatus(savedStatus);
     } catch (error) {
       alert(error.message);
       return;
