@@ -59,6 +59,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return Number.isNaN(date.getTime()) ? 0 : date.getTime();
   }
 
+  function consultationEndTimeValue(request) {
+    const start = requestDateTimeValue(request);
+    return start > 0 ? start + (30 * 60 * 1000) : 0;
+  }
+
   function displayYear(value) {
     const normalized = String(value || "").trim();
     const labels = {
@@ -272,7 +277,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function isUpcomingRequest(request) {
     const status = String(request.status || "").toLowerCase();
-    return status === "approved" || status === "rescheduled";
+    const endTime = consultationEndTimeValue(request);
+    return ["approved", "rescheduled"].includes(status) &&
+      (endTime === 0 || endTime > Date.now());
+  }
+
+  function isCompletedRequest(request) {
+    const status = String(request.status || "").toLowerCase();
+    const endTime = consultationEndTimeValue(request);
+    return status === "completed" ||
+      (["approved", "rescheduled"].includes(status) && endTime > 0 && endTime <= Date.now());
   }
 
   function renderRequests() {
@@ -286,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .filter(isUpcomingRequest)
       .sort((a, b) => requestDateTimeValue(a) - requestDateTimeValue(b));
     const completed = REQUESTS
-      .filter((request) => request.status === "completed")
+      .filter(isCompletedRequest)
       .sort((a, b) => requestDateTimeValue(b) - requestDateTimeValue(a));
 
     pending.forEach((request) => {

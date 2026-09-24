@@ -158,7 +158,7 @@ function markFinishedApprovedRequestsCompleted(PDO $db): void
          INNER JOIN users student_user ON student_user.User_ID = s.User_ID
          INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
          INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
-         WHERE cr.Status = 'approved'
+         WHERE cr.Status IN ('approved', 'rescheduled')
            AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
     );
     $studentNotifications->execute([$now]);
@@ -174,7 +174,7 @@ function markFinishedApprovedRequestsCompleted(PDO $db): void
          INNER JOIN users student_user ON student_user.User_ID = s.User_ID
          INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
          INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
-         WHERE cr.Status = 'approved'
+         WHERE cr.Status IN ('approved', 'rescheduled')
            AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
     );
     $facultyNotifications->execute([$now]);
@@ -182,7 +182,7 @@ function markFinishedApprovedRequestsCompleted(PDO $db): void
     $statement = $db->prepare(
         "UPDATE consultation_requests
          SET Status = 'completed'
-         WHERE Status = 'approved'
+         WHERE Status IN ('approved', 'rescheduled')
            AND (Request_Date::timestamp + Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
     );
     $statement->execute([$now]);
