@@ -18,9 +18,6 @@
 //        ↓
 //   verify-account-successful.html?from=faculty
 //
-// TEST VERIFICATION CODE:
-//   123456
-//
 // Back:
 //   Always returns to verify-account.html
 // =========================================================
@@ -48,23 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // =======================================================
-  // TEST VERIFICATION CODE
-  //
-  // Frontend testing only.
-  //
-  // The correct code is:
-  // 123456
-  //
-  // This can later be replaced with the backend-generated
-  // verification code.
-  // =======================================================
-
-  const TEST_VERIFICATION_CODE =
-    "123456";
-
-
-
-  // =======================================================
   // GET SAVED VERIFICATION INFORMATION
   // =======================================================
 
@@ -78,6 +58,12 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.getItem(
       "verificationMethod"
     ) || "email";
+
+
+  let verificationToken =
+    sessionStorage.getItem(
+      "accountVerificationToken"
+    ) || "";
 
 
 
@@ -305,6 +291,39 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
+  }
+
+
+  // =======================================================
+  // PARSE API RESPONSE
+  // =======================================================
+
+  async function parseJsonResponse(response) {
+
+    const rawResponse =
+      await response.text();
+
+    if (!rawResponse) {
+
+      return {
+        ok: false,
+        message:
+          "The server returned an empty response."
+      };
+    }
+
+    try {
+
+      return JSON.parse(rawResponse);
+
+    } catch {
+
+      return {
+        ok: false,
+        message:
+          "The server did not return JSON."
+      };
+    }
   }
 
 
@@ -662,20 +681,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // =======================================================
   // RESEND CODE
-  //
-  // FRONTEND ONLY
-  //
-  // This does not generate a new real code yet.
-  //
-  // The testing code remains:
-  // 123456
   // =======================================================
 
   if (resendButton) {
 
     resendButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
 
         if (
@@ -719,19 +731,63 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         // -----------------------------------------------
-        // RESTART COUNTDOWN
+        // REQUEST NEW CODE
         // -----------------------------------------------
 
-        startCountdown();
+        try {
 
+          const response =
+            await fetch(
+              "api/request-account-verification-code.php",
+              {
+                method: "POST",
 
-        // -----------------------------------------------
-        // FRONTEND NOTICE
-        // -----------------------------------------------
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
 
-        showError(
-          "A new verification code has been requested. For testing, use 123456."
-        );
+                body: JSON.stringify({
+                  role: origin,
+                  email: identifier
+                })
+              }
+            );
+
+          const result =
+            await parseJsonResponse(response);
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Unable to resend verification code."
+            );
+          }
+
+          verificationToken =
+            result.token || "";
+
+          sessionStorage.setItem(
+            "accountVerificationToken",
+            verificationToken
+          );
+
+          startCountdown();
+
+          showError(
+            "A new verification code has been sent."
+          );
+
+        } catch (error) {
+
+          enableResend();
+
+          showError(
+            error.message ||
+            "Unable to resend verification code."
+          );
+
+        }
 
 
         // -----------------------------------------------
@@ -753,20 +809,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // =======================================================
   // VERIFY FORM
-  //
-  // Correct testing code:
-  //
-  // 123456
-  //
-  // Any other 6-digit code:
-  // Incorrect verification code.
   // =======================================================
 
   if (form) {
 
     form.addEventListener(
       "submit",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
@@ -819,17 +868,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-        // =================================================
-        // CHECK TEST VERIFICATION CODE
-        // =================================================
-
-        if (
-          enteredCode !==
-          TEST_VERIFICATION_CODE
-        ) {
+        if (!verificationToken) {
 
           showError(
-            "Incorrect verification code. Please try again."
+            "Your verification session expired. Please request a new code."
           );
 
 
@@ -841,68 +883,123 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
+        if (verifyButton) {
 
-        // =================================================
-        // CORRECT CODE
-        // =================================================
-
-        clearCodeErrors();
-
-
-
-        // =================================================
-        // SAVE VERIFICATION INFORMATION
-        // =================================================
-
-        sessionStorage.setItem(
-          "verificationCode",
-          enteredCode
-        );
-
-
-        sessionStorage.setItem(
-          "verificationOrigin",
-          origin
-        );
-
-
-        if (identifier) {
-
-          sessionStorage.setItem(
-            "verificationIdentifier",
-            identifier
-          );
-
+          verifyButton.disabled = true;
+          verifyButton.textContent =
+            "Verifying...";
         }
 
 
-
         // =================================================
-        // SAVE VERIFIED STATE
-        //
-        // This lets the registration page know that the
-        // account verification step was completed.
+        // VERIFY CODE WITH API
         // =================================================
 
-        sessionStorage.setItem(
-          "accountVerified",
-          "true"
-        );
+        try {
+
+          const response =
+            await fetch(
+              "api/verify-account-code.php",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  token: verificationToken,
+                  code: enteredCode,
+                  role: origin
+                })
+              }
+            );
+
+          const result =
+            await parseJsonResponse(response);
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Incorrect verification code."
+            );
+          }
+
+          clearCodeErrors();
+
+
+          // =================================================
+          // SAVE VERIFICATION INFORMATION
+          // =================================================
+
+          sessionStorage.setItem(
+            "verificationCode",
+            enteredCode
+          );
+
+
+          sessionStorage.setItem(
+            "verificationOrigin",
+            origin
+          );
+
+
+          if (identifier) {
+
+            sessionStorage.setItem(
+              "verificationIdentifier",
+              identifier
+            );
+
+          }
+
+
+          // =================================================
+          // SAVE VERIFIED STATE
+          //
+          // This lets the registration page know that the
+          // account verification step was completed.
+          // =================================================
+
+          sessionStorage.setItem(
+            "accountVerified",
+            "true"
+          );
 
 
 
-        // =================================================
-        // MOVE TO SUCCESSFUL PAGE
-        //
-        // Student:
-        // verify-account-successful.html?from=student
-        //
-        // Faculty:
-        // verify-account-successful.html?from=faculty
-        // =================================================
+          // =================================================
+          // MOVE TO SUCCESSFUL PAGE
+          //
+          // Student:
+          // verify-account-successful.html?from=student
+          //
+          // Faculty:
+          // verify-account-successful.html?from=faculty
+          // =================================================
 
-        window.location.href =
-          `verify-account-successful.html${originQuery}`;
+          window.location.href =
+            `verify-account-successful.html${originQuery}`;
+
+        } catch (error) {
+
+          showError(
+            error.message ||
+            "Incorrect verification code. Please try again."
+          );
+
+          showCodeErrors();
+
+        } finally {
+
+          if (verifyButton) {
+
+            verifyButton.disabled = false;
+            verifyButton.textContent =
+              "Verify Account";
+          }
+        }
 
       }
     );

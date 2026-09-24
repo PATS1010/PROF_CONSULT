@@ -22,6 +22,12 @@ if ($identifier === '' || !in_array($role, ['student', 'faculty'], true)) {
 $emailCandidate = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? $identifier : '';
 $phoneCandidate = preg_replace('/\D/', '', $identifier);
 
+if (strlen($phoneCandidate) === 12 && str_starts_with($phoneCandidate, '63')) {
+    $phoneCandidate = substr($phoneCandidate, 2);
+} elseif (strlen($phoneCandidate) === 11 && str_starts_with($phoneCandidate, '0')) {
+    $phoneCandidate = substr($phoneCandidate, 1);
+}
+
 try {
     $db = database();
     ensurePasswordResetTable($db);

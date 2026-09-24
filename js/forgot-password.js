@@ -73,6 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const methodSuffix = document.getElementById("methodSuffix");
   const subtitle = document.getElementById("forgotPasswordSubtitle");
   const message = document.getElementById("forgotPasswordMessage");
+  const sendCodeButton = document.getElementById("sendCodeButton");
 
   const requiredElements = {
     form, emailInput, mobileInput, emailInputWrapper,
@@ -108,6 +109,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function normalizeMobile(mobile) {
     return `+63${mobile}`;
+  }
+
+  async function parseJsonResponse(response) {
+    const rawResponse = await response.text();
+
+    if (!rawResponse) {
+      return {
+        ok: false,
+        message: "The server returned an empty response."
+      };
+    }
+
+    try {
+      return JSON.parse(rawResponse);
+    } catch {
+      return {
+        ok: false,
+        message: "The server did not return JSON."
+      };
+    }
   }
 
   function setEmailMode() {
@@ -211,16 +232,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const identifier = validateInput();
       if (!identifier) return;
 
-      sessionStorage.setItem("resetIdentifier", identifier);
-      sessionStorage.setItem("resetMethod", currentMode);
+      if (sendCodeButton) {
+        sendCodeButton.disabled = true;
+        sendCodeButton.textContent = "Sending...";
+      }
 
-      window.location.href = `verification-code.html?from=${origin}`;
+      try {
+        const response = await fetch("api/request-reset-code.php", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ identifier, role: origin })
+        });
+
+        const result = await parseJsonResponse(response);
+
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to send verification code.");
+        }
+
+        sessionStorage.setItem("resetIdentifier", identifier);
+        sessionStorage.setItem("resetMethod", currentMode);
+
+        window.location.href =
+          `verification-code.html?from=${origin}&token=${encodeURIComponent(result.token)}`;
+      } catch (error) {
+        showMessage(error.message || "Unable to send verification code.");
+      } finally {
+        if (sendCodeButton) {
+          sendCodeButton.disabled = false;
+          sendCodeButton.textContent = "Send Verification Code";
+        }
+      }
     });
   }
 

@@ -355,6 +355,10 @@ document.addEventListener("DOMContentLoaded", () => {
       VERIFICATION_KEY
     );
 
+    sessionStorage.removeItem(
+      "accountVerificationToken"
+    );
+
     updateVerifyButton();
     updateCreateButton();
   }
@@ -770,6 +774,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   phone:
                     contactNumberInput.value,
 
+                  account_verification_token:
+                    sessionStorage.getItem(
+                      "accountVerificationToken"
+                    ) || "",
+
                   password:
                     passwordInput.value
                 })
@@ -829,6 +838,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             VERIFICATION_KEY
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationToken"
           );
 
           sessionStorage.removeItem(

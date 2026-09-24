@@ -29,6 +29,22 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.getItem("student_account_verified") === "true";
 
 
+  function resetVerification() {
+
+    isAccountVerified = false;
+
+    sessionStorage.removeItem(
+      "student_account_verified"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerificationToken"
+    );
+
+    updateVerificationButton();
+  }
+
+
   // =========================================================
   // LOAD SAVED INFORMATION
   // =========================================================
@@ -195,6 +211,10 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileInput.value
       );
 
+    if (isAccountVerified) {
+      resetVerification();
+    }
+
     saveInformation();
 
     updateVerificationButton();
@@ -212,6 +232,13 @@ document.addEventListener("DOMContentLoaded", () => {
   ].forEach((input) => {
 
     input.addEventListener("input", () => {
+
+      if (
+        isAccountVerified &&
+        input === emailInput
+      ) {
+        resetVerification();
+      }
 
       saveInformation();
 
@@ -644,6 +671,11 @@ document.addEventListener("DOMContentLoaded", () => {
               phone:
                 mobileInput.value,
 
+              account_verification_token:
+                sessionStorage.getItem(
+                  "accountVerificationToken"
+                ) || "",
+
               password:
                 passwordInput.value
             })
@@ -698,6 +730,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       sessionStorage.removeItem(
         "student_account_verified"
+      );
+
+      sessionStorage.removeItem(
+        "accountVerificationToken"
       );
 
 

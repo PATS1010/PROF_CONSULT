@@ -2,8 +2,6 @@
 // VERIFY ACCOUNT PAGE
 // Prof Consult
 //
-// FRONTEND ONLY
-//
 // Shared by:
 //   Student
 //   Faculty
@@ -19,7 +17,6 @@
 //        verify-account-code.html?from=student
 //        verify-account-code.html?from=faculty
 //
-// No backend verification is being used yet.
 // =========================================================
 
 
@@ -63,6 +60,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const verificationCodePage =
     `verify-account-code.html?from=${origin}`;
+
+  const registrationStorageKey =
+    origin === "faculty"
+      ? "findprof_faculty_registration_step2"
+      : "findprof_registration_step2_student";
+
+  let savedRegistration = {};
+
+  try {
+    savedRegistration = JSON.parse(
+      sessionStorage.getItem(registrationStorageKey) || "{}"
+    );
+  } catch {
+    savedRegistration = {};
+  }
 
 
   // =======================================================
@@ -147,12 +159,25 @@ document.addEventListener("DOMContentLoaded", () => {
       "verificationMessage"
     );
 
+  const sendCodeButton =
+    document.getElementById(
+      "sendCodeButton"
+    );
+
 
   // =======================================================
   // CURRENT INPUT MODE
   // =======================================================
 
   let currentMode = "email";
+
+  const savedEmail =
+    savedRegistration.email || "";
+
+  const savedMobile =
+    savedRegistration.mobile ||
+    savedRegistration.contactNumber ||
+    "";
 
 
   // =======================================================
@@ -230,6 +255,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     return `+63${mobile}`;
 
+  }
+
+
+  // =======================================================
+  // PARSE API RESPONSE
+  // =======================================================
+
+  async function parseJsonResponse(response) {
+
+    const rawResponse =
+      await response.text();
+
+    if (!rawResponse) {
+      return {
+        ok: false,
+        message:
+          "The server returned an empty response."
+      };
+    }
+
+    try {
+      return JSON.parse(rawResponse);
+    } catch {
+      return {
+        ok: false,
+        message:
+          "The server did not return JSON."
+      };
+    }
   }
 
 
@@ -329,24 +383,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (switchMethod) {
 
-    switchMethod.addEventListener(
-      "click",
-      (event) => {
+    const methodRow =
+      switchMethod.closest(
+        ".reset-method-text"
+      );
 
-        event.preventDefault();
-
-        if (currentMode === "email") {
-
-          setMobileMode();
-
-        } else {
-
-          setEmailMode();
-
-        }
-
-      }
-    );
+    if (methodRow) {
+      methodRow.hidden = true;
+    }
 
   }
 
@@ -540,7 +584,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener(
       "submit",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
@@ -556,6 +600,52 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        if (currentMode !== "email") {
+
+          showMessage(
+            "Verification codes are sent to your email address. Your contact number is saved for your account."
+          );
+
+          setEmailMode();
+
+          return;
+        }
+
+        if (sendCodeButton) {
+          sendCodeButton.disabled = true;
+          sendCodeButton.textContent = "Sending...";
+        }
+
+        try {
+
+          const response =
+            await fetch(
+              "api/request-account-verification-code.php",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  role: origin,
+                  email: identifier
+                })
+              }
+            );
+
+          const result =
+            await parseJsonResponse(response);
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Unable to send verification code."
+            );
+          }
+
 
         // =================================================
         // SAVE VERIFICATION INFORMATION
@@ -568,13 +658,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
         sessionStorage.setItem(
           "verificationMethod",
-          currentMode
+          "email"
         );
 
         sessionStorage.setItem(
           "verificationOrigin",
           origin
         );
+
+          sessionStorage.setItem(
+            "accountVerificationToken",
+            result.token
+          );
 
 
         // =================================================
@@ -583,6 +678,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
         window.location.href =
           verificationCodePage;
+
+        } catch (error) {
+
+          showMessage(
+            error.message ||
+            "Unable to send verification code."
+          );
+
+        } finally {
+
+          if (sendCodeButton) {
+            sendCodeButton.disabled = false;
+            sendCodeButton.textContent =
+              "Send Verification Code";
+          }
+        }
 
       }
     );
@@ -593,6 +704,15 @@ document.addEventListener("DOMContentLoaded", () => {
   // =======================================================
   // INITIAL STATE
   // =======================================================
+
+  if (emailInput && savedEmail) {
+    emailInput.value = savedEmail;
+  }
+
+  if (mobileInput && savedMobile) {
+    mobileInput.value =
+      savedMobile.replace(/\D/g, "").slice(0, 10);
+  }
 
   setEmailMode();
 
