@@ -20,6 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const scrollContainer = document.getElementById("requestsScrollContainer");
   const noRequestsMessage = document.getElementById("noRequestsMessage");
+  const upcomingContainer = document.getElementById("upcomingScrollContainer");
+  const completedContainer = document.getElementById("completedScrollContainer");
+  const noUpcomingMessage = document.getElementById("noUpcomingMessage");
+  const noCompletedMessage = document.getElementById("noCompletedMessage");
 
   function escapeHtml(value) {
     return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -45,6 +49,14 @@ document.addEventListener("DOMContentLoaded", () => {
       minute: "2-digit",
       hour12: true,
     });
+  }
+
+  function requestDateTimeValue(request) {
+    if (!request.rawDate) return 0;
+
+    const [hours = "00", minutes = "00"] = String(request.rawTime || "00:00").split(":");
+    const date = new Date(`${request.rawDate}T${hours}:${minutes}:00`);
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
   }
 
   function displayYear(value) {
@@ -77,6 +89,8 @@ document.addEventListener("DOMContentLoaded", () => {
       type: row.Purpose || "Consultation",
       // Combine the saved request date and preferred time for display.
       date: formatDateTime(row.Request_Date, row.Preferred_Time),
+      rawDate: row.Request_Date || "",
+      rawTime: row.Preferred_Time || "",
       // Program, year, section, and message come from the current student's profile/request.
       program: row.Program || "Program not set",
       yearSet: [year, section].filter(Boolean).join(" - ") || "Year and section not set",
@@ -209,19 +223,101 @@ document.addEventListener("DOMContentLoaded", () => {
     return card;
   }
 
+  function buildHistoryCard(request, type) {
+    const card = document.createElement("article");
+    card.className = "request-card";
+    card.dataset.id = request.id;
+
+    const statusLine = type === "completed"
+      ? '<p class="request-complete-text">Consultation completed</p>'
+      : `<p class="request-complete-text">${escapeHtml(request.status === "rescheduled" ? "Rescheduled consultation" : "Approved consultation")}</p>`;
+
+    card.innerHTML = `
+      <div class="request-card-header">
+        <p class="request-name">${escapeHtml(request.name)}</p>
+        <span class="request-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8v1H4v-1z"></path>
+          </svg>
+        </span>
+      </div>
+
+      <p class="request-type">${escapeHtml(request.type)}</p>
+      <p class="request-date">Preferred Date: ${escapeHtml(request.date)}</p>
+
+      <div class="request-expanded-info">
+        <div class="request-info-col">
+          <p class="request-info-label">Student ID:</p>
+          <p class="request-info-value">${escapeHtml(request.studentId)}</p>
+          <p class="request-info-label">Program:</p>
+          <p class="request-info-value">${escapeHtml(request.program)}</p>
+          <p class="request-info-label">Year and Set:</p>
+          <p class="request-info-value">${escapeHtml(request.yearSet)}</p>
+        </div>
+        <div class="request-info-col">
+          <p class="request-info-label">Additional Message:</p>
+          <p class="request-message">${escapeHtml(request.message)}</p>
+          ${statusLine}
+        </div>
+      </div>
+
+      <button type="button" class="request-view-more-button request-view-more-button--full" data-action="history-toggle">
+        View More
+      </button>
+    `;
+
+    return card;
+  }
+
+  function isUpcomingRequest(request) {
+    const status = String(request.status || "").toLowerCase();
+    return status === "approved" || status === "rescheduled";
+  }
+
   function renderRequests() {
     if (!scrollContainer) return;
     scrollContainer.innerHTML = "";
+    if (upcomingContainer) upcomingContainer.innerHTML = "";
+    if (completedContainer) completedContainer.innerHTML = "";
 
     const pending = REQUESTS.filter((request) => request.status === "pending");
+    const upcoming = REQUESTS
+      .filter(isUpcomingRequest)
+      .sort((a, b) => requestDateTimeValue(a) - requestDateTimeValue(b));
+    const completed = REQUESTS
+      .filter((request) => request.status === "completed")
+      .sort((a, b) => requestDateTimeValue(b) - requestDateTimeValue(a));
 
     pending.forEach((request) => {
       scrollContainer.appendChild(buildRequestCard(request));
     });
 
+    if (upcomingContainer) {
+      upcoming.forEach((request) => {
+        upcomingContainer.appendChild(buildHistoryCard(request, "upcoming"));
+      });
+    }
+
+    if (completedContainer) {
+      completed.forEach((request) => {
+        completedContainer.appendChild(buildHistoryCard(request, "completed"));
+      });
+    }
+
     if (noRequestsMessage) {
       noRequestsMessage.textContent = "No pending consultation requests right now.";
       noRequestsMessage.hidden = pending.length > 0;
+    }
+
+    if (noUpcomingMessage) {
+      noUpcomingMessage.textContent = "No upcoming consultations right now.";
+      noUpcomingMessage.hidden = upcoming.length > 0;
+    }
+
+    if (noCompletedMessage) {
+      noCompletedMessage.textContent = "No completed consultations yet.";
+      noCompletedMessage.hidden = completed.length > 0;
     }
   }
 
@@ -331,6 +427,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  [upcomingContainer, completedContainer].forEach((container) => {
+    if (!container) return;
+
+    container.addEventListener("click", (event) => {
+      const toggleButton = event.target.closest('[data-action="history-toggle"]');
+      if (!toggleButton) return;
+
+      const card = toggleButton.closest(".request-card");
+      if (!card) return;
+
+      const isExpanded = card.classList.toggle("is-expanded");
+      toggleButton.textContent = isExpanded ? "View Less" : "View More";
+    });
+  });
 
   // ---------------------------------------------------------
   // Click outside any expanded card collapses it back.

@@ -401,6 +401,7 @@
 
 /* Completed cards keep their single View More/View Less button
    visible even while expanded (it becomes the collapse control). */
+.upcoming-card-list .request-card.is-expanded .request-view-more-button--full,
 .completed-card-list .request-card.is-expanded .request-view-more-button--full {
   display: block;
 }
