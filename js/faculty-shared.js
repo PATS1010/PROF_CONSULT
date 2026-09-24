@@ -23,15 +23,9 @@
 // Status, so the dashboard card and student availability list
 // stay in sync after every status change.
 //
-// CHECK_IN_TIMEOUT is the single place that controls how long
-// a Check In lasts before automatically reverting to Offline
-// if the faculty forgets to Check Out -- change this one value
-// to adjust the duration everywhere it's used.
 // ---------------------------------------------------------
-const CHECK_IN_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 let facultyOnlineStatus = "offline";
-let checkInTimeoutId = null;
 
 function facultyStatusForApi(status) {
   const map = {
@@ -82,13 +76,23 @@ function facultyCurrentTimeValue() {
 function isFacultyClassHoursNow() {
   const now = new Date();
   const minutes = now.getHours() * 60 + now.getMinutes();
-  return minutes >= 7 * 60 && minutes < 19 * 60;
+  return (minutes >= 7 * 60 && minutes < 12 * 60) ||
+    (minutes >= 13 * 60 && minutes < 19 * 60);
 }
 
 function millisecondsUntilFacultyClassHoursEnd() {
   const now = new Date();
+  const minutes = now.getHours() * 60 + now.getMinutes();
   const end = new Date(now);
-  end.setHours(19, 0, 0, 0);
+
+  if (minutes >= 7 * 60 && minutes < 12 * 60) {
+    end.setHours(12, 0, 0, 0);
+  } else if (minutes >= 13 * 60 && minutes < 19 * 60) {
+    end.setHours(19, 0, 0, 0);
+  } else {
+    return 0;
+  }
+
   return Math.max(0, end.getTime() - now.getTime());
 }
 
@@ -110,10 +114,12 @@ async function saveFacultyAvailabilityStatus(status) {
     throw new Error(result.message || "Unable to save availability status.");
   }
 
+  const savedUiStatus = facultyStatusForUi(result.status || uiStatus);
+
   document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
     detail: {
-      status: uiStatus,
-      label: facultyStatusLabel(uiStatus),
+      status: savedUiStatus,
+      label: facultyStatusLabel(savedUiStatus),
     },
   }));
 
@@ -130,31 +136,20 @@ window.FacultyAvailability = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  let classHoursLogoutTimeoutId = null;
+  let workHoursOfflineTimeoutId = null;
 
-  async function logoutFacultyOutsideClassHours() {
+  async function markFacultyOfflineOutsideClassHours() {
     try {
       await saveFacultyAvailabilityStatus("offline");
     } catch (error) {
-      // Continue logging out even if the status save fails.
+      setFacultyOnlineStatus("offline");
     }
-
-    try {
-      await fetch("api/logout.php", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-    } catch (error) {
-      // Redirect still clears the protected page from view.
-    }
-
-    window.location.href = "faculty-login.html";
   }
 
-  function scheduleFacultyClassHoursLogout() {
-    if (classHoursLogoutTimeoutId) {
-      window.clearTimeout(classHoursLogoutTimeoutId);
+  function scheduleFacultyWorkHoursOffline() {
+    if (workHoursOfflineTimeoutId) {
+      window.clearTimeout(workHoursOfflineTimeoutId);
+      workHoursOfflineTimeoutId = null;
     }
 
     if (!isFacultyClassHoursNow()) {
@@ -162,8 +157,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    classHoursLogoutTimeoutId = window.setTimeout(() => {
-      logoutFacultyOutsideClassHours();
+    workHoursOfflineTimeoutId = window.setTimeout(() => {
+      markFacultyOfflineOutsideClassHours();
+      workHoursOfflineTimeoutId = null;
     }, millisecondsUntilFacultyClassHoursEnd());
   }
 
@@ -361,19 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (checkInTimeoutId) {
-      window.clearTimeout(checkInTimeoutId);
-    }
-    // Forgot-to-Check-Out safeguard: automatically save Offline
-    // after CHECK_IN_TIMEOUT if Check Out was never clicked.
-    checkInTimeoutId = window.setTimeout(async () => {
-      try {
-        await saveFacultyAvailabilityStatus("offline");
-      } catch (error) {
-        setFacultyOnlineStatus("offline");
-      }
-      checkInTimeoutId = null;
-    }, CHECK_IN_TIMEOUT);
+    scheduleFacultyWorkHoursOffline();
   }
 
   async function handleCheckOut(event) {
@@ -386,10 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (checkInTimeoutId) {
-      window.clearTimeout(checkInTimeoutId);
-      checkInTimeoutId = null;
-    }
+    scheduleFacultyWorkHoursOffline();
   }
 
   if (checkInButton) {
@@ -403,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // the database-backed Dashboard status card.
   updateQuickActionUI();
   loadSavedFacultyStatus();
-  scheduleFacultyClassHoursLogout();
+  scheduleFacultyWorkHoursOffline();
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to the Faculty Notifications

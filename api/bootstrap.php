@@ -126,7 +126,8 @@ function currentManilaDateTime(): DateTimeImmutable
 function isFacultyClassHours(?DateTimeImmutable $now = null): bool
 {
     $time = ($now ?? currentManilaDateTime())->format('H:i:s');
-    return $time >= '07:00:00' && $time < '19:00:00';
+    return ($time >= '07:00:00' && $time < '12:00:00')
+        || ($time >= '13:00:00' && $time < '19:00:00');
 }
 
 function saveFacultyAvailabilityForUser(PDO $db, int $userId, string $status, ?DateTimeImmutable $now = null): void

@@ -170,6 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to save availability status.");
     }
+
+    return statusForUi(result.status || status);
   }
 
   async function loadSavedStatus() {
@@ -245,12 +247,12 @@ document.addEventListener("DOMContentLoaded", () => {
       event.stopPropagation();
       if (pendingStatus && currentStatusDot && currentStatusLabel) {
         try {
-          await saveCurrentStatus(pendingStatus);
-          applyCurrentStatus(pendingStatus, pendingLabel);
+          const savedStatus = await saveCurrentStatus(pendingStatus);
+          applyCurrentStatus(savedStatus, statusLabel(savedStatus));
           document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
             detail: {
-              status: pendingStatus,
-              label: pendingLabel,
+              status: savedStatus,
+              label: statusLabel(savedStatus),
             },
           }));
         } catch (error) {

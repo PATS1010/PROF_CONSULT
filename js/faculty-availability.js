@@ -172,6 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to save availability status.");
     }
+
+    return statusForUi(result.status || status);
   }
 
   async function loadSavedStatus() {
@@ -244,8 +246,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedOption = statusOptions.find((opt) => opt.classList.contains("is-selected"));
       if (selectedOption) {
         try {
-          await saveCurrentStatus(selectedOption.dataset.status);
-          savedStatus = { status: selectedOption.dataset.status, label: selectedOption.dataset.label };
+          const savedUiStatus = await saveCurrentStatus(selectedOption.dataset.status);
+          savedStatus = { status: savedUiStatus, label: statusLabel(savedUiStatus) };
           renderStatus(savedStatus.status, savedStatus.label);
           markSelectedStatus(savedStatus.status);
         } catch (error) {

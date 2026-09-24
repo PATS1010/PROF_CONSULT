@@ -53,13 +53,17 @@ try {
             fail('Please provide valid availability details.');
         }
 
+        if (!isFacultyClassHours() && $status !== 'offline') {
+            $status = 'offline';
+        }
+
         $statement = $db->prepare(
             'INSERT INTO availability (Faculty_ID, Status, Date, Time)
              VALUES (?, ?, ?, ?)
              RETURNING Availability_ID AS "Availability_ID"'
         );
         $statement->execute([(int) $profile['profile_id'], $status, $date, preferredTimeStart($time)]);
-        reply(['ok' => true, 'id' => (int) $statement->fetchColumn()], 201);
+        reply(['ok' => true, 'id' => (int) $statement->fetchColumn(), 'status' => $status], 201);
     }
 
     $facultyId = (int) ($_GET['faculty_id'] ?? 0);
