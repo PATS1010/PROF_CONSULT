@@ -17,6 +17,9 @@
 
 // ---------------------------------------------------------
 const FACULTY_ACCOUNT = {
+  firstName: "",
+  middleInitial: "",
+  lastName: "",
   name: "",
   facultyId: "",
   program: "",
@@ -44,12 +47,50 @@ function formatPhoneInput(rawValue) {
   return [part1, part2, part3].filter(Boolean).join("-");
 }
 
+function normalizeName(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function combineName(firstName, middleInitial, lastName) {
+  return [firstName, middleInitial, lastName]
+    .map(normalizeName)
+    .filter(Boolean)
+    .join(" ");
+}
+
+function splitLegacyName(fullName) {
+  const words = normalizeName(fullName).split(" ").filter(Boolean);
+  if (words.length <= 1) {
+    return { firstName: words[0] || "", middleInitial: "", lastName: "" };
+  }
+
+  const lastName = words.pop();
+  let middleInitial = "";
+  if (words.length > 1 && words[words.length - 1].length === 1) {
+    middleInitial = words.pop();
+  }
+
+  return {
+    firstName: words.join(" "),
+    middleInitial,
+    lastName,
+  };
+}
+
 function applySessionProfile(sessionData) {
   const user = sessionData && sessionData.user ? sessionData.user : {};
   const profile = sessionData && sessionData.profile ? sessionData.profile : {};
   const department = displayProgramName(profile.Department || profile.department || "");
+  const nameParts = splitLegacyName(user.name || "");
 
-  FACULTY_ACCOUNT.name = user.name || "";
+  FACULTY_ACCOUNT.firstName = nameParts.firstName;
+  FACULTY_ACCOUNT.middleInitial = nameParts.middleInitial;
+  FACULTY_ACCOUNT.lastName = nameParts.lastName;
+  FACULTY_ACCOUNT.name = combineName(
+    FACULTY_ACCOUNT.firstName,
+    FACULTY_ACCOUNT.middleInitial,
+    FACULTY_ACCOUNT.lastName
+  );
   FACULTY_ACCOUNT.facultyId = user.username || "";
   FACULTY_ACCOUNT.program = department || "Computer Engineering";
   FACULTY_ACCOUNT.email = user.email || "";
@@ -77,7 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewEmail = document.getElementById("viewFacultyEmail");
   const viewPhone = document.getElementById("viewFacultyPhone");
 
-  const nameInput = document.getElementById("editFacultyName");
+  const firstNameInput = document.getElementById("editFirstName");
+  const middleInitialInput = document.getElementById("editMiddleInitial");
+  const lastNameInput = document.getElementById("editLastName");
   const nameError = document.getElementById("nameError");
   const idInput = document.getElementById("editFacultyId");
   const emailInput = document.getElementById("editFacultyEmail");
@@ -94,10 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const programValueEl = document.getElementById("programDropdownValue");
   const programList = document.getElementById("programDropdownList");
 
-  const saveButton = document.getElementById("saveProfileButton");
   const saveSuccessMessage = document.getElementById("saveSuccessMessage");
 
   let selectedProgram = FACULTY_ACCOUNT.program;
+  let isEditing = false;
 
   // ---------------------------------------------------------
   // Render the account's current data into view mode
@@ -237,6 +280,15 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = middleInitialInput.value
+        .replace(/[^\p{L}]/gu, "")
+        .toUpperCase()
+        .slice(0, 1);
+    });
+  }
+
   // ---------------------------------------------------------
   // Validation
   // ---------------------------------------------------------
@@ -258,13 +310,30 @@ document.addEventListener("DOMContentLoaded", () => {
     if (wrapEl) wrapEl.classList.remove("has-error");
   }
 
+  function clearNameErrors() {
+    clearFieldError(firstNameInput, nameError);
+    clearFieldError(lastNameInput, null);
+  }
+
   function validateName() {
-    const value = nameInput.value.trim();
-    if (value === "") {
-      showFieldError(nameInput, nameError, "Faculty name cannot be empty.");
+    firstNameInput.value = normalizeName(firstNameInput.value);
+    lastNameInput.value = normalizeName(lastNameInput.value);
+
+    const firstMissing = firstNameInput.value === "";
+    const lastMissing = lastNameInput.value === "";
+
+    clearNameErrors();
+
+    if (firstMissing || lastMissing) {
+      let message = "First name and last name cannot be empty.";
+      if (firstMissing && !lastMissing) message = "First name cannot be empty.";
+      if (lastMissing && !firstMissing) message = "Last name cannot be empty.";
+
+      showFieldError(firstMissing ? firstNameInput : null, nameError, message);
+      if (lastMissing) lastNameInput.classList.add("has-error");
       return false;
     }
-    clearFieldError(nameInput, nameError);
+
     return true;
   }
 
@@ -306,14 +375,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   function enterEditMode() {
     // Populate the edit form from the current account data
-    nameInput.value = FACULTY_ACCOUNT.name;
+    firstNameInput.value = FACULTY_ACCOUNT.firstName;
+    middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
+    lastNameInput.value = FACULTY_ACCOUNT.lastName;
     idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
     selectedProgram = FACULTY_ACCOUNT.program;
     programValueEl.textContent = selectedProgram;
     emailInput.value = FACULTY_ACCOUNT.email;
     phoneInput.value = FACULTY_ACCOUNT.phone;
 
-    clearFieldError(nameInput, nameError);
+    clearNameErrors();
     clearFieldError(emailInput, emailError);
     clearFieldError(phoneInput, phoneError, phoneWrap);
 
@@ -324,20 +395,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     viewSection.hidden = true;
     editForm.hidden = false;
-    editProfileButton.hidden = true;
+    editProfileButton.textContent = "Save Changes";
+    isEditing = true;
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
   }
 
   function exitEditMode() {
     editForm.hidden = true;
     viewSection.hidden = false;
-    editProfileButton.hidden = false;
+    editProfileButton.textContent = "Edit Profile";
+    isEditing = false;
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
     closeProgramDropdown();
   }
 
   if (editProfileButton) {
-    editProfileButton.addEventListener("click", enterEditMode);
+    editProfileButton.addEventListener("click", () => {
+      if (isEditing) {
+        handleSave();
+      } else {
+        enterEditMode();
+      }
+    });
+  }
+
+  if (editForm) {
+    editForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      handleSave();
+    });
   }
 
   // ---------------------------------------------------------
@@ -360,7 +446,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    FACULTY_ACCOUNT.name = nameInput.value.trim();
+    FACULTY_ACCOUNT.firstName = firstNameInput.value;
+    FACULTY_ACCOUNT.middleInitial = middleInitialInput.value.trim();
+    FACULTY_ACCOUNT.lastName = lastNameInput.value;
+    FACULTY_ACCOUNT.name = combineName(
+      FACULTY_ACCOUNT.firstName,
+      FACULTY_ACCOUNT.middleInitial,
+      FACULTY_ACCOUNT.lastName
+    );
     FACULTY_ACCOUNT.program = selectedProgram;
     FACULTY_ACCOUNT.email = emailInput.value.trim();
     FACULTY_ACCOUNT.phone = phoneInput.value.trim();
@@ -380,10 +473,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 250);
       }, 2500);
     }
-  }
-
-  if (saveButton) {
-    saveButton.addEventListener("click", handleSave);
   }
 
   if (facultyProfilePhotoInput && facultyProfilePhoto) {
