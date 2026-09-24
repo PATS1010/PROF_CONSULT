@@ -32,7 +32,7 @@ CREATE TABLE faculty (
   User_ID INTEGER NOT NULL UNIQUE,
   Department VARCHAR(120) NOT NULL,
   Office VARCHAR(120) NULL,
-  Consultation_Hours VARCHAR(255) NULL,
+  Consultation_Hours TEXT NULL,
   CONSTRAINT fk_faculty_user
     FOREIGN KEY (User_ID) REFERENCES users(User_ID) ON DELETE CASCADE
 );

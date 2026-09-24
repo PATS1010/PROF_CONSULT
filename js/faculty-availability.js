@@ -17,23 +17,13 @@
 //   restores the previously saved hours, hides the arrows again,
 //   and turns Cancel back into Edit.
 //
-// FACULTY TEST ACCOUNT -- no backend yet. Current status and
-// the weekly available hours are frontend/mock state only: a
-// plain JS variable, no localStorage/sessionStorage/persistence
-// of any kind, so a page reload resets everything back to the
-// default mock schedule below. Structured so this can later be
-// connected to the real logged-in faculty account's data once
-// the backend exists.
-//
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
 
 // ---------------------------------------------------------
-// Mock weekly schedule -- replace with the logged-in faculty's
-// real saved hours once the backend exists. `time` is the
-// currently SAVED value for that day; "Unavailable" is a valid
-// saved value, same as any time range.
+// Default weekly schedule. The logged-in faculty member's saved
+// schedule is loaded from the backend and replaces this when set.
 // ---------------------------------------------------------
 let AVAILABLE_HOURS = [
   { day: "Monday", short: "Mon", time: "11:00 AM - 1:00 PM" },
@@ -286,6 +276,97 @@ document.addEventListener("DOMContentLoaded", () => {
   // discards this and re-renders from AVAILABLE_HOURS untouched.
   let draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
 
+  function scheduleToText(hours) {
+    return hours
+      .map((entry) => `${entry.short}: ${entry.time}`)
+      .join("; ");
+  }
+
+  function normalizeDayLabel(day) {
+    const normalized = String(day || "").trim().toLowerCase();
+    const map = {
+      monday: "Mon",
+      mon: "Mon",
+      tuesday: "Tue",
+      tue: "Tue",
+      tues: "Tue",
+      wednesday: "Wed",
+      wed: "Wed",
+      thursday: "Thurs",
+      thu: "Thurs",
+      thur: "Thurs",
+      thurs: "Thurs",
+      friday: "Fri",
+      fri: "Fri",
+      saturday: "Sat",
+      sat: "Sat",
+    };
+
+    return map[normalized] || "";
+  }
+
+  function parseScheduleText(value) {
+    const parsed = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+    const rows = String(value || "")
+      .split(/\r?\n|;/)
+      .map((row) => row.trim())
+      .filter(Boolean);
+
+    rows.forEach((row) => {
+      const parts = row.split(/\s*:\s*/);
+      if (parts.length < 2) return;
+
+      const short = normalizeDayLabel(parts.shift());
+      const index = parsed.findIndex((entry) => entry.short === short);
+      if (index === -1) return;
+
+      const time = parts.join(":").trim();
+      if (time) parsed[index] = { ...parsed[index], time };
+    });
+
+    return parsed;
+  }
+
+  async function loadSavedHours() {
+    try {
+      const response = await fetch("api/faculty-hours.php", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+
+      if (handleAuthFailure(response, result)) return;
+      if (!response.ok || !result.ok || !result.consultation_hours) return;
+
+      AVAILABLE_HOURS = parseScheduleText(result.consultation_hours);
+      draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+      renderAvailableHours();
+    } catch (error) {
+      // Keep default hours if the saved schedule cannot be loaded.
+    }
+  }
+
+  async function saveHours(hours) {
+    const response = await fetch("api/faculty-hours.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ consultation_hours: scheduleToText(hours) }),
+    });
+    const result = await response.json();
+
+    if (handleAuthFailure(response, result)) {
+      throw new Error("AUTH_REQUIRED");
+    }
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to save available hours.");
+    }
+
+    return parseScheduleText(result.consultation_hours);
+  }
+
   function buildTimeDropdown(dayIndex) {
     const dropdown = document.createElement("div");
     dropdown.className = "availability-time-dropdown";
@@ -374,6 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderAvailableHours();
+  loadSavedHours();
 
   if (hoursListEl) {
     hoursListEl.addEventListener("click", (event) => {
@@ -424,12 +506,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (saveHoursButton) {
-    saveHoursButton.addEventListener("click", () => {
+    saveHoursButton.addEventListener("click", async () => {
       if (isEditingHours) {
-        // Commit the draft -- only days that actually changed
-        // differ from AVAILABLE_HOURS; unchanged days are
-        // written back identically, so nothing is lost.
-        AVAILABLE_HOURS = draftHours.map((entry) => ({ ...entry }));
+        try {
+          saveHoursButton.disabled = true;
+          AVAILABLE_HOURS = await saveHours(draftHours);
+          draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+        } catch (error) {
+          if (error.message !== "AUTH_REQUIRED") {
+            alert(error.message);
+          }
+          return;
+        } finally {
+          saveHoursButton.disabled = false;
+        }
       }
 
       isEditingHours = false;
