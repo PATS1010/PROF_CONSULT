@@ -12,9 +12,27 @@ set_time_limit(20);
 $data = input();
 $role = clean((string) ($data['role'] ?? ''));
 $email = strtolower(clean((string) ($data['email'] ?? $data['identifier'] ?? '')));
+$method = clean((string) ($data['method'] ?? 'email'));
+$identifier = clean((string) ($data['identifier'] ?? ''));
+$mobile = preg_replace('/\D/', '', $identifier);
 
 if (!in_array($role, ['student', 'faculty'], true) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     fail('Please enter a valid email address.');
+}
+
+if ($method === 'mobile') {
+    if (strlen($mobile) === 12 && str_starts_with($mobile, '63')) {
+        $mobile = substr($mobile, 2);
+    } elseif (strlen($mobile) === 11 && str_starts_with($mobile, '0')) {
+        $mobile = substr($mobile, 1);
+    }
+
+    if (!preg_match('/^9\d{9}$/', $mobile)) {
+        fail('Please enter a valid Philippine mobile number.');
+    }
+} else {
+    $method = 'email';
+    $mobile = '';
 }
 
 try {
@@ -25,6 +43,14 @@ try {
     $existing->execute([$email]);
     if ($existing->fetchColumn()) {
         fail('An account with that email already exists.', 409);
+    }
+
+    if ($mobile !== '') {
+        $existingMobile = $db->prepare('SELECT 1 FROM users WHERE Mobile_Number = ? LIMIT 1');
+        $existingMobile->execute([$mobile]);
+        if ($existingMobile->fetchColumn()) {
+            fail('An account with that mobile number already exists.', 409);
+        }
     }
 
     $otpCode = (string) random_int(100000, 999999);

@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function normalizeMobile(mobile) {
-    return `+63${mobile}`;
+    return mobile.replace(/\D/g, "").slice(0, 10);
   }
 
   function setEmailMode() {
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentMode === "email" ? identifier : savedEmail;
 
       if (!isValidEmail(emailForVerification)) {
-        showMessage("Email verification is required before creating your account.");
+        showMessage("Please enter and save your email address before verifying by contact number.");
         return;
       }
 
@@ -202,6 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify({
             email: emailForVerification,
             identifier,
+            method: currentMode,
             role: origin,
           }),
         });
@@ -216,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sessionStorage.setItem("accountVerificationEmail", emailForVerification);
         sessionStorage.setItem("accountVerificationRole", origin);
         sessionStorage.setItem("verificationIdentifier", identifier);
-        sessionStorage.setItem("verificationMethod", "email");
+        sessionStorage.setItem("verificationMethod", currentMode);
         sessionStorage.setItem("verificationOrigin", origin);
 
         window.location.href = verificationCodePage;
