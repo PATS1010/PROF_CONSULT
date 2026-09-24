@@ -1,9 +1,8 @@
+// SYSTEM NOTE: Controls client-side behavior for the request submitted page, including UI events and API calls.
 // =========================================================
 // REQUEST SUBMITTED PAGE INTERACTIONS
 // - Burger menu + Quick Action + Notification bell: same
-//   behavior as the Dashboard / Faculty Directory. Bell also
-//   renders the shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
+//   behavior as the Dashboard / Faculty Directory
 // - Reads the request data saved by request-consultation.js
 //   (sessionStorage is a frontend-only stand-in; once a backend
 //   exists, this should instead fetch the just-created request
@@ -126,21 +125,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
+  // Notification bell -- navigates to notifications.html
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
-    if (window.ProfConsultNotifications) {
-      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
-    }
   }
 
   // ---------------------------------------------------------

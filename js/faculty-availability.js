@@ -1,12 +1,11 @@
+// SYSTEM NOTE: Controls client-side behavior for the faculty availability page, including UI events and API calls.
 // =========================================================
 // FACULTY AVAILABILITY -- PAGE-SPECIFIC INTERACTIONS
 // - Current Status pill + Change Status dropdown, anchored
 //   directly below the Change Status button. Selecting an
 //   option updates the main status display immediately as a
-//   PENDING preview; it only becomes the SHARED faculty
-//   status (see faculty-shared.js) once Save Changes is
-//   clicked, so Quick Action and faculty-dashboard stay in
-//   sync.
+//   PENDING choice; it only becomes the saved status once
+//   Save Changes is clicked.
 // - Available Hours: six independent day rows. Hours are shown
 //   as plain text and are NEVER directly editable. Clicking
 //   Edit reveals a black downward-arrow button on every row
@@ -18,13 +17,11 @@
 //   restores the previously saved hours, hides the arrows again,
 //   and turns Cancel back into Edit.
 //
-// FACULTY TEST ACCOUNT -- no backend yet. Current status now
-// lives in faculty-shared.js's shared status (persisted via
-// localStorage) instead of a page-local variable. The weekly
-// available hours remain frontend/mock state only: a plain JS
-// variable, no localStorage/sessionStorage/persistence of any
-// kind, so a page reload resets the hours back to the default
-// mock schedule below. Structured so this can later be
+// FACULTY TEST ACCOUNT -- no backend yet. Current status and
+// the weekly available hours are frontend/mock state only: a
+// plain JS variable, no localStorage/sessionStorage/persistence
+// of any kind, so a page reload resets everything back to the
+// default mock schedule below. Structured so this can later be
 // connected to the real logged-in faculty account's data once
 // the backend exists.
 //
@@ -67,12 +64,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // the button itself (see .faculty-change-status-wrap in the
   // CSS/HTML), so the popup always opens directly below the
   // Change Status button rather than the status pill.
-  //
-  // The real current status comes from faculty-shared.js
-  // (window.getFacultyOnlineStatus) -- faculty-shared.js
-  // already paints the pill and highlights the matching
-  // option on load, so this file only needs to read the
-  // selection back out when Save Changes is clicked.
   // ---------------------------------------------------------
   const changeStatusButton = document.getElementById("changeStatusButton");
   const statusPanel = document.getElementById("statusPanel");
@@ -82,6 +73,130 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveStatusButton = document.getElementById("saveStatusButton");
   const currentStatusDot = document.getElementById("availabilityStatusDot");
   const currentStatusLabel = document.getElementById("availabilityStatusLabel");
+
+  // Tracks the currently SAVED status vs. a pending in-progress
+  // selection -- selecting an option updates the main display
+  // right away (per spec), but Cancel-by-closing-without-saving
+  // isn't requested for status, only for hours; Save Changes is
+  // what makes a selection the new source of truth.
+  let savedStatus = { status: "consultation", label: "Consultation" };
+
+  function statusForApi(status) {
+    const map = {
+      teaching: "in class",
+      onleave: "on leave",
+    };
+
+    return map[status] || status;
+  }
+
+  function statusForUi(status) {
+    const map = {
+      "in class": "teaching",
+      "on leave": "onleave",
+      unavailable: "offline",
+    };
+
+    return map[String(status || "").toLowerCase()] || String(status || "offline").toLowerCase();
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      available: "Available",
+      teaching: "In Class",
+      meeting: "Meeting",
+      consultation: "Consultation",
+      onleave: "On Leave",
+      offline: "Offline",
+    };
+
+    return labels[status] || "Offline";
+  }
+
+  function currentTimeValue() {
+    const now = new Date();
+    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+  }
+
+  function currentDateValue() {
+    const now = new Date();
+    return [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, "0"),
+      String(now.getDate()).padStart(2, "0"),
+    ].join("-");
+  }
+
+  function renderStatus(status, label) {
+    if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
+    if (currentStatusLabel) currentStatusLabel.textContent = label;
+  }
+
+  function markSelectedStatus(status) {
+    statusOptions.forEach((option) => {
+      option.classList.toggle("is-selected", option.dataset.status === status);
+    });
+  }
+
+  function redirectToFacultyLogin() {
+    window.location.href = "faculty-login.html";
+  }
+
+  function handleAuthFailure(response, result) {
+    const message = String(result && result.message ? result.message : "").toLowerCase();
+    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
+      redirectToFacultyLogin();
+      return true;
+    }
+
+    return false;
+  }
+
+  async function saveCurrentStatus(status) {
+    const response = await fetch("api/availability.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        status: statusForApi(status),
+        date: currentDateValue(),
+        time: currentTimeValue(),
+      }),
+    });
+    const result = await response.json();
+
+    if (handleAuthFailure(response, result)) {
+      throw new Error("AUTH_REQUIRED");
+    }
+
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to save availability status.");
+    }
+  }
+
+  async function loadSavedStatus() {
+    try {
+      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(currentDateValue())}`, {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) return;
+
+      const latest = (result.availability || []).slice(-1)[0];
+      if (!latest) return;
+
+      const status = statusForUi(latest.Status);
+      savedStatus = { status, label: statusLabel(status) };
+      renderStatus(savedStatus.status, savedStatus.label);
+      markSelectedStatus(savedStatus.status);
+    } catch (error) {
+      // Keep the default display if availability cannot be loaded.
+    }
+  }
+
+  loadSavedStatus();
 
   function openStatusPanel() {
     statusPanel.hidden = false;
@@ -116,24 +231,29 @@ document.addEventListener("DOMContentLoaded", () => {
       statusOptions.forEach((opt) => opt.classList.remove("is-selected"));
       option.classList.add("is-selected");
 
-      // Update the main display immediately on selection (pending
-      // preview only -- not saved/shared until Save Changes).
+      // Update the main display immediately on selection.
       const status = option.dataset.status;
       const label = option.dataset.label;
-      if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
-      if (currentStatusLabel) currentStatusLabel.textContent = label;
+      renderStatus(status, label);
     });
   });
 
   if (saveStatusButton) {
-    saveStatusButton.addEventListener("click", (event) => {
+    saveStatusButton.addEventListener("click", async (event) => {
       event.stopPropagation();
       const selectedOption = statusOptions.find((opt) => opt.classList.contains("is-selected"));
-      if (selectedOption && typeof window.setFacultyOnlineStatus === "function") {
-        // Updates the SHARED status (localStorage + Quick Action +
-        // this page's pill + faculty-dashboard's pill, if that
-        // page is open elsewhere).
-        window.setFacultyOnlineStatus(selectedOption.dataset.status);
+      if (selectedOption) {
+        try {
+          await saveCurrentStatus(selectedOption.dataset.status);
+          savedStatus = { status: selectedOption.dataset.status, label: selectedOption.dataset.label };
+          renderStatus(savedStatus.status, savedStatus.label);
+          markSelectedStatus(savedStatus.status);
+        } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
+          alert(error.message);
+          renderStatus(savedStatus.status, savedStatus.label);
+          return;
+        }
       }
       closeStatusPanel();
     });
@@ -149,21 +269,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
       closeStatusPanel();
     }
-  });
-
-  // ---------------------------------------------------------
-  // If the shared status changes while the panel is open
-  // (e.g. Check In/Out clicked from Quick Action), re-highlight
-  // the option that matches the new real status so an unrelated
-  // pending click here doesn't overwrite it with something stale.
-  // ---------------------------------------------------------
-  document.addEventListener("faculty-status-changed", (event) => {
-    const newStatus = event.detail && event.detail.status;
-    if (!newStatus) return;
-
-    statusOptions.forEach((opt) => {
-      opt.classList.toggle("is-selected", opt.dataset.status === newStatus);
-    });
   });
 
   // ---------------------------------------------------------

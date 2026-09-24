@@ -1,143 +1,147 @@
+// SYSTEM NOTE: Controls client-side behavior for the student profile page, including UI events and API calls.
 // =========================================================
 // STUDENT PROFILE PAGE INTERACTIONS
 // - Burger menu + Quick Action: same behavior as the Dashboard
-// - Populates profile fields from sample student data
-//   (will come from the logged-in student's real record,
-//   structured so it's easy to swap for real backend data)
+// - Populates profile fields from api/session.php so the page
+//   shows the currently logged-in student.
 // - Edit Profile: toggles all fields except Student Number
 //   into an editable state; "Save Changes" exits edit mode.
-//   No backend yet, so this only updates the page's own state.
 // - Profile photo: clicking the edit badge (visible only in
-//   edit mode) opens a file picker and previews the chosen image
-// - Notification bell: navigates to notifications.html and
-//   renders the shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
+//   edit mode) opens a file picker, uploads it, and shows the
+//   saved image returned by the backend.
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
-  // Sample student account -- replace with real session/user
-  // data once backend authentication exists
+  // Current student profile state. The loader below fills this
+  // object from the PHP session response, then the renderer copies
+  // it into the visible form fields.
   // ---------------------------------------------------------
-  const SAMPLE_STUDENT = {
-    studentNumber: "24-00001",
-    course: "computer-engineering",
-    yearLevel: "3",
-    section: "A",
-    email: "john.delacruz@example.com",
-    phone: "912-345-6789",
+  const CURRENT_STUDENT = {
+    fullName: "",
+    studentNumber: "",
+    course: "",
+    yearLevel: "",
+    email: "",
+    phone: "",
+    profilePhoto: "",
   };
 
-  // ---------------------------------------------------------
-  // Name -- stored as three independent parts (First Name,
-  // Middle Initial, Last Name) rather than one combined string,
-  // so the dashboard greeting can use First Name alone without
-  // ever having to guess which word of a full name is the first
-  // name. Persisted to localStorage under the SAME key the
-  // Student Dashboard reads from, so the two pages can never
-  // drift out of sync and the saved name survives a refresh.
-  // ---------------------------------------------------------
-  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
-
-  const DEFAULT_STUDENT_NAME = {
-    firstName: "John",
-    middleInitial: "D",
-    lastName: "Cruz",
+  const COURSE_LABELS = {
+    "computer-engineering": "BSCPE (Computer Engineering)",
   };
 
-  function loadStudentName() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          return {
-            firstName: parsed.firstName || "",
-            middleInitial: parsed.middleInitial || "",
-            lastName: parsed.lastName || "",
-          };
-        }
-      }
-    } catch (error) {
-      // fall through to defaults
-    }
-    return { ...DEFAULT_STUDENT_NAME };
+  function formatPhoneInput(rawValue) {
+    const digits = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
+    const part1 = digits.slice(0, 3);
+    const part2 = digits.slice(3, 6);
+    const part3 = digits.slice(6, 10);
+    return [part1, part2, part3].filter(Boolean).join("-");
   }
 
-  function saveStudentName(nameParts) {
-    try {
-      localStorage.setItem(STUDENT_NAME_STORAGE_KEY, JSON.stringify(nameParts));
-    } catch (error) {
-      // Storage unavailable -- the change just won't persist/sync
-    }
-  }
+  function ensureCourseOption(courseValue) {
+    if (!courseSelect || !courseValue) return;
 
-  // Name display/data must never contain commas, periods, or
-  // dashes -- strip them as the person types, not just on save.
-  function sanitizeNamePart(value) {
-    return (value || "").replace(/[,.\-]/g, "");
-  }
-
-  // Joins the three parts with plain spaces only -- no punctuation
-  // added, and a multi-word First Name ("Mary Jane") keeps its
-  // internal space since only the ends are trimmed.
-  function buildFullName(firstName, middleInitial, lastName) {
-    return [firstName, middleInitial, lastName]
-      .map((part) => (part || "").trim())
-      .filter((part) => part.length > 0)
-      .join(" ");
-  }
-
-  let studentName = loadStudentName();
-
-  const fullNameViewGroup = document.getElementById("profileFullNameView");
-  const fullNameDisplay = document.getElementById("profileFullNameDisplay");
-  const fullNameEditGroup = document.getElementById("profileFullNameEdit");
-  const firstNameInput = document.getElementById("profileFirstName");
-  const middleInitialInput = document.getElementById("profileMiddleInitial");
-  const lastNameInput = document.getElementById("profileLastName");
-
-  function renderFullNameDisplay() {
-    if (fullNameDisplay) {
-      fullNameDisplay.textContent = buildFullName(
-        studentName.firstName,
-        studentName.middleInitial,
-        studentName.lastName
-      );
-    }
-  }
-
-  function populateNameEditInputs() {
-    if (firstNameInput) firstNameInput.value = studentName.firstName;
-    if (middleInitialInput) middleInitialInput.value = studentName.middleInitial;
-    if (lastNameInput) lastNameInput.value = studentName.lastName;
-  }
-
-  renderFullNameDisplay();
-  populateNameEditInputs();
-
-  [firstNameInput, middleInitialInput, lastNameInput].forEach((input) => {
-    if (!input) return;
-    input.addEventListener("input", () => {
-      const sanitized = sanitizeNamePart(input.value);
-      if (sanitized !== input.value) input.value = sanitized;
+    const hasOption = Array.from(courseSelect.options).some((option) => {
+      return option.value === courseValue;
     });
-  });
 
+    if (!hasOption) {
+      const option = document.createElement("option");
+      option.value = courseValue;
+      option.textContent = COURSE_LABELS[courseValue] || courseValue;
+      courseSelect.appendChild(option);
+    }
+  }
+
+  const fullNameInput = document.getElementById("profileFullName");
   const studentNumberInput = document.getElementById("profileStudentNumber");
   const courseSelect = document.getElementById("profileCourse");
   const yearLevelSelect = document.getElementById("profileYearLevel");
-  const sectionSelect = document.getElementById("profileSection");
   const emailInput = document.getElementById("profileEmail");
   const phoneInput = document.getElementById("profilePhone");
+  const profilePhoto = document.getElementById("profilePhoto");
 
-  if (studentNumberInput) studentNumberInput.value = SAMPLE_STUDENT.studentNumber;
-  if (courseSelect) courseSelect.value = SAMPLE_STUDENT.course;
-  if (yearLevelSelect) yearLevelSelect.value = SAMPLE_STUDENT.yearLevel;
-  if (sectionSelect) sectionSelect.value = SAMPLE_STUDENT.section;
-  if (emailInput) emailInput.value = SAMPLE_STUDENT.email;
-  if (phoneInput) phoneInput.value = SAMPLE_STUDENT.phone;
+  if (phoneInput) {
+    phoneInput.addEventListener("input", () => {
+      phoneInput.value = formatPhoneInput(phoneInput.value);
+    });
+  }
+
+  function applySessionProfile(sessionData) {
+    const user = sessionData && sessionData.user ? sessionData.user : {};
+    const profile = sessionData && sessionData.profile ? sessionData.profile : {};
+
+    CURRENT_STUDENT.fullName = user.name || "";
+    CURRENT_STUDENT.studentNumber = user.username || "";
+    CURRENT_STUDENT.course = profile.Program || profile.program || "";
+    CURRENT_STUDENT.yearLevel = String(profile.Year_Level || profile.year_level || "");
+    CURRENT_STUDENT.email = user.email || "";
+    CURRENT_STUDENT.phone = formatPhoneInput(user.phone || "");
+    CURRENT_STUDENT.profilePhoto = user.profile_photo || "";
+  }
+
+  function renderStudentProfile() {
+    ensureCourseOption(CURRENT_STUDENT.course);
+
+    if (fullNameInput) fullNameInput.value = CURRENT_STUDENT.fullName;
+    if (studentNumberInput) studentNumberInput.value = CURRENT_STUDENT.studentNumber;
+    if (courseSelect) courseSelect.value = CURRENT_STUDENT.course;
+    if (yearLevelSelect) yearLevelSelect.value = CURRENT_STUDENT.yearLevel;
+    if (emailInput) emailInput.value = CURRENT_STUDENT.email;
+    if (phoneInput) phoneInput.value = CURRENT_STUDENT.phone;
+    if (profilePhoto && CURRENT_STUDENT.profilePhoto) {
+      profilePhoto.src = `${CURRENT_STUDENT.profilePhoto}?v=${Date.now()}`;
+    }
+  }
+
+  async function uploadProfilePhoto(file) {
+    const formData = new FormData();
+    formData.append("profile_photo", file);
+
+    const response = await fetch("api/profile-photo.php", {
+      method: "POST",
+      body: formData,
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok || !data.ok || !data.profile_photo) {
+      throw new Error(data.message || "Unable to save profile photo.");
+    }
+
+    return data.profile_photo;
+  }
+
+  async function loadCurrentStudentProfile() {
+    try {
+      // api/session.php reads the active PHP session and returns
+      // both the shared user row and the student-specific profile row.
+      const response = await fetch("api/session.php?role=student", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error("Session unavailable");
+      }
+
+      const data = await response.json();
+      if (!data.ok || !data.user || data.user.role !== "student") {
+        throw new Error("Student session unavailable");
+      }
+
+      // Convert the API fields into the shape used by this page,
+      // then render the current student in every profile input.
+      applySessionProfile(data);
+      renderStudentProfile();
+    } catch (error) {
+      window.location.href = "student-login.html";
+    }
+  }
+
+  loadCurrentStudentProfile();
 
   // ---------------------------------------------------------
   // Burger sidebar (same behavior as the Student Dashboard)
@@ -208,21 +212,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
- 
+  // "Send Request" doesn't have a destination page yet --
+  // left wired up but intentionally not navigating anywhere
+  const requestConsultationButton = document.getElementById("requestConsultationButton");
+  if (requestConsultationButton) {
+    requestConsultationButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      // Future: navigate to the consultation request page once it exists
+    });
+  }
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
+  // Notification bell -- clickable placeholder, no
+  // functionality implemented yet
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
-      window.location.href = "notifications.html";
+      // Intentionally left empty -- functionality comes later
     });
-    if (window.ProfConsultNotifications) {
-      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
-    }
   }
 
   // ---------------------------------------------------------
@@ -237,9 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilePhotoEdit = document.getElementById("profilePhotoEdit");
 
   // Every editable field except Student Number (which stays
-  // read-only/disabled at all times, per spec) and the name
-  // parts (handled separately below via the view/edit group toggle)
-  const editableFields = [courseSelect, yearLevelSelect, sectionSelect, emailInput, phoneInput];
+  // read-only/disabled at all times, per spec)
+  const editableFields = [fullNameInput, courseSelect, yearLevelSelect, emailInput, phoneInput];
 
   let isEditing = false;
 
@@ -250,14 +257,6 @@ document.addEventListener("DOMContentLoaded", () => {
       field.readOnly = false;
       field.disabled = false;
     });
-
-    // Full Name: swap the connected display for the three
-    // independently-editable First/Middle/Last inputs, repopulated
-    // from the current stored values (not derived by splitting text)
-    populateNameEditInputs();
-    if (fullNameViewGroup) fullNameViewGroup.hidden = true;
-    if (fullNameEditGroup) fullNameEditGroup.hidden = false;
-
     profileInfoCard.classList.add("is-editing");
     profilePhotoEdit.hidden = false;
     editProfileButton.textContent = "Save Changes";
@@ -275,28 +274,18 @@ document.addEventListener("DOMContentLoaded", () => {
         field.readOnly = true;
       }
     });
-
-    // Full Name: save the three parts as the single source of
-    // truth, persist them (so the Dashboard greeting stays in
-    // sync and this survives a refresh), then rebuild the
-    // connected display name from them -- never store a combined
-    // string directly.
-    studentName = {
-      firstName: sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
-      middleInitial: sanitizeNamePart(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
-      lastName: sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
-    };
-    saveStudentName(studentName);
-    renderFullNameDisplay();
-
-    if (fullNameEditGroup) fullNameEditGroup.hidden = true;
-    if (fullNameViewGroup) fullNameViewGroup.hidden = false;
-
     profileInfoCard.classList.remove("is-editing");
     profilePhotoEdit.hidden = true;
     editProfileButton.textContent = "Edit Profile";
 
-    // Future: send the updated field values to the backend here
+    // Keep the in-page state aligned with edits. A later backend
+    // update endpoint can use this same object as its request body.
+    CURRENT_STUDENT.fullName = fullNameInput ? fullNameInput.value.trim() : CURRENT_STUDENT.fullName;
+    CURRENT_STUDENT.course = courseSelect ? courseSelect.value : CURRENT_STUDENT.course;
+    CURRENT_STUDENT.yearLevel = yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel;
+    CURRENT_STUDENT.email = emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email;
+    CURRENT_STUDENT.phone = phoneInput ? formatPhoneInput(phoneInput.value) : CURRENT_STUDENT.phone;
+    renderStudentProfile();
   }
 
   if (editProfileButton) {
@@ -314,18 +303,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // edit mode, since the edit badge is hidden otherwise
   // ---------------------------------------------------------
   const profilePhotoInput = document.getElementById("profilePhotoInput");
-  const profilePhoto = document.getElementById("profilePhoto");
 
   if (profilePhotoInput && profilePhoto) {
-    profilePhotoInput.addEventListener("change", () => {
+    profilePhotoInput.addEventListener("change", async () => {
       const file = profilePhotoInput.files && profilePhotoInput.files[0];
       if (!file) return;
 
       const previewUrl = URL.createObjectURL(file);
       profilePhoto.src = previewUrl;
 
-      // Future: upload `file` to the backend and use the
-      // returned URL instead of this local preview
+      try {
+        const savedPhoto = await uploadProfilePhoto(file);
+        CURRENT_STUDENT.profilePhoto = savedPhoto;
+        profilePhoto.src = `${savedPhoto}?v=${Date.now()}`;
+      } catch (error) {
+        alert(error.message);
+        renderStudentProfile();
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+        profilePhotoInput.value = "";
+      }
     });
   }
 

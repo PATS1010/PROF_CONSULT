@@ -356,11 +356,19 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     sessionStorage.removeItem(
+      "accountVerified"
+    );
+
+    sessionStorage.removeItem(
       "accountVerificationToken"
     );
 
     sessionStorage.removeItem(
       "accountVerificationEmail"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerificationRole"
     );
 
     updateVerifyButton();
@@ -778,13 +786,13 @@ document.addEventListener("DOMContentLoaded", () => {
                   phone:
                     contactNumberInput.value,
 
+                  password:
+                    passwordInput.value,
+
                   account_verification_token:
                     sessionStorage.getItem(
                       "accountVerificationToken"
-                    ) || "",
-
-                  password:
-                    passwordInput.value
+                    ) || ""
                 })
               }
             );
@@ -845,11 +853,19 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           sessionStorage.removeItem(
+            "accountVerified"
+          );
+
+          sessionStorage.removeItem(
             "accountVerificationToken"
           );
 
           sessionStorage.removeItem(
             "accountVerificationEmail"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationRole"
           );
 
           sessionStorage.removeItem(

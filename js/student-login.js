@@ -62,77 +62,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const emailInput = document.getElementById("studentEmail");
   const passwordInput = document.getElementById("studentPassword");
   const loginError = document.getElementById("loginError");
-  const loginButton = document.getElementById("loginButton");
-
-  function showLoginError(message) {
-    if (!loginError) return;
-    loginError.textContent = message;
-    loginError.hidden = false;
-  }
-
-  async function parseJsonResponse(response) {
-    const rawResponse = await response.text();
-
-    if (!rawResponse) {
-      return {
-        ok: false,
-        message: "The server returned an empty response."
-      };
-    }
-
-    try {
-      return JSON.parse(rawResponse);
-    } catch {
-      return {
-        ok: false,
-        message: "The server did not return JSON."
-      };
-    }
-  }
 
   if (loginForm) {
     loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const enteredEmail = emailInput.value.trim();
-      const enteredPassword = passwordInput.value;
-
-      if (!enteredEmail || !enteredPassword) {
-        showLoginError("Please enter your email/username and password.");
-        return;
-      }
-
-      if (loginButton) {
-        loginButton.disabled = true;
-        loginButton.textContent = "Logging in...";
-      }
-
       try {
-        const response = await fetch("api/login.php", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            role: "student",
-            identifier: enteredEmail,
-            password: enteredPassword
-          })
-        });
-
-        const result = await parseJsonResponse(response);
-
-        if (!response.ok || !result.ok) {
-          throw new Error(result.message || "Incorrect email/username or password.");
-        }
-
+        const response = await fetch("api/login.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "student", identifier: emailInput.value.trim(), password: passwordInput.value }) });
+        if (!response.ok) throw new Error();
         loginError.hidden = true;
         window.location.href = "student-dashboard.html";
       } catch (error) {
-        showLoginError(error.message || "Unable to log in.");
-      } finally {
-        if (loginButton) {
-          loginButton.disabled = false;
-          loginButton.textContent = "Login";
-        }
+        loginError.hidden = false;
       }
     });
   }

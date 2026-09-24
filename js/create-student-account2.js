@@ -28,13 +28,16 @@ document.addEventListener("DOMContentLoaded", () => {
   let isAccountVerified =
     sessionStorage.getItem("student_account_verified") === "true";
 
-
-  function resetVerification() {
+  function clearAccountVerification() {
 
     isAccountVerified = false;
 
     sessionStorage.removeItem(
       "student_account_verified"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerified"
     );
 
     sessionStorage.removeItem(
@@ -45,7 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "accountVerificationEmail"
     );
 
-    updateVerificationButton();
+    sessionStorage.removeItem(
+      "accountVerificationRole"
+    );
   }
 
 
@@ -210,14 +215,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   mobileInput.addEventListener("input", () => {
 
+    if (isAccountVerified) {
+      clearAccountVerification();
+    }
+
     mobileInput.value =
       formatMobileNumber(
         mobileInput.value
       );
-
-    if (isAccountVerified) {
-      resetVerification();
-    }
 
     saveInformation();
 
@@ -237,11 +242,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     input.addEventListener("input", () => {
 
-      if (
-        isAccountVerified &&
-        input === emailInput
-      ) {
-        resetVerification();
+      if (input === emailInput && isAccountVerified) {
+        clearAccountVerification();
       }
 
       saveInformation();
@@ -310,6 +312,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (canVerify) {
 
+      verifyButton.textContent =
+        "Verify Account";
+
+      verifyButton.classList.remove(
+        "account-verified"
+      );
+
       verifyButton.classList.remove(
         "disabled"
       );
@@ -324,6 +333,13 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
     } else {
+
+      verifyButton.textContent =
+        "Verify Account";
+
+      verifyButton.classList.remove(
+        "account-verified"
+      );
 
       verifyButton.classList.add(
         "disabled"
@@ -675,13 +691,13 @@ document.addEventListener("DOMContentLoaded", () => {
               phone:
                 mobileInput.value,
 
+              password:
+                passwordInput.value,
+
               account_verification_token:
                 sessionStorage.getItem(
                   "accountVerificationToken"
-                ) || "",
-
-              password:
-                passwordInput.value
+                ) || ""
             })
           }
         );
@@ -737,11 +753,19 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       sessionStorage.removeItem(
+        "accountVerified"
+      );
+
+      sessionStorage.removeItem(
         "accountVerificationToken"
       );
 
       sessionStorage.removeItem(
         "accountVerificationEmail"
+      );
+
+      sessionStorage.removeItem(
+        "accountVerificationRole"
       );
 
 

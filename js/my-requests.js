@@ -1,13 +1,10 @@
+// SYSTEM NOTE: Controls client-side behavior for the my requests page, including UI events and API calls.
 // =========================================================
 // MY CONSULTATION REQUESTS PAGE INTERACTIONS
 // - Burger menu + Quick Action: copied verbatim from the
 //   proven-working Student Dashboard implementation
-// - Notification bell icon: navigates to notifications.html
-//   and shows the shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
-// - Renders sample requests plus any real requests the student
-//   has submitted (read from the same localStorage list that
-//   request-consultation.js appends to on every submission)
+// - Notification bell: navigates to notifications.html
+// - Renders the current student's database-backed requests
 // =========================================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -92,60 +89,68 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
+ 
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
+  // Notification bell
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
-    if (window.ProfConsultNotifications) {
-      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
-    }
   }
 
   // ---------------------------------------------------------
-  // Consultation requests
-  // Sample data for the current test student account (matches
-  // the reference design), combined with any real requests the
-  // student has actually submitted via Request Consultation --
-  // those are read from the same localStorage list that
-  // request-consultation.js appends to on every submission,
-  // which is what makes this list grow automatically over time.
-  // Replace SAMPLE_REQUESTS with a real API call once a backend
-  // exists; renderRequests() itself doesn't need to change.
+  // Consultation requests from the backend
   // ---------------------------------------------------------
-  const MY_REQUESTS_STORAGE_KEY = "profconsult_my_requests";
-
-  const SAMPLE_REQUESTS = [
-    { title: "Research Consultation", date: "July 15", time: "10:00 AM", status: "waiting", statusLabel: "Waiting" },
-    { title: "Capstone Consultation", date: "July 18", time: "2:00 PM", status: "approved", statusLabel: "Approved" },
-    { title: "OJT Consultation", date: "July 8", time: "", status: "completed", statusLabel: "Completed" },
-  ];
-
-  function getSubmittedRequests() {
-    try {
-      const raw = localStorage.getItem(MY_REQUESTS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (error) {
-      return [];
-    }
+  function statusClass(status) {
+    const normalized = String(status || "pending").toLowerCase();
+    return normalized === "pending" ? "waiting" : normalized;
   }
 
-  function renderRequests() {
+  function statusLabel(status) {
+    const labels = {
+      pending: "Waiting",
+      approved: "Approved",
+      declined: "Declined",
+      rescheduled: "Rescheduled",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+
+    return labels[String(status || "pending").toLowerCase()] || "Waiting";
+  }
+
+  function formatDate(value) {
+    if (!value) return "";
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  }
+
+  function formatTime(value) {
+    if (!value) return "";
+    const [hours = "0", minutes = "00"] = String(value).split(":");
+    const date = new Date();
+    date.setHours(Number(hours), Number(minutes), 0, 0);
+    return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+  }
+
+  function requestFromApi(row) {
+    return {
+      title: row.Purpose || "Consultation",
+      date: formatDate(row.Request_Date),
+      time: formatTime(row.Preferred_Time),
+      status: statusClass(row.Status),
+      statusLabel: statusLabel(row.Status),
+    };
+  }
+
+  function renderRequests(requests) {
     const listEl = document.getElementById("requestsList");
     const noResultsEl = document.getElementById("noRequestsMessage");
     if (!listEl) return;
-
-    // Real submissions first (newest submitted = newest at the
-    // front already, since request-consultation.js prepends),
-    // then the sample data for the test account.
-    const requests = [...getSubmittedRequests(), ...SAMPLE_REQUESTS];
 
     listEl.innerHTML = "";
 
@@ -207,11 +212,48 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  renderRequests();
+  async function loadRequests(showLoading = false) {
+    const listEl = document.getElementById("requestsList");
+    const noResultsEl = document.getElementById("noRequestsMessage");
+    if (showLoading && listEl) listEl.innerHTML = "";
+    if (showLoading && noResultsEl) {
+      noResultsEl.textContent = "Loading consultation requests...";
+      noResultsEl.hidden = false;
+    }
 
-  // Re-render if a new request is submitted from another tab/page
-  window.addEventListener("storage", (event) => {
-    if (event.key === MY_REQUESTS_STORAGE_KEY) renderRequests();
+    try {
+      const response = await fetch("api/consultation-requests.php?role=student", {
+        cache: "no-store",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.message || "Unable to load consultation requests.");
+      }
+
+      if (noResultsEl) {
+        noResultsEl.textContent = "You haven't submitted any consultation requests yet.";
+      }
+      renderRequests((result.requests || []).map(requestFromApi));
+    } catch (error) {
+      if (showLoading && noResultsEl) {
+        noResultsEl.textContent = error.message || "Unable to load consultation requests.";
+        noResultsEl.hidden = false;
+      }
+    }
+  }
+
+  loadRequests(true);
+
+  window.setInterval(() => {
+    loadRequests(false);
+  }, 5000);
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      loadRequests(false);
+    }
   });
 
 });

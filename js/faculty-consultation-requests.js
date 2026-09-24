@@ -1,395 +1,349 @@
+// SYSTEM NOTE: Controls client-side behavior for the faculty consultation requests page, including UI events and API calls.
 // =========================================================
 // FACULTY CONSULTATION REQUESTS -- PAGE-SPECIFIC INTERACTIONS
-// - Renders Pending (horizontal scroll), Upcoming, and Completed
-//   consultations from ONE shared array, so a request moves
-//   between sections by changing its `status` field -- never by
-//   being copied/duplicated into a different data structure.
-// - View More expands a card in place to show Program, Year and
-//   Set, and Additional Message. Completed cards use an explicit
-//   View More/View Less toggle; Pending/Upcoming collapse when
-//   you click outside the expanded card (unchanged from before).
-// - Accept moves a request from Pending -> Upcoming.
-// - Complete (Upcoming cards only) moves a request from
-//   Upcoming -> Completed.
-// - Decline (Pending) / Cancel (Upcoming) are the same underlying
-//   cancellation logic -- only the button label differs by section.
-// - Reschedule navigates to reschedule-consultation.html for that
-//   exact consultation.
+// - Renders pending requests from api/consultation-requests.php.
+// - View More expands a card in place to show Program, Year
+//   and Set, and Additional Message; clicking outside any
+//   expanded card collapses it back.
+// - Accept / Decline mark the request answered, then remove it
+//   from the pending queue so the next one moves up.
+// - Reschedule is a frontend-only placeholder for now.
 //
-// STATE / STORAGE:
-// Consultations persist in localStorage under CONSULTATIONS_STORAGE_KEY
-// so Reschedule can update a consultation's date/time on a separate
-// page and have it reflected back here. Still no backend -- once one
-// exists, loadConsultations()/saveConsultations() are the two
-// functions to swap for real API calls; everything else (rendering,
-// actions) stays the same.
-//
-// MOCK/TEST RESET ON REFRESH:
-// This is currently a mock/test account, so an actual browser refresh
-// (not the normal navigate-away-and-back-from-reschedule flow) wipes
-// any Accept/Complete/Decline/Reschedule test changes and restores
-// DEFAULT_CONSULTATIONS. isPageReload() distinguishes a real refresh
-// from ordinary navigation using the Navigation Timing API. Once real
-// accounts/backend exist, this reset behavior is the one thing to
-// remove -- loadConsultations() and saveConsultations() themselves
-// don't need to change further.
-//
-// Frontend/prototype only. Shared shell behavior (navbar, sidebar,
-// quick action, notification bell) lives in faculty-shared.js and
-// is untouched by this file.
+// Shared shell behavior (navbar, sidebar, quick action,
+// notification bell) lives in faculty-shared.js and is untouched
+// by this file.
 // =========================================================
 
-const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
-const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
-
-// ---------------------------------------------------------
-// Mock consultations -- replace with real data from the backend
-// once consultation requests are persisted server-side. Used to
-// SEED localStorage on first run AND to restore state whenever
-// the page is actually refreshed (mock/test account only -- see
-// isPageReload() below).
-// ---------------------------------------------------------
-const DEFAULT_CONSULTATIONS = [
-  {
-    id: "req-1",
-    name: "Juan Dela Cruz",
-    studentId: "22-00145",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-    status: "pending",
-  },
-  {
-    id: "req-2",
-    name: "Joselita Rizal",
-    studentId: "22-00098",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-    status: "pending",
-  },
-  {
-    id: "req-3",
-    name: "Mark Santos",
-    studentId: "21-00567",
-    type: "Thesis Defense Prep",
-    date: "July 21, 1:00 PM",
-    preferredDateISO: "2026-07-21",
-    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "4A",
-    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-    status: "pending",
-  },
-  {
-    id: "req-4",
-    name: "Angela Cruz",
-    studentId: "23-00212",
-    type: "Grade Concern",
-    date: "July 22, 9:30 AM",
-    preferredDateISO: "2026-07-22",
-    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
-    program: "BS Computer Engineering",
-    yearSet: "2A",
-    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-    status: "pending",
-  },
-];
-
-// ---------------------------------------------------------
-// Detects a real browser refresh (F5 / reload button / Ctrl+R)
-// as opposed to arriving here via ordinary navigation (e.g.
-// coming back from reschedule-consultation.html). Only a true
-// reload should reset the mock/test data.
-// ---------------------------------------------------------
-function isPageReload() {
-  try {
-    const navEntries = performance.getEntriesByType("navigation");
-    if (navEntries.length > 0) return navEntries[0].type === "reload";
-    if (performance.navigation) {
-      return performance.navigation.type === performance.navigation.TYPE_RELOAD;
-    }
-  } catch (error) {
-    // fall through -- if we can't tell, don't force a reset
-  }
-  return false;
-}
-
-function loadConsultations() {
-  try {
-    if (isPageReload()) {
-      saveConsultations(DEFAULT_CONSULTATIONS);
-      return DEFAULT_CONSULTATIONS.slice();
-    }
-    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (error) {
-    // fall through to seeding defaults below
-  }
-  saveConsultations(DEFAULT_CONSULTATIONS);
-  return DEFAULT_CONSULTATIONS.slice();
-}
-
-function saveConsultations(list) {
-  try {
-    localStorage.setItem(CONSULTATIONS_STORAGE_KEY, JSON.stringify(list));
-  } catch (error) {
-    // Storage unavailable -- state just won't persist across reload/navigation
-  }
-}
-
-let REQUESTS = loadConsultations();
-
-// ---------------------------------------------------------
-// Notification hook -- intentionally a no-op placeholder for
-// now. The backend team owns building out the real notification
-// system; this just marks where Accept/Complete/Decline/Cancel
-// would trigger it once that exists.
-// ---------------------------------------------------------
-function notifyRequestAnswered(request, decision) {
-  // Placeholder only -- wire this to the real notification
-  // system once the backend exists. Intentionally does nothing
-  // and stores nothing beyond REQUESTS itself.
-}
+let REQUESTS = [];
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const pendingContainer = document.getElementById("requestsScrollContainer");
-  const noPendingMessage = document.getElementById("noRequestsMessage");
-  const upcomingContainer = document.getElementById("upcomingScrollContainer");
-  const noUpcomingMessage = document.getElementById("noUpcomingMessage");
-  const completedContainer = document.getElementById("completedScrollContainer");
-  const noCompletedMessage = document.getElementById("noCompletedMessage");
+  const scrollContainer = document.getElementById("requestsScrollContainer");
+  const noRequestsMessage = document.getElementById("noRequestsMessage");
+
+  function escapeHtml(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "\"": "&quot;",
+      "'": "&#039;",
+    }[character]));
+  }
+
+  function formatDateTime(dateValue, timeValue) {
+    if (!dateValue) return "Date not set";
+
+    const [hours = "00", minutes = "00"] = String(timeValue || "00:00").split(":");
+    const date = new Date(`${dateValue}T${hours}:${minutes}:00`);
+    if (Number.isNaN(date.getTime())) return `${dateValue} ${timeValue || ""}`.trim();
+
+    return date.toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  }
+
+  function displayYear(value) {
+    const normalized = String(value || "").trim();
+    const labels = {
+      "1": "1st Year",
+      "2": "2nd Year",
+      "3": "3rd Year",
+      "4": "4th Year",
+      "5": "5th Year",
+    };
+
+    return labels[normalized] || normalized;
+  }
+
+  function requestFromApi(row) {
+    // Convert the database year value into the label shown on request cards.
+    const year = displayYear(row.Year_Level);
+    // Keep the section separate so blank sections do not create extra punctuation.
+    const section = row.Section || "";
+
+    return {
+      // Store the database request id so button clicks update the correct row.
+      id: String(row.Request_ID),
+      // Show the real student name from the joined users table.
+      name: row.Student_Name || "Unnamed Student",
+      // Prefer the user's student number, then fall back to the profile id.
+      studentId: row.Student_Number || row.Student_ID || "",
+      // Purpose becomes the request subject displayed on the card.
+      type: row.Purpose || "Consultation",
+      // Combine the saved request date and preferred time for display.
+      date: formatDateTime(row.Request_Date, row.Preferred_Time),
+      // Program, year, section, and message come from the current student's profile/request.
+      program: row.Program || "Program not set",
+      yearSet: [year, section].filter(Boolean).join(" - ") || "Year and section not set",
+      message: row.Additional_Message || "No additional message.",
+      // Status controls whether the request remains visible in the pending list.
+      status: row.Status || "pending",
+    };
+  }
+
+  function redirectToFacultyLogin() {
+    window.location.href = "faculty-login.html";
+  }
+
+  function handleAuthFailure(response, result) {
+    const message = String(result && result.message ? result.message : "").toLowerCase();
+    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
+      redirectToFacultyLogin();
+      return true;
+    }
+
+    return false;
+  }
+
+  async function loadRequests() {
+    if (scrollContainer) {
+      scrollContainer.innerHTML = "";
+    }
+    if (noRequestsMessage) {
+      noRequestsMessage.textContent = "Loading consultation requests...";
+      noRequestsMessage.hidden = false;
+    }
+
+    try {
+      // Ask the API for faculty requests so the backend uses the professor session.
+      const response = await fetch("api/consultation-requests.php?role=faculty", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      // Parse the JSON reply from the API.
+      const result = await response.json();
+
+      // Stop rendering if the API reports an authentication or database problem.
+      if (!response.ok || !result.ok) {
+        if (handleAuthFailure(response, result)) return;
+        throw new Error(result.message || "Unable to load consultation requests.");
+      }
+
+      // Convert raw database rows into the card shape used by this page.
+      REQUESTS = (result.requests || []).map(requestFromApi);
+      // Rebuild the visible cards after loading fresh data.
+      renderRequests();
+    } catch (error) {
+      if (noRequestsMessage) {
+        noRequestsMessage.textContent = error.message || "Unable to load consultation requests.";
+        noRequestsMessage.hidden = false;
+      }
+    }
+  }
+
+  async function updateRequestStatus(requestId, status) {
+    // Include role=faculty so Accept/Reschedule/Decline uses the professor session.
+    const response = await fetch("api/consultation-requests.php?role=faculty", {
+      method: "POST",
+      credentials: "same-origin",
+      // Tell PHP that the request body is JSON.
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      // Send the selected request id and the new status to the backend.
+      body: JSON.stringify({ request_id: requestId, status }),
+    });
+    // Read the backend response so errors can be shown to the professor.
+    const result = await response.json();
+
+    // Turn API failures into an error message the click handler can alert.
+    if (!response.ok || !result.ok) {
+      if (handleAuthFailure(response, result)) {
+        throw new Error("AUTH_REQUIRED");
+      }
+      throw new Error(result.message || "Unable to update consultation request.");
+    }
+  }
 
   // ---------------------------------------------------------
   // Render
-  // One card-builder shared by all three sections -- they're
-  // "almost identical", per spec, so the differences (which
-  // buttons show, what the secondary button is labeled, the
-  // green completed text) are handled with a `section` flag
-  // instead of three separate templates.
   // ---------------------------------------------------------
-  function buildConsultationCard(request, section) {
+  function buildRequestCard(request) {
     const card = document.createElement("article");
     card.className = "request-card";
     card.dataset.id = request.id;
-    card.dataset.section = section;
-
-    const primaryButtonHtml = section === "pending"
-      ? `<button type="button" class="request-accept-button" data-action="accept">Accept</button>`
-      : section === "upcoming"
-        ? `<button type="button" class="request-accept-button" data-action="complete">Complete</button>`
-        : ""; // completed: no primary action button
-
-    const secondaryActionLabel = section === "upcoming" ? "Cancel" : "Decline";
-
-    const expandedInfoHtml = `
-      <div class="request-expanded-info">
-        <div class="request-info-col">
-          <p class="request-info-label">Program:</p>
-          <p class="request-info-value">${request.program}</p>
-          <p class="request-info-label">Year and Set:</p>
-          <p class="request-info-value">${request.yearSet}</p>
-        </div>
-        <div class="request-info-col">
-          <p class="request-info-label">Additional Message:</p>
-          <p class="request-message">${request.message}</p>
-          ${section === "completed" ? '<p class="request-complete-text">Consultation Complete!</p>' : ""}
-        </div>
-      </div>
-    `;
-
-    const actionsHtml = section === "completed"
-      ? `<button type="button" class="request-view-more-button request-view-more-button--full" data-action="view-more">View More</button>`
-      : `
-        <div class="request-actions">
-          <button type="button" class="request-view-more-button" data-action="view-more">View More</button>
-          <button type="button" class="request-reschedule-button" data-action="reschedule">Reschedule</button>
-          <button type="button" class="request-decline-button" data-action="decline">${secondaryActionLabel}</button>
-        </div>
-      `;
 
     card.innerHTML = `
       <div class="request-card-header">
-        <p class="request-name">${request.name}</p>
+        <p class="request-name">${escapeHtml(request.name)}</p>
         <span class="request-avatar" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="8" r="4"></circle>
             <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8v1H4v-1z"></path>
           </svg>
         </span>
-        ${primaryButtonHtml}
+        <button type="button" class="request-accept-button" data-action="accept">Accept</button>
       </div>
 
-      <p class="request-type">${request.type}</p>
-      <p class="request-date">Preferred Date: ${request.date}</p>
+      <p class="request-type">${escapeHtml(request.type)}</p>
+      <p class="request-date">Preferred Date: ${escapeHtml(request.date)}</p>
 
-      ${expandedInfoHtml}
+      <div class="request-expanded-info">
+        <div class="request-info-col">
+          <p class="request-info-label">Student ID:</p>
+          <p class="request-info-value">${escapeHtml(request.studentId)}</p>
+          <p class="request-info-label">Program:</p>
+          <p class="request-info-value">${escapeHtml(request.program)}</p>
+          <p class="request-info-label">Year and Set:</p>
+          <p class="request-info-value">${escapeHtml(request.yearSet)}</p>
+        </div>
+        <div class="request-info-col">
+          <p class="request-info-label">Additional Message:</p>
+          <p class="request-message">${escapeHtml(request.message)}</p>
+        </div>
+      </div>
 
-      ${actionsHtml}
+      <div class="request-actions">
+        <button type="button" class="request-view-more-button" data-action="view-more">View More</button>
+        <button type="button" class="request-reschedule-button" data-action="reschedule">Reschedule</button>
+        <button type="button" class="request-decline-button" data-action="decline">Decline</button>
+      </div>
+
+      <p class="request-toast" aria-live="polite"></p>
     `;
 
     return card;
   }
 
-  function renderSection(containerEl, emptyMessageEl, status, section) {
-    if (!containerEl) return;
-    containerEl.innerHTML = "";
+  function renderRequests() {
+    if (!scrollContainer) return;
+    scrollContainer.innerHTML = "";
 
-    const items = REQUESTS.filter((request) => request.status === status);
-    items.forEach((request) => {
-      containerEl.appendChild(buildConsultationCard(request, section));
+    const pending = REQUESTS.filter((request) => request.status === "pending");
+
+    pending.forEach((request) => {
+      scrollContainer.appendChild(buildRequestCard(request));
     });
 
-    if (emptyMessageEl) {
-      emptyMessageEl.hidden = items.length > 0;
+    if (noRequestsMessage) {
+      noRequestsMessage.textContent = "No pending consultation requests right now.";
+      noRequestsMessage.hidden = pending.length > 0;
     }
   }
 
-  function renderAll() {
-    renderSection(pendingContainer, noPendingMessage, "pending", "pending");
-    renderSection(upcomingContainer, noUpcomingMessage, "upcoming", "upcoming");
-    renderSection(completedContainer, noCompletedMessage, "completed", "completed");
-  }
-
-  renderAll();
+  loadRequests();
 
   // ---------------------------------------------------------
-  // Card interactions -- delegated per section container so
+  // Card interactions -- delegated to the scroll container so
   // re-rendering never loses event bindings.
   // ---------------------------------------------------------
-  function handleAction(event, section) {
-    const actionButton = event.target.closest("[data-action]");
-    if (!actionButton) return;
+  if (scrollContainer) {
+    scrollContainer.addEventListener("click", async (event) => {
+      const actionButton = event.target.closest("[data-action]");
+      if (!actionButton) return;
 
-    const card = actionButton.closest(".request-card");
-    if (!card) return;
+      const card = actionButton.closest(".request-card");
+      if (!card) return;
 
-    const requestId = card.dataset.id;
-    const request = REQUESTS.find((r) => r.id === requestId);
-    if (!request) return;
+      const requestId = card.dataset.id;
+      const request = REQUESTS.find((r) => r.id === requestId);
+      if (!request) return;
 
-    const action = actionButton.dataset.action;
+      const action = actionButton.dataset.action;
 
-    if (action === "view-more") {
-      if (section === "completed") {
-        const isExpanded = card.classList.toggle("is-expanded");
-        actionButton.textContent = isExpanded ? "View Less" : "View More";
-      } else {
-        // Only one card expanded at a time, across all sections.
-        document.querySelectorAll(".request-card.is-expanded").forEach((c) => {
-          if (c !== card) {
-            c.classList.remove("is-expanded");
-            if (c.dataset.section === "completed") {
-              const btn = c.querySelector('[data-action="view-more"]');
-              if (btn) btn.textContent = "View More";
-            }
-          }
+      if (action === "view-more") {
+        // Only one card expanded at a time.
+        Array.from(scrollContainer.querySelectorAll(".request-card")).forEach((c) => {
+          if (c !== card) c.classList.remove("is-expanded");
         });
         card.classList.add("is-expanded");
       }
-      return;
-    }
 
-    if (action === "reschedule") {
-      try {
-        sessionStorage.setItem(RESCHEDULE_TARGET_STORAGE_KEY, request.id);
-      } catch (error) {
-        // sessionStorage unavailable -- reschedule-consultation.js
-        // handles a missing target by returning here gracefully
+      if (action === "reschedule") {
+        const toast = card.querySelector(".request-toast");
+        actionButton.textContent = "Rescheduled";
+        actionButton.disabled = true;
+
+        try {
+          await updateRequestStatus(request.id, "rescheduled");
+          request.status = "rescheduled";
+        } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
+          alert(error.message);
+          actionButton.textContent = "Reschedule";
+          actionButton.disabled = false;
+          return;
+        }
+
+        if (toast) {
+          toast.textContent = "Request marked for reschedule.";
+          toast.classList.add("is-visible");
+        }
+        window.setTimeout(renderRequests, 900);
       }
-      window.location.href = "reschedule-consultation.html";
-      return;
-    }
 
-    if (action === "accept" || action === "complete") {
-      const isComplete = action === "complete";
+      if (action === "accept") {
+        actionButton.textContent = "Accepted";
+        actionButton.disabled = true;
+        actionButton.classList.add("is-accepted");
+        const declineButton = card.querySelector(".request-decline-button");
+        if (declineButton) declineButton.disabled = true;
+        const viewMoreButton = card.querySelector(".request-view-more-button");
+        if (viewMoreButton) viewMoreButton.disabled = true;
 
-      actionButton.textContent = isComplete ? "Completed" : "Accepted";
-      actionButton.disabled = true;
-      actionButton.classList.add("is-accepted");
+        try {
+          await updateRequestStatus(request.id, "approved");
+          request.status = "approved";
+        } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
+          alert(error.message);
+          actionButton.textContent = "Accept";
+          actionButton.disabled = false;
+          actionButton.classList.remove("is-accepted");
+          if (declineButton) declineButton.disabled = false;
+          if (viewMoreButton) viewMoreButton.disabled = false;
+          return;
+        }
 
-      const declineButton = card.querySelector(".request-decline-button");
-      if (declineButton) declineButton.disabled = true;
-      const viewMoreButton = card.querySelector(".request-view-more-button");
-      if (viewMoreButton) viewMoreButton.disabled = true;
-      const rescheduleButton = card.querySelector(".request-reschedule-button");
-      if (rescheduleButton) rescheduleButton.disabled = true;
+        // Give the person a moment to see "Accepted" before the
+        // card leaves the pending queue and the next one shifts up.
+        window.setTimeout(renderRequests, 900);
+      }
 
-      request.status = isComplete ? "completed" : "upcoming";
-      saveConsultations(REQUESTS);
-      notifyRequestAnswered(request, isComplete ? "completed" : "accepted");
+      if (action === "decline") {
+        actionButton.textContent = "Declined";
+        actionButton.disabled = true;
+        actionButton.classList.add("is-declined");
+        const acceptButton = card.querySelector(".request-accept-button");
+        if (acceptButton) acceptButton.disabled = true;
+        const viewMoreButton = card.querySelector(".request-view-more-button");
+        if (viewMoreButton) viewMoreButton.disabled = true;
 
-      // Give the person a moment to see the confirmation text before
-      // the card leaves this section and the next one shifts up.
-      window.setTimeout(renderAll, 900);
-      return;
-    }
+        try {
+          await updateRequestStatus(request.id, "declined");
+          request.status = "declined";
+        } catch (error) {
+          if (error.message === "AUTH_REQUIRED") return;
+          alert(error.message);
+          actionButton.textContent = "Decline";
+          actionButton.disabled = false;
+          actionButton.classList.remove("is-declined");
+          if (acceptButton) acceptButton.disabled = false;
+          if (viewMoreButton) viewMoreButton.disabled = false;
+          return;
+        }
 
-    if (action === "decline") {
-      actionButton.textContent = section === "upcoming" ? "Cancelled" : "Declined";
-      actionButton.disabled = true;
-      actionButton.classList.add("is-declined");
-
-      const acceptButton = card.querySelector(".request-accept-button");
-      if (acceptButton) acceptButton.disabled = true;
-      const viewMoreButton = card.querySelector(".request-view-more-button");
-      if (viewMoreButton) viewMoreButton.disabled = true;
-      const rescheduleButton = card.querySelector(".request-reschedule-button");
-      if (rescheduleButton) rescheduleButton.disabled = true;
-
-      // Same cancellation logic for Pending's Decline and Upcoming's
-      // Cancel -- only the button label differs by section.
-      request.status = "declined";
-      saveConsultations(REQUESTS);
-      notifyRequestAnswered(request, section === "upcoming" ? "cancelled" : "declined");
-
-      window.setTimeout(renderAll, 900);
-      return;
-    }
-  }
-
-  if (pendingContainer) {
-    pendingContainer.addEventListener("click", (event) => handleAction(event, "pending"));
-  }
-  if (upcomingContainer) {
-    upcomingContainer.addEventListener("click", (event) => handleAction(event, "upcoming"));
-  }
-  if (completedContainer) {
-    completedContainer.addEventListener("click", (event) => handleAction(event, "completed"));
+        window.setTimeout(renderRequests, 900);
+      }
+    });
   }
 
   // ---------------------------------------------------------
-  // Click outside any expanded card collapses it back (Pending/
-  // Upcoming). Completed cards also collapse this way, resetting
-  // their button text back to "View More" since they use an
-  // explicit label instead of hide-on-expand.
+  // Click outside any expanded card collapses it back.
   // ---------------------------------------------------------
   document.addEventListener("click", (event) => {
-    const expandedCards = Array.from(document.querySelectorAll(".request-card.is-expanded"));
+    if (!scrollContainer) return;
+    const expandedCards = Array.from(scrollContainer.querySelectorAll(".request-card.is-expanded"));
     if (expandedCards.length === 0) return;
 
     const clickedInsideAnExpandedCard = expandedCards.some((card) => card.contains(event.target));
-    if (clickedInsideAnExpandedCard) return;
-
-    expandedCards.forEach((card) => {
-      card.classList.remove("is-expanded");
-      if (card.dataset.section === "completed") {
-        const btn = card.querySelector('[data-action="view-more"]');
-        if (btn) btn.textContent = "View More";
-      }
-    });
+    if (!clickedInsideAnExpandedCard) {
+      expandedCards.forEach((card) => card.classList.remove("is-expanded"));
+    }
   });
 
 });
