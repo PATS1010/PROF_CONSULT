@@ -383,14 +383,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (switchMethod) {
 
-    const methodRow =
-      switchMethod.closest(
-        ".reset-method-text"
-      );
+    switchMethod.addEventListener(
+      "click",
+      (event) => {
 
-    if (methodRow) {
-      methodRow.hidden = true;
-    }
+        event.preventDefault();
+
+        if (currentMode === "email") {
+
+          setMobileMode();
+
+        } else {
+
+          setEmailMode();
+
+        }
+
+      }
+    );
 
   }
 
@@ -600,13 +610,16 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (currentMode !== "email") {
+        const deliveryEmail =
+          currentMode === "email"
+            ? identifier
+            : savedEmail;
+
+        if (!isValidEmail(deliveryEmail)) {
 
           showMessage(
-            "Verification codes are sent to your email address. Your contact number is saved for your account."
+            "Please enter and save a valid email address before verifying with your contact number."
           );
-
-          setEmailMode();
 
           return;
         }
@@ -631,7 +644,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 body: JSON.stringify({
                   role: origin,
-                  email: identifier
+                  email: deliveryEmail
                 })
               }
             );
@@ -658,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         sessionStorage.setItem(
           "verificationMethod",
-          "email"
+          currentMode
         );
 
         sessionStorage.setItem(
@@ -669,6 +682,11 @@ document.addEventListener("DOMContentLoaded", () => {
           sessionStorage.setItem(
             "accountVerificationToken",
             result.token
+          );
+
+          sessionStorage.setItem(
+            "accountVerificationEmail",
+            deliveryEmail
           );
 
 

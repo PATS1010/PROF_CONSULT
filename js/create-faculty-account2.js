@@ -359,6 +359,10 @@ document.addEventListener("DOMContentLoaded", () => {
       "accountVerificationToken"
     );
 
+    sessionStorage.removeItem(
+      "accountVerificationEmail"
+    );
+
     updateVerifyButton();
     updateCreateButton();
   }
@@ -842,6 +846,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             "accountVerificationToken"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerificationEmail"
           );
 
           sessionStorage.removeItem(

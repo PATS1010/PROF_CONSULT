@@ -59,6 +59,11 @@ document.addEventListener("DOMContentLoaded", () => {
       "verificationMethod"
     ) || "email";
 
+  const verificationEmail =
+    sessionStorage.getItem(
+      "accountVerificationEmail"
+    ) || identifier;
+
 
   let verificationToken =
     sessionStorage.getItem(
@@ -198,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ) {
 
       subtitle.textContent =
-        "A 6-digit verification code has been sent to your mobile number.";
+        "A 6-digit verification code has been sent to your saved email address for contact number verification.";
 
     } else {
 
@@ -749,7 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 body: JSON.stringify({
                   role: origin,
-                  email: identifier
+                  email: verificationEmail
                 })
               }
             );
