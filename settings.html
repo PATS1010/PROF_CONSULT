@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the settings page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -59,7 +58,7 @@
           <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
         </div>
 
-        
+       
       </div>
     </div>
   </header>
@@ -131,9 +130,19 @@
             </span>
           </label>
 
+          <label class="settings-option">
+            <span class="settings-option-text">
+              <span class="settings-option-title">Dark Mode</span>
+            </span>
+            <span class="settings-checkbox">
+              <input type="checkbox" id="darkModeCheckbox">
+              <span class="settings-checkbox-box" aria-hidden="true"></span>
+            </span>
+          </label>
+
         </div>
 
-        <a href="forgot-password.html" class="format-text change-password-link" id="changePasswordLink">
+        <a href="change-password.html?from=student" class="format-text change-password-link" id="changePasswordLink">
           Change Password
         </a>
 
@@ -148,7 +157,7 @@
 
   </main>
 
-  <script src="js/notification-bell-status.js"></script>
+  <script src="js/notification-state.js"></script>
   <script src="js/settings.js"></script>
 </body>
 </html>

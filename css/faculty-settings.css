@@ -1,4 +1,3 @@
-/* SYSTEM NOTE: Styles the faculty settings page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC STYLES
    Only the main content area (inside .faculty-main-content)
@@ -30,7 +29,7 @@
    INNER CARD
 ========================================================= */
 .faculty-settings-inner-card {
-  background-color: #ffffff;
+  background-color: #f5f1ea;
   border-radius: 22px;
   box-shadow: var(--shadow-card);
   padding: 30px 36px;

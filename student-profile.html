@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the student profile page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -26,7 +25,7 @@
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- clickable, functionality not implemented yet -->
+      <!-- Notification bell -- navigates to notifications.html on click (see student-profile.js) -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
@@ -54,13 +53,7 @@
           <a href="faculty-directory.html" class="quick-action-button" data-nav="find-faculty">View Directory</a>
         </div>
 
-        <div class="quick-action-item">
-          <div class="quick-action-item-text-block">
-            <p class="quick-action-item-title">Request Consultation</p>
-            <p class="quick-action-item-text">Schedule a conversation with your professor.</p>
-          </div>
-          <a href="#" class="quick-action-button" id="requestConsultationButton">Send Request</a>
-        </div>
+        
       </div>
     </div>
   </header>
@@ -108,7 +101,7 @@
       <div class="profile-info-card">
 
         <div class="profile-photo-wrapper">
-          <img src="images/user.png" alt="Student profile photo" class="profile-photo" id="profilePhoto">
+          <img src="images/student-profile-photo.jpg" alt="John Dela Cruz" class="profile-photo" id="profilePhoto">
           <label class="profile-photo-edit" id="profilePhotoEdit" hidden>
             <input type="file" id="profilePhotoInput" accept="image/*" class="profile-photo-input">
             <span aria-hidden="true">&#9998;</span>
@@ -117,14 +110,33 @@
 
         <div class="profile-fields">
 
-          <div class="profile-field-row">
-            <label for="profileFullName">Full Name</label>
-            <input type="text" id="profileFullName" class="profile-field profile-field-highlight" value="Loading profile..." readonly>
+          <div class="profile-field-row profile-fullname-row">
+            <!-- View mode: one connected full name (First + Middle Initial + Last) -->
+            <div class="profile-fullname-view" id="profileFullNameView">
+              <label>Full Name</label>
+              <p class="profile-field profile-field-highlight" id="profileFullNameDisplay"></p>
+            </div>
+
+            <!-- Edit mode: First Name / Middle Initial / Last Name, each independently editable -->
+            <div class="profile-fullname-edit" id="profileFullNameEdit" hidden>
+              <div class="profile-fullname-part">
+                <label for="profileFirstName">First Name</label>
+                <input type="text" id="profileFirstName" class="profile-field" autocomplete="off">
+              </div>
+              <div class="profile-fullname-part">
+                <label for="profileMiddleInitial">Middle Initial</label>
+                <input type="text" id="profileMiddleInitial" class="profile-field" autocomplete="off">
+              </div>
+              <div class="profile-fullname-part">
+                <label for="profileLastName">Last Name</label>
+                <input type="text" id="profileLastName" class="profile-field" autocomplete="off">
+              </div>
+            </div>
           </div>
 
           <div class="profile-field-row">
             <label for="profileStudentNumber">Student Number</label>
-            <input type="text" id="profileStudentNumber" class="profile-field" value="" readonly disabled>
+            <input type="text" id="profileStudentNumber" class="profile-field" value="24-00001" readonly disabled>
           </div>
 
           <div class="profile-field-row">
@@ -146,15 +158,25 @@
           </div>
 
           <div class="profile-field-row">
+            <label for="profileSection">Section</label>
+            <select id="profileSection" class="profile-field profile-select" disabled>
+              <option value="A" selected>A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+              <option value="D">D</option>
+            </select>
+          </div>
+
+          <div class="profile-field-row">
             <label for="profileEmail">Email</label>
-            <input type="email" id="profileEmail" class="profile-field" value="" readonly>
+            <input type="email" id="profileEmail" class="profile-field" value="john.delacruz@example.com" readonly>
           </div>
 
           <div class="profile-field-row">
             <label for="profilePhone">Phone Number</label>
             <div class="profile-phone-group">
               <span class="profile-phone-prefix">+63</span>
-              <input type="tel" id="profilePhone" class="profile-field profile-phone-input" value="" inputmode="numeric" readonly>
+              <input type="tel" id="profilePhone" class="profile-field profile-phone-input" value="912-345-6789" inputmode="numeric" readonly>
             </div>
           </div>
 
@@ -168,7 +190,7 @@
 
   </main>
 
-  <script src="js/notification-bell-status.js"></script>
-  <script src="js/student-profile.js?v=20260903-2345"></script>
+  <script src="js/notification-state.js"></script>
+  <script src="js/student-profile.js"></script>
 </body>
 </html>

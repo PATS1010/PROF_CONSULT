@@ -73,21 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "findprof_faculty_account_verified"
       : "student_account_verified";
 
-  const verificationToken =
-    sessionStorage.getItem(
-      "accountVerificationToken"
-    ) || "";
-
-  const verificationRole =
-    sessionStorage.getItem(
-      "accountVerificationRole"
-    ) || "";
-
-  const accountVerified =
-    sessionStorage.getItem(
-      "accountVerified"
-    ) === "true";
-
 
 
   // =======================================================
@@ -118,14 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById(
       "proceedButton"
     );
-
-  if (!verificationToken || verificationRole !== origin || !accountVerified) {
-
-    window.location.href =
-      `verify-account.html?from=${origin}`;
-
-    return;
-  }
 
 
 

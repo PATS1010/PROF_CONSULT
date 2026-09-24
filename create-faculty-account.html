@@ -51,17 +51,49 @@
         >
       </div>
 
-      <div class="form-field">
-        <label for="fullName">Full Name</label>
-        <input
-          type="text"
-          id="fullName"
-          name="fullName"
-          class="form-input"
-          placeholder="Surname, First Name, M.I"
-          autocomplete="name"
-          required
-        >
+      <!-- =========================================================
+           Name fields: First Name / Middle Initial / Last Name on
+           one row. Each is its own independent input (the old
+           single Full Name field is replaced).
+      ========================================================= -->
+      <div class="form-row form-row-name">
+
+        <div class="form-field">
+          <label for="firstName">First Name</label>
+          <input
+            type="text"
+            id="firstName"
+            name="firstName"
+            class="form-input"
+            autocomplete="given-name"
+            required
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="middleInitial">Middle Initial</label>
+          <input
+            type="text"
+            id="middleInitial"
+            name="middleInitial"
+            class="form-input"
+            autocomplete="additional-name"
+            maxlength="1"
+          >
+        </div>
+
+        <div class="form-field">
+          <label for="lastName">Last Name</label>
+          <input
+            type="text"
+            id="lastName"
+            name="lastName"
+            class="form-input"
+            autocomplete="family-name"
+            required
+          >
+        </div>
+
       </div>
 
       <div class="form-field">

@@ -1,0 +1,413 @@
+/* =========================================================
+   RESCHEDULE CONSULTATION -- PAGE-SPECIFIC STYLES
+   Only the main content area (inside .faculty-main-content) is
+   defined here. Navbar/sidebar/quick action/background styling
+   lives in faculty-shared.css and is not duplicated here.
+
+   Heading gradient follows the same page-local, self-contained
+   approach as faculty-consultation-requests.css's .requests-title
+   (no dependency on .format-text or shared CSS variables for the
+   gradient itself; other values like --color-red-primary,
+   --shadow-card etc. are still assumed to come from
+   faculty-shared.css, same as faculty-consultation-requests.css).
+
+   Info-row / custom dropdown / date-availability / button styles
+   below are carried over from request-consultation.css so
+   Preferred Date/Time behave identically to Request Consultation,
+   per spec ("Date/time must work the same way as Request
+   Consultation, including existing availability/validation rules
+   and custom dropdowns").
+========================================================= */
+
+/* =========================================================
+   PAGE HEADING
+========================================================= */
+.reschedule-page-heading {
+  margin-bottom: 24px;
+}
+
+.reschedule-title {
+  display: inline-block;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  font-size: clamp(2rem, 4.5vw, 2.9rem);
+  line-height: 1.1;
+
+  background: linear-gradient(
+    90deg,
+    #000000 0%,
+    #000000 42%,
+    #e8560f 78%,
+    #e8560f 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+.reschedule-subtitle {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  max-width: 780px;
+}
+
+/* =========================================================
+   RESCHEDULE CARD
+   Same white-panel-with-red-accent-bar treatment as
+   .requests-card. overflow is intentionally NOT hidden --
+   clipping this container would cut off the Preferred Time
+   dropdown, the same issue already fixed on Request
+   Consultation. The accent bar carries its own corner radius
+   instead of relying on the container to clip it.
+========================================================= */
+.reschedule-card {
+  position: relative;
+  max-width: 1100px;
+  padding: 28px 28px 28px 44px;
+  margin-top: 8px;
+}
+
+.reschedule-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 14px;
+  background-color: var(--color-red-primary);
+  border-top-left-radius: 28px;
+  border-bottom-left-radius: 28px;
+}
+
+.reschedule-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+}
+
+.reschedule-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* =========================================================
+   INFO ROWS -- identical pattern to Request Consultation
+========================================================= */
+.info-row {
+  display: flex;
+  align-items: stretch;
+  border-radius: 999px;
+  overflow: hidden;
+  background-color: #ffffff;
+}
+
+.info-label {
+  display: flex;
+  align-items: center;
+  padding: 13px 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.info-value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 13px 20px;
+  background-color: #e9e9e9;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--color-text-dark);
+}
+
+.info-input {
+  border: none;
+  font-family: inherit;
+  cursor: text;
+}
+
+.info-input:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: -2px;
+}
+
+input[type="date"].info-input {
+  cursor: pointer;
+}
+
+/* Preferred Date rejected an unavailable weekday -- brief red
+   outline, same pattern as Request Consultation */
+.info-input.is-date-invalid {
+  outline: 2px solid var(--color-red-primary);
+  outline-offset: -2px;
+}
+
+.date-availability-hint {
+  margin-top: -6px;
+  padding-left: 6px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.date-availability-hint.is-error {
+  color: var(--color-red-primary);
+}
+
+.info-row-label-only {
+  background-color: #ffffff;
+}
+
+.info-row-label-only .info-label {
+  width: 100%;
+}
+
+/* =========================================================
+   ADDITIONAL MESSAGE -- read-only display (not an editable
+   textarea; only Preferred Date/Time are editable per spec)
+========================================================= */
+.message-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.message-display {
+  flex: 1;
+  min-height: 110px;
+  width: 100%;
+  border-radius: 20px;
+  background-color: #ffffff;
+  padding: 16px 20px;
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--color-text-dark);
+  line-height: 1.6;
+}
+
+/* =========================================================
+   CUSTOM DROPDOWN (Preferred Time) -- identical pattern to
+   Request Consultation, own HTML/CSS so it can never overflow
+========================================================= */
+.info-row-select .custom-select {
+  position: relative;
+  flex: 1;
+  overflow: visible;
+}
+
+.info-row-select {
+  overflow: visible;
+}
+
+.custom-select-trigger {
+  width: 100%;
+  height: 100%;
+  padding: 13px 40px 13px 20px;
+  border: none;
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+  background-color: #e9e9e9;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+}
+
+.custom-select-trigger:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: -2px;
+}
+
+.custom-select-value[data-is-placeholder="true"] {
+  color: #8a8a8a;
+}
+
+.custom-select-trigger::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid var(--color-text-dark);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.custom-select.is-open .custom-select-trigger::after {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.custom-select-options {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 240px;
+  overflow-y: auto;
+  list-style: none;
+  background-color: #ffffff;
+  border: 1px solid rgba(242, 96, 28, 0.35);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  z-index: 30;
+}
+
+.custom-select-options[hidden] {
+  display: none;
+}
+
+.custom-select-options li {
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+  cursor: pointer;
+}
+
+.custom-select-options li:first-child {
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+}
+
+.custom-select-options li:last-child {
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+}
+
+.custom-select-options li:hover,
+.custom-select-options li.is-active {
+  background-color: rgba(242, 96, 28, 0.15);
+}
+
+.custom-select-options li.is-unavailable {
+  color: #b9b9b9;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* =========================================================
+   BUTTONS -- red -> orange gradient for both. Submit must NOT
+   be green (spec explicitly calls this out).
+========================================================= */
+.reschedule-buttons {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.btn {
+  display: inline-block;
+  padding: 13px 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  color: var(--color-text-light);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-align: center;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
+  opacity: 0.95;
+}
+
+.btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+  transform: none;
+}
+
+.btn-cancel {
+  background: linear-gradient(90deg, var(--color-gradient-end) 0%, var(--color-gradient-start) 100%);
+}
+
+/* Submit button turns green after a successful submission --
+   pre-submission state above (still red -> orange via .btn) is
+   unchanged; this is the only new rule in this file. */
+.btn-submit.is-submitted {
+  background: var(--color-checkin, #2fae4e);
+}
+
+.reschedule-countdown {
+  margin-top: 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+@media (max-width: 1024px) {
+  .reschedule-columns {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .reschedule-card {
+    padding: 30px 24px 30px 38px;
+  }
+
+  .info-label {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+  }
+
+  .info-value,
+  .custom-select-trigger {
+    padding: 12px 16px;
+    font-size: 0.8rem;
+  }
+
+  .reschedule-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .reschedule-title {
+    font-size: 1.7rem;
+  }
+
+  .reschedule-card {
+    padding: 24px 16px 24px 30px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    border-radius: 16px;
+  }
+
+  .info-label {
+    width: 100%;
+  }
+
+  .info-value,
+  .custom-select-trigger {
+    width: 100%;
+  }
+}

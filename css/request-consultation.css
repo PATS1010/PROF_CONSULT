@@ -1,4 +1,3 @@
-/* SYSTEM NOTE: Styles the request consultation page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    CSS VARIABLES
 ========================================================= */
@@ -419,11 +418,16 @@ input {
   border-radius: 28px;
   box-shadow: var(--shadow-card);
   padding: 36px 40px 36px 54px;
-  overflow: hidden;
+  /* overflow intentionally NOT hidden here -- clipping this container
+     was cutting off the Preferred Time dropdown. The rounded left
+     accent bar below now carries its own corner radius instead of
+     relying on this container to clip it. */
 }
 
 /* Thick red accent bar along the left edge, matching the
-   Faculty Availability / Recent Notifications panels */
+   Faculty Availability / Recent Notifications panels. Carries its
+   own matching corner radius (instead of depending on .request-card's
+   overflow:hidden) so removing that clip doesn't square off the bar. */
 .request-card::before {
   content: "";
   position: absolute;
@@ -432,6 +436,8 @@ input {
   bottom: 0;
   width: 14px;
   background-color: var(--color-red-primary);
+  border-top-left-radius: 28px;
+  border-bottom-left-radius: 28px;
 }
 
 .request-columns {
@@ -499,6 +505,26 @@ input {
 
 input[type="date"].info-input {
   cursor: pointer;
+}
+
+/* Preferred Date rejected an unavailable weekday -- brief red
+   outline to flag it, matching the existing focus-outline pattern */
+.info-input.is-date-invalid {
+  outline: 2px solid var(--color-red-primary);
+  outline-offset: -2px;
+}
+
+/* Small muted note under Preferred Date showing which days are
+   available; turns red briefly when an unavailable day is rejected */
+.date-availability-hint {
+  margin-top: -6px;
+  padding-left: 6px;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.date-availability-hint.is-error {
+  color: var(--color-red-primary);
 }
 
 /* Label-only row (Additional Message heading) */
@@ -645,6 +671,15 @@ input[type="date"].info-input {
   background-color: rgba(242, 96, 28, 0.15);
 }
 
+/* Time slots outside the faculty's test availability -- visible,
+   grayed out, and not selectable (pointer-events:none blocks both
+   click and hover so they can never become the active/selected slot) */
+.custom-select-options li.is-unavailable {
+  color: #b9b9b9;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 /* =========================================================
    BUTTONS
 ========================================================= */
@@ -704,6 +739,11 @@ input[type="date"].info-input {
     border-radius: 24px;
   }
 
+  .request-card::before {
+    border-top-left-radius: 24px;
+    border-bottom-left-radius: 24px;
+  }
+
   .info-label {
     padding: 12px 16px;
     font-size: 0.8rem;
@@ -752,6 +792,11 @@ input[type="date"].info-input {
   .request-card {
     padding: 24px 16px 24px 30px;
     border-radius: 20px;
+  }
+
+  .request-card::before {
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
   }
 
   .info-row {

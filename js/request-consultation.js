@@ -1,16 +1,21 @@
-// SYSTEM NOTE: Controls client-side behavior for the request consultation page, including UI events and API calls.
 // =========================================================
 // REQUEST CONSULTATION PAGE INTERACTIONS
 // - Burger menu + Quick Action + Notification bell: same
-//   behavior as the Dashboard / Faculty Directory
+//   behavior as the Dashboard / Faculty Directory. Bell also
+//   renders the shared unread-indicator badge (see
+//   notification-state.js / window.ProfConsultNotifications)
 // - Faculty Member auto-fills from the professor the student
 //   selected in the Faculty Directory (handed off via
 //   sessionStorage from faculty-directory.js) -- never
 //   hardcoded to a specific professor
-// - Student Name/ID/Program & Year auto-fill from the current
-//   logged-in student session
-// - Preferred Time: custom dropdown populated with 30-minute
-//   slots from 7:00 AM through 7:00 PM
+// - Student Name/ID/Program & Year auto-fill from sample
+//   student data (structured so it's easy to swap for the
+//   real logged-in student once the backend exists)
+// - Preferred Time: custom dropdown populated with every
+//   30-minute slot from 8:00 AM to 8:00 PM
+// - Faculty availability (FRONTEND TEST DATA ONLY): dates and
+//   times outside the test faculty's availability stay visible
+//   but grayed out and unselectable; see FACULTY_AVAILABILITY_TEST
 // - Submit Request -> request-submitted.html
 // =========================================================
 
@@ -28,9 +33,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
-  const params = new URLSearchParams(window.location.search);
-  const facultyIdFromParams = params.get("facultyId");
-
   function getSelectedFaculty() {
     try {
       const stored = sessionStorage.getItem(SELECTED_FACULTY_STORAGE_KEY);
@@ -41,81 +43,60 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const selectedFaculty = getSelectedFaculty();
-  const facultyId = (selectedFaculty && selectedFaculty.id) || facultyIdFromParams || "";
   const SELECTED_FACULTY_MEMBER = (selectedFaculty && selectedFaculty.fullName)
     ? selectedFaculty.fullName
-    : (params.get("faculty") || "Selected Faculty Member");
+    : "Selected Faculty Member";
 
+  // ---------------------------------------------------------
+  // Sample student data -- replace with the logged-in
+  // student's real record once the backend exists.
+  //
+  // course / yearLevel / section deliberately use the same
+  // field names and values as Student Profile's own sample
+  // data (see student-profile.js: SAMPLE_STUDENT.course,
+  // .yearLevel, .section) so that once Student Profile shares
+  // its data somewhere accessible (e.g. the same sessionStorage
+  // hand-off pattern used for Selected Faculty above, or a real
+  // backend), this object can be replaced with that shared data
+  // without changing how Program & Year is built below.
+  // Student Profile itself has not been modified to expose this
+  // data yet -- that wasn't requested.
+  // ---------------------------------------------------------
   const COURSE_LABELS = {
     "computer-engineering": "BSCPE (Computer Engineering)",
   };
 
-  const YEAR_LABELS = {
-    "1": "1st Year",
-    "2": "2nd Year",
-    "3": "3rd Year",
-    "4": "4th Year",
-    "5": "5th Year",
+  const SAMPLE_STUDENT = {
+    name: "John Dela Cruz",
+    studentId: "24-00001",
+    course: "computer-engineering",
+    yearLevel: "3",
+    section: "A",
   };
+
+  // Builds "<Program Label> - <Year><Section>", e.g.
+  // "BSCPE (Computer Engineering) - 3A". Never hardcode the
+  // combined string -- always derive it from the year/section values.
+  function buildProgramYearDisplay(courseValue, yearLevel, section) {
+    const programLabel = COURSE_LABELS[courseValue] || courseValue;
+    return `${programLabel} - ${yearLevel}${section}`;
+  }
 
   const facultyMemberInput = document.getElementById("facultyMember");
   const studentNameInput = document.getElementById("studentName");
   const studentIdInput = document.getElementById("studentId");
   const programYearInput = document.getElementById("programYear");
-  const preferredDateInput = document.getElementById("preferredDate");
 
   if (facultyMemberInput) facultyMemberInput.textContent = SELECTED_FACULTY_MEMBER;
-
-  function todayValue() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  if (studentNameInput) studentNameInput.textContent = SAMPLE_STUDENT.name;
+  if (studentIdInput) studentIdInput.textContent = SAMPLE_STUDENT.studentId;
+  if (programYearInput) {
+    programYearInput.textContent = buildProgramYearDisplay(
+      SAMPLE_STUDENT.course,
+      SAMPLE_STUDENT.yearLevel,
+      SAMPLE_STUDENT.section
+    );
   }
-
-  if (preferredDateInput) {
-    preferredDateInput.min = todayValue();
-  }
-
-  function displayCourse(value) {
-    return COURSE_LABELS[value] || value || "";
-  }
-
-  function displayYear(value) {
-    const normalized = String(value || "");
-    return YEAR_LABELS[normalized] || normalized;
-  }
-
-  async function loadCurrentStudent() {
-    try {
-      const response = await fetch("api/session.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.ok || !data.user || data.user.role !== "student") {
-        throw new Error("Student session unavailable");
-      }
-
-      const user = data.user || {};
-      const profile = data.profile || {};
-      const program = displayCourse(profile.Program || profile.program || "");
-      const year = displayYear(profile.Year_Level || profile.year_level || "");
-
-      if (studentNameInput) studentNameInput.textContent = user.name || "";
-      if (studentIdInput) studentIdInput.textContent = user.username || "";
-      if (programYearInput) {
-        programYearInput.textContent = [program, year].filter(Boolean).join(" - ");
-      }
-    } catch (error) {
-      window.location.href = "student-login.html";
-    }
-  }
-
-  loadCurrentStudent();
 
   // ---------------------------------------------------------
   // Burger sidebar (same behavior as the Student Dashboard)
@@ -189,19 +170,28 @@ document.addEventListener("DOMContentLoaded", () => {
   
 
   // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html
+  // Notification bell -- navigates to notifications.html, and
+  // renders the shared unread-indicator badge (read-only here;
+  // only notifications.js clears the state).
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
   // ---------------------------------------------------------
-  // Preferred Time: build every 30-minute slot from 7:00 AM
-  // through 7:00 PM, then populate the dropdown.
+  // Preferred Time: build every 30-minute slot from 8:00 AM to
+  // 8:00 PM (8:00 AM - 8:30 AM, 8:30 AM - 9:00 AM, ... through
+  // 7:30 PM - 8:00 PM), then populate the dropdown.
   // ---------------------------------------------------------
+  const TIME_RANGE_START_MINUTES = 8 * 60;   // 8:00 AM
+  const TIME_RANGE_END_MINUTES = 20 * 60;    // 8:00 PM
+
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
     const minute = totalMinutes % 60;
@@ -212,56 +202,114 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${hour12}:${minuteStr} ${period}`;
   }
 
-  function buildTimeSlots() {
-    const slots = [];
-    const firstSlotStart = 7 * 60;
-    const lastSlotStart = (19 * 60) - 30;
+  function buildTimeLabel(startMinutes, endMinutes) {
+    return `${formatHourMinute(startMinutes)} \u2013 ${formatHourMinute(endMinutes)}`;
+  }
 
-    for (let start = firstSlotStart; start <= lastSlotStart; start += 30) {
-      const end = start + 30;
-      const label = `${formatHourMinute(start)} \u2013 ${formatHourMinute(end)}`;
-      slots.push(label);
+  function buildTimeSlots(rangeStartMinutes, rangeEndMinutes) {
+    const slots = [];
+    for (let start = rangeStartMinutes; start < rangeEndMinutes; start += 30) {
+      slots.push(buildTimeLabel(start, start + 30));
     }
     return slots;
   }
 
-  function selectedTimeStartMinutes(value) {
-    const startLabel = String(value || "").split("\u2013")[0].trim();
-    const match = startLabel.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!match) return null;
+  // ---------------------------------------------------------
+  // FRONTEND TEST/DEMO faculty availability data ONLY.
+  // There is no backend yet -- this stands in for the real
+  // per-faculty availability schedule and is deliberately kept
+  // in one small, swappable object so it can later be replaced
+  // with real data (e.g. fetched per selected faculty) without
+  // touching the dropdown-building or date-validation logic
+  // below, which just read from this object.
+  //
+  // Test faculty is available:
+  //   Days: Monday, Wednesday, Friday
+  //   Time: 1:00 PM - 2:30 PM (three 30-minute slots)
+  // ---------------------------------------------------------
+  const TEST_AVAILABLE_TIME_LABELS = [
+    buildTimeLabel(13 * 60, 13 * 60 + 30),       // 1:00 PM - 1:30 PM
+    buildTimeLabel(13 * 60 + 30, 14 * 60),       // 1:30 PM - 2:00 PM
+    buildTimeLabel(14 * 60, 14 * 60 + 30),       // 2:00 PM - 2:30 PM
+  ];
 
-    let hour = Number(match[1]);
-    const minute = Number(match[2]);
-    const period = match[3].toUpperCase();
+  // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday,
+  // 4 = Thursday, 5 = Friday, 6 = Saturday
+  const FACULTY_AVAILABILITY_TEST = {
+    availableDaysOfWeek: [1, 3, 5], // Monday, Wednesday, Friday
+    availableTimeSlotsByDay: {
+      1: TEST_AVAILABLE_TIME_LABELS,
+      3: TEST_AVAILABLE_TIME_LABELS,
+      5: TEST_AVAILABLE_TIME_LABELS,
+    },
+  };
 
-    if (period === "PM" && hour < 12) hour += 12;
-    if (period === "AM" && hour === 12) hour = 0;
+  // Used to preview time-slot availability before a date is
+  // chosen. All currently-available days share the same test
+  // time slots, so Monday's set doubles as the default preview.
+  const DEFAULT_PREVIEW_DAY_OF_WEEK = 1;
 
-    return hour * 60 + minute;
+  function isDateAvailable(dayOfWeek) {
+    return FACULTY_AVAILABILITY_TEST.availableDaysOfWeek.includes(dayOfWeek);
   }
 
-  function isPastSchedule(dateValue, timeValue) {
-    if (!dateValue || !timeValue) return false;
-
-    const startMinutes = selectedTimeStartMinutes(timeValue);
-    if (startMinutes === null) return false;
-
-    const scheduledEnd = new Date(`${dateValue}T00:00:00`);
-    scheduledEnd.setMinutes(startMinutes + 30);
-
-    return scheduledEnd <= new Date();
+  function getAvailableSlotsForDayOfWeek(dayOfWeek) {
+    return FACULTY_AVAILABILITY_TEST.availableTimeSlotsByDay[dayOfWeek] || [];
   }
 
   const preferredTimeOptions = document.getElementById("preferredTimeOptions");
   if (preferredTimeOptions) {
-    buildTimeSlots().forEach((label) => {
+    buildTimeSlots(TIME_RANGE_START_MINUTES, TIME_RANGE_END_MINUTES).forEach((label) => {
       const li = document.createElement("li");
       li.setAttribute("role", "option");
       li.setAttribute("data-value", label);
+      li.setAttribute("aria-disabled", "false");
       li.textContent = label;
       preferredTimeOptions.appendChild(li);
     });
   }
+
+  // Clears the current time selection back to the placeholder --
+  // used whenever the previously-picked slot is no longer valid
+  // for the newly selected date.
+  function clearSelectedTime() {
+    const timeSelectEl = document.getElementById("preferredTimeSelect");
+    if (!timeSelectEl) return;
+    const valueLabelEl = timeSelectEl.querySelector(".custom-select-value");
+    const hiddenInputEl = timeSelectEl.querySelector('input[type="hidden"]');
+    if (valueLabelEl) {
+      valueLabelEl.textContent = "Select Time";
+      valueLabelEl.setAttribute("data-is-placeholder", "true");
+    }
+    if (hiddenInputEl) hiddenInputEl.value = "";
+    timeSelectEl.querySelectorAll("li.is-active").forEach((li) => li.classList.remove("is-active"));
+  }
+
+  // Marks every rendered time option as available/unavailable
+  // based on the given list of available labels. Unavailable
+  // options stay in the list (per spec) but get the
+  // .is-unavailable class, which grays them out and blocks
+  // clicks via CSS pointer-events:none.
+  function updateTimeSlotAvailability(availableSlots) {
+    if (!preferredTimeOptions) return;
+    const availableSet = new Set(availableSlots);
+    const options = preferredTimeOptions.querySelectorAll("li[role='option']");
+
+    options.forEach((li) => {
+      const label = li.getAttribute("data-value");
+      const isAvailable = availableSet.has(label);
+      li.classList.toggle("is-unavailable", !isAvailable);
+      li.setAttribute("aria-disabled", isAvailable ? "false" : "true");
+    });
+
+    const hiddenInput = document.getElementById("preferredTime");
+    if (hiddenInput && hiddenInput.value && !availableSet.has(hiddenInput.value)) {
+      clearSelectedTime();
+    }
+  }
+
+  // Initial preview (before any date is picked)
+  updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
 
   // ---------------------------------------------------------
   // Custom dropdown behavior (Preferred Time) -- same pattern
@@ -294,6 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
     optionsList.addEventListener("click", (event) => {
       const option = event.target.closest("li[role='option']");
       if (!option) return;
+      if (option.classList.contains("is-unavailable")) return; // grayed-out slots are not selectable
 
       optionsList.querySelectorAll("li").forEach((li) => li.classList.remove("is-active"));
       option.classList.add("is-active");
@@ -315,79 +364,80 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
+  // Preferred Date availability (FRONTEND TEST DATA ONLY).
+  // Native <input type="date"> can't gray out individual
+  // weekdays inside its own calendar UI (that's browser/OS
+  // rendered), so this validates on change instead: picking an
+  // unavailable day immediately clears the field and flags it,
+  // so an unavailable date can never remain selected. Picking a
+  // valid day also refreshes which time slots are available,
+  // since date and time availability work together.
+  // ---------------------------------------------------------
+  const preferredDateInput = document.getElementById("preferredDate");
+  const preferredDateHint = document.getElementById("preferredDateHint");
+
+  function setDateErrorState(isError) {
+    if (preferredDateInput) preferredDateInput.classList.toggle("is-date-invalid", isError);
+    if (preferredDateHint) preferredDateHint.classList.toggle("is-error", isError);
+  }
+
+  if (preferredDateInput) {
+    preferredDateInput.addEventListener("change", () => {
+      const dateValue = preferredDateInput.value;
+
+      if (!dateValue) {
+        setDateErrorState(false);
+        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        return;
+      }
+
+      const dayOfWeek = new Date(`${dateValue}T00:00:00`).getDay();
+
+      if (!isDateAvailable(dayOfWeek)) {
+        preferredDateInput.value = "";
+        setDateErrorState(true);
+        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        clearSelectedTime();
+        window.setTimeout(() => setDateErrorState(false), 1200);
+        return;
+      }
+
+      setDateErrorState(false);
+      updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(dayOfWeek));
+    });
+  }
+
+  // ---------------------------------------------------------
   // Submit Request -> request-submitted.html
   // No backend yet, so this just collects and forwards the
   // entered data structure; wire up the real API call here later.
   // ---------------------------------------------------------
   const form = document.getElementById("requestConsultationForm");
   if (form) {
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener("submit", (event) => {
       event.preventDefault();
 
-      if (!facultyId) {
-        alert("Please select a faculty member from the directory.");
-        return;
-      }
-
-      const purpose = document.getElementById("consultationPurpose").value.trim();
-      const message = document.getElementById("additionalMessage").value.trim();
-      const preferredDate = document.getElementById("preferredDate").value;
-      const preferredTime = document.getElementById("preferredTime").value;
-
-      if (!purpose || !preferredDate || !preferredTime) {
-        alert("Please complete the purpose, preferred date, and preferred time.");
-        return;
-      }
-
-      if (preferredDate < todayValue()) {
-        alert("Preferred date cannot be in the past.");
-        return;
-      }
-
-      if (isPastSchedule(preferredDate, preferredTime)) {
-        alert("Preferred date and time must be in the future.");
-        return;
-      }
+      const requestId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
       const requestData = {
+        requestId,
         facultyMember: facultyMemberInput.textContent,
         studentName: studentNameInput.textContent,
         studentId: studentIdInput.textContent,
         programYear: programYearInput.textContent,
-        purpose,
-        message,
-        preferredDate,
-        preferredTime,
+        purpose: document.getElementById("consultationPurpose").value,
+        message: document.getElementById("additionalMessage").value,
+        preferredDate: document.getElementById("preferredDate").value,
+        preferredTime: document.getElementById("preferredTime").value,
         status: "Pending Approval",
       };
 
-      if (/^\d+$/.test(String(facultyId))) {
-        try {
-          const response = await fetch("api/submit-consultation.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              faculty_id: facultyId,
-              purpose: requestData.purpose,
-              message: requestData.message,
-              preferred_date: requestData.preferredDate,
-              preferred_time: requestData.preferredTime,
-            }),
-          });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.message || "Unable to submit request.");
-          requestData.requestId = `REQ-${result.id}`;
-        } catch (error) {
-          alert(error.message);
-          return;
-        }
-      } else {
-        requestData.requestId = `REQ-${Date.now()}`;
-      }
-
+      // Future: POST requestData to the backend here instead of
+      // storing it locally -- sessionStorage is a frontend-only
+      // stand-in so request-submitted.html can display it
       sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
 
-      // Also keep the display list in sync for the static My Requests page.
+      // Also add this request to the persistent My Requests list
       // so it automatically shows up on my-requests.html, growing
       // that list every time a request is submitted.
       try {

@@ -1,419 +1,1224 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty shared page, including UI events and API calls.
 // =========================================================
 // FACULTY SHARED LAYOUT INTERACTIONS
-// Reused across every Faculty page. Handles only the shared
-// shell: burger sidebar, Quick Action popup (including Check
-// In/Check Out online status), notification bell navigation,
-// and active-link highlighting.
 //
-// Each Faculty page sets `document.body.dataset.activePage`
-// to one of: "dashboard", "consultation-requests",
-// "availability", "notifications", "profile", "settings"
-// so the correct sidebar link gets the .is-active class
-// automatically, without hardcoding it per page.
+// Used by every Faculty page.
 //
-// Page-specific behavior (e.g. the Dashboard's Change Status
-// dropdown) belongs in that page's own JS file, loaded after
-// this one.
+// Handles:
+// - Burger sidebar
+// - Active sidebar page
+// - Quick Action
+// - Check In / Check Out
+// - Persistent faculty status (SINGLE SOURCE OF TRUTH)
+// - Notification bell
+// - Notification badge
+//
+// IMPORTANT:
+// This version uses localStorage for the TEST ACCOUNT only.
+// No backend is used.
 // =========================================================
 
-// ---------------------------------------------------------
-// Faculty online/offline status (Quick Action Check In/Out)
-// -- Quick Action uses the same availability API as Today's
-// Status, so the dashboard card and student availability list
-// stay in sync after every status change.
+
+// =========================================================
+// TEST ACCOUNT STORAGE
+// =========================================================
+
+const FACULTY_ONLINE_STATUS_STORAGE_KEY =
+  "facultyTestOnlineStatus";
+
+const FACULTY_NOTIFICATION_STORAGE_KEY =
+  "facultyTestNotifications";
+
+
+// =========================================================
+// TEST ACCOUNT FLAG
 //
-// CHECK_IN_TIMEOUT is the single place that controls how long
-// a Check In lasts before automatically reverting to Offline
-// if the faculty forgets to Check Out -- change this one value
-// to adjust the duration everywhere it's used.
-// ---------------------------------------------------------
-const CHECK_IN_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+// This project has no backend/login system yet, so there is
+// no real per-account identification -- every Faculty file's
+// own comments already describe this whole section as a
+// single test account. faculty-notifications.html already
+// refers to a "TEST_FACULTY_ACCOUNT flag" that decides
+// whether the test notification is shown; this is that flag,
+// defined here since faculty-shared.js loads on every page.
+//
+// Once real accounts/login exist, replace this with the
+// actual "is this the designated test account" check (e.g.
+// based on the logged-in user's ID) -- nothing else that
+// reads window.TEST_FACULTY_ACCOUNT needs to change.
+// =========================================================
 
-let facultyOnlineStatus = "offline";
-let checkInTimeoutId = null;
+window.TEST_FACULTY_ACCOUNT = true;
 
-function facultyStatusForApi(status) {
-  const map = {
-    teaching: "in class",
-    onleave: "on leave",
-  };
 
-  return map[status] || status;
-}
+// =========================================================
+// FACULTY STATUS MODEL
+//
+// SINGLE SOURCE OF TRUTH for faculty status.
+//
+// These are the app's existing status values -- the same
+// six values already used by the faculty-dashboard and
+// faculty-availability status panels (data-status), and the
+// same six colors already defined in :root above as
+// --color-status-*. Quick Action, the Dashboard, and
+// Availability all read/write this one model instead of
+// keeping their own separate status state.
+// =========================================================
 
-function facultyStatusForUi(status) {
-  const map = {
-    "in class": "teaching",
-    "on leave": "onleave",
-    unavailable: "offline",
-  };
-
-  return map[String(status || "").toLowerCase()] || String(status || "offline").toLowerCase();
-}
-
-function facultyStatusLabel(status) {
-  const labels = {
-    available: "Available",
-    teaching: "In Class",
-    meeting: "Meeting",
-    consultation: "Consultation",
-    onleave: "On Leave",
-    offline: "Offline",
-  };
-
-  return labels[status] || "Offline";
-}
-
-function facultyCurrentDateValue() {
-  const now = new Date();
-  return [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, "0"),
-    String(now.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function facultyCurrentTimeValue() {
-  const now = new Date();
-  return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-}
-
-function isFacultyClassHoursNow() {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  return minutes >= 7 * 60 && minutes < 19 * 60;
-}
-
-function millisecondsUntilFacultyClassHoursEnd() {
-  const now = new Date();
-  const end = new Date(now);
-  end.setHours(19, 0, 0, 0);
-  return Math.max(0, end.getTime() - now.getTime());
-}
-
-async function saveFacultyAvailabilityStatus(status) {
-  const uiStatus = facultyStatusForUi(status);
-  const response = await fetch("api/availability.php", {
-    method: "POST",
-    credentials: "same-origin",
-    headers: { "Content-Type": "application/json", "Accept": "application/json" },
-    body: JSON.stringify({
-      status: facultyStatusForApi(uiStatus),
-      date: facultyCurrentDateValue(),
-      time: facultyCurrentTimeValue(),
-    }),
-  });
-  const result = await response.json();
-
-  if (!response.ok || !result.ok) {
-    throw new Error(result.message || "Unable to save availability status.");
-  }
-
-  document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
-    detail: {
-      status: uiStatus,
-      label: facultyStatusLabel(uiStatus),
-    },
-  }));
-
-  return result;
-}
-
-window.FacultyAvailability = {
-  statusForApi: facultyStatusForApi,
-  statusForUi: facultyStatusForUi,
-  statusLabel: facultyStatusLabel,
-  currentDateValue: facultyCurrentDateValue,
-  currentTimeValue: facultyCurrentTimeValue,
-  saveStatus: saveFacultyAvailabilityStatus,
+const FACULTY_STATUS_LABELS = {
+  available: "Available",
+  teaching: "In Class",
+  meeting: "Meeting",
+  consultation: "Consultation",
+  onleave: "On Leave",
+  offline: "Offline",
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-  let classHoursLogoutTimeoutId = null;
+const FACULTY_STATUS_COLOR_VARS = {
+  available: "--color-status-available",
+  teaching: "--color-status-teaching",
+  meeting: "--color-status-meeting",
+  consultation: "--color-status-consultation",
+  onleave: "--color-status-onleave",
+  offline: "--color-status-offline",
+};
 
-  async function logoutFacultyOutsideClassHours() {
-    try {
-      await saveFacultyAvailabilityStatus("offline");
-    } catch (error) {
-      // Continue logging out even if the status save fails.
+const FACULTY_STATUS_DEFAULT = "available";
+
+
+function isValidFacultyStatus(value) {
+
+  return Object.prototype.hasOwnProperty.call(
+    FACULTY_STATUS_LABELS,
+    value
+  );
+}
+
+
+// =========================================================
+// CURRENT STATUS
+//
+// Possible values (existing app status model):
+// "available"
+// "teaching"
+// "meeting"
+// "consultation"
+// "onleave"
+// "offline"
+// =========================================================
+
+let facultyOnlineStatus = FACULTY_STATUS_DEFAULT;
+
+let checkInTimeoutId = null;
+
+
+// =========================================================
+// CHECK-IN TIMEOUT
+//
+// The test account automatically goes Offline after 5 minutes
+// if the user forgets to Check Out.
+//
+// This is frontend-only.
+// =========================================================
+
+const CHECK_IN_TIMEOUT =
+  5 * 60 * 1000;
+
+
+// =========================================================
+// LOAD SAVED FACULTY STATUS
+// =========================================================
+
+function loadFacultyOnlineStatus() {
+
+  try {
+
+    const savedStatus =
+      localStorage.getItem(
+        FACULTY_ONLINE_STATUS_STORAGE_KEY
+      );
+
+
+    facultyOnlineStatus =
+      isValidFacultyStatus(savedStatus)
+        ? savedStatus
+        : FACULTY_STATUS_DEFAULT;
+
+  } catch (error) {
+
+    facultyOnlineStatus =
+      FACULTY_STATUS_DEFAULT;
+  }
+}
+
+
+// =========================================================
+// SAVE FACULTY STATUS
+// =========================================================
+
+function saveFacultyOnlineStatus(
+  status
+) {
+
+  try {
+
+    localStorage.setItem(
+      FACULTY_ONLINE_STATUS_STORAGE_KEY,
+      status
+    );
+
+  } catch (error) {
+
+    // Ignore storage errors.
+  }
+}
+
+
+// =========================================================
+// GET NOTIFICATION COUNT
+// =========================================================
+
+function getFacultyNotificationCount() {
+
+  try {
+
+    const savedCount =
+      localStorage.getItem(
+        FACULTY_NOTIFICATION_STORAGE_KEY
+      );
+
+
+    if (savedCount === null) {
+
+      return 0;
     }
 
-    try {
-      await fetch("api/logout.php", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-    } catch (error) {
-      // Redirect still clears the protected page from view.
+
+    const count =
+      Number(savedCount);
+
+
+    if (
+      !Number.isFinite(count) ||
+      count < 0
+    ) {
+
+      return 0;
     }
 
-    window.location.href = "faculty-login.html";
+
+    return Math.floor(count);
+
+  } catch (error) {
+
+    return 0;
+  }
+}
+
+
+// =========================================================
+// SET NOTIFICATION COUNT
+// =========================================================
+
+function setFacultyNotificationCount(
+  count
+) {
+
+  const normalizedCount =
+    Math.max(
+      0,
+      Math.floor(
+        Number(count) || 0
+      )
+    );
+
+
+  try {
+
+    localStorage.setItem(
+      FACULTY_NOTIFICATION_STORAGE_KEY,
+      String(normalizedCount)
+    );
+
+  } catch (error) {
+
+    // Ignore storage errors.
   }
 
-  function scheduleFacultyClassHoursLogout() {
-    if (classHoursLogoutTimeoutId) {
-      window.clearTimeout(classHoursLogoutTimeoutId);
-    }
 
-    if (!isFacultyClassHoursNow()) {
-      saveFacultyAvailabilityStatus("offline").catch(() => {});
-      return;
-    }
+  updateFacultyNotificationBadge();
+}
 
-    classHoursLogoutTimeoutId = window.setTimeout(() => {
-      logoutFacultyOutsideClassHours();
-    }, millisecondsUntilFacultyClassHoursEnd());
+
+// =========================================================
+// UPDATE NOTIFICATION BADGE
+//
+// The red dot appears whenever the notification count
+// is greater than zero.
+//
+// The CSS class used is:
+//
+// .has-notifications
+// =========================================================
+
+function updateFacultyNotificationBadge() {
+
+  const notificationBellButton =
+    document.getElementById(
+      "facultyNotificationBellButton"
+    );
+
+
+  if (!notificationBellButton) {
+
+    return;
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // page behind it. Closes via the X button or clicking the
-  // overlay outside the sidebar.
-  // ---------------------------------------------------------
-  const hamburgerButton = document.getElementById("facultyHamburgerButton");
-  const sidebar = document.getElementById("facultySidebar");
-  const sidebarOverlay = document.getElementById("facultySidebarOverlay");
-  const sidebarClose = document.getElementById("facultySidebarClose");
 
-  function openSidebar() {
-    sidebar.classList.add("is-open");
-    sidebarOverlay.hidden = false;
-    requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
-  }
+  const notificationCount =
+    getFacultyNotificationCount();
 
-  function closeSidebar() {
-    sidebar.classList.remove("is-open");
-    sidebarOverlay.classList.remove("is-open");
-    window.setTimeout(() => {
-      sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
-  }
 
-  if (hamburgerButton) {
-    hamburgerButton.addEventListener("click", openSidebar);
-  }
-  if (sidebarClose) {
-    sidebarClose.addEventListener("click", closeSidebar);
-  }
-  if (sidebarOverlay) {
-    sidebarOverlay.addEventListener("click", closeSidebar);
-  }
+  if (notificationCount > 0) {
 
-  // ---------------------------------------------------------
-  // Active sidebar link -- set automatically from
-  // document.body.dataset.activePage, so nothing needs to be
-  // hardcoded by hand on each page's copy of the sidebar.
-  // ---------------------------------------------------------
-  const activePage = document.body.dataset.activePage;
-  if (activePage) {
-    const activeLink = sidebar
-      ? sidebar.querySelector(`.faculty-sidebar-link[data-page="${activePage}"]`)
-      : null;
-    if (activeLink) {
-      activeLink.classList.add("is-active");
-    }
+    notificationBellButton.classList.add(
+      "has-notifications"
+    );
+
+
+    notificationBellButton.setAttribute(
+      "aria-label",
+      `Notifications (${notificationCount} unread)`
+    );
+
+  } else {
+
+    notificationBellButton.classList.remove(
+      "has-notifications"
+    );
+
+
+    notificationBellButton.setAttribute(
+      "aria-label",
+      "Notifications"
+    );
   }
+}
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // ---------------------------------------------------------
-  const quickActionButton = document.getElementById("facultyQuickActionButton");
-  const quickActionPanel = document.getElementById("facultyQuickActionPanel");
 
-  function openQuickAction() {
-    quickActionPanel.hidden = false;
-    requestAnimationFrame(() => quickActionPanel.classList.add("is-open"));
-    quickActionButton.setAttribute("aria-expanded", "true");
-  }
+// =========================================================
+// PUBLIC NOTIFICATION FUNCTIONS
+//
+// Other Faculty scripts can use:
+//
+// window.setFacultyNotificationCount(1);
+//
+// or:
+//
+// window.setFacultyNotificationCount(0);
+//
+// =========================================================
 
-  function closeQuickAction() {
-    quickActionPanel.classList.remove("is-open");
-    quickActionButton.setAttribute("aria-expanded", "false");
-    window.setTimeout(() => {
-      quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
-  }
+window.setFacultyNotificationCount =
+  setFacultyNotificationCount;
 
-  if (quickActionButton) {
-    quickActionButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const isOpen = quickActionPanel.classList.contains("is-open");
-      if (isOpen) {
-        closeQuickAction();
-      } else {
-        openQuickAction();
+window.getFacultyNotificationCount =
+  getFacultyNotificationCount;
+
+
+// =========================================================
+// INITIALIZE
+// =========================================================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+
+    // =======================================================
+    // LOAD PERSISTENT STATUS
+    // =======================================================
+
+    loadFacultyOnlineStatus();
+
+
+    // =======================================================
+    // BURGER SIDEBAR
+    // =======================================================
+
+    const hamburgerButton =
+      document.getElementById(
+        "facultyHamburgerButton"
+      );
+
+
+    const sidebar =
+      document.getElementById(
+        "facultySidebar"
+      );
+
+
+    const sidebarOverlay =
+      document.getElementById(
+        "facultySidebarOverlay"
+      );
+
+
+    const sidebarClose =
+      document.getElementById(
+        "facultySidebarClose"
+      );
+
+
+    function openSidebar() {
+
+      if (
+        !sidebar ||
+        !sidebarOverlay
+      ) {
+
+        return;
       }
-    });
-  }
 
-  document.addEventListener("click", (event) => {
+
+      sidebar.classList.add(
+        "is-open"
+      );
+
+
+      sidebarOverlay.hidden =
+        false;
+
+
+      requestAnimationFrame(
+        () => {
+
+          sidebarOverlay.classList.add(
+            "is-open"
+          );
+
+        }
+      );
+    }
+
+
+    function closeSidebar() {
+
+      if (
+        !sidebar ||
+        !sidebarOverlay
+      ) {
+
+        return;
+      }
+
+
+      sidebar.classList.remove(
+        "is-open"
+      );
+
+
+      sidebarOverlay.classList.remove(
+        "is-open"
+      );
+
+
+      window.setTimeout(
+        () => {
+
+          sidebarOverlay.hidden =
+            true;
+
+        },
+        250
+      );
+    }
+
+
+    if (hamburgerButton) {
+
+      hamburgerButton.addEventListener(
+        "click",
+        openSidebar
+      );
+    }
+
+
+    if (sidebarClose) {
+
+      sidebarClose.addEventListener(
+        "click",
+        closeSidebar
+      );
+    }
+
+
+    if (sidebarOverlay) {
+
+      sidebarOverlay.addEventListener(
+        "click",
+        closeSidebar
+      );
+    }
+
+
+    // =======================================================
+    // ACTIVE SIDEBAR PAGE
+    // =======================================================
+
+    const activePage =
+      document.body.dataset.activePage;
+
+
+    if (
+      activePage &&
+      sidebar
+    ) {
+
+      const activeLink =
+        sidebar.querySelector(
+          `.faculty-sidebar-link[data-page="${activePage}"]`
+        );
+
+
+      if (activeLink) {
+
+        activeLink.classList.add(
+          "is-active"
+        );
+      }
+    }
+
+
+    // =======================================================
+    // QUICK ACTION
+    // =======================================================
+
+    const quickActionButton =
+      document.getElementById(
+        "facultyQuickActionButton"
+      );
+
+
+    const quickActionPanel =
+      document.getElementById(
+        "facultyQuickActionPanel"
+      );
+
+
+    function openQuickAction() {
+
+      if (
+        !quickActionButton ||
+        !quickActionPanel
+      ) {
+
+        return;
+      }
+
+
+      quickActionPanel.hidden =
+        false;
+
+
+      requestAnimationFrame(
+        () => {
+
+          quickActionPanel.classList.add(
+            "is-open"
+          );
+
+        }
+      );
+
+
+      quickActionButton.setAttribute(
+        "aria-expanded",
+        "true"
+      );
+    }
+
+
+    function closeQuickAction() {
+
+      if (
+        !quickActionButton ||
+        !quickActionPanel
+      ) {
+
+        return;
+      }
+
+
+      quickActionPanel.classList.remove(
+        "is-open"
+      );
+
+
+      quickActionButton.setAttribute(
+        "aria-expanded",
+        "false"
+      );
+
+
+      window.setTimeout(
+        () => {
+
+          quickActionPanel.hidden =
+            true;
+
+        },
+        200
+      );
+    }
+
+
+    if (quickActionButton) {
+
+      quickActionButton.addEventListener(
+        "click",
+        (event) => {
+
+          event.stopPropagation();
+
+
+          const isOpen =
+            quickActionPanel &&
+            quickActionPanel.classList.contains(
+              "is-open"
+            );
+
+
+          if (isOpen) {
+
+            closeQuickAction();
+
+          } else {
+
+            openQuickAction();
+          }
+        }
+      );
+    }
+
+
+    document.addEventListener(
+      "click",
+      (event) => {
+
+        if (
+          quickActionPanel &&
+          !quickActionPanel.hidden &&
+          !quickActionPanel.contains(
+            event.target
+          ) &&
+          event.target !==
+            quickActionButton &&
+          !quickActionButton.contains(
+            event.target
+          )
+        ) {
+
+          closeQuickAction();
+        }
+      }
+    );
+
+
+    // =======================================================
+    // QUICK ACTION STATUS UI
+    // =======================================================
+
+    const checkInButton =
+      document.getElementById(
+        "facultyCheckInButton"
+      );
+
+
+    const checkOutButton =
+      document.getElementById(
+        "facultyCheckOutButton"
+      );
+
+
+    const quickActionHeader =
+      quickActionPanel
+        ? quickActionPanel.querySelector(
+            ".faculty-quick-action-header"
+          )
+        : null;
+
+
+    let quickActionStatusDot =
+      null;
+
+
+    let quickActionStatusLabel =
+      null;
+
+
+    // =======================================================
+    // CREATE STATUS LINE
+    // =======================================================
+
     if (
       quickActionPanel &&
-      !quickActionPanel.hidden &&
-      !quickActionPanel.contains(event.target) &&
-      event.target !== quickActionButton &&
-      !quickActionButton.contains(event.target)
+      quickActionHeader &&
+      !quickActionPanel.querySelector(
+        ".faculty-quick-action-status"
+      )
     ) {
-      closeQuickAction();
-    }
-  });
 
-  // ---------------------------------------------------------
-  // Check In / Check Out -- toggles facultyOnlineStatus between
-  // "offline" and "available". The popup's status line is not
-  // part of the existing static markup, so it's created here at
-  // runtime (inline-styled, so it renders consistently even on
-  // pages whose own CSS doesn't define status-dot colors) and
-  // inserted right after the popup header, before the buttons.
-  // Only one of Check In / Check Out is visible at a time.
-  // ---------------------------------------------------------
-  const checkInButton = document.getElementById("facultyCheckInButton");
-  const checkOutButton = document.getElementById("facultyCheckOutButton");
-  const quickActionHeader = quickActionPanel
-    ? quickActionPanel.querySelector(".faculty-quick-action-header")
-    : null;
+      const statusRow =
+        document.createElement(
+          "p"
+        );
 
-  let quickActionStatusDot = null;
-  let quickActionStatusLabel = null;
 
-  if (quickActionPanel && quickActionHeader && !quickActionPanel.querySelector(".faculty-quick-action-status")) {
-    const statusRow = document.createElement("p");
-    statusRow.className = "faculty-quick-action-status";
-    statusRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:0.82rem;font-weight:600;color:#2b2b2b;margin:0 0 14px;";
+      statusRow.className =
+        "faculty-quick-action-status";
 
-    quickActionStatusDot = document.createElement("span");
-    quickActionStatusDot.setAttribute("aria-hidden", "true");
-    quickActionStatusDot.style.cssText = "display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0;";
 
-    quickActionStatusLabel = document.createElement("span");
+      statusRow.style.cssText =
+        "display:flex;" +
+        "align-items:center;" +
+        "gap:8px;" +
+        "font-size:0.82rem;" +
+        "font-weight:600;" +
+        "color:#2b2b2b;" +
+        "margin:0 0 14px;";
 
-    statusRow.appendChild(document.createTextNode("Status: "));
-    statusRow.appendChild(quickActionStatusDot);
-    statusRow.appendChild(quickActionStatusLabel);
 
-    quickActionHeader.insertAdjacentElement("afterend", statusRow);
-  } else if (quickActionPanel) {
-    // Popup already has a status row (shouldn't normally happen,
-    // but guards against double-injection if this ever runs twice).
-    const existingRow = quickActionPanel.querySelector(".faculty-quick-action-status");
-    if (existingRow) {
-      quickActionStatusDot = existingRow.children[0] || null;
-      quickActionStatusLabel = existingRow.children[1] || null;
-    }
-  }
+      quickActionStatusDot =
+        document.createElement(
+          "span"
+        );
 
-  function updateQuickActionUI() {
-    const isAvailable = facultyOnlineStatus === "available";
 
-    if (quickActionStatusDot) {
-      quickActionStatusDot.style.backgroundColor = isAvailable ? "#2fae4e" : "#b9b9b9";
-    }
-    if (quickActionStatusLabel) {
-      quickActionStatusLabel.textContent = facultyStatusLabel(facultyOnlineStatus);
-    }
-    if (checkInButton) {
-      checkInButton.hidden = isAvailable;
-    }
-    if (checkOutButton) {
-      checkOutButton.hidden = !isAvailable;
-    }
-  }
+      quickActionStatusDot.setAttribute(
+        "aria-hidden",
+        "true"
+      );
 
-  function setFacultyOnlineStatus(newStatus) {
-    facultyOnlineStatus = facultyStatusForUi(newStatus);
-    updateQuickActionUI();
-  }
 
-  async function loadSavedFacultyStatus() {
-    try {
-      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(facultyCurrentDateValue())}`, {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) return;
+      quickActionStatusDot.style.cssText =
+        "display:inline-block;" +
+        "width:10px;" +
+        "height:10px;" +
+        "border-radius:50%;" +
+        "flex-shrink:0;";
 
-      const latest = (result.availability || []).slice(-1)[0];
-      if (!latest) return;
 
-      setFacultyOnlineStatus(latest.Status);
-    } catch (error) {
-      // Keep the default quick action status if the saved status cannot be loaded.
-    }
-  }
+      quickActionStatusLabel =
+        document.createElement(
+          "span"
+        );
 
-  document.addEventListener("facultyavailabilitychange", (event) => {
-    if (event.detail && event.detail.status) {
-      setFacultyOnlineStatus(event.detail.status);
-    }
-  });
 
-  async function handleCheckIn(event) {
-    event.preventDefault();
-    try {
-      await saveFacultyAvailabilityStatus("available");
-      setFacultyOnlineStatus("available");
-    } catch (error) {
-      alert(error.message);
-      return;
-    }
+      statusRow.appendChild(
+        document.createTextNode(
+          "Status: "
+        )
+      );
 
-    if (checkInTimeoutId) {
-      window.clearTimeout(checkInTimeoutId);
-    }
-    // Forgot-to-Check-Out safeguard: automatically save Offline
-    // after CHECK_IN_TIMEOUT if Check Out was never clicked.
-    checkInTimeoutId = window.setTimeout(async () => {
-      try {
-        await saveFacultyAvailabilityStatus("offline");
-      } catch (error) {
-        setFacultyOnlineStatus("offline");
+
+      statusRow.appendChild(
+        quickActionStatusDot
+      );
+
+
+      statusRow.appendChild(
+        quickActionStatusLabel
+      );
+
+
+      quickActionHeader.insertAdjacentElement(
+        "afterend",
+        statusRow
+      );
+
+
+    } else if (
+      quickActionPanel
+    ) {
+
+      const existingRow =
+        quickActionPanel.querySelector(
+          ".faculty-quick-action-status"
+        );
+
+
+      if (existingRow) {
+
+        quickActionStatusDot =
+          existingRow.querySelector(
+            "span"
+          );
+
+
+        quickActionStatusLabel =
+          existingRow.lastElementChild;
       }
-      checkInTimeoutId = null;
-    }, CHECK_IN_TIMEOUT);
-  }
-
-  async function handleCheckOut(event) {
-    event.preventDefault();
-    try {
-      await saveFacultyAvailabilityStatus("offline");
-      setFacultyOnlineStatus("offline");
-    } catch (error) {
-      alert(error.message);
-      return;
     }
 
-    if (checkInTimeoutId) {
-      window.clearTimeout(checkInTimeoutId);
-      checkInTimeoutId = null;
+
+    // =======================================================
+    // UPDATE QUICK ACTION UI
+    //
+    // Always reflects the actual current faculty status
+    // (not just Available/Offline). Check In only shows while
+    // Offline; Check Out shows for any active status, since
+    // Checking Out always returns to Offline.
+    // =======================================================
+
+    function updateQuickActionUI() {
+
+      const isOffline =
+        facultyOnlineStatus ===
+        "offline";
+
+
+      const colorVar =
+        FACULTY_STATUS_COLOR_VARS[
+          facultyOnlineStatus
+        ] ||
+        FACULTY_STATUS_COLOR_VARS.offline;
+
+
+      if (quickActionStatusDot) {
+
+        quickActionStatusDot.style.backgroundColor =
+          `var(${colorVar})`;
+      }
+
+
+      if (quickActionStatusLabel) {
+
+        quickActionStatusLabel.textContent =
+          FACULTY_STATUS_LABELS[
+            facultyOnlineStatus
+          ] ||
+          FACULTY_STATUS_LABELS.offline;
+      }
+
+
+      if (checkInButton) {
+
+        checkInButton.hidden =
+          !isOffline;
+      }
+
+
+      if (checkOutButton) {
+
+        checkOutButton.hidden =
+          isOffline;
+      }
     }
-  }
 
-  if (checkInButton) {
-    checkInButton.addEventListener("click", handleCheckIn);
-  }
-  if (checkOutButton) {
-    checkOutButton.addEventListener("click", handleCheckOut);
-  }
 
-  // Establish the initial Quick Action state without changing
-  // the database-backed Dashboard status card.
-  updateQuickActionUI();
-  loadSavedFacultyStatus();
-  scheduleFacultyClassHoursLogout();
+    // =======================================================
+    // UPDATE DASHBOARD STATUS
+    // =======================================================
 
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to the Faculty Notifications
-  // page. The bell icon/design itself is untouched.
-  // ---------------------------------------------------------
-  const notificationBellButton = document.getElementById("facultyNotificationBellButton");
-  if (notificationBellButton) {
-    notificationBellButton.addEventListener("click", () => {
-      window.location.href = "faculty-notifications.html";
-    });
+    function updateDashboardStatusUI() {
+
+      const dashboardStatusDot =
+        document.getElementById(
+          "currentStatusDot"
+        );
+
+
+      const dashboardStatusLabel =
+        document.getElementById(
+          "currentStatusLabel"
+        );
+
+
+      if (
+        !dashboardStatusDot ||
+        !dashboardStatusLabel
+      ) {
+
+        return;
+      }
+
+
+      dashboardStatusDot.className =
+        `status-dot status-${facultyOnlineStatus}`;
+
+
+      dashboardStatusLabel.textContent =
+        FACULTY_STATUS_LABELS[
+          facultyOnlineStatus
+        ] ||
+        FACULTY_STATUS_LABELS.offline;
+    }
+
+
+    // =======================================================
+    // UPDATE AVAILABILITY STATUS
+    // =======================================================
+
+    function updateAvailabilityStatusUI() {
+
+      const availabilityStatusDot =
+        document.getElementById(
+          "availabilityStatusDot"
+        );
+
+
+      const availabilityStatusLabel =
+        document.getElementById(
+          "availabilityStatusLabel"
+        );
+
+
+      if (
+        !availabilityStatusDot ||
+        !availabilityStatusLabel
+      ) {
+
+        return;
+      }
+
+
+      availabilityStatusDot.className =
+        `status-dot status-${facultyOnlineStatus}`;
+
+
+      availabilityStatusLabel.textContent =
+        FACULTY_STATUS_LABELS[
+          facultyOnlineStatus
+        ] ||
+        FACULTY_STATUS_LABELS.offline;
+    }
+
+
+    // =======================================================
+    // SYNC STATUS PANEL SELECTION
+    //
+    // Dashboard and Availability both reuse the same
+    // #statusPanel / .faculty-status-option markup, so this
+    // one function keeps whichever one is on the current page
+    // highlighting the option that matches the real status.
+    // =======================================================
+
+    function syncStatusPanelSelection() {
+
+      const statusPanel =
+        document.getElementById(
+          "statusPanel"
+        );
+
+
+      if (!statusPanel) {
+
+        return;
+      }
+
+
+      const options =
+        Array.from(
+          statusPanel.querySelectorAll(
+            ".faculty-status-option"
+          )
+        );
+
+
+      options.forEach((option) => {
+
+        option.classList.toggle(
+          "is-selected",
+          option.dataset.status ===
+            facultyOnlineStatus
+        );
+      });
+    }
+
+
+    // =======================================================
+    // SET FACULTY STATUS
+    //
+    // SINGLE SOURCE OF TRUTH. Every page/component that
+    // changes the faculty status (Quick Action Check In/Out,
+    // Dashboard's Change Status, Availability's Change
+    // Status) must call this instead of writing its own
+    // status state.
+    // =======================================================
+
+    function setFacultyOnlineStatus(
+      newStatus
+    ) {
+
+      facultyOnlineStatus =
+        isValidFacultyStatus(newStatus)
+          ? newStatus
+          : FACULTY_STATUS_DEFAULT;
+
+
+      saveFacultyOnlineStatus(
+        facultyOnlineStatus
+      );
+
+
+      updateQuickActionUI();
+
+      updateDashboardStatusUI();
+
+      updateAvailabilityStatusUI();
+
+      syncStatusPanelSelection();
+
+
+      // Same-page notice, so a Change Status panel that is
+      // already open (e.g. on Dashboard/Availability) can
+      // re-sync itself if the status changed from elsewhere
+      // (Quick Action, or another tab) while it was open.
+      document.dispatchEvent(
+        new CustomEvent(
+          "faculty-status-changed",
+          {
+            detail: {
+              status: facultyOnlineStatus,
+            },
+          }
+        )
+      );
+    }
+
+
+    // Exposed so faculty-dashboard.js / faculty-availability.js
+    // can update the one shared status instead of keeping their
+    // own separate state.
+    window.setFacultyOnlineStatus =
+      setFacultyOnlineStatus;
+
+    window.getFacultyOnlineStatus =
+      () => facultyOnlineStatus;
+
+    window.FACULTY_STATUS_LABELS =
+      FACULTY_STATUS_LABELS;
+
+
+    // =======================================================
+    // CHECK IN
+    // =======================================================
+
+    function handleCheckIn(
+      event
+    ) {
+
+      event.preventDefault();
+
+
+      setFacultyOnlineStatus(
+        "available"
+      );
+
+
+      if (checkInTimeoutId) {
+
+        window.clearTimeout(
+          checkInTimeoutId
+        );
+      }
+
+
+      checkInTimeoutId =
+        window.setTimeout(
+          () => {
+
+            setFacultyOnlineStatus(
+              "offline"
+            );
+
+
+            checkInTimeoutId =
+              null;
+
+          },
+          CHECK_IN_TIMEOUT
+        );
+    }
+
+
+    // =======================================================
+    // CHECK OUT
+    // =======================================================
+
+    function handleCheckOut(
+      event
+    ) {
+
+      event.preventDefault();
+
+
+      setFacultyOnlineStatus(
+        "offline"
+      );
+
+
+      if (checkInTimeoutId) {
+
+        window.clearTimeout(
+          checkInTimeoutId
+        );
+
+
+        checkInTimeoutId =
+          null;
+      }
+    }
+
+
+    if (checkInButton) {
+
+      checkInButton.addEventListener(
+        "click",
+        handleCheckIn
+      );
+    }
+
+
+    if (checkOutButton) {
+
+      checkOutButton.addEventListener(
+        "click",
+        handleCheckOut
+      );
+    }
+
+
+    // =======================================================
+    // INITIAL UI
+    // =======================================================
+
+    updateQuickActionUI();
+
+    updateDashboardStatusUI();
+
+    updateAvailabilityStatusUI();
+
+    syncStatusPanelSelection();
+
+
+    // =======================================================
+    // TEST ACCOUNT: RE-ARM THE TEST NOTIFICATION
+    //
+    // For the designated test account only, every page load
+    // simulates a fresh unread notification so the red
+    // indicator can be tested repeatedly. This resets the
+    // existing unread COUNT -- it never inserts a new
+    // notification record, so nothing accumulates/duplicates
+    // across repeated refreshes.
+    //
+    // Normal/real accounts (TEST_FACULTY_ACCOUNT = false)
+    // skip this entirely, so their notification count stays
+    // exactly as whatever was last legitimately set (0 for a
+    // fresh account).
+    // =======================================================
+
+    if (window.TEST_FACULTY_ACCOUNT === true) {
+
+      setFacultyNotificationCount(1);
+    }
+
+
+    // =======================================================
+    // NOTIFICATION BADGE
+    // =======================================================
+
+    updateFacultyNotificationBadge();
+
+
+    // =======================================================
+    // NOTIFICATION BELL
+    //
+    // Clicking the bell:
+    //
+    // 1. Clears the notification count.
+    // 2. Removes the red dot immediately.
+    // 3. Opens the Notifications page.
+    // =======================================================
+
+    const notificationBellButton =
+      document.getElementById(
+        "facultyNotificationBellButton"
+      );
+
+
+    if (notificationBellButton) {
+
+      notificationBellButton.addEventListener(
+        "click",
+        () => {
+
+          // Mark all notifications as viewed.
+          setFacultyNotificationCount(
+            0
+          );
+
+
+          // Open Notifications page.
+          window.location.href =
+            "faculty-notifications.html";
+        }
+      );
+    }
+
+
+    // =======================================================
+    // STORAGE EVENT
+    //
+    // If another Faculty page/tab changes the status or
+    // notification count, this page updates automatically.
+    // =======================================================
+
+    window.addEventListener(
+      "storage",
+      (event) => {
+
+        if (
+          event.key ===
+          FACULTY_ONLINE_STATUS_STORAGE_KEY
+        ) {
+
+          loadFacultyOnlineStatus();
+
+
+          updateQuickActionUI();
+
+
+          updateDashboardStatusUI();
+
+
+          updateAvailabilityStatusUI();
+
+
+          syncStatusPanelSelection();
+
+
+          document.dispatchEvent(
+            new CustomEvent(
+              "faculty-status-changed",
+              {
+                detail: {
+                  status: facultyOnlineStatus,
+                },
+              }
+            )
+          );
+        }
+
+
+        if (
+          event.key ===
+          FACULTY_NOTIFICATION_STORAGE_KEY
+        ) {
+
+          updateFacultyNotificationBadge();
+        }
+      }
+    );
+
   }
-
-});
+);

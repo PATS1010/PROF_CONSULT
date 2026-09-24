@@ -1,17 +1,16 @@
-/* SYSTEM NOTE: Styles the faculty notifications page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY NOTIFICATIONS -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+
+   Only the main content area is defined here.
+   Navbar/sidebar/quick action/background styling lives in
+   faculty-shared.css.
 ========================================================= */
+
 
 /* =========================================================
    PAGE HEADING
-   Left-aligned, matching the reference design (unlike the
-   Dashboard's centered heading).
 ========================================================= */
+
 .notifications-page-heading {
   margin-bottom: 28px;
 }
@@ -39,11 +38,14 @@
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
+
+
 /* =========================================================
    NOTIFICATIONS CARD
-   White rounded card with a thick red left accent bar,
-   matching the Student module's .panel-card treatment.
+
+   White rounded card with a thick red left accent bar.
 ========================================================= */
+
 .notifications-card {
   position: relative;
   overflow: hidden;
@@ -52,35 +54,64 @@
 
 .notifications-card::before {
   content: "";
+
   position: absolute;
+
   top: 0;
   left: 0;
   bottom: 0;
+
   width: 14px;
+
   background-color: var(--color-red-primary);
 }
 
+
 /* =========================================================
-   INNER SCROLLABLE CONTAINER
+   INNER CONTAINER
 ========================================================= */
+
 .notifications-list-container {
-  background-color: #f2f0eb;
-  border-radius: 22px;
-  padding: 12px 8px;
-  max-height: 420px;
-  overflow-y: auto;
+  background-color: #f4f4f6;
+
+  border-radius: 20px;
+
+  padding: 32px 28px;
 }
+
+
+/* =========================================================
+   NOTIFICATION LIST
+========================================================= */
 
 .notifications-list {
   list-style: none;
+
   display: flex;
   flex-direction: column;
+
+  gap: 24px;
+
+  max-height: 320px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  padding-right: 4px;
 }
+
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
 
 .no-notifications-message {
   padding: 24px 4px;
+
   text-align: center;
+
   font-size: 0.85rem;
+
   color: var(--color-text-muted);
 }
 
@@ -88,76 +119,86 @@
   display: none;
 }
 
+
 /* =========================================================
    NOTIFICATION ROW
 ========================================================= */
-.notification-item {
+
+.notification-row {
   display: flex;
+
   align-items: flex-start;
+
   gap: 12px;
-  padding: 18px 20px;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
 }
 
-.notification-item + .notification-item {
-  border-top: 1px solid #e6e3dc;
+
+/* =========================================================
+   NOTIFICATION ICON
+========================================================= */
+
+.notification-icon {
+  flex-shrink: 0;
+
+  font-size: 0.95rem;
+
+  line-height: 1.6;
+
+  color: #4a5568;
 }
 
-.notification-item:hover,
-.notification-item:focus-visible {
-  background-color: #ffffff;
-  outline: none;
-}
 
-.notification-consultation-icon {
-  flex: 0 0 28px;
-  width: 28px;
-  height: 28px;
-  margin-top: 1px;
-}
-
-.notification-consultation-icon svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  fill: none;
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.notification-content {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+/* =========================================================
+   NOTIFICATION MESSAGE
+========================================================= */
 
 .notification-message {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
+
   font-weight: 500;
-  color: var(--color-text-dark);
-  line-height: 1.5;
+
+  color: #4a5568;
+
+  line-height: 1.6;
 }
 
-.notification-timestamp {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
+
+/* =========================================================
+   VIEW LINK
+========================================================= */
+
+.notification-view-link {
+  margin-left: 4px;
+
+  color: #4a5568;
+
+  font-weight: 700;
+
+  text-decoration: underline;
+
+  transition: color 0.2s ease;
 }
+
+.notification-view-link:hover {
+  color: var(--color-red-primary);
+}
+
 
 /* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */
+
 @media (max-width: 1024px) {
+
   .notifications-list-container {
     padding: 26px 20px;
   }
+
 }
 
+
 @media (max-width: 480px) {
+
   .notifications-card {
     padding: 22px 20px 22px 34px;
   }
@@ -167,11 +208,12 @@
   }
 
   .notifications-list {
-    gap: 0;
+    max-height: 280px;
+    gap: 18px;
   }
 
   .notification-message {
     font-size: 0.85rem;
   }
-}
 
+}

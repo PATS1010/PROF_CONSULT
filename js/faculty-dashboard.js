@@ -1,14 +1,17 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty dashboard page, including UI events and API calls.
 // =========================================================
 // FACULTY DASHBOARD -- PAGE-SPECIFIC INTERACTIONS
-// - Populates the greeting from the logged-in faculty session.
-// - Real-time Philippine date/time under the greeting, same
-//   component and formatting approach as the Student
-//   Dashboard's #dashboardDateTime.
+// - Populates the greeting from sample faculty data
+//   (will come from the logged-in faculty's real record
+//   once the backend exists)
+// - Philippine date/time: displayed below the greeting
+//   and updates every second.
 // - Today's Status: Change Status opens a gradient popup of
-//   status options; selecting + Save updates the visible
-//   status pill. Frontend-only for now (no persistence).
-// - Accept / Decline / View More: backed by consultation request API.
+//   status options; selecting + Save now updates the SHARED
+//   faculty status (see faculty-shared.js) instead of only
+//   this page's own status pill, so Quick Action and
+//   faculty-availability stay in sync.
+// - Accept / Decline / View More: clickable placeholders,
+//   functionality not implemented yet.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
@@ -16,567 +19,710 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  // ---------------------------------------------------------
+  // Sample faculty account -- replace with real session/user
+  // data once backend authentication exists
+  // ---------------------------------------------------------
+
+  const SAMPLE_FACULTY = {
+    fullName: "Engr. Maria Nina Sales",
+    lastName: "Professor",
+  };
+
   const nameEl = document.getElementById("facultyLastName");
 
-  async function loadCurrentFaculty() {
-    try {
-      const response = await fetch("api/session.php?role=faculty", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.ok || !data.user || data.user.role !== "faculty") {
-        throw new Error("Faculty session unavailable");
-      }
-
-      if (nameEl) nameEl.textContent = "Prof";
-    } catch (error) {
-      window.location.href = "faculty-login.html";
-    }
+  if (nameEl) {
+    nameEl.textContent = SAMPLE_FACULTY.lastName;
   }
 
-  loadCurrentFaculty();
 
   // ---------------------------------------------------------
-  // Real-time Philippine date/time, directly below the greeting.
-  // Reuses the exact same approach as the Student Dashboard
-  // (student-dashboard.js #dashboardDateTime): Intl.DateTimeFormat
-  // with the Asia/Manila timezone, built via formatToParts for
-  // exact spacing/punctuation, rendered once immediately and then
-  // re-rendered every second via setInterval so it stays live
-  // without a page refresh -- and keeps working correctly no
-  // matter how long the page stays open.
+  // Philippine Date and Time
+  //
+  // This is frontend-only.
+  // No backend/API is used.
+  //
+  // The time is always displayed using the Philippines
+  // timezone: Asia/Manila.
+  //
+  // Example:
+  // Saturday, September 12, 2026 10:30:00 AM
+  //
+  // It renders immediately and then updates every second.
   // ---------------------------------------------------------
-  const facultyPageDateTimeEl = document.getElementById("facultyPageDateTime");
+
+  const facultyPageDateTimeEl =
+    document.getElementById("facultyPageDateTime");
 
   if (facultyPageDateTimeEl) {
-    const facultyPhilippineDateTimeFormatter = new Intl.DateTimeFormat("en-US", {
-      timeZone: "Asia/Manila",
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
 
-    function renderFacultyPageDateTime() {
-      const parts = facultyPhilippineDateTimeFormatter.formatToParts(new Date());
-      const get = (type) => {
-        const part = parts.find((p) => p.type === type);
+    const philippineDateTimeFormatter =
+      new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Manila",
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      });
+
+
+    function renderPhilippineDateTime() {
+
+      const parts =
+        philippineDateTimeFormatter.formatToParts(new Date());
+
+
+      function getPart(type) {
+        const part = parts.find(
+          (item) => item.type === type
+        );
+
         return part ? part.value : "";
-      };
+      }
 
-      const weekday = get("weekday");
-      const month = get("month");
-      const day = get("day");
-      const year = get("year");
-      const hour = get("hour");
-      const minute = get("minute");
-      const second = get("second");
-      const dayPeriod = get("dayPeriod");
+
+      const weekday = getPart("weekday");
+      const month = getPart("month");
+      const day = getPart("day");
+      const year = getPart("year");
+      const hour = getPart("hour");
+      const minute = getPart("minute");
+      const second = getPart("second");
+      const dayPeriod = getPart("dayPeriod");
+
 
       facultyPageDateTimeEl.textContent =
         `${weekday}, ${month} ${day}, ${year} ${hour}:${minute}:${second} ${dayPeriod}`;
     }
 
-    renderFacultyPageDateTime();
-    setInterval(renderFacultyPageDateTime, 1000);
+
+    // Display immediately.
+    renderPhilippineDateTime();
+
+    // Update every second.
+    setInterval(renderPhilippineDateTime, 1000);
   }
 
+
   // ---------------------------------------------------------
-  // Today's Status: Change Status popup. Selecting an option
-  // marks it visually selected; Save applies it to the status
-  // pill and closes the popup. Closing without Save discards
-  // the pending selection.
+  // Today's Status: Change Status popup.
+  //
+  // Selecting an option marks it visually selected (pending).
+  // Save applies it to the SHARED faculty status (source of
+  // truth in faculty-shared.js), which in turn updates this
+  // page's status pill, Quick Action, and (if navigated to)
+  // faculty-availability. Closing without Save discards the
+  // pending selection.
   // ---------------------------------------------------------
-  const changeStatusButton = document.getElementById("changeStatusButton");
-  const statusPanel = document.getElementById("statusPanel");
+
+  const changeStatusButton =
+    document.getElementById("changeStatusButton");
+
+  const statusPanel =
+    document.getElementById("statusPanel");
+
   const statusOptions = statusPanel
-    ? Array.from(statusPanel.querySelectorAll(".faculty-status-option"))
+    ? Array.from(
+        statusPanel.querySelectorAll(
+          ".faculty-status-option"
+        )
+      )
     : [];
-  const saveStatusButton = document.getElementById("saveStatusButton");
-  const currentStatusDot = document.getElementById("currentStatusDot");
-  const currentStatusLabel = document.getElementById("currentStatusLabel");
+
+  const saveStatusButton =
+    document.getElementById("saveStatusButton");
+
 
   let pendingStatus = null;
   let pendingLabel = null;
 
-  function statusForApi(status) {
-    return window.FacultyAvailability
-      ? window.FacultyAvailability.statusForApi(status)
-      : status;
-  }
 
-  function statusForUi(status) {
-    return window.FacultyAvailability
-      ? window.FacultyAvailability.statusForUi(status)
-      : String(status || "offline").toLowerCase();
-  }
+  // ---------------------------------------------------------
+  // Sync the panel's pending selection to whatever the real,
+  // shared faculty status currently is. Called whenever the
+  // panel is opened, so it always starts from the true
+  // current status rather than a stale prior selection.
+  // ---------------------------------------------------------
 
-  function statusLabel(status) {
-    return window.FacultyAvailability
-      ? window.FacultyAvailability.statusLabel(status)
-      : "Offline";
-  }
+  function syncPendingFromCurrentStatus() {
 
-  function currentTimeValue() {
-    return window.FacultyAvailability
-      ? window.FacultyAvailability.currentTimeValue()
-      : "";
-  }
+    const current =
+      typeof window.getFacultyOnlineStatus ===
+        "function"
+        ? window.getFacultyOnlineStatus()
+        : "available";
 
-  function currentDateValue() {
-    return window.FacultyAvailability
-      ? window.FacultyAvailability.currentDateValue()
-      : "";
-  }
 
-  function redirectToFacultyLogin() {
-    window.location.href = "faculty-login.html";
-  }
-
-  function handleAuthFailure(response, result) {
-    const message = String(result && result.message ? result.message : "").toLowerCase();
-    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
-      redirectToFacultyLogin();
-      return true;
-    }
-
-    return false;
-  }
-
-  async function saveCurrentStatus(status) {
-    const response = await fetch("api/availability.php", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        status: statusForApi(status),
-        date: currentDateValue(),
-        time: currentTimeValue(),
-      }),
+    statusOptions.forEach((opt) => {
+      opt.classList.remove("is-selected");
     });
-    const result = await response.json();
 
-    if (handleAuthFailure(response, result)) {
-      throw new Error("AUTH_REQUIRED");
-    }
 
-    if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Unable to save availability status.");
-    }
-  }
+    const matchingOption =
+      statusOptions.find(
+        (opt) =>
+          opt.dataset.status === current
+      );
 
-  async function loadSavedStatus() {
-    try {
-      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(currentDateValue())}`, {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) return;
 
-      const latest = (result.availability || []).slice(-1)[0];
-      if (!latest) return;
+    if (matchingOption) {
 
-      const status = statusForUi(latest.Status);
-      applyCurrentStatus(status, statusLabel(status));
-    } catch (error) {
-      // Keep the default display if availability cannot be loaded.
+      matchingOption.classList.add(
+        "is-selected"
+      );
+
+      pendingStatus =
+        matchingOption.dataset.status;
+
+      pendingLabel =
+        matchingOption.dataset.label;
+
+    } else {
+
+      pendingStatus = null;
+      pendingLabel = null;
     }
   }
 
-  loadSavedStatus();
-
-  function applyCurrentStatus(status, label) {
-    if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
-    if (currentStatusLabel) currentStatusLabel.textContent = label || statusLabel(status);
-  }
-
-  document.addEventListener("facultyavailabilitychange", (event) => {
-    const status = statusForUi(event.detail && event.detail.status);
-    applyCurrentStatus(status, event.detail && event.detail.label);
-  });
 
   function openStatusPanel() {
+
+    syncPendingFromCurrentStatus();
+
     statusPanel.hidden = false;
-    requestAnimationFrame(() => statusPanel.classList.add("is-open"));
-    changeStatusButton.setAttribute("aria-expanded", "true");
+
+    requestAnimationFrame(() => {
+      statusPanel.classList.add("is-open");
+    });
+
+    changeStatusButton.setAttribute(
+      "aria-expanded",
+      "true"
+    );
   }
+
 
   function closeStatusPanel() {
+
     statusPanel.classList.remove("is-open");
-    changeStatusButton.setAttribute("aria-expanded", "false");
+
+    changeStatusButton.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
     window.setTimeout(() => {
       statusPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
+
 
   if (changeStatusButton) {
-    changeStatusButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const isOpen = statusPanel.classList.contains("is-open");
-      if (isOpen) {
-        closeStatusPanel();
-      } else {
-        openStatusPanel();
+
+    changeStatusButton.addEventListener(
+      "click",
+      (event) => {
+
+        event.stopPropagation();
+
+        const isOpen =
+          statusPanel.classList.contains("is-open");
+
+        if (isOpen) {
+          closeStatusPanel();
+        } else {
+          openStatusPanel();
+        }
+
       }
-    });
+    );
   }
+
 
   statusOptions.forEach((option) => {
-    option.addEventListener("click", (event) => {
-      event.stopPropagation();
-      pendingStatus = option.dataset.status;
-      pendingLabel = option.dataset.label;
-      statusOptions.forEach((opt) => opt.classList.remove("is-selected"));
-      option.classList.add("is-selected");
-    });
+
+    option.addEventListener(
+      "click",
+      (event) => {
+
+        event.stopPropagation();
+
+        pendingStatus =
+          option.dataset.status;
+
+        pendingLabel =
+          option.dataset.label;
+
+
+        statusOptions.forEach((opt) => {
+          opt.classList.remove("is-selected");
+        });
+
+
+        option.classList.add("is-selected");
+
+      }
+    );
+
   });
+
 
   if (saveStatusButton) {
-    saveStatusButton.addEventListener("click", async (event) => {
-      event.stopPropagation();
-      if (pendingStatus && currentStatusDot && currentStatusLabel) {
-        try {
-          await saveCurrentStatus(pendingStatus);
-          applyCurrentStatus(pendingStatus, pendingLabel);
-          document.dispatchEvent(new CustomEvent("facultyavailabilitychange", {
-            detail: {
-              status: pendingStatus,
-              label: pendingLabel,
-            },
-          }));
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          return;
+
+    saveStatusButton.addEventListener(
+      "click",
+      (event) => {
+
+        event.stopPropagation();
+
+        if (
+          pendingStatus &&
+          typeof window.setFacultyOnlineStatus ===
+            "function"
+        ) {
+
+          // Updates the SHARED status (localStorage +
+          // Quick Action + this page's pill + Availability's
+          // pill, if that page is open elsewhere).
+          window.setFacultyOnlineStatus(
+            pendingStatus
+          );
         }
+
+        closeStatusPanel();
+
       }
-      closeStatusPanel();
-    });
+    );
   }
 
-  document.addEventListener("click", (event) => {
-    if (
-      statusPanel &&
-      !statusPanel.hidden &&
-      !statusPanel.contains(event.target) &&
-      event.target !== changeStatusButton &&
-      !changeStatusButton.contains(event.target)
-    ) {
-      closeStatusPanel();
-    }
-  });
 
-  let requests = [];
+  document.addEventListener(
+    "click",
+    (event) => {
 
-  const requestNameEl = document.querySelector(".faculty-request-name");
-  const requestMetaEl = document.querySelector(".faculty-request-meta");
-  const requestSubjectLabelEl = document.querySelector(".faculty-request-subject-label");
-  const requestSubjectEl = document.querySelector(".faculty-request-subject");
-  const requestActionsEl = document.querySelector(".faculty-request-actions");
-  const acceptButton = document.getElementById("acceptRequestButton");
-  const declineButton = document.getElementById("declineRequestButton");
-  const viewMoreButton = document.getElementById("viewMoreRequestsButton");
-  const scheduleListEl = document.getElementById("facultyScheduleList");
-  // Tracks whether the first request load has finished, so later refreshes do not show a loading flicker.
-  let hasLoadedDashboardRequests = false;
-  // Prevents multiple overlapping request loads from running at the same time.
-  let isLoadingDashboardRequests = false;
+      if (
+        statusPanel &&
+        !statusPanel.hidden &&
+        !statusPanel.contains(event.target) &&
+        event.target !== changeStatusButton &&
+        !changeStatusButton.contains(event.target)
+      ) {
 
-  function displayYear(value) {
-    const normalized = String(value || "").trim();
-    const labels = {
-      "1": "1st Year",
-      "2": "2nd Year",
-      "3": "3rd Year",
-      "4": "4th Year",
-      "5": "5th Year",
-    };
+        closeStatusPanel();
 
-    return labels[normalized] || normalized;
-  }
-
-  function requestFromApi(row) {
-    // Convert the database year level into the readable dashboard label.
-    const year = displayYear(row.Year_Level);
-    // Keep section optional so missing sections do not leave extra separators.
-    const section = row.Section || "";
-
-    return {
-      // Keep the database id so dashboard buttons update the correct request.
-      id: String(row.Request_ID),
-      // Show the real student name instead of the old sample "Juan Dela Cruz" value.
-      name: row.Student_Name || "Unnamed Student",
-      // Prefer the login username/student number, then fall back to Student_ID.
-      studentId: row.Student_Number || row.Student_ID || "",
-      // The request purpose is shown as the pending request subject.
-      type: row.Purpose || "Consultation",
-      // Program and year/section appear in the professor's pending request card.
-      program: row.Program || "Program not set",
-      yearSet: [year, section].filter(Boolean).join(" - ") || "Year and section not set",
-      // Status controls whether the card is pending and whether it appears in today's schedule.
-      status: row.Status || "pending",
-    };
-  }
-
-  function formatDisplayTime(value) {
-    // Normalize database time values like 09:30:00 before showing them on the dashboard.
-    const normalized = String(value || "").trim();
-    // Read only the hour and minute because seconds are not useful in the schedule UI.
-    const match = normalized.match(/^(\d{1,2}):(\d{2})/);
-    if (!match) return normalized || "Time not set";
-
-    // Convert 24-hour database time into 12-hour AM/PM text.
-    const hour24 = Number(match[1]);
-    const minute = match[2];
-    const suffix = hour24 >= 12 ? "PM" : "AM";
-    const hour12 = hour24 % 12 || 12;
-    return `${hour12}:${minute} ${suffix}`;
-  }
-
-  function renderTodaySchedule(apiRequests) {
-    if (!scheduleListEl) return;
-
-    // Match requests against the local current date shown by the dashboard.
-    const today = currentDateValue();
-    // Only approved/completed requests for today are real scheduled consultations.
-    const scheduledRequests = (apiRequests || [])
-      .filter((row) => {
-        const requestDate = String(row.Request_Date || "").slice(0, 10);
-        const status = String(row.Status || "").toLowerCase();
-        return requestDate === today && ["approved", "completed"].includes(status);
-      })
-      // Sort by the saved preferred time so the schedule reads from morning to afternoon.
-      .sort((a, b) => String(a.Preferred_Time || "").localeCompare(String(b.Preferred_Time || "")));
-
-    // Replace the old hardcoded schedule with a clear empty state when there is no consultation today.
-    if (!scheduledRequests.length) {
-      scheduleListEl.innerHTML = '<li class="faculty-schedule-empty">No consultations scheduled today.</li>';
-      return;
-    }
-
-    // Build DOM nodes directly so student-entered text is displayed as text, not HTML.
-    scheduleListEl.replaceChildren(...scheduledRequests.map((row) => {
-      const status = String(row.Status || "").toLowerCase();
-      const statusText = status === "completed" ? "Completed" : "Approved";
-      const title = row.Purpose || "Consultation";
-      const studentName = row.Student_Name || "Student";
-      const item = document.createElement("li");
-      const icon = document.createElement("span");
-      const text = document.createElement("span");
-
-      // Green check icon marks each schedule item as accepted/completed.
-      icon.className = "faculty-check";
-      icon.setAttribute("aria-hidden", "true");
-      icon.textContent = "\u2713";
-      // Show the consultation time, purpose, student, and status in one schedule row.
-      text.textContent = `${formatDisplayTime(row.Preferred_Time)} ${title} with ${studentName} (${statusText})`;
-
-      // Add the icon and schedule text to the list item.
-      item.append(icon, text);
-      return item;
-    }));
-  }
-
-  async function loadDashboardRequests({ showLoading = false } = {}) {
-    // If a request load is already in progress, skip this call to avoid duplicate API requests.
-    if (isLoadingDashboardRequests) return;
-    // Mark the request loader as busy until the try/catch/finally block finishes.
-    isLoadingDashboardRequests = true;
-
-    // Show the loading text only for the first visible page load.
-    if (showLoading && !hasLoadedDashboardRequests) {
-      // Tell the professor that requests are being loaded.
-      if (requestNameEl) requestNameEl.textContent = "Loading requests...";
-      // Hide request metadata until real request data is available.
-      if (requestMetaEl) requestMetaEl.style.display = "none";
-      // Hide the "Subject:" label while loading.
-      if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "none";
-      // Hide the request subject while loading.
-      if (requestSubjectEl) requestSubjectEl.style.display = "none";
-      // Hide Accept/Decline buttons while loading.
-      if (requestActionsEl) requestActionsEl.style.display = "none";
-    }
-
-    try {
-      // Load requests as faculty so the API reads the professor session, not a student session.
-      const response = await fetch("api/consultation-requests.php?role=faculty", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      // Parse the API result before updating the dashboard UI.
-      const result = await response.json();
-
-      // Show an error if the backend rejects the session or query.
-      if (!response.ok || !result.ok) {
-        if (handleAuthFailure(response, result)) return;
-        throw new Error(result.message || "Unable to load consultation requests.");
       }
 
-      // Keep the raw rows for today's schedule and mapped rows for the pending card.
-      const apiRequests = result.requests || [];
-      requests = apiRequests.map(requestFromApi);
-      // Refresh today's schedule from approved/completed requests.
-      renderTodaySchedule(apiRequests);
-      // Refresh the pending request card from pending requests.
-      renderDashboardRequest();
-      // Remember that the dashboard has real request data or a real empty state now.
-      hasLoadedDashboardRequests = true;
-    } catch (error) {
-      // Only replace the card with an error before the first successful load.
-      if (!hasLoadedDashboardRequests && requestNameEl) {
-        // Show a readable failure message in the pending request area.
-        requestNameEl.textContent = error.message || "Unable to load requests.";
-      }
-      if (scheduleListEl) {
-        // Show a schedule-specific error when the same request load fails.
-        scheduleListEl.innerHTML = '<li class="faculty-schedule-empty">Unable to load today&apos;s schedule.</li>';
-      }
-    } finally {
-      // Clear the busy flag so a future manual/visibility refresh can run.
-      isLoadingDashboardRequests = false;
     }
+  );
+
+
+  // ---------------------------------------------------------
+  // If the shared status changes while this panel happens to
+  // be open (e.g. Check In/Out clicked from Quick Action),
+  // re-sync the panel's highlighted option so a later Save
+  // doesn't re-apply a stale pending selection.
+  // ---------------------------------------------------------
+
+  document.addEventListener(
+    "faculty-status-changed",
+    () => {
+
+      if (
+        statusPanel &&
+        !statusPanel.hidden
+      ) {
+
+        syncPendingFromCurrentStatus();
+      }
+    }
+  );
+
+
+  // ---------------------------------------------------------
+  // Pending Consultation Requests
+  //
+  // Frontend-only mock data.
+  //
+  // No localStorage.
+  // No sessionStorage.
+  // No API.
+  // No PHP.
+  // No backend.
+  //
+  // Everything resets when the page is refreshed.
+  // ---------------------------------------------------------
+
+  let requests = [
+
+    {
+      id: "req-1",
+      name: "Juan Dela Cruz",
+      studentId: "22-00145",
+      type: "Research Proposal",
+      date: "July 20, 10:00 AM",
+      program: "BS Computer Engineering",
+      yearSet: "3B",
+      message:
+        "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
+      status: "pending",
+    },
+
+    {
+      id: "req-2",
+      name: "Joselita Rizal",
+      studentId: "22-00098",
+      type: "Research Proposal",
+      date: "July 20, 10:00 AM",
+      program: "BS Computer Engineering",
+      yearSet: "3B",
+      message:
+        "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
+      status: "pending",
+    },
+
+    {
+      id: "req-3",
+      name: "Mark Santos",
+      studentId: "21-00567",
+      type: "Thesis Defense Prep",
+      date: "July 21, 1:00 PM",
+      program: "BS Computer Engineering",
+      yearSet: "4A",
+      message:
+        "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
+      status: "pending",
+    },
+
+    {
+      id: "req-4",
+      name: "Angela Cruz",
+      studentId: "23-00212",
+      type: "Grade Concern",
+      date: "July 22, 9:30 AM",
+      program: "BS Computer Engineering",
+      yearSet: "2A",
+      message:
+        "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
+      status: "pending",
+    },
+
+  ];
+
+
+  // ---------------------------------------------------------
+  // Placeholder notification function.
+  // Intentionally does nothing.
+  // ---------------------------------------------------------
+
+  function notifyRequestAnswered(
+    request,
+    decision
+  ) {
+    // Intentionally does nothing.
   }
 
-  async function updateRequestStatus(requestId, status) {
-    // Include role=faculty so dashboard Accept/Decline is handled as the logged-in professor.
-    const response = await fetch("api/consultation-requests.php?role=faculty", {
-      method: "POST",
-      credentials: "same-origin",
-      // Send JSON because the PHP API reads the request body with input().
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      // request_id selects the consultation row; status is the new faculty decision.
-      body: JSON.stringify({ request_id: requestId, status }),
-    });
-    // Decode the API response so error messages can be shown.
-    const result = await response.json();
 
-    // Bubble API errors back to the button handler.
-    if (!response.ok || !result.ok) {
-      if (handleAuthFailure(response, result)) {
-        throw new Error("AUTH_REQUIRED");
-      }
-      throw new Error(result.message || "Unable to update consultation request.");
-    }
-  }
+  // ---------------------------------------------------------
+  // Request elements
+  // ---------------------------------------------------------
+
+  const requestNameEl =
+    document.querySelector(
+      ".faculty-request-name"
+    );
+
+  const requestMetaEl =
+    document.querySelector(
+      ".faculty-request-meta"
+    );
+
+  const requestSubjectLabelEl =
+    document.querySelector(
+      ".faculty-request-subject-label"
+    );
+
+  const requestSubjectEl =
+    document.querySelector(
+      ".faculty-request-subject"
+    );
+
+  const requestActionsEl =
+    document.querySelector(
+      ".faculty-request-actions"
+    );
+
+  const acceptButton =
+    document.getElementById(
+      "acceptRequestButton"
+    );
+
+  const declineButton =
+    document.getElementById(
+      "declineRequestButton"
+    );
+
+  const viewMoreButton =
+    document.getElementById(
+      "viewMoreRequestsButton"
+    );
+
+
+  // ---------------------------------------------------------
+  // Get the next pending request
+  // ---------------------------------------------------------
 
   function getNextPendingRequest() {
-    return requests.find((r) => r.status === "pending") || null;
+
+    return requests.find(
+      (request) =>
+        request.status === "pending"
+    ) || null;
+
   }
 
+
+  // ---------------------------------------------------------
+  // Render request
+  // ---------------------------------------------------------
+
   function renderDashboardRequest() {
-    const request = getNextPendingRequest();
+
+    const request =
+      getNextPendingRequest();
+
 
     if (!request) {
-      // No pending requests left -- reuse the existing markup,
-      // just swap its text instead of adding new elements.
-      if (requestNameEl) requestNameEl.textContent = "No pending requests right now.";
-      if (requestMetaEl) requestMetaEl.style.display = "none";
-      if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "none";
-      if (requestSubjectEl) requestSubjectEl.style.display = "none";
-      if (requestActionsEl) requestActionsEl.style.display = "none";
+
+      if (requestNameEl) {
+        requestNameEl.textContent =
+          "No pending requests right now.";
+      }
+
+      if (requestMetaEl) {
+        requestMetaEl.style.display =
+          "none";
+      }
+
+      if (requestSubjectLabelEl) {
+        requestSubjectLabelEl.style.display =
+          "none";
+      }
+
+      if (requestSubjectEl) {
+        requestSubjectEl.style.display =
+          "none";
+      }
+
+      if (requestActionsEl) {
+        requestActionsEl.style.display =
+          "none";
+      }
+
       return;
     }
 
-    if (requestMetaEl) requestMetaEl.style.display = "";
-    if (requestSubjectLabelEl) requestSubjectLabelEl.style.display = "";
-    if (requestSubjectEl) requestSubjectEl.style.display = "";
-    if (requestActionsEl) requestActionsEl.style.display = "";
 
-    if (requestNameEl) requestNameEl.textContent = request.name;
-    if (requestMetaEl) requestMetaEl.textContent = `${request.program} | ${request.studentId} | ${request.yearSet}`;
-    if (requestSubjectEl) requestSubjectEl.textContent = request.type;
+    if (requestMetaEl) {
+      requestMetaEl.style.display = "";
+    }
+
+    if (requestSubjectLabelEl) {
+      requestSubjectLabelEl.style.display = "";
+    }
+
+    if (requestSubjectEl) {
+      requestSubjectEl.style.display = "";
+    }
+
+    if (requestActionsEl) {
+      requestActionsEl.style.display = "";
+    }
+
+
+    if (requestNameEl) {
+      requestNameEl.textContent =
+        request.name;
+    }
+
+
+    if (requestMetaEl) {
+
+      requestMetaEl.textContent =
+        `${request.program} | ${request.studentId} | ${request.yearSet}`;
+
+    }
+
+
+    if (requestSubjectEl) {
+      requestSubjectEl.textContent =
+        request.type;
+    }
+
 
     if (acceptButton) {
-      acceptButton.textContent = "Accept";
-      acceptButton.disabled = false;
-      acceptButton.classList.remove("is-accepted");
+
+      acceptButton.textContent =
+        "Accept";
+
+      acceptButton.disabled =
+        false;
+
+      acceptButton.classList.remove(
+        "is-accepted"
+      );
     }
+
+
     if (declineButton) {
-      declineButton.textContent = "Decline";
-      declineButton.disabled = false;
-      declineButton.classList.remove("is-declined");
+
+      declineButton.textContent =
+        "Decline";
+
+      declineButton.disabled =
+        false;
+
+      declineButton.classList.remove(
+        "is-declined"
+      );
     }
+
   }
 
-  loadDashboardRequests({ showLoading: true });
+
+  // Render the first request immediately.
+  renderDashboardRequest();
+
+
+  // ---------------------------------------------------------
+  // Accept request
+  // ---------------------------------------------------------
 
   if (acceptButton) {
-    acceptButton.addEventListener("click", async () => {
-      const request = getNextPendingRequest();
-      if (!request) return;
 
-      acceptButton.textContent = "Accepted";
-      acceptButton.disabled = true;
-      acceptButton.classList.add("is-accepted");
-      if (declineButton) declineButton.disabled = true;
+    acceptButton.addEventListener(
+      "click",
+      () => {
 
-      try {
-        await updateRequestStatus(request.id, "approved");
-        request.status = "approved";
-      } catch (error) {
-        if (error.message === "AUTH_REQUIRED") return;
-        alert(error.message);
-        acceptButton.textContent = "Accept";
-        acceptButton.disabled = false;
-        acceptButton.classList.remove("is-accepted");
-        if (declineButton) declineButton.disabled = false;
-        return;
+        const request =
+          getNextPendingRequest();
+
+        if (!request) return;
+
+
+        acceptButton.textContent =
+          "Accepted";
+
+        acceptButton.disabled =
+          true;
+
+        acceptButton.classList.add(
+          "is-accepted"
+        );
+
+
+        if (declineButton) {
+          declineButton.disabled =
+            true;
+        }
+
+
+        request.status =
+          "accepted";
+
+
+        notifyRequestAnswered(
+          request,
+          "accepted"
+        );
+
+
+        // Give the person a moment to see
+        // "Accepted" before the next request.
+        window.setTimeout(
+          renderDashboardRequest,
+          900
+        );
+
       }
+    );
 
-      // Give the person a moment to see "Accepted" before the
-      // next pending request takes its place.
-      window.setTimeout(loadDashboardRequests, 900);
-    });
   }
+
+
+  // ---------------------------------------------------------
+  // Decline request
+  // ---------------------------------------------------------
 
   if (declineButton) {
-    declineButton.addEventListener("click", async () => {
-      const request = getNextPendingRequest();
-      if (!request) return;
 
-      declineButton.textContent = "Declined";
-      declineButton.disabled = true;
-      declineButton.classList.add("is-declined");
-      if (acceptButton) acceptButton.disabled = true;
+    declineButton.addEventListener(
+      "click",
+      () => {
 
-      try {
-        await updateRequestStatus(request.id, "declined");
-        request.status = "declined";
-      } catch (error) {
-        if (error.message === "AUTH_REQUIRED") return;
-        alert(error.message);
-        declineButton.textContent = "Decline";
-        declineButton.disabled = false;
-        declineButton.classList.remove("is-declined");
-        if (acceptButton) acceptButton.disabled = false;
-        return;
+        const request =
+          getNextPendingRequest();
+
+        if (!request) return;
+
+
+        declineButton.textContent =
+          "Declined";
+
+        declineButton.disabled =
+          true;
+
+        declineButton.classList.add(
+          "is-declined"
+        );
+
+
+        if (acceptButton) {
+          acceptButton.disabled =
+            true;
+        }
+
+
+        request.status =
+          "declined";
+
+
+        notifyRequestAnswered(
+          request,
+          "declined"
+        );
+
+
+        window.setTimeout(
+          renderDashboardRequest,
+          900
+        );
+
       }
+    );
 
-      window.setTimeout(loadDashboardRequests, 900);
-    });
   }
 
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      loadSavedStatus();
-      loadDashboardRequests();
-    }
-  });
+
+  // ---------------------------------------------------------
+  // View More
+  // ---------------------------------------------------------
 
   if (viewMoreButton) {
-    viewMoreButton.addEventListener("click", () => {
-      window.location.href = "faculty-consultation-requests.html";
-    });
+
+    viewMoreButton.addEventListener(
+      "click",
+      () => {
+
+        window.location.href =
+          "faculty-consultation-requests.html";
+
+      }
+    );
+
   }
 
 });

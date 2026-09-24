@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the faculty settings page structure used by the Prof Consult web app. -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -136,12 +135,18 @@
     </label>
 
     <label class="faculty-settings-checkbox-row">
+      <input type="checkbox" id="darkModeCheckbox" class="faculty-settings-checkbox">
+      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+      <span class="faculty-settings-checkbox-label">Dark Mode</span>
+    </label>
+
+    <label class="faculty-settings-checkbox-row">
       <input type="checkbox" id="autoCheckInCheckbox" class="faculty-settings-checkbox">
       <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
       <span class="faculty-settings-checkbox-label">Auto Check-In Reminder</span>
     </label>
 
-    <a href="forgot-password.html" class="faculty-change-password-link">Change Password</a>
+    <a href="change-password.html?from=faculty" class="faculty-change-password-link">Change Password</a>
 
   </div>
 
@@ -153,7 +158,6 @@
 </section>
   </main>
 
-  <script src="js/notification-bell-status.js"></script>
   <script src="js/faculty-shared.js"></script>
   <script src="js/faculty-settings.js"></script>
 

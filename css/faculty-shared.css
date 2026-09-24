@@ -1,22 +1,20 @@
-/* SYSTEM NOTE: Styles the faculty shared page so its layout, spacing, and visual states match the system design. */
 /* =========================================================
    FACULTY SHARED LAYOUT STYLES
-   Reused across every Faculty page (Dashboard, Consultation
-   Requests, Availability, Notifications, Profile, Settings).
+   Reused across every Faculty page.
 
-   Only the ".faculty-main-content" section's own contents
-   should differ from page to page -- everything above this
-   comment block (navbar, sidebar, quick action, background)
-   is the shared shell and should not be duplicated/altered
-   per page.
-
-   Load this file BEFORE the page-specific stylesheet so
-   page-specific rules can extend it if ever needed.
+   Handles:
+   - Navbar
+   - Notification bell
+   - Notification badge
+   - Quick Action
+   - Sidebar
+   - Background
+   - Main content
+   - Shared cards
 ========================================================= */
 
 /* =========================================================
    CSS VARIABLES
-   Matches the Student module's design language exactly.
 ========================================================= */
 :root {
   --color-red-primary: #d81f26;
@@ -50,6 +48,7 @@
 /* =========================================================
    RESET / BASE STYLES
 ========================================================= */
+
 * {
   margin: 0;
   padding: 0;
@@ -76,8 +75,8 @@ button {
 
 /* =========================================================
    FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
 ========================================================= */
+
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -90,8 +89,10 @@ button {
     var(--color-gradient-end) 78%,
     var(--color-gradient-end) 100%
   );
+
   background-clip: text;
   -webkit-background-clip: text;
+
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
@@ -99,16 +100,24 @@ button {
 /* =========================================================
    TOP NAVIGATION BAR
 ========================================================= */
+
 .faculty-navbar {
   position: sticky;
   top: 0;
   z-index: 100;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
   height: var(--nav-height);
   padding: 0 var(--content-padding-x);
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
 }
 
 .faculty-navbar-left {
@@ -129,6 +138,10 @@ button {
   background: transparent;
 }
 
+/* =========================================================
+   HAMBURGER
+========================================================= */
+
 .faculty-hamburger-button {
   flex-direction: column;
   gap: 5px;
@@ -142,25 +155,40 @@ button {
   border-radius: 2px;
 }
 
+/* =========================================================
+   NAVBAR RIGHT SIDE
+========================================================= */
+
 .faculty-navbar-right {
   position: relative;
+
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+/* =========================================================
+   NOTIFICATION + QUICK ACTION BUTTONS
+========================================================= */
+
 .faculty-notification-bell-button,
 .faculty-quick-action-button {
+  position: relative;
+
   width: 40px;
   height: 40px;
+
   border-radius: 50%;
+
   background-color: rgba(255, 255, 255, 0.15);
-  overflow: hidden;
+
+  overflow: visible;
 }
 
 .faculty-notification-bell-button img {
   width: 20px;
   height: 20px;
+
   object-fit: contain;
   margin: 0 auto;
 }
@@ -168,30 +196,114 @@ button {
 .faculty-quick-action-button img {
   width: 22px;
   height: 22px;
+
   object-fit: contain;
   margin: 0 auto;
 }
 
 /* =========================================================
-   QUICK ACTION POPUP
-   Robot icon + title, Check In / Check Out placeholder buttons
+   NOTIFICATION RED BADGE
+   Appears on the top-right of the notification bell when
+   there are unread/pending notifications.
+
+   JS adds .has-notifications to the bell button.
 ========================================================= */
+
+.faculty-notification-bell-button.has-notifications::after {
+  content: "";
+
+  position: absolute;
+
+  top: -2px;
+  right: -2px;
+
+  width: 11px;
+  height: 11px;
+
+  border-radius: 50%;
+
+  background-color: #ff2028;
+
+  border: 2px solid var(--color-gradient-start);
+
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.25);
+
+  z-index: 5;
+}
+
+/* Slight pulse so a new notification is noticeable */
+.faculty-notification-bell-button.has-notifications::before {
+  content: "";
+
+  position: absolute;
+
+  top: -5px;
+  right: -5px;
+
+  width: 15px;
+  height: 15px;
+
+  border-radius: 50%;
+
+  background-color: rgba(255, 32, 40, 0.35);
+
+  animation: facultyNotificationPulse 1.8s infinite;
+
+  pointer-events: none;
+
+  z-index: 4;
+}
+
+@keyframes facultyNotificationPulse {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.75;
+  }
+
+  70% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+
+/* =========================================================
+   QUICK ACTION POPUP
+========================================================= */
+
 .faculty-quick-action-panel {
   position: absolute;
+
   top: calc(100% + 14px);
   right: 0;
+
   width: 300px;
   max-width: 90vw;
+
   background-color: #ffffff;
+
   border-radius: 22px;
+
   box-shadow: 0 20px 45px rgba(0, 0, 0, 0.25);
+
   padding: 22px;
+
   z-index: 200;
 
   opacity: 0;
   transform: translateY(-10px);
+
   pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .faculty-quick-action-panel.is-open {
@@ -204,15 +316,24 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
+
   margin-bottom: 18px;
 }
 
 .faculty-quick-action-icon-wrap {
   flex-shrink: 0;
+
   width: 34px;
   height: 34px;
+
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+
+  background: linear-gradient(
+    135deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,12 +342,17 @@ button {
 .faculty-quick-action-icon-wrap img {
   width: 20px;
   height: 20px;
+
   object-fit: contain;
 }
 
 .faculty-quick-action-title {
   font-size: 1.05rem;
 }
+
+/* =========================================================
+   QUICK ACTION BUTTONS
+========================================================= */
 
 .faculty-quick-action-actions {
   display: flex;
@@ -236,14 +362,22 @@ button {
 
 .faculty-quick-action-item-button {
   width: 100%;
+
   padding: 13px 20px;
+
   border-radius: 999px;
+
   color: var(--color-text-light);
+
   font-size: 0.9rem;
   font-weight: 700;
+
   text-align: center;
   text-decoration: none;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .faculty-quick-action-item-button:hover {
@@ -256,21 +390,32 @@ button {
 }
 
 .faculty-checkout-button {
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
 }
 
 /* =========================================================
    BURGER SIDEBAR
 ========================================================= */
+
 .faculty-sidebar-overlay {
   position: fixed;
+
   inset: 0;
+
   z-index: 300;
+
   background-color: rgba(20, 10, 10, 0.45);
+
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
+
   opacity: 0;
   pointer-events: none;
+
   transition: opacity 0.25s ease;
 }
 
@@ -281,20 +426,32 @@ button {
 
 .faculty-sidebar {
   position: fixed;
+
   top: 0;
   left: 0;
   bottom: 0;
+
   z-index: 301;
+
   width: 300px;
   max-width: 85vw;
-  background: linear-gradient(180deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+
+  background: linear-gradient(
+    180deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
+
   box-shadow: 8px 0 30px rgba(0, 0, 0, 0.25);
+
   padding: 24px;
+
   display: flex;
   flex-direction: column;
   gap: 28px;
 
   transform: translateX(-100%);
+
   transition: transform 0.3s ease;
 }
 
@@ -315,9 +472,12 @@ button {
 
 .faculty-sidebar-close {
   background: transparent;
+
   font-size: 1.6rem;
   line-height: 1;
+
   color: var(--color-text-light);
+
   padding: 4px 8px;
 }
 
@@ -329,15 +489,24 @@ button {
 
 .faculty-sidebar-link {
   display: inline-block;
+
   padding: 12px 18px;
+
   border-radius: 999px;
+
   font-size: 0.82rem;
   font-weight: 700;
+
   letter-spacing: 0.5px;
   text-transform: uppercase;
+
   color: var(--color-text-light);
+
   text-decoration: none;
-  transition: background-color 0.2s ease, color 0.2s ease;
+
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .faculty-sidebar-link:hover {
@@ -351,58 +520,77 @@ button {
 
 /* =========================================================
    BACKGROUND
-   Slightly blurred, light white overlay for readability
 ========================================================= */
+
 .faculty-page-background {
   position: fixed;
+
   top: 0;
   left: 0;
+
   width: 100%;
   height: 100%;
+
   z-index: -1;
+
   overflow: hidden;
 }
 
 .faculty-page-background-image {
   position: absolute;
+
   top: -20px;
   left: -20px;
+
   width: calc(100% + 40px);
   height: calc(100% + 40px);
+
   max-width: none;
+
   object-fit: cover;
+
   filter: blur(6px);
 }
 
 .faculty-page-background-overlay {
   position: absolute;
+
   top: 0;
   left: 0;
+
   width: 100%;
   height: 100%;
+
   background-color: rgba(255, 255, 255, 0.9);
 }
 
 /* =========================================================
    MAIN CONTENT CONTAINER
-   The only section that should change from page to page.
 ========================================================= */
+
 .faculty-main-content {
   max-width: 1400px;
+
   margin: 0 auto;
+
   padding: 48px var(--content-padding-x) 60px;
 }
 
 .faculty-page-heading {
   text-align: center;
+
   margin-bottom: 36px;
 }
 
 .faculty-page-title {
   font-family: var(--font-main);
+
   font-weight: 800;
+
   font-size: clamp(1.8rem, 3.2vw, 2.4rem);
+
   color: var(--color-text-dark);
+
   margin-bottom: 8px;
 }
 
@@ -411,25 +599,35 @@ button {
   color: var(--color-text-muted);
 }
 
-/* Generic reusable card, styling shared by every Faculty page */
+/* =========================================================
+   GENERIC FACULTY CARD
+========================================================= */
+
 .faculty-card {
   position: relative;
+
   background-color: #ffffff;
+
   border-radius: 22px;
+
   box-shadow: var(--shadow-card);
+
   padding: 26px 28px;
 }
 
 .faculty-card-title {
   font-size: 1.2rem;
   font-weight: 700;
+
   color: var(--color-red-primary);
+
   margin-bottom: 18px;
 }
 
 /* =========================================================
-   RESPONSIVE ADJUSTMENTS
+   RESPONSIVE
 ========================================================= */
+
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -457,14 +655,11 @@ button {
     padding: 20px;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, matching
-     the Student module's mobile sidebar sizing */
   .faculty-sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .faculty-quick-action-panel {
     width: min(300px, 90vw);
     right: -8px;

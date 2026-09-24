@@ -10,6 +10,11 @@
    typography) now matches the Student Profile reference.
    No HTML structure or JS-facing classes were changed --
    only property values inside existing selectors.
+
+   UPDATED (name fields): added .faculty-name-row /
+   .faculty-name-field for the three-across First Name /
+   Middle Initial / Last Name inputs in edit mode. Nothing else
+   was changed.
 ========================================================= */
 
 /* =========================================================
@@ -239,6 +244,34 @@
   font-size: 0.8rem;
   font-weight: 700;
   color: var(--color-text-muted);
+}
+
+/* ---- Name row: First Name / Middle Initial / Last Name ----
+   Middle Initial is a fixed narrow column; First + Last split
+   the remaining width equally. Each field is a label + input
+   stacked, matching .faculty-form-group. */
+.faculty-name-row {
+  display: flex;
+  align-items: flex-end; /* inputs share one bottom edge, so they line up even if a label ever wraps */
+  gap: 14px;
+}
+
+.faculty-name-field {
+  flex: 2 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Middle Initial: fixed narrow column, wide enough that its
+   label stays on one line so all three inputs line up. */
+.faculty-name-field:nth-child(2) {
+  flex: 0 0 124px;
+}
+
+.faculty-name-field label {
+  white-space: nowrap;
 }
 
 .faculty-form-input {
@@ -484,6 +517,21 @@
 
   .faculty-profile-details {
     text-align: left;
+  }
+}
+
+/* Name inputs stack on narrow screens instead of squeezing
+   three across */
+@media (max-width: 600px) {
+  .faculty-name-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .faculty-name-field,
+  .faculty-name-field:nth-child(2) {
+    flex: none;
   }
 }
 

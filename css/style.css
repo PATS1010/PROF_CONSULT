@@ -33,7 +33,6 @@ html,
 body {
   width: 100%;
   height: 100%;
-  min-height: 100%;
   overflow: hidden;
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
@@ -45,8 +44,6 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
-  height: 100dvh;
-  min-height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -154,6 +151,7 @@ body {
   max-width: var(--logo-width-brand);
   height: auto;
   object-fit: contain;
+  transform: translateX(-12px);
 }
 
 /* =========================================================
@@ -241,13 +239,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 0;
   }
 
   .prof-consult-logo {
-    width: min(84vw, 360px);
-    max-height: 56vh;
+    width: min(88vw, 380px);
     max-width: none;
+    transform: translate(-8px, -10px);
   }
 }
 
@@ -261,43 +258,11 @@ body {
   }
 
   .prof-consult-logo {
-    width: min(82vw, 300px);
-    max-height: 42dvh;
+    width: min(88vw, 340px);
     max-width: none;
-  }
-
-  .bottom-area {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: max(28px, env(safe-area-inset-bottom));
-    z-index: 5;
-    width: 100%;
-    min-height: 56px;
-    margin-bottom: 0;
-    padding: 0 20px;
-  }
-
-  .continue-button {
-    min-width: 144px;
-    min-height: 44px;
-    padding: 12px 24px;
   }
 
   .loading-text {
     font-size: 0.85rem;
-  }
-}
-
-@media (max-width: 480px) and (max-height: 700px) {
-  :root {
-    --logo-height-university: 32px;
-    --spacing-logo-gap: 16px;
-    --spacing-top-offset: 4vh;
-  }
-
-  .prof-consult-logo {
-    width: min(76vw, 260px);
-    max-height: 36dvh;
   }
 }

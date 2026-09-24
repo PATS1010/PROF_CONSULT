@@ -214,10 +214,10 @@ button {
 
 /* =========================================================
    FORM ROW
-   Lets two fields (currently Year Level + Section) sit side
-   by side on the same row. Only used by that pair -- every
-   other .form-field on the page is unaffected since it isn't
-   nested inside a .form-row.
+   Lets two fields sit side by side on the same row (used by
+   First Name + Middle Initial, and Year Level + Section on
+   the student page). Every other .form-field on the page is
+   unaffected since it isn't nested inside a .form-row.
 ========================================================= */
 .form-row {
   width: 100%;
@@ -231,6 +231,23 @@ button {
   width: auto;
   flex: 1 1 0;
   margin-bottom: 0;
+}
+
+/* First Name / Middle Initial / Last Name on one row:
+   First + Last are twice as wide as Middle Initial.
+   Stacks on small screens via the 480px rule below. */
+@media (min-width: 481px) {
+  .form-row-name {
+    gap: 14px;
+  }
+
+  .form-row-name .form-field {
+    flex: 2 1 0;
+  }
+
+  .form-row-name .form-field:nth-child(2) {
+    flex: 1 1 0;
+  }
 }
 
 /* =========================================================
@@ -404,7 +421,7 @@ button {
     padding-right: 40px;
   }
 
-  /* Year Level + Section stack instead of squeezing side by
+  /* Rows of two fields stack instead of squeezing side by
      side once the card gets this narrow */
   .form-row {
     flex-direction: column;
