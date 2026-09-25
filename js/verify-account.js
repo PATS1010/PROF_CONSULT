@@ -70,7 +70,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(normalizeEmail(email));
+  }
+
+  function normalizeEmail(email) {
+    const cleaned = String(email || "").trim().replace(/\s+/g, "");
+    const parts = cleaned.split("@");
+    if (parts.length !== 2) return cleaned.toLowerCase();
+
+    const domain = parts[1].replace(/,/g, ".").replace(/\.+/g, ".");
+    return `${parts[0]}@${domain}`.toLowerCase();
   }
 
   function isValidMobile(mobile) {
@@ -142,20 +151,24 @@ document.addEventListener("DOMContentLoaded", () => {
   function validateInput() {
     if (currentMode === "email") {
       const email = emailInput.value.trim();
+      const normalizedEmail = normalizeEmail(email);
+      if (emailInput.value !== normalizedEmail) {
+        emailInput.value = normalizedEmail;
+      }
       if (!email) {
         emailInput.classList.add("input-error");
         showMessage("Please enter your email address.");
         emailInput.focus();
         return null;
       }
-      if (!isValidEmail(email)) {
+      if (!isValidEmail(normalizedEmail)) {
         emailInput.classList.add("input-error");
         showMessage("Please enter a valid email address.");
         emailInput.focus();
         return null;
       }
       emailInput.classList.remove("input-error");
-      return email;
+      return normalizedEmail;
     }
 
     const mobile = mobileInput.value.trim();

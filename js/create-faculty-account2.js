@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const data = {
       email:
-        emailInput.value.trim(),
+        normalizeEmail(emailInput.value),
 
       contactNumber:
         contactNumberInput.value.trim()
@@ -131,9 +131,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function isValidEmail(value) {
 
-    return /^[^\s@]+@[^\s@]+\.com$/i.test(
-      value.trim()
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(
+      normalizeEmail(value)
     );
+  }
+
+  function normalizeEmail(value) {
+    const cleaned = String(value || "").trim().replace(/\s+/g, "");
+    const parts = cleaned.split("@");
+    if (parts.length !== 2) return cleaned.toLowerCase();
+
+    const domain = parts[1].replace(/,/g, ".").replace(/\.+/g, ".");
+    return `${parts[0]}@${domain}`.toLowerCase();
+  }
+
+  function syncEmailInput() {
+    const normalized = normalizeEmail(emailInput.value);
+    if (emailInput.value !== normalized) {
+      emailInput.value = normalized;
+    }
   }
 
 
@@ -468,6 +484,7 @@ document.addEventListener("DOMContentLoaded", () => {
     "input",
     () => {
 
+      syncEmailInput();
       saveStep2Data();
 
       if (accountVerified) {
@@ -780,7 +797,7 @@ document.addEventListener("DOMContentLoaded", () => {
                   ...stepOne,
 
                   email:
-                    emailInput.value.trim(),
+                    normalizeEmail(emailInput.value),
 
                   phone:
                     contactNumberInput.value,
