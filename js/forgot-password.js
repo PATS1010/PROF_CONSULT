@@ -28,8 +28,7 @@
 //   User enters:
 //   9171234567
 //
-//   Backend receives:
-//   +639171234567
+//   Backend receives the mobile number and sends the OTP by SMS.
 //
 // =========================================================
 
@@ -260,12 +259,12 @@ document.addEventListener("DOMContentLoaded", () => {
   //
   // Output:
   //
-  // +639171234567
+  // 9171234567
   // =========================================================
 
   function normalizeMobile(mobile) {
 
-    return `+63${mobile}`;
+    return mobile.replace(/\D/g, "").slice(0, 10);
 
   }
 
@@ -368,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Update description
     subtitle.textContent =
-      "Enter your Mobile Number to receive a verification code.";
+      "Enter your Mobile Number to receive a verification code by SMS.";
 
 
     // Update toggle
@@ -679,6 +678,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                   identifier:
                     identifier,
+
+                  method:
+                    currentMode,
 
                   role:
                     origin

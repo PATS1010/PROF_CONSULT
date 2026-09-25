@@ -14,6 +14,7 @@ set_time_limit(20);
 $data = input();
 $identifier = strtolower(clean((string) ($data['identifier'] ?? '')));
 $role = clean((string) ($data['role'] ?? 'student'));
+$method = clean((string) ($data['method'] ?? ''));
 
 if ($identifier === '' || !in_array($role, ['student', 'faculty'], true)) {
     fail('Please enter your registered email address or mobile number.');
@@ -21,6 +22,7 @@ if ($identifier === '' || !in_array($role, ['student', 'faculty'], true)) {
 
 $emailCandidate = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? $identifier : '';
 $phoneCandidate = preg_replace('/\D/', '', $identifier);
+$sendBySms = $method === 'mobile' || ($emailCandidate === '' && $phoneCandidate !== '');
 
 if (strlen($phoneCandidate) === 12 && str_starts_with($phoneCandidate, '63')) {
     $phoneCandidate = substr($phoneCandidate, 2);
@@ -64,12 +66,19 @@ try {
         password_hash($otpCode, PASSWORD_DEFAULT),
     ]);
 
-    sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
+    if ($sendBySms) {
+        sendOtpSms($phoneCandidate, $otpCode);
+        $sentTo = 'mobile';
+    } else {
+        sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
+        $sentTo = 'email';
+    }
 
     reply([
         'ok' => true,
         'message' => 'Verification code sent.',
         'token' => $token,
+        'sent_to' => $sentTo,
     ]);
 } catch (RuntimeException $exception) {
     fail($exception->getMessage(), 500);

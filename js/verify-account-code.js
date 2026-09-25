@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (subtitle) {
     subtitle.textContent =
       verificationMethod === "mobile"
-        ? "A 6-digit verification code has been sent to your registered email address."
+        ? "A 6-digit verification code has been sent to your mobile number."
         : "A 6-digit verification code has been sent to your email address.";
   }
 

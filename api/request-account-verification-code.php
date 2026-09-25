@@ -74,12 +74,19 @@ try {
         password_hash($otpCode, PASSWORD_DEFAULT),
     ]);
 
-    sendOtpEmail($email, 'Prof Consult User', $otpCode);
+    if ($mobile !== '') {
+        sendOtpSms($mobile, $otpCode);
+        $sentTo = 'mobile';
+    } else {
+        sendOtpEmail($email, 'Prof Consult User', $otpCode);
+        $sentTo = 'email';
+    }
 
     reply([
         'ok' => true,
         'message' => 'Verification code sent.',
         'token' => $token,
+        'sent_to' => $sentTo,
     ]);
 } catch (RuntimeException $exception) {
     fail($exception->getMessage(), 500);

@@ -21,6 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const originQuery = `?from=${origin}`;
   let token = params.get("token") || "";
   const identifier = sessionStorage.getItem("resetIdentifier") || "";
+  const resetMethod = sessionStorage.getItem("resetMethod") || "email";
   const error = params.get("error");
 
   const backButton = document.getElementById("backButton");
@@ -108,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch("api/request-reset-code.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, role: origin })
+          body: JSON.stringify({ identifier, role: origin, method: resetMethod })
         });
         const result = await response.json();
 

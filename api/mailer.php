@@ -19,6 +19,26 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
     sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
 }
 
+function sendOtpSms(string $mobileNumber, string $otpCode): void
+{
+    if (BREVO_API_KEY === '') {
+        throw new RuntimeException('BREVO_API_KEY is not configured in Railway.');
+    }
+
+    $recipient = preg_replace('/\D/', '', $mobileNumber);
+    if (strlen($recipient) === 10 && str_starts_with($recipient, '9')) {
+        $recipient = '63' . $recipient;
+    } elseif (strlen($recipient) === 11 && str_starts_with($recipient, '0')) {
+        $recipient = '63' . substr($recipient, 1);
+    }
+
+    if (!preg_match('/^63\d{10}$/', $recipient)) {
+        throw new RuntimeException('Unable to send SMS because the mobile number is invalid.');
+    }
+
+    sendOtpSmsWithBrevoApi($recipient, $otpCode);
+}
+
 function otpEmailHtml(string $toName, string $otpCode): string
 {
     return '
@@ -56,6 +76,30 @@ function brevoErrorMessage(?string $response): string
     return $code !== ''
         ? "Brevo rejected the email request ({$code}): {$message}"
         : "Brevo rejected the email request: {$message}";
+}
+
+function brevoSmsErrorMessage(?string $response): string
+{
+    $fallback = 'Brevo rejected the SMS request. Check BREVO_API_KEY, BREVO_SMS_SENDER, and SMS credits.';
+    if (!$response) {
+        return $fallback;
+    }
+
+    $data = json_decode($response, true);
+    if (!is_array($data)) {
+        return $fallback;
+    }
+
+    $message = (string) ($data['message'] ?? '');
+    $code = (string) ($data['code'] ?? '');
+
+    if ($message === '') {
+        return $fallback;
+    }
+
+    return $code !== ''
+        ? "Brevo rejected the SMS request ({$code}): {$message}"
+        : "Brevo rejected the SMS request: {$message}";
 }
 
 function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCode): void
@@ -100,6 +144,39 @@ function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCo
     if (!preg_match('/\s2\d\d\s/', $statusLine)) {
         error_log('Brevo email failed: ' . $statusLine . ' ' . (string) $response);
         throw new RuntimeException(brevoErrorMessage($response === false ? null : $response));
+    }
+}
+
+function sendOtpSmsWithBrevoApi(string $recipient, string $otpCode): void
+{
+    $payload = [
+        'sender' => substr(BREVO_SMS_SENDER, 0, 11),
+        'recipient' => $recipient,
+        'content' => "Your Prof Consult verification code is {$otpCode}. It expires in 2 hours.",
+        'type' => 'transactional',
+        'tag' => 'profconsult_otp',
+    ];
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => [
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'api-key: ' . BREVO_API_KEY,
+            ],
+            'content' => json_encode($payload),
+            'ignore_errors' => true,
+            'timeout' => 15,
+        ],
+    ]);
+
+    $response = file_get_contents('https://api.brevo.com/v3/transactionalSMS/send', false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+
+    if (!preg_match('/\s2\d\d\s/', $statusLine)) {
+        error_log('Brevo SMS failed: ' . $statusLine . ' ' . (string) $response);
+        throw new RuntimeException(brevoSmsErrorMessage($response === false ? null : $response));
     }
 }
 

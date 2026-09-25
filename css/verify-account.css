@@ -416,6 +416,10 @@ button {
   overflow: hidden;
 }
 
+.mobile-input-wrapper[hidden] {
+  display: none;
+}
+
 
 /* =========================================================
    COUNTRY CODE

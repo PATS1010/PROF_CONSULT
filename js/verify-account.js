@@ -105,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
     mobileInput.required = true;
     emailInput.classList.remove("input-error");
     mobileInput.classList.remove("input-error");
-    subtitle.textContent = "Enter your Mobile Number to receive a verification code.";
+    subtitle.textContent = "Enter your Mobile Number to receive a verification code by SMS.";
     methodText.textContent = "Enter";
     switchMethod.textContent = "Email Address";
     methodSuffix.textContent = "instead";
