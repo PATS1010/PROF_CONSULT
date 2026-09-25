@@ -398,6 +398,18 @@
   transform: translateY(-2px);
 }
 
+.availability-save-button.is-saved {
+  background: #1f9d55;
+}
+
+.availability-save-message {
+  margin-top: 10px;
+  text-align: center;
+  color: #1f9d55;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
 /* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */

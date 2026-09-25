@@ -269,12 +269,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const hoursListEl = document.getElementById("availabilityHoursList");
   const editButton = document.getElementById("editHoursButton");
   const saveHoursButton = document.getElementById("saveHoursButton");
+  const hoursSaveMessage = document.getElementById("hoursSaveMessage");
 
   let isEditingHours = false;
+  let savedMessageTimeoutId = null;
   // Draft copy edited during an edit session; only written back
   // into AVAILABLE_HOURS when Save is clicked. Cancel just
   // discards this and re-renders from AVAILABLE_HOURS untouched.
   let draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+
+  function setHoursSavedState(isSaved) {
+    if (saveHoursButton) {
+      saveHoursButton.textContent = isSaved ? "Saved" : "Save";
+      saveHoursButton.classList.toggle("is-saved", isSaved);
+    }
+
+    if (hoursSaveMessage) {
+      hoursSaveMessage.hidden = !isSaved;
+    }
+
+    if (savedMessageTimeoutId) {
+      window.clearTimeout(savedMessageTimeoutId);
+      savedMessageTimeoutId = null;
+    }
+
+    if (isSaved && hoursSaveMessage) {
+      savedMessageTimeoutId = window.setTimeout(() => {
+        hoursSaveMessage.hidden = true;
+        savedMessageTimeoutId = null;
+      }, 2500);
+    }
+  }
 
   function scheduleToText(hours) {
     return hours
@@ -492,6 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Only THIS day's draft entry changes -- every other day
         // stays exactly as it was.
         draftHours[dayIndex] = { ...draftHours[dayIndex], time: optionButton.dataset.value };
+        setHoursSavedState(false);
         renderAvailableHours();
       }
     });
@@ -512,6 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
           saveHoursButton.disabled = true;
           AVAILABLE_HOURS = await saveHours(draftHours);
           draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+          setHoursSavedState(true);
         } catch (error) {
           if (error.message !== "AUTH_REQUIRED") {
             alert(error.message);
@@ -544,6 +571,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isEditingHours = true;
         draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
         editButton.textContent = "Cancel";
+        setHoursSavedState(false);
         renderAvailableHours();
       }
     });
