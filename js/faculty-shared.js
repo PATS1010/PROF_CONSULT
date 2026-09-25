@@ -358,7 +358,37 @@ document.addEventListener("DOMContentLoaded", () => {
   // page. The bell icon/design itself is untouched.
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("facultyNotificationBellButton");
+  function setFacultyNotificationUnread(hasUnread) {
+    if (!notificationBellButton) return;
+
+    notificationBellButton.classList.toggle("has-notifications", hasUnread);
+    notificationBellButton.setAttribute(
+      "aria-label",
+      hasUnread ? "Notifications, unread notifications" : "Notifications"
+    );
+  }
+
+  async function refreshFacultyNotificationBellStatus() {
+    if (!notificationBellButton) return;
+
+    try {
+      const response = await fetch("api/notifications.php?role=faculty", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+      setFacultyNotificationUnread(response.ok && result.ok && Number(result.unread_count || 0) > 0);
+    } catch (error) {
+      setFacultyNotificationUnread(false);
+    }
+  }
+
+  window.setNotificationBellUnread = setFacultyNotificationUnread;
+  window.refreshNotificationBellStatus = refreshFacultyNotificationBellStatus;
+
   if (notificationBellButton) {
+    refreshFacultyNotificationBellStatus();
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "faculty-notifications.html";
     });
