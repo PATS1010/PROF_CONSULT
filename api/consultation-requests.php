@@ -44,6 +44,8 @@ try {
         $status = clean((string) ($data['status'] ?? ''));
         // Optional faculty response is saved with the request when provided.
         $response = clean((string) ($data['response'] ?? ''));
+        $preferredDate = clean((string) ($data['preferred_date'] ?? ''));
+        $preferredTime = clean((string) ($data['preferred_time'] ?? ''));
         // These are the only request states the system currently supports.
         $allowedStatuses = ['pending', 'approved', 'declined', 'rescheduled', 'completed', 'cancelled'];
 
@@ -52,14 +54,52 @@ try {
             fail('Please provide a valid request update.');
         }
 
+        $preferredTimeStart = '';
+        if ($status === 'rescheduled') {
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $preferredDate) || $preferredTime === '') {
+                fail('Please provide a valid new consultation schedule.');
+            }
+
+            $preferredTimeStart = preferredTimeStart($preferredTime);
+            if ($preferredTimeStart < '07:00:00' || $preferredTimeStart >= '19:00:00') {
+                fail('Preferred time must be between 7:00 AM and 7:00 PM.');
+            }
+
+            $scheduledStart = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $preferredDate . ' ' . $preferredTimeStart);
+            $scheduledEnd = $scheduledStart instanceof DateTimeImmutable
+                ? $scheduledStart->modify('+30 minutes')
+                : false;
+            $now = new DateTimeImmutable('now');
+
+            if (!$scheduledEnd || $scheduledEnd <= $now) {
+                fail('Preferred date and time must be in the future.');
+            }
+        }
+
         // Update only the selected request that belongs to the logged-in professor.
-        $update = $db->prepare(
-            'UPDATE consultation_requests
-             SET Status = ?, Response = ?
-             WHERE Request_ID = ? AND Faculty_ID = ?'
-        );
-        // Save null when the professor did not type a response.
-        $update->execute([$status, $response !== '' ? $response : null, $requestId, (int) $profile['profile_id']]);
+        if ($status === 'rescheduled') {
+            $update = $db->prepare(
+                'UPDATE consultation_requests
+                 SET Status = ?, Response = ?, Request_Date = ?, Preferred_Time = ?
+                 WHERE Request_ID = ? AND Faculty_ID = ?'
+            );
+            $update->execute([
+                $status,
+                $response !== '' ? $response : null,
+                $preferredDate,
+                $preferredTimeStart,
+                $requestId,
+                (int) $profile['profile_id'],
+            ]);
+        } else {
+            $update = $db->prepare(
+                'UPDATE consultation_requests
+                 SET Status = ?, Response = ?
+                 WHERE Request_ID = ? AND Faculty_ID = ?'
+            );
+            // Save null when the professor did not type a response.
+            $update->execute([$status, $response !== '' ? $response : null, $requestId, (int) $profile['profile_id']]);
+        }
 
         // If no row changed, the request either does not exist or belongs to another faculty account.
         if ($update->rowCount() === 0) {

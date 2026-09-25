@@ -7,7 +7,7 @@
 //   expanded card collapses it back.
 // - Accept / Decline mark the request answered, then remove it
 //   from the pending queue so the next one moves up.
-// - Reschedule is a frontend-only placeholder for now.
+// - Reschedule opens the reschedule form for the selected request.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js and is untouched
@@ -364,26 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (action === "reschedule") {
-        const toast = card.querySelector(".request-toast");
-        actionButton.textContent = "Rescheduled";
-        actionButton.disabled = true;
-
-        try {
-          await updateRequestStatus(request.id, "rescheduled");
-          request.status = "rescheduled";
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          actionButton.textContent = "Reschedule";
-          actionButton.disabled = false;
-          return;
-        }
-
-        if (toast) {
-          toast.textContent = "Request marked for reschedule.";
-          toast.classList.add("is-visible");
-        }
-        window.setTimeout(renderRequests, 900);
+        window.location.href = `reschedule-consultation.html?request_id=${encodeURIComponent(request.id)}`;
       }
 
       if (action === "accept") {
