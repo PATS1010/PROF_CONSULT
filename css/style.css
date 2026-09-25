@@ -32,8 +32,8 @@
 html,
 body {
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
@@ -43,7 +43,8 @@ body {
 .loading-screen {
   position: relative;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,7 +107,8 @@ body {
   align-items: center;
   text-align: center;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
   max-width: 900px;
   padding: 0 20px;
 }
@@ -163,8 +165,9 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  min-height: 40px;
-  margin-bottom: var(--spacing-section-gap);
+  width: 100%;
+  min-height: 52px;
+  margin-bottom: max(var(--spacing-section-gap), env(safe-area-inset-bottom));
 }
 
 /* =========================================================
@@ -185,7 +188,11 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 132px;
+  min-height: 44px;
   padding: 10px 22px;
   border-radius: 8px;
   background-color: var(--color-button-red);
@@ -246,6 +253,10 @@ body {
     max-width: none;
     transform: translate(-8px, -10px);
   }
+
+  .loading-screen {
+    overflow-y: auto;
+  }
 }
 
 /* Phones */
@@ -264,5 +275,25 @@ body {
 
   .loading-text {
     font-size: 0.85rem;
+  }
+
+  .bottom-area {
+    margin-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-height: 640px) and (max-width: 768px) {
+  .content-wrapper {
+    min-height: 100dvh;
+    padding-top: 18px;
+    padding-bottom: 18px;
+  }
+
+  .logo-row {
+    margin-top: 0;
+  }
+
+  .brand-logo {
+    min-height: 180px;
   }
 }
