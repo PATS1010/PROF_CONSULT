@@ -53,10 +53,6 @@ try {
             fail('Please provide valid availability details.');
         }
 
-        if (!isFacultyClassHours() && $status !== 'offline') {
-            $status = 'offline';
-        }
-
         $statement = $db->prepare(
             'INSERT INTO availability (Faculty_ID, Status, Date, Time)
              VALUES (?, ?, ?, ?)

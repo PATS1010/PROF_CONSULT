@@ -34,10 +34,6 @@ try {
     }
 
     $user = rememberUserSession(publicUser($record));
-    if ($user['role'] === 'faculty' && !isFacultyClassHours()) {
-        saveFacultyAvailabilityForUser($db, $user['id'], 'offline');
-    }
-
     $profile = userProfile($db, $user['id'], $user['role']);
     reply(['ok' => true, 'user' => $user, 'profile' => $profile]);
 } catch (PDOException $exception) {

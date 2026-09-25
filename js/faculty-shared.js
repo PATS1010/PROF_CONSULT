@@ -73,29 +73,6 @@ function facultyCurrentTimeValue() {
   return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
 }
 
-function isFacultyClassHoursNow() {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  return (minutes >= 7 * 60 && minutes < 12 * 60) ||
-    (minutes >= 13 * 60 && minutes < 19 * 60);
-}
-
-function millisecondsUntilFacultyClassHoursEnd() {
-  const now = new Date();
-  const minutes = now.getHours() * 60 + now.getMinutes();
-  const end = new Date(now);
-
-  if (minutes >= 7 * 60 && minutes < 12 * 60) {
-    end.setHours(12, 0, 0, 0);
-  } else if (minutes >= 13 * 60 && minutes < 19 * 60) {
-    end.setHours(19, 0, 0, 0);
-  } else {
-    return 0;
-  }
-
-  return Math.max(0, end.getTime() - now.getTime());
-}
-
 async function saveFacultyAvailabilityStatus(status) {
   const uiStatus = facultyStatusForUi(status);
   const response = await fetch("api/availability.php", {
@@ -136,33 +113,6 @@ window.FacultyAvailability = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  let workHoursOfflineTimeoutId = null;
-
-  async function markFacultyOfflineOutsideClassHours() {
-    try {
-      await saveFacultyAvailabilityStatus("offline");
-    } catch (error) {
-      setFacultyOnlineStatus("offline");
-    }
-  }
-
-  function scheduleFacultyWorkHoursOffline() {
-    if (workHoursOfflineTimeoutId) {
-      window.clearTimeout(workHoursOfflineTimeoutId);
-      workHoursOfflineTimeoutId = null;
-    }
-
-    if (!isFacultyClassHoursNow()) {
-      saveFacultyAvailabilityStatus("offline").catch(() => {});
-      return;
-    }
-
-    workHoursOfflineTimeoutId = window.setTimeout(() => {
-      markFacultyOfflineOutsideClassHours();
-      workHoursOfflineTimeoutId = null;
-    }, millisecondsUntilFacultyClassHoursEnd());
-  }
-
   // ---------------------------------------------------------
   // Burger sidebar: slides in from the left, dims/blurs the
   // page behind it. Closes via the X button or clicking the
@@ -349,12 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleCheckIn(event) {
     event.preventDefault();
-    if (!isFacultyClassHoursNow()) {
-      alert("Check In is only available from 7:00 AM to 12:00 PM and 1:00 PM to 7:00 PM.");
-      setFacultyOnlineStatus("offline");
-      return;
-    }
-
     try {
       const savedStatus = await saveFacultyAvailabilityStatus("available");
       setFacultyOnlineStatus(savedStatus);
@@ -362,8 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(error.message);
       return;
     }
-
-    scheduleFacultyWorkHoursOffline();
   }
 
   async function handleCheckOut(event) {
@@ -375,8 +317,6 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(error.message);
       return;
     }
-
-    scheduleFacultyWorkHoursOffline();
   }
 
   if (checkInButton) {
@@ -390,7 +330,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // the database-backed Dashboard status card.
   updateQuickActionUI();
   loadSavedFacultyStatus();
-  scheduleFacultyWorkHoursOffline();
+
+  document.querySelectorAll('.faculty-sidebar-link[data-page="logout"]').forEach((link) => {
+    link.addEventListener("click", async (event) => {
+      event.preventDefault();
+
+      try {
+        await fetch("api/logout.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+        });
+      } catch (error) {
+        try {
+          await saveFacultyAvailabilityStatus("offline");
+        } catch (saveError) {
+          // Continue to login page even if the network request is unavailable.
+        }
+      }
+
+      window.location.href = "faculty-login.html";
+    });
+  });
 
   // ---------------------------------------------------------
   // Notification bell -- navigates to the Faculty Notifications
