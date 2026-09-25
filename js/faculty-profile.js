@@ -147,11 +147,21 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render the account's current data into view mode
   // ---------------------------------------------------------
   function renderViewMode() {
-    viewName.textContent = FACULTY_ACCOUNT.name;
-    viewId.textContent = FACULTY_ACCOUNT.facultyId;
-    viewProgram.textContent = FACULTY_ACCOUNT.program;
-    viewEmail.textContent = FACULTY_ACCOUNT.email;
-    viewPhone.textContent = FACULTY_ACCOUNT.phone ? `+63 ${FACULTY_ACCOUNT.phone}` : "";
+    if (viewName) viewName.textContent = FACULTY_ACCOUNT.name;
+    if (viewId) viewId.textContent = FACULTY_ACCOUNT.facultyId;
+    if (viewProgram) viewProgram.textContent = FACULTY_ACCOUNT.program;
+    if (viewEmail) viewEmail.textContent = FACULTY_ACCOUNT.email;
+    if (viewPhone) viewPhone.textContent = FACULTY_ACCOUNT.phone ? `+63 ${FACULTY_ACCOUNT.phone}` : "";
+
+    if (firstNameInput) firstNameInput.value = FACULTY_ACCOUNT.firstName;
+    if (middleInitialInput) middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
+    if (lastNameInput) lastNameInput.value = FACULTY_ACCOUNT.lastName;
+    if (idInput) idInput.value = FACULTY_ACCOUNT.facultyId;
+    selectedProgram = FACULTY_ACCOUNT.program;
+    if (programValueEl) programValueEl.textContent = selectedProgram;
+    if (emailInput) emailInput.value = FACULTY_ACCOUNT.email;
+    if (phoneInput) phoneInput.value = FACULTY_ACCOUNT.phone;
+
     if (facultyProfilePhoto && FACULTY_ACCOUNT.profilePhoto) {
       facultyProfilePhoto.src = `${FACULTY_ACCOUNT.profilePhoto}?v=${Date.now()}`;
     }
@@ -242,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (programTrigger) {
     programTrigger.addEventListener("click", (event) => {
       event.stopPropagation();
+      if (!isEditing) return;
       const isOpen = programList.classList.contains("is-open");
       if (isOpen) {
         closeProgramDropdown();
@@ -253,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (programList) {
     programList.addEventListener("click", (event) => {
+      if (!isEditing) return;
       const option = event.target.closest(".faculty-dropdown-option");
       if (!option) return;
       selectedProgram = option.dataset.value;
@@ -375,16 +387,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   // Enter / exit edit mode
   // ---------------------------------------------------------
+  function setInlineFieldsEditable(canEdit) {
+    [firstNameInput, middleInitialInput, lastNameInput, emailInput, phoneInput].forEach((field) => {
+      if (!field) return;
+      field.readOnly = !canEdit;
+    });
+
+    if (programTrigger) {
+      programTrigger.disabled = !canEdit;
+    }
+
+    if (editForm) {
+      editForm.classList.toggle("is-editing", canEdit);
+    }
+  }
+
   function enterEditMode() {
     // Populate the edit form from the current account data
-    firstNameInput.value = FACULTY_ACCOUNT.firstName;
-    middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
-    lastNameInput.value = FACULTY_ACCOUNT.lastName;
-    idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
-    selectedProgram = FACULTY_ACCOUNT.program;
-    programValueEl.textContent = selectedProgram;
-    emailInput.value = FACULTY_ACCOUNT.email;
-    phoneInput.value = FACULTY_ACCOUNT.phone;
+    renderViewMode();
 
     clearNameErrors();
     clearFieldError(emailInput, emailError);
@@ -400,15 +420,17 @@ document.addEventListener("DOMContentLoaded", () => {
     editProfileButton.textContent = "Save Changes";
     if (cancelProfileButton) cancelProfileButton.hidden = false;
     isEditing = true;
+    setInlineFieldsEditable(true);
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
   }
 
   function exitEditMode() {
-    editForm.hidden = true;
-    viewSection.hidden = false;
+    editForm.hidden = false;
+    viewSection.hidden = true;
     editProfileButton.textContent = "Edit Profile";
     if (cancelProfileButton) cancelProfileButton.hidden = true;
     isEditing = false;
+    setInlineFieldsEditable(false);
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
     closeProgramDropdown();
   }
@@ -451,7 +473,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleSave() {
     // Do nothing if not currently editing -- Save only acts on
     // the edit form's values.
-    if (editForm.hidden) return;
+    if (!isEditing) return;
 
     const isNameValid = validateName();
     const isEmailValid = validateEmail();
@@ -513,5 +535,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  if (viewSection) viewSection.hidden = true;
+  if (editForm) editForm.hidden = false;
+  setInlineFieldsEditable(false);
 
 });

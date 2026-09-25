@@ -303,11 +303,11 @@
 
 .faculty-form-input {
   width: 100%;
-  padding: 6px 10px;
+  padding: 6px 0;
   border: none;
-  border-bottom: 1px solid var(--color-gradient-end);
-  border-radius: 6px;
-  background-color: #ffffff;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background-color: transparent;
   font-family: var(--font-main);
   font-size: 0.95rem;
   font-weight: 500;
@@ -330,6 +330,13 @@
   border-bottom-color: transparent;
   color: var(--color-text-muted);
   cursor: not-allowed;
+}
+
+.faculty-profile-edit.is-editing .faculty-form-input:not(.faculty-form-input-readonly) {
+  padding: 6px 10px;
+  border-bottom-color: var(--color-gradient-end);
+  border-radius: 6px;
+  background-color: #ffffff;
 }
 
 .faculty-form-error {
@@ -387,11 +394,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 10px;
+  padding: 6px 0;
   border: none;
-  border-bottom: 1px solid var(--color-gradient-end);
-  border-radius: 6px;
-  background-color: #ffffff;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background-color: transparent;
   font-family: var(--font-main);
   font-size: 0.95rem;
   font-weight: 500;
@@ -403,6 +410,21 @@
 .faculty-dropdown-trigger[aria-expanded="true"] {
   outline: 2px solid var(--color-gradient-end);
   outline-offset: 1px;
+}
+
+.faculty-dropdown-trigger:disabled {
+  cursor: default;
+}
+
+.faculty-dropdown-trigger:disabled:hover {
+  outline: none;
+}
+
+.faculty-profile-edit.is-editing .faculty-dropdown-trigger {
+  padding: 6px 10px;
+  border-bottom-color: var(--color-gradient-end);
+  border-radius: 6px;
+  background-color: #ffffff;
 }
 
 .faculty-dropdown-caret {
