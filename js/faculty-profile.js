@@ -108,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Element references
   // ---------------------------------------------------------
   const editProfileButton = document.getElementById("editProfileButton");
+  const cancelProfileButton = document.getElementById("cancelProfileButton");
 
   const viewSection = document.getElementById("facultyProfileView");
   const editForm = document.getElementById("facultyProfileEdit");
@@ -162,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const response = await fetch("api/profile-photo.php", {
       method: "POST",
+      credentials: "same-origin",
       body: formData,
     });
     const data = await response.json().catch(() => ({}));
@@ -396,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
     viewSection.hidden = true;
     editForm.hidden = false;
     editProfileButton.textContent = "Save Changes";
+    if (cancelProfileButton) cancelProfileButton.hidden = false;
     isEditing = true;
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
   }
@@ -404,9 +407,19 @@ document.addEventListener("DOMContentLoaded", () => {
     editForm.hidden = true;
     viewSection.hidden = false;
     editProfileButton.textContent = "Edit Profile";
+    if (cancelProfileButton) cancelProfileButton.hidden = true;
     isEditing = false;
     if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
     closeProgramDropdown();
+  }
+
+  function cancelEditMode() {
+    clearNameErrors();
+    clearFieldError(emailInput, emailError);
+    clearFieldError(phoneInput, phoneError, phoneWrap);
+    if (facultyProfilePhotoInput) facultyProfilePhotoInput.value = "";
+    renderViewMode();
+    exitEditMode();
   }
 
   if (editProfileButton) {
@@ -417,6 +430,10 @@ document.addEventListener("DOMContentLoaded", () => {
         enterEditMode();
       }
     });
+  }
+
+  if (cancelProfileButton) {
+    cancelProfileButton.addEventListener("click", cancelEditMode);
   }
 
   if (editForm) {

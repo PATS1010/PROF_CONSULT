@@ -151,6 +151,20 @@
           class="faculty-profile-photo"
           id="facultyProfilePhoto"
         >
+        <label
+          for="facultyProfilePhotoInput"
+          class="faculty-profile-photo-edit"
+          id="facultyProfilePhotoEdit"
+          hidden
+        >
+          Choose
+        </label>
+        <input
+          type="file"
+          id="facultyProfilePhotoInput"
+          class="faculty-profile-photo-input"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+        >
       </div>
     </div>
 
@@ -272,9 +286,14 @@
        Edit mode: "Save Changes". It is a direct child of the card,
        so .faculty-profile-card's align-items:center centers it
        below the whole card, matching the Student Profile reference. -->
-  <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
-    Edit Profile
-  </button>
+  <div class="faculty-profile-actions">
+    <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
+      Edit Profile
+    </button>
+    <button type="button" class="faculty-cancel-profile-button" id="cancelProfileButton" hidden>
+      Cancel
+    </button>
+  </div>
 
   <div class="faculty-profile-footer">
     <p class="faculty-save-success" id="saveSuccessMessage" hidden>Profile updated successfully.</p>

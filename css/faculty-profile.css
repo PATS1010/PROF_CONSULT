@@ -111,17 +111,19 @@
 
 .faculty-profile-photo-edit {
   position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  left: 50%;
+  bottom: -12px;
+  min-width: 82px;
+  transform: translateX(-50%);
+  padding: 8px 14px;
+  border-radius: 999px;
   background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 700;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
@@ -138,26 +140,51 @@
   clip: rect(0 0 0 0);
 }
 
-.faculty-edit-profile-button {
+.faculty-profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.faculty-edit-profile-button,
+.faculty-cancel-profile-button {
   display: inline-block;
   padding: 12px 32px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: var(--color-text-light);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.3px;
-  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.faculty-edit-profile-button:hover {
+.faculty-edit-profile-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+}
+
+.faculty-cancel-profile-button {
+  background: #6b6b6b;
+  box-shadow: 0 8px 18px rgba(72, 72, 72, 0.25);
+}
+
+.faculty-edit-profile-button:hover,
+.faculty-cancel-profile-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
   opacity: 0.95;
 }
 
-.faculty-edit-profile-button[hidden] {
+.faculty-edit-profile-button:hover {
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
+}
+
+.faculty-cancel-profile-button:hover {
+  box-shadow: 0 12px 24px rgba(72, 72, 72, 0.35);
+}
+
+.faculty-edit-profile-button[hidden],
+.faculty-cancel-profile-button[hidden] {
   display: none;
 }
 
@@ -550,7 +577,9 @@
     height: 88px;
   }
 
-  .faculty-edit-profile-button {
+  .faculty-profile-actions,
+  .faculty-edit-profile-button,
+  .faculty-cancel-profile-button {
     width: 100%;
     text-align: center;
   }
