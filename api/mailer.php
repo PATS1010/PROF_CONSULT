@@ -25,18 +25,33 @@ function sendOtpSms(string $mobileNumber, string $otpCode): void
         throw new RuntimeException('BREVO_API_KEY is not configured in Railway.');
     }
 
-    $recipient = preg_replace('/\D/', '', $mobileNumber);
-    if (strlen($recipient) === 10 && str_starts_with($recipient, '9')) {
-        $recipient = '63' . $recipient;
-    } elseif (strlen($recipient) === 11 && str_starts_with($recipient, '0')) {
-        $recipient = '63' . substr($recipient, 1);
-    }
+    $recipient = philippineMobileForSms($mobileNumber);
 
-    if (!preg_match('/^63\d{10}$/', $recipient)) {
+    if ($recipient === '') {
         throw new RuntimeException('Unable to send SMS because the mobile number is invalid.');
     }
 
     sendOtpSmsWithBrevoApi($recipient, $otpCode);
+}
+
+function philippineMobileLocalNumber(string $mobileNumber): string
+{
+    $digits = preg_replace('/\D/', '', $mobileNumber);
+
+    if (strlen($digits) === 12 && str_starts_with($digits, '63')) {
+        $digits = substr($digits, 2);
+    } elseif (strlen($digits) === 11 && str_starts_with($digits, '0')) {
+        $digits = substr($digits, 1);
+    }
+
+    return preg_match('/^9\d{9}$/', $digits) ? $digits : '';
+}
+
+function philippineMobileForSms(string $mobileNumber): string
+{
+    $localNumber = philippineMobileLocalNumber($mobileNumber);
+
+    return $localNumber !== '' ? '63' . $localNumber : '';
 }
 
 function otpEmailHtml(string $toName, string $otpCode): string

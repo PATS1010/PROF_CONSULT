@@ -246,5 +246,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  setEmailMode();
+  if (savedMobile) {
+    setMobileMode();
+  } else {
+    setEmailMode();
+  }
 });

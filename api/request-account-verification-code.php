@@ -14,20 +14,14 @@ $role = clean((string) ($data['role'] ?? ''));
 $email = strtolower(clean((string) ($data['email'] ?? $data['identifier'] ?? '')));
 $method = clean((string) ($data['method'] ?? 'email'));
 $identifier = clean((string) ($data['identifier'] ?? ''));
-$mobile = preg_replace('/\D/', '', $identifier);
+$mobile = philippineMobileLocalNumber($identifier);
 
 if (!in_array($role, ['student', 'faculty'], true) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     fail('Please enter a valid email address.');
 }
 
 if ($method === 'mobile') {
-    if (strlen($mobile) === 12 && str_starts_with($mobile, '63')) {
-        $mobile = substr($mobile, 2);
-    } elseif (strlen($mobile) === 11 && str_starts_with($mobile, '0')) {
-        $mobile = substr($mobile, 1);
-    }
-
-    if (!preg_match('/^9\d{9}$/', $mobile)) {
+    if ($mobile === '') {
         fail('Please enter a valid Philippine mobile number.');
     }
 } else {

@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Faculty session unavailable");
       }
 
-      if (nameEl) nameEl.textContent = "Prof";
+      if (nameEl) nameEl.textContent = "Professor";
     } catch (error) {
       window.location.href = "faculty-login.html";
     }

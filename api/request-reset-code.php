@@ -21,28 +21,34 @@ if ($identifier === '' || !in_array($role, ['student', 'faculty'], true)) {
 }
 
 $emailCandidate = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? $identifier : '';
-$phoneCandidate = preg_replace('/\D/', '', $identifier);
+$phoneCandidate = philippineMobileLocalNumber($identifier);
 $sendBySms = $method === 'mobile' || ($emailCandidate === '' && $phoneCandidate !== '');
-
-if (strlen($phoneCandidate) === 12 && str_starts_with($phoneCandidate, '63')) {
-    $phoneCandidate = substr($phoneCandidate, 2);
-} elseif (strlen($phoneCandidate) === 11 && str_starts_with($phoneCandidate, '0')) {
-    $phoneCandidate = substr($phoneCandidate, 1);
-}
 
 try {
     $db = database();
     ensurePasswordResetTable($db);
 
     $lookup = $db->prepare(
-        'SELECT User_ID AS "User_ID", Full_Name AS "Full_Name", Email AS "Email"
+        'SELECT User_ID AS "User_ID", Full_Name AS "Full_Name", Email AS "Email", Mobile_Number AS "Mobile_Number"
          FROM users
          WHERE Role = ?
-           AND (LOWER(Email) = ? OR Mobile_Number = ?)
+           AND (
+             LOWER(Email) = ?
+             OR Mobile_Number = ?
+             OR REGEXP_REPLACE(Mobile_Number, \'\D\', \'\', \'g\') = ?
+             OR REGEXP_REPLACE(Mobile_Number, \'\D\', \'\', \'g\') = ?
+           )
            AND Account_Status = ?
          LIMIT 1'
     );
-    $lookup->execute([$role, $emailCandidate, $phoneCandidate, 'active']);
+    $lookup->execute([
+        $role,
+        $emailCandidate,
+        $phoneCandidate,
+        '0' . $phoneCandidate,
+        '63' . $phoneCandidate,
+        'active',
+    ]);
     $user = $lookup->fetch();
 
     if (!$user) {
@@ -67,7 +73,7 @@ try {
     ]);
 
     if ($sendBySms) {
-        sendOtpSms($phoneCandidate, $otpCode);
+        sendOtpSms((string) $user['Mobile_Number'], $otpCode);
         $sentTo = 'mobile';
     } else {
         sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
