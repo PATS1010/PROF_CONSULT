@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const studentGreetingEl = document.getElementById("studentFirstName");
 
+  function firstNameFromFullName(fullName) {
+    return String(fullName || "").trim().split(/\s+/)[0] || "Student";
+  }
+
   async function loadCurrentStudent() {
     try {
       const response = await fetch("api/session.php?role=student", {
@@ -29,7 +33,9 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Student session unavailable");
       }
 
-      if (studentGreetingEl) studentGreetingEl.textContent = "Student";
+      if (studentGreetingEl) {
+        studentGreetingEl.textContent = firstNameFromFullName(data.user.name);
+      }
     } catch (error) {
       window.location.href = "student-login.html";
     }
