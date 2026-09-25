@@ -344,17 +344,23 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${hour12}:${minute} ${suffix}`;
   }
 
+  function requestDateValue(row) {
+    const rawDate = String(row.Request_Date || "").trim();
+    const dateMatch = rawDate.match(/^(\d{4}-\d{2}-\d{2})/);
+    return dateMatch ? dateMatch[1] : rawDate;
+  }
+
   function renderTodaySchedule(apiRequests) {
     if (!scheduleListEl) return;
 
     // Match requests against the local current date shown by the dashboard.
     const today = currentDateValue();
-    // Only approved/completed requests for today are real scheduled consultations.
+    // Only approved/rescheduled requests for today are real upcoming scheduled consultations.
     const scheduledRequests = (apiRequests || [])
       .filter((row) => {
-        const requestDate = String(row.Request_Date || "").slice(0, 10);
+        const requestDate = requestDateValue(row);
         const status = String(row.Status || "").toLowerCase();
-        return requestDate === today && ["approved", "completed"].includes(status);
+        return requestDate === today && ["approved", "rescheduled"].includes(status);
       })
       // Sort by the saved preferred time so the schedule reads from morning to afternoon.
       .sort((a, b) => String(a.Preferred_Time || "").localeCompare(String(b.Preferred_Time || "")));
@@ -368,7 +374,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Build DOM nodes directly so student-entered text is displayed as text, not HTML.
     scheduleListEl.replaceChildren(...scheduledRequests.map((row) => {
       const status = String(row.Status || "").toLowerCase();
-      const statusText = status === "completed" ? "Completed" : "Approved";
+      const statusText = status === "rescheduled" ? "Rescheduled" : "Approved";
       const title = row.Purpose || "Consultation";
       const studentName = row.Student_Name || "Student";
       const item = document.createElement("li");
