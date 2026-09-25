@@ -255,7 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       verifyAccountButton.setAttribute(
         "tabindex",
-        "-1"
+        "0"
       );
 
       return;
@@ -311,9 +311,8 @@ document.addEventListener("DOMContentLoaded", () => {
         "true"
       );
 
-      verifyAccountButton.setAttribute(
-        "tabindex",
-        "-1"
+      verifyAccountButton.removeAttribute(
+        "tabindex"
       );
     }
   }

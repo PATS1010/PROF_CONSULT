@@ -350,8 +350,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "true"
       );
 
-      verifyButton.removeAttribute(
-        "href"
+      verifyButton.setAttribute(
+        "href",
+        "verify-account.html?from=student"
       );
     }
   }

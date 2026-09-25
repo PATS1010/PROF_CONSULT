@@ -434,9 +434,7 @@ button {
 .verify-account-button.disabled {
   opacity: 0.5;
 
-  cursor: not-allowed;
-
-  pointer-events: none;
+  cursor: pointer;
 
   transform: none;
 
