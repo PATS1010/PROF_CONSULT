@@ -673,7 +673,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const response =
         await fetch(
-          "/api/register.php",
+          "api/register.php",
           {
             method: "POST",
 

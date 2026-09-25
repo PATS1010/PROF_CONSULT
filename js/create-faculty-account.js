@@ -105,15 +105,28 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      if (!form.checkValidity() || !document.getElementById("department").value) {
+      const firstName = document.getElementById("firstName").value.trim();
+      const middleInitial = document.getElementById("middleInitial").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const department = document.getElementById("department").value;
+
+      if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
+
+      if (!department) {
+        alert("Please select your department.");
+        document.getElementById("departmentTrigger").focus();
+        return;
+      }
+
+      const fullName = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
       sessionStorage.setItem("findprof_registration", JSON.stringify({
         role: "faculty",
         id_number: document.getElementById("facultyIdNumber").value.trim(),
-        full_name: document.getElementById("fullName").value.trim(),
-        department: document.getElementById("department").value
+        full_name: fullName,
+        department: department
       }));
       window.location.href = "create-faculty-account2.html";
     });

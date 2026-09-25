@@ -105,16 +105,40 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      if (!form.checkValidity() || !document.getElementById("courseProgram").value || !document.getElementById("yearLevel").value) {
+      const firstName = document.getElementById("firstName").value.trim();
+      const middleInitial = document.getElementById("middleInitial").value.trim();
+      const lastName = document.getElementById("lastName").value.trim();
+      const program = document.getElementById("courseProgram").value;
+      const yearLevel = document.getElementById("yearLevel").value;
+      const section = document.getElementById("section").value;
+
+      if (!form.checkValidity()) {
         form.reportValidity();
         return;
       }
+
+      if (!program || !yearLevel || !section) {
+        if (!program) {
+          alert("Please select your course or program.");
+          document.getElementById("courseProgramTrigger").focus();
+        } else if (!yearLevel) {
+          alert("Please select your year level.");
+          document.getElementById("yearLevelTrigger").focus();
+        } else if (!section) {
+          alert("Please select your section.");
+          document.getElementById("sectionTrigger").focus();
+        }
+        return;
+      }
+
+      const fullName = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
       sessionStorage.setItem("findprof_registration", JSON.stringify({
         role: "student",
         id_number: studentNumberInput.value.trim(),
-        full_name: document.getElementById("fullName").value.trim(),
-        program: document.getElementById("courseProgram").value,
-        year_level: document.getElementById("yearLevel").value
+        full_name: fullName,
+        program: program,
+        year_level: yearLevel,
+        section: section
       }));
       window.location.href = "create-student-account2.html";
     });
