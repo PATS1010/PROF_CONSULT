@@ -111,19 +111,17 @@
 
 .faculty-profile-photo-edit {
   position: absolute;
-  left: 50%;
-  bottom: -12px;
-  min-width: 82px;
-  transform: translateX(-50%);
-  padding: 8px 14px;
-  border-radius: 999px;
+  right: 0;
+  bottom: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.85rem;
   cursor: pointer;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
@@ -258,18 +256,20 @@
 .faculty-profile-edit {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .faculty-form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .faculty-form-group label {
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--color-text-muted);
 }
 
@@ -288,7 +288,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 /* Middle Initial: fixed narrow column, wide enough that its
@@ -303,28 +303,31 @@
 
 .faculty-form-input {
   width: 100%;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background-color: #f9f8f5;
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 1px solid var(--color-gradient-end);
+  border-radius: 6px;
+  background-color: #ffffff;
   font-family: var(--font-main);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--color-text-dark);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: outline-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .faculty-form-input:focus {
-  outline: none;
-  border-color: var(--color-gradient-end);
-  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 1px;
+  box-shadow: none;
 }
 
 .faculty-form-input.has-error {
-  border-color: var(--color-status-onleave);
+  border-bottom-color: var(--color-status-onleave);
 }
 
 .faculty-form-input-readonly {
-  background-color: #eeece7;
+  background-color: transparent;
+  border-bottom-color: transparent;
   color: var(--color-text-muted);
   cursor: not-allowed;
 }
@@ -344,20 +347,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 16px;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background-color: #f9f8f5;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.faculty-phone-input-wrap:focus-within {
-  border-color: var(--color-gradient-end);
-  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
 }
 
 .faculty-phone-input-wrap.has-error {
-  border-color: var(--color-status-onleave);
+  outline: 2px solid var(--color-status-onleave);
+  outline-offset: 1px;
 }
 
 .faculty-phone-prefix {
@@ -368,14 +362,12 @@
 }
 
 .faculty-phone-input {
-  border: none;
-  background: transparent;
-  padding: 12px 0;
+  flex: 1;
 }
 
 .faculty-phone-input:focus {
-  outline: none;
-  box-shadow: none;
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 1px;
 }
 
 /* =========================================================
@@ -395,20 +387,22 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 1px solid #e0e0e0;
-  background-color: #f9f8f5;
+  padding: 6px 10px;
+  border: none;
+  border-bottom: 1px solid var(--color-gradient-end);
+  border-radius: 6px;
+  background-color: #ffffff;
   font-family: var(--font-main);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--color-text-dark);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: outline-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .faculty-dropdown-trigger:hover,
 .faculty-dropdown-trigger[aria-expanded="true"] {
-  border-color: var(--color-gradient-end);
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 1px;
 }
 
 .faculty-dropdown-caret {
