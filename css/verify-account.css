@@ -427,7 +427,7 @@ button {
 
 .country-code {
   flex:
-    0 0 100px;
+    0 0 auto;
 
   display: flex;
 
@@ -436,10 +436,10 @@ button {
   justify-content: center;
 
   padding:
-    14px 10px;
+    14px 8px 14px 22px;
 
   background-color:
-    var(--color-input-light);
+    transparent;
 
   color: #666666;
 
@@ -461,7 +461,7 @@ button {
   flex: 1;
 
   padding:
-    14px 22px;
+    14px 22px 14px 6px;
 
   border: none;
 
