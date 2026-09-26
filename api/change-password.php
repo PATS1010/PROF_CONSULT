@@ -17,7 +17,7 @@ if ($currentPassword === '' || !validPassword($newPassword)) {
 
 try {
     $db = database();
-    $statement = $db->prepare('SELECT Password FROM users WHERE User_ID = ? LIMIT 1');
+    $statement = $db->prepare('SELECT Password AS "Password" FROM users WHERE User_ID = ? LIMIT 1');
     $statement->execute([$user['id']]);
     $record = $statement->fetch();
 
