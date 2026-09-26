@@ -106,11 +106,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   function formatTimestamp(value) {
     if (!value) return "";
-    const normalized = String(value).replace(" ", "T");
-    const date = new Date(normalized);
+    const timestamp = String(value).trim();
+    const normalized = timestamp
+      .replace(" ", "T")
+      .replace(/(\.\d{3})\d+/, "$1");
+    const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
+    const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
     if (Number.isNaN(date.getTime())) return value;
 
     return date.toLocaleString("en-US", {
+      timeZone: "Asia/Manila",
       month: "long",
       day: "numeric",
       hour: "numeric",

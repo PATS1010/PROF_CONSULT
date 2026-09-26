@@ -14,6 +14,7 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  const dashboardGreetingEl = document.getElementById("dashboardGreeting");
   const studentGreetingEl = document.getElementById("studentFirstName");
 
   function firstNameFromFullName(fullName) {
@@ -35,6 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (studentGreetingEl) {
         studentGreetingEl.textContent = firstNameFromFullName(data.user.name);
+      }
+      if (dashboardGreetingEl) {
+        dashboardGreetingEl.hidden = false;
       }
     } catch (error) {
       window.location.href = "student-login.html";

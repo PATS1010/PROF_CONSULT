@@ -540,9 +540,12 @@ input {
   margin-bottom: 4px;
 }
 
+.profile-fullname-view[hidden] {
+  display: none;
+}
+
 .profile-fullname-edit {
-  display: flex;
-  gap: 14px;
+  display: block;
 }
 
 .profile-fullname-edit[hidden] {
@@ -583,8 +586,16 @@ input {
 }
 
 /* =========================================================
-   EDIT PROFILE BUTTON
+   PROFILE ACTION BUTTONS
 ========================================================= */
+.profile-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
 .btn {
   display: inline-block;
   padding: 14px 40px;
@@ -603,6 +614,23 @@ input {
   transform: translateY(-3px);
   box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
   opacity: 0.95;
+}
+
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
+.cancel-profile-button {
+  background: #ffffff;
+  color: var(--color-red-dark);
+  border: 1px solid rgba(122, 20, 20, 0.25);
+  box-shadow: none;
+}
+
+.cancel-profile-button:hover {
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.18);
 }
 
 /* =========================================================
@@ -667,8 +695,16 @@ input {
     height: 88px;
   }
 
+  .profile-actions,
   .btn {
     width: 100%;
+  }
+
+  .profile-actions {
+    gap: 10px;
+  }
+
+  .btn {
     text-align: center;
     padding: 13px 20px;
   }

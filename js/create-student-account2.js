@@ -20,6 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileError = document.getElementById("mobileError");
   const passwordFieldError = document.getElementById("passwordFieldError");
   const passwordError = document.getElementById("passwordError");
+  const termsError = document.getElementById("termsError");
   const successMessage = document.getElementById("successMessage");
 
   const verifyButton = document.querySelector(".verify-account-button");
@@ -282,7 +283,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   agreeTermsInput.addEventListener("change", () => {
+    termsError.hidden = agreeTermsInput.checked;
     saveInformation();
+    updateVerificationButton();
   });
 
 
@@ -327,7 +330,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const canVerify =
       emailValid &&
-      mobileValid;
+      mobileValid &&
+      agreeTermsInput.checked;
 
 
     if (canVerify) {
@@ -403,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
 
-    if (!emailValid || !mobileValid) {
+    if (!emailValid || !mobileValid || !agreeTermsInput.checked) {
 
       event.preventDefault();
 
@@ -423,6 +427,17 @@ document.addEventListener("DOMContentLoaded", () => {
           "Please enter a valid Philippine mobile number.";
 
         mobileError.hidden = false;
+      }
+
+
+      if (!agreeTermsInput.checked) {
+
+        termsError.textContent =
+          "Please agree to the Privacy Policy before verifying your account.";
+
+        termsError.hidden = false;
+
+        agreeTermsInput.focus();
       }
 
       return;
@@ -646,12 +661,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!agreeTermsInput.checked) {
 
-      passwordFieldError.textContent =
-        "Please agree to the Privacy Policy.";
+      termsError.textContent =
+        "Please agree to the Privacy Policy before creating your account.";
 
-      passwordFieldError.hidden = false;
+      termsError.hidden = false;
 
       isValid = false;
+    } else {
+
+      termsError.hidden = true;
     }
 
 

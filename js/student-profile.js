@@ -13,6 +13,8 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+  const DEFAULT_PROFILE_PHOTO = "images/user.png";
+
   // ---------------------------------------------------------
   // Current student profile state. The loader below fills this
   // object from the PHP session response, then the renderer copies
@@ -20,9 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   const CURRENT_STUDENT = {
     fullName: "",
+    firstName: "",
+    middleInitial: "",
+    lastName: "",
     studentNumber: "",
     course: "",
     yearLevel: "",
+    section: "",
     email: "",
     phone: "",
     profilePhoto: "",
@@ -55,13 +61,66 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function ensureSelectOption(select, value, label) {
+    if (!select || !value) return;
+
+    const hasOption = Array.from(select.options).some((option) => {
+      return option.value === value;
+    });
+
+    if (!hasOption) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label || value;
+      select.appendChild(option);
+    }
+  }
+
+  function splitFullName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return { firstName: "", middleInitial: "", lastName: "" };
+    }
+    if (parts.length === 1) {
+      return { firstName: parts[0], middleInitial: "", lastName: "" };
+    }
+
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    const middleInitial = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
+    return { firstName, middleInitial, lastName };
+  }
+
+  function combineFullName() {
+    return [
+      CURRENT_STUDENT.firstName,
+      CURRENT_STUDENT.middleInitial,
+      CURRENT_STUDENT.lastName,
+    ].map((part) => String(part || "").trim()).filter(Boolean).join(" ");
+  }
+
+  const fullNameView = document.getElementById("profileFullNameView");
+  const fullNameEdit = document.getElementById("profileFullNameEdit");
+  const fullNameDisplay = document.getElementById("profileFullNameDisplay");
   const fullNameInput = document.getElementById("profileFullName");
+  const firstNameInput = document.getElementById("profileFirstName");
+  const middleInitialInput = document.getElementById("profileMiddleInitial");
+  const lastNameInput = document.getElementById("profileLastName");
   const studentNumberInput = document.getElementById("profileStudentNumber");
   const courseSelect = document.getElementById("profileCourse");
   const yearLevelSelect = document.getElementById("profileYearLevel");
+  const sectionSelect = document.getElementById("profileSection");
   const emailInput = document.getElementById("profileEmail");
   const phoneInput = document.getElementById("profilePhone");
   const profilePhoto = document.getElementById("profilePhoto");
+
+  if (profilePhoto) {
+    profilePhoto.addEventListener("error", () => {
+      if (!profilePhoto.src.endsWith(DEFAULT_PROFILE_PHOTO)) {
+        profilePhoto.src = DEFAULT_PROFILE_PHOTO;
+      }
+    });
+  }
 
   if (phoneInput) {
     phoneInput.addEventListener("input", () => {
@@ -74,9 +133,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const profile = sessionData && sessionData.profile ? sessionData.profile : {};
 
     CURRENT_STUDENT.fullName = user.name || "";
+    const nameParts = splitFullName(CURRENT_STUDENT.fullName);
+    CURRENT_STUDENT.firstName = nameParts.firstName;
+    CURRENT_STUDENT.middleInitial = nameParts.middleInitial;
+    CURRENT_STUDENT.lastName = nameParts.lastName;
     CURRENT_STUDENT.studentNumber = user.username || "";
     CURRENT_STUDENT.course = profile.Program || profile.program || "";
     CURRENT_STUDENT.yearLevel = String(profile.Year_Level || profile.year_level || "");
+    CURRENT_STUDENT.section = String(profile.Section || profile.section || "");
     CURRENT_STUDENT.email = user.email || "";
     CURRENT_STUDENT.phone = formatPhoneInput(user.phone || "");
     CURRENT_STUDENT.profilePhoto = user.profile_photo || "";
@@ -84,11 +148,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function renderStudentProfile() {
     ensureCourseOption(CURRENT_STUDENT.course);
+    ensureSelectOption(yearLevelSelect, CURRENT_STUDENT.yearLevel, CURRENT_STUDENT.yearLevel);
+    ensureSelectOption(sectionSelect, CURRENT_STUDENT.section, CURRENT_STUDENT.section);
 
+    CURRENT_STUDENT.fullName = combineFullName() || CURRENT_STUDENT.fullName;
+
+    if (fullNameDisplay) fullNameDisplay.textContent = CURRENT_STUDENT.fullName;
     if (fullNameInput) fullNameInput.value = CURRENT_STUDENT.fullName;
+    if (firstNameInput) firstNameInput.value = CURRENT_STUDENT.firstName;
+    if (middleInitialInput) middleInitialInput.value = CURRENT_STUDENT.middleInitial;
+    if (lastNameInput) lastNameInput.value = CURRENT_STUDENT.lastName;
     if (studentNumberInput) studentNumberInput.value = CURRENT_STUDENT.studentNumber;
     if (courseSelect) courseSelect.value = CURRENT_STUDENT.course;
     if (yearLevelSelect) yearLevelSelect.value = CURRENT_STUDENT.yearLevel;
+    if (sectionSelect) sectionSelect.value = CURRENT_STUDENT.section;
     if (emailInput) emailInput.value = CURRENT_STUDENT.email;
     if (phoneInput) phoneInput.value = CURRENT_STUDENT.phone;
     if (profilePhoto && CURRENT_STUDENT.profilePhoto) {
@@ -111,6 +184,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return data.profile_photo;
+  }
+
+  async function saveStudentProfile() {
+    const response = await fetch("api/student-profile.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        full_name: fullNameInput ? fullNameInput.value.trim() : combineFullName(),
+        program: courseSelect ? courseSelect.value : CURRENT_STUDENT.course,
+        year_level: yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel,
+        section: sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section,
+        email: emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email,
+        phone: phoneInput ? phoneInput.value : CURRENT_STUDENT.phone,
+      }),
+    });
+
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.ok) {
+      throw new Error(data.message || "Unable to save profile changes.");
+    }
+
+    return data;
   }
 
   async function loadCurrentStudentProfile() {
@@ -235,35 +334,28 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
   // Edit Profile: toggles all fields except Student Number
-  // between read-only and editable. No backend yet, so
-  // "Save Changes" just exits edit mode -- the values already
-  // live on the page's own inputs, ready for a real save call
-  // to be wired in later.
+  // between read-only and editable, then saves changes through
+  // api/student-profile.php.
   // ---------------------------------------------------------
   const editProfileButton = document.getElementById("editProfileButton");
+  const cancelProfileButton = document.getElementById("cancelProfileButton");
   const profileInfoCard = document.querySelector(".profile-info-card");
   const profilePhotoEdit = document.getElementById("profilePhotoEdit");
 
   // Every editable field except Student Number (which stays
   // read-only/disabled at all times, per spec)
-  const editableFields = [fullNameInput, courseSelect, yearLevelSelect, emailInput, phoneInput];
+  const editableFields = [
+    fullNameInput,
+    courseSelect,
+    yearLevelSelect,
+    sectionSelect,
+    emailInput,
+    phoneInput,
+  ];
 
   let isEditing = false;
 
-  function enterEditMode() {
-    isEditing = true;
-    editableFields.forEach((field) => {
-      if (!field) return;
-      field.readOnly = false;
-      field.disabled = false;
-    });
-    profileInfoCard.classList.add("is-editing");
-    profilePhotoEdit.hidden = false;
-    editProfileButton.textContent = "Save Changes";
-  }
-
-  function exitEditMode() {
-    isEditing = false;
+  function lockProfileFields() {
     editableFields.forEach((field) => {
       if (!field) return;
       // <select> elements use disabled to lock them (readOnly
@@ -274,27 +366,77 @@ document.addEventListener("DOMContentLoaded", () => {
         field.readOnly = true;
       }
     });
+  }
+
+  function leaveEditMode() {
+    isEditing = false;
+    lockProfileFields();
+    if (fullNameView) fullNameView.hidden = false;
+    if (fullNameEdit) fullNameEdit.hidden = true;
     profileInfoCard.classList.remove("is-editing");
     profilePhotoEdit.hidden = true;
+    if (cancelProfileButton) cancelProfileButton.hidden = true;
+    editProfileButton.disabled = false;
     editProfileButton.textContent = "Edit Profile";
-
-    // Keep the in-page state aligned with edits. A later backend
-    // update endpoint can use this same object as its request body.
-    CURRENT_STUDENT.fullName = fullNameInput ? fullNameInput.value.trim() : CURRENT_STUDENT.fullName;
-    CURRENT_STUDENT.course = courseSelect ? courseSelect.value : CURRENT_STUDENT.course;
-    CURRENT_STUDENT.yearLevel = yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel;
-    CURRENT_STUDENT.email = emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email;
-    CURRENT_STUDENT.phone = phoneInput ? formatPhoneInput(phoneInput.value) : CURRENT_STUDENT.phone;
     renderStudentProfile();
   }
 
+  function enterEditMode() {
+    isEditing = true;
+    editableFields.forEach((field) => {
+      if (!field) return;
+      field.readOnly = false;
+      field.disabled = false;
+    });
+    if (fullNameView) fullNameView.hidden = true;
+    if (fullNameEdit) fullNameEdit.hidden = false;
+    profileInfoCard.classList.add("is-editing");
+    profilePhotoEdit.hidden = false;
+    if (cancelProfileButton) cancelProfileButton.hidden = false;
+    editProfileButton.textContent = "Save Changes";
+  }
+
+  async function exitEditMode() {
+    CURRENT_STUDENT.fullName = fullNameInput ? fullNameInput.value.trim() : CURRENT_STUDENT.fullName;
+    const nameParts = splitFullName(CURRENT_STUDENT.fullName);
+    CURRENT_STUDENT.firstName = nameParts.firstName;
+    CURRENT_STUDENT.middleInitial = nameParts.middleInitial;
+    CURRENT_STUDENT.lastName = nameParts.lastName;
+    CURRENT_STUDENT.course = courseSelect ? courseSelect.value : CURRENT_STUDENT.course;
+    CURRENT_STUDENT.yearLevel = yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel;
+    CURRENT_STUDENT.section = sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section;
+    CURRENT_STUDENT.email = emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email;
+    CURRENT_STUDENT.phone = phoneInput ? formatPhoneInput(phoneInput.value) : CURRENT_STUDENT.phone;
+
+    editProfileButton.disabled = true;
+    editProfileButton.textContent = "Saving...";
+
+    try {
+      const data = await saveStudentProfile();
+      applySessionProfile(data);
+    } catch (error) {
+      alert(error.message);
+      editProfileButton.disabled = false;
+      editProfileButton.textContent = "Save Changes";
+      return;
+    }
+
+    leaveEditMode();
+  }
+
   if (editProfileButton) {
-    editProfileButton.addEventListener("click", () => {
+    editProfileButton.addEventListener("click", async () => {
       if (isEditing) {
-        exitEditMode();
+        await exitEditMode();
       } else {
         enterEditMode();
       }
+    });
+  }
+
+  if (cancelProfileButton) {
+    cancelProfileButton.addEventListener("click", () => {
+      leaveEditMode();
     });
   }
 
