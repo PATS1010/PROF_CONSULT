@@ -361,6 +361,69 @@ document.addEventListener("DOMContentLoaded", () => {
   const notificationRefreshIntervalMs = 30000;
   let notificationRefreshTimer = null;
 
+  function facultyBrowserNotificationsSupported() {
+    return "Notification" in window;
+  }
+
+  async function requestFacultyBrowserNotificationPermission() {
+    if (!facultyBrowserNotificationsSupported()) {
+      return "unsupported";
+    }
+    if (Notification.permission !== "default") {
+      return Notification.permission;
+    }
+
+    return Notification.requestPermission();
+  }
+
+  function storedFacultyNotifiedIds() {
+    try {
+      const value = JSON.parse(localStorage.getItem("profConsultBrowserNotified:faculty") || "[]");
+      return Array.isArray(value) ? value.map(String) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveFacultyNotifiedIds(ids) {
+    localStorage.setItem("profConsultBrowserNotified:faculty", JSON.stringify(ids.slice(-80)));
+  }
+
+  function facultyNotificationId(notification) {
+    return String(notification.Notification_ID || notification.id || "");
+  }
+
+  function notifyUnreadFacultyNotifications(notifications) {
+    if (!facultyBrowserNotificationsSupported() || Notification.permission !== "granted") {
+      return;
+    }
+
+    const knownIds = new Set(storedFacultyNotifiedIds());
+    const nextIds = [...knownIds];
+
+    (notifications || []).forEach((notification) => {
+      const id = facultyNotificationId(notification);
+      if (!id || knownIds.has(id) || notification.Read_Status !== "unread") return;
+
+      const browserNotification = new Notification("Prof Consult", {
+        body: notification.Message || "You have a new notification.",
+        icon: "images/bell.png",
+        tag: `prof-consult-faculty-${id}`,
+      });
+
+      browserNotification.onclick = () => {
+        window.focus();
+        window.location.href = "faculty-notifications.html";
+        browserNotification.close();
+      };
+
+      knownIds.add(id);
+      nextIds.push(id);
+    });
+
+    saveFacultyNotifiedIds(nextIds);
+  }
+
   function setFacultyNotificationUnread(hasUnread) {
     if (!notificationBellButton) return;
 
@@ -381,7 +444,11 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Accept": "application/json" },
       });
       const result = await response.json();
-      setFacultyNotificationUnread(response.ok && result.ok && Number(result.unread_count || 0) > 0);
+      const hasUnread = response.ok && result.ok && Number(result.unread_count || 0) > 0;
+      setFacultyNotificationUnread(hasUnread);
+      if (hasUnread) {
+        notifyUnreadFacultyNotifications(result.notifications || []);
+      }
     } catch (error) {
       setFacultyNotificationUnread(false);
     }
@@ -412,6 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
     notificationBellButton.addEventListener("click", () => {
+      requestFacultyBrowserNotificationPermission();
       window.location.href = "faculty-notifications.html";
     });
   }
