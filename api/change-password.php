@@ -22,7 +22,7 @@ try {
     $record = $statement->fetch();
 
     if (!$record || !password_verify($currentPassword, $record['Password'])) {
-        fail('Current password is incorrect.', 401);
+        fail('Current password is incorrect.');
     }
 
     $update = $db->prepare('UPDATE users SET Password = ? WHERE User_ID = ?');

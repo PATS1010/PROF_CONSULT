@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveButton = document.getElementById("saveButton");
   const forgotPasswordLink = document.getElementById("forgotPasswordLink");
   const requirementItems = Array.from(document.querySelectorAll("#passwordRequirements [data-rule]"));
+  let isSubmitting = false;
 
   function setBackLinks() {
     document.querySelectorAll('[data-nav="back"]').forEach((element) => {
@@ -106,9 +107,14 @@ document.addEventListener("DOMContentLoaded", () => {
   async function submitPasswordChange(event) {
     event.preventDefault();
 
+    if (isSubmitting) {
+      return;
+    }
+
     const values = validateForm();
     if (!values) return;
 
+    isSubmitting = true;
     if (saveButton) {
       saveButton.disabled = true;
       saveButton.textContent = "Saving...";
@@ -126,7 +132,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const result = await response.json();
 
-      if (response.status === 401 || response.status === 403) {
+      const authMessage = String(result.message || "").toLowerCase();
+      if (
+        response.status === 403 ||
+        (response.status === 401 && (authMessage.includes("log in") || authMessage.includes("not allowed")))
+      ) {
         showMessage(result.message || "Please log in again before changing your password.");
         window.setTimeout(() => {
           window.location.href = loginPage;
@@ -151,6 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       showMessage("Unable to connect to the server. Please try again.");
     } finally {
+      isSubmitting = false;
       if (saveButton) {
         saveButton.disabled = false;
         saveButton.textContent = "Save";
