@@ -518,6 +518,25 @@ input {
   flex: 1;
 }
 
+.profile-name-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+.profile-name-field {
+  flex: 2 1 0;
+  min-width: 0;
+}
+
+.profile-name-field:nth-child(2) {
+  flex: 0 0 124px;
+}
+
+.profile-name-field label {
+  white-space: nowrap;
+}
+
 /* Editing state -- applied to the whole info card via JS when
    Edit Profile is active */
 .profile-info-card.is-editing .profile-field:not(:disabled) {
@@ -679,5 +698,18 @@ input {
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .profile-name-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .profile-name-field,
+  .profile-name-field:nth-child(2) {
+    flex: none;
   }
 }

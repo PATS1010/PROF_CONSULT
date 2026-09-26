@@ -99,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ].map((part) => String(part || "").trim()).filter(Boolean).join(" ");
   }
 
-  const fullNameInput = document.getElementById("profileFullName");
   const firstNameInput = document.getElementById("profileFirstName");
   const middleInitialInput = document.getElementById("profileMiddleInitial");
   const lastNameInput = document.getElementById("profileLastName");
@@ -150,7 +149,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     CURRENT_STUDENT.fullName = combineFullName() || CURRENT_STUDENT.fullName;
 
-    if (fullNameInput) fullNameInput.value = CURRENT_STUDENT.fullName;
     if (firstNameInput) firstNameInput.value = CURRENT_STUDENT.firstName;
     if (middleInitialInput) middleInitialInput.value = CURRENT_STUDENT.middleInitial;
     if (lastNameInput) lastNameInput.value = CURRENT_STUDENT.lastName;
@@ -191,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
         "Accept": "application/json",
       },
       body: JSON.stringify({
-        full_name: fullNameInput ? fullNameInput.value.trim() : combineFullName(),
+        full_name: combineFullName(),
         program: courseSelect ? courseSelect.value : CURRENT_STUDENT.course,
         year_level: yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel,
         section: sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section,
@@ -341,7 +339,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Every editable field except Student Number (which stays
   // read-only/disabled at all times, per spec)
   const editableFields = [
-    fullNameInput,
+    firstNameInput,
+    middleInitialInput,
+    lastNameInput,
     courseSelect,
     yearLevelSelect,
     sectionSelect,
@@ -350,6 +350,15 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   let isEditing = false;
+
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = middleInitialInput.value
+        .replace(/[^\p{L}]/gu, "")
+        .toUpperCase()
+        .slice(0, 1);
+    });
+  }
 
   function lockProfileFields() {
     editableFields.forEach((field) => {
@@ -389,11 +398,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function exitEditMode() {
-    CURRENT_STUDENT.fullName = fullNameInput ? fullNameInput.value.trim() : CURRENT_STUDENT.fullName;
-    const nameParts = splitFullName(CURRENT_STUDENT.fullName);
-    CURRENT_STUDENT.firstName = nameParts.firstName;
-    CURRENT_STUDENT.middleInitial = nameParts.middleInitial;
-    CURRENT_STUDENT.lastName = nameParts.lastName;
+    CURRENT_STUDENT.firstName = firstNameInput ? firstNameInput.value.trim() : CURRENT_STUDENT.firstName;
+    CURRENT_STUDENT.middleInitial = middleInitialInput ? middleInitialInput.value.trim() : CURRENT_STUDENT.middleInitial;
+    CURRENT_STUDENT.lastName = lastNameInput ? lastNameInput.value.trim() : CURRENT_STUDENT.lastName;
+    CURRENT_STUDENT.fullName = combineFullName();
     CURRENT_STUDENT.course = courseSelect ? courseSelect.value : CURRENT_STUDENT.course;
     CURRENT_STUDENT.yearLevel = yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel;
     CURRENT_STUDENT.section = sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section;
