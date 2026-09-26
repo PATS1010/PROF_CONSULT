@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   let currentRequest = null;
+  let isSubmitting = false;
 
   function displayYear(value) {
     const normalized = String(value || "").trim();
@@ -212,6 +213,10 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function submitReschedule() {
+    if (isSubmitting) {
+      return;
+    }
+
     const preferredDate = preferredDateInput ? preferredDateInput.value : "";
     const preferredTime = preferredTimeInput ? preferredTimeInput.value : "";
 
@@ -230,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    isSubmitting = true;
     if (submitButton) {
       submitButton.disabled = true;
       submitButton.textContent = "Submitting...";
@@ -265,6 +271,7 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.href = "faculty-consultation-requests.html";
       }, 1200);
     } catch (error) {
+      isSubmitting = false;
       setStatus(error.message || "Unable to reschedule consultation.", true);
       if (submitButton) {
         submitButton.disabled = false;
