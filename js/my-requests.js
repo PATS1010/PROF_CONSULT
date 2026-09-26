@@ -144,6 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       time: formatTime(row.Preferred_Time),
       status: statusClass(row.Status),
       statusLabel: statusLabel(row.Status),
+      response: row.Response || "",
     };
   }
 
@@ -206,6 +207,14 @@ document.addEventListener("DOMContentLoaded", () => {
       status.appendChild(statusText);
 
       body.appendChild(status);
+
+      if (request.response) {
+        const response = document.createElement("p");
+        response.className = "request-response";
+        response.textContent = request.response;
+        body.appendChild(response);
+      }
+
       card.appendChild(body);
 
       listEl.appendChild(card);

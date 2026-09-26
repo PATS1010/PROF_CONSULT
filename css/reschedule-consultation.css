@@ -297,6 +297,35 @@ input[type="date"].info-input {
   pointer-events: none;
 }
 
+.reschedule-response-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.response-label {
+  padding: 0;
+}
+
+.reschedule-response-input {
+  width: 100%;
+  min-height: 110px;
+  resize: vertical;
+  border: none;
+  border-radius: 18px;
+  background-color: #e9e9e9;
+  padding: 14px 18px;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.reschedule-response-input:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: -2px;
+}
+
 /* =========================================================
    BUTTONS -- red -> orange gradient for both. Submit must NOT
    be green (spec explicitly calls this out).

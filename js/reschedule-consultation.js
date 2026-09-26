@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const yearSetEl = document.getElementById("rescheduleYearSet");
   const preferredDateInput = document.getElementById("reschedulePreferredDate");
   const preferredTimeInput = document.getElementById("reschedulePreferredTime");
+  const responseInput = document.getElementById("rescheduleResponse");
   const submitButton = document.getElementById("submitRescheduleButton");
   const countdownEl = document.getElementById("rescheduleCountdown");
   const timeSelect = document.getElementById("reschedulePreferredTimeSelect");
@@ -219,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const preferredDate = preferredDateInput ? preferredDateInput.value : "";
     const preferredTime = preferredTimeInput ? preferredTimeInput.value : "";
+    const responseMessage = responseInput ? responseInput.value.trim() : "";
 
     if (!preferredDate || !preferredTime) {
       setStatus("Please choose the new preferred date and time.", true);
@@ -251,7 +253,7 @@ document.addEventListener("DOMContentLoaded", () => {
           status: "rescheduled",
           preferred_date: preferredDate,
           preferred_time: preferredTime,
-          response: "Consultation rescheduled.",
+          response: responseMessage,
         }),
       });
       const result = await response.json();

@@ -514,6 +514,15 @@ input {
   color: var(--color-text-dark);
 }
 
+.request-response {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(122, 16, 16, 0.15);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+
 .status-dot {
   flex-shrink: 0;
   width: 9px;

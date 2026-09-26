@@ -121,7 +121,7 @@ try {
 
         if ($studentRecord) {
             // Build the message that appears in the student's notifications page/dashboard.
-            $message = notificationMessageForRequestUpdate($status, $preferredDate, $preferredTimeStart);
+            $message = notificationMessageForRequestUpdate($status, $preferredDate, $preferredTimeStart, $response);
             $notification = $db->prepare(
                 'INSERT INTO notifications (User_ID, Message, Read_Status)
                  VALUES (?, ?, ?)'
@@ -183,7 +183,12 @@ try {
     fail('Unable to load consultation requests.', 500);
 }
 
-function notificationMessageForRequestUpdate(string $status, string $preferredDate = '', string $preferredTime = ''): string
+function notificationMessageForRequestUpdate(
+    string $status,
+    string $preferredDate = '',
+    string $preferredTime = '',
+    string $response = ''
+): string
 {
     if ($status !== 'rescheduled') {
         return 'Your consultation request was ' . $status . '.';
@@ -194,7 +199,12 @@ function notificationMessageForRequestUpdate(string $status, string $preferredDa
         return 'Your consultation request was rescheduled.';
     }
 
-    return 'Your consultation request was rescheduled to ' . $schedule . '.';
+    $message = 'Your consultation request was rescheduled to ' . $schedule . '.';
+    if ($response !== '') {
+        $message .= ' Message from professor: ' . $response;
+    }
+
+    return $message;
 }
 
 function formatRescheduledSchedule(string $date, string $time): string
