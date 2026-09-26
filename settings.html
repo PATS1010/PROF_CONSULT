@@ -106,53 +106,29 @@
 
       <div class="settings-inner-card">
 
-        <div class="settings-options">
+        <label class="settings-option">
+          <input type="checkbox" id="emailNotificationsCheckbox" class="settings-checkbox-input" checked>
+          <span class="settings-checkbox-box" aria-hidden="true"></span>
+          <span class="settings-option-title">Email Notifications</span>
+        </label>
 
-          <label class="settings-option">
-            <span class="settings-option-text">
-              <span class="settings-option-title">Email Notifications</span>
-              <span class="settings-option-description">Receive future system notifications at your registered email address.</span>
-            </span>
-            <span class="settings-checkbox">
-              <input type="checkbox" id="emailNotificationsCheckbox" checked>
-              <span class="settings-checkbox-box" aria-hidden="true"></span>
-            </span>
-          </label>
+        <label class="settings-option">
+          <input type="checkbox" id="pushNotificationsCheckbox" class="settings-checkbox-input" checked>
+          <span class="settings-checkbox-box" aria-hidden="true"></span>
+          <span class="settings-option-title">Push Notifications</span>
+        </label>
 
-          <label class="settings-option">
-            <span class="settings-option-text">
-              <span class="settings-option-title">Push Notifications</span>
-              <span class="settings-option-description">Show desktop/browser push notifications while you're logged in.</span>
-            </span>
-            <span class="settings-checkbox">
-              <input type="checkbox" id="pushNotificationsCheckbox" checked>
-              <span class="settings-checkbox-box" aria-hidden="true"></span>
-            </span>
-          </label>
-
-          <label class="settings-option">
-            <span class="settings-option-text">
-              <span class="settings-option-title">Dark Mode</span>
-            </span>
-            <span class="settings-checkbox">
-              <input type="checkbox" id="darkModeCheckbox">
-              <span class="settings-checkbox-box" aria-hidden="true"></span>
-            </span>
-          </label>
-
-        </div>
-
-        <a href="change-password.html?from=student" class="format-text change-password-link" id="changePasswordLink">
+        <a href="change-password.html?from=student" class="change-password-link" id="changePasswordLink">
           Change Password
         </a>
 
       </div>
 
-    </div>
+      <div class="save-button-wrapper">
+        <p class="save-success-popup" id="saveSuccessPopup" hidden>Changes saved successfully.</p>
+        <button type="button" class="btn save-settings-button" id="saveSettingsButton">Save</button>
+      </div>
 
-    <div class="save-button-wrapper">
-      <button type="button" class="btn save-settings-button" id="saveSettingsButton">Save</button>
-      <p class="save-success-popup" id="saveSuccessPopup" hidden>Saved successfully.</p>
     </div>
 
   </main>

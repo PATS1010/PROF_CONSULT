@@ -495,12 +495,6 @@ input {
   border-bottom: 1px solid transparent;
 }
 
-.profile-field-highlight {
-  color: var(--color-red-primary);
-  font-weight: 700;
-  font-size: 1.05rem;
-}
-
 .profile-select {
   appearance: none;
   -webkit-appearance: none;
@@ -522,49 +516,6 @@ input {
 
 .profile-phone-input {
   flex: 1;
-}
-
-/* =========================================================
-   FULL NAME -- view mode shows one connected name (a plain
-   paragraph, not an input); edit mode swaps in three
-   independently-editable inputs (First/Middle/Last), each
-   with its own label, laid out side by side.
-========================================================= */
-.profile-fullname-view label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
-  margin-bottom: 4px;
-}
-
-.profile-fullname-view[hidden] {
-  display: none;
-}
-
-.profile-fullname-edit {
-  display: block;
-}
-
-.profile-fullname-edit[hidden] {
-  display: none;
-}
-
-.profile-fullname-part {
-  flex: 1;
-  min-width: 0;
-}
-
-.profile-fullname-part label {
-  display: block;
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--color-text-muted);
-  margin-bottom: 4px;
 }
 
 /* Editing state -- applied to the whole info card via JS when
@@ -592,28 +543,34 @@ input {
   display: flex;
   justify-content: center;
   gap: 14px;
-  width: 100%;
   flex-wrap: wrap;
 }
 
 .btn {
   display: inline-block;
-  padding: 14px 40px;
+  padding: 12px 32px;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: var(--color-text-light);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+  letter-spacing: 0.3px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.btn:hover {
+.edit-profile-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
+}
+
+.btn:hover,
+.cancel-profile-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
   opacity: 0.95;
+}
+
+.edit-profile-button:hover {
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
 }
 
 .btn:disabled {
@@ -623,14 +580,17 @@ input {
 }
 
 .cancel-profile-button {
-  background: #ffffff;
-  color: var(--color-red-dark);
-  border: 1px solid rgba(122, 20, 20, 0.25);
-  box-shadow: none;
+  background: #6b6b6b;
+  box-shadow: 0 8px 18px rgba(72, 72, 72, 0.25);
 }
 
 .cancel-profile-button:hover {
-  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.18);
+  box-shadow: 0 12px 24px rgba(72, 72, 72, 0.35);
+}
+
+.edit-profile-button[hidden],
+.cancel-profile-button[hidden] {
+  display: none;
 }
 
 /* =========================================================
@@ -719,12 +679,5 @@ input {
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
-  }
-
-  /* Full Name edit inputs stack on very small screens instead of
-     squeezing three fields into one row */
-  .profile-fullname-edit {
-    flex-direction: column;
-    gap: 10px;
   }
 }

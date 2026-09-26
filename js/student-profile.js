@@ -99,9 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ].map((part) => String(part || "").trim()).filter(Boolean).join(" ");
   }
 
-  const fullNameView = document.getElementById("profileFullNameView");
-  const fullNameEdit = document.getElementById("profileFullNameEdit");
-  const fullNameDisplay = document.getElementById("profileFullNameDisplay");
   const fullNameInput = document.getElementById("profileFullName");
   const firstNameInput = document.getElementById("profileFirstName");
   const middleInitialInput = document.getElementById("profileMiddleInitial");
@@ -153,7 +150,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     CURRENT_STUDENT.fullName = combineFullName() || CURRENT_STUDENT.fullName;
 
-    if (fullNameDisplay) fullNameDisplay.textContent = CURRENT_STUDENT.fullName;
     if (fullNameInput) fullNameInput.value = CURRENT_STUDENT.fullName;
     if (firstNameInput) firstNameInput.value = CURRENT_STUDENT.firstName;
     if (middleInitialInput) middleInitialInput.value = CURRENT_STUDENT.middleInitial;
@@ -371,8 +367,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function leaveEditMode() {
     isEditing = false;
     lockProfileFields();
-    if (fullNameView) fullNameView.hidden = false;
-    if (fullNameEdit) fullNameEdit.hidden = true;
     profileInfoCard.classList.remove("is-editing");
     profilePhotoEdit.hidden = true;
     if (cancelProfileButton) cancelProfileButton.hidden = true;
@@ -388,8 +382,6 @@ document.addEventListener("DOMContentLoaded", () => {
       field.readOnly = false;
       field.disabled = false;
     });
-    if (fullNameView) fullNameView.hidden = true;
-    if (fullNameEdit) fullNameEdit.hidden = false;
     profileInfoCard.classList.add("is-editing");
     profilePhotoEdit.hidden = false;
     if (cancelProfileButton) cancelProfileButton.hidden = false;

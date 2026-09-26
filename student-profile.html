@@ -111,17 +111,8 @@
         <div class="profile-fields">
 
           <div class="profile-field-row profile-fullname-row">
-            <!-- View mode: one connected full name (First + Middle Initial + Last) -->
-            <div class="profile-fullname-view" id="profileFullNameView">
-              <label>Full Name</label>
-              <p class="profile-field profile-field-highlight" id="profileFullNameDisplay"></p>
-            </div>
-
-            <!-- Edit mode: one directly editable full name field -->
-            <div class="profile-fullname-edit" id="profileFullNameEdit" hidden>
-              <label for="profileFullName">Full Name</label>
-              <input type="text" id="profileFullName" class="profile-field" autocomplete="name">
-            </div>
+            <label for="profileFullName">Full Name</label>
+            <input type="text" id="profileFullName" class="profile-field" autocomplete="name" readonly>
           </div>
 
           <div class="profile-field-row">
