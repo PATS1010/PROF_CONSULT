@@ -233,27 +233,19 @@ document.addEventListener("DOMContentLoaded", () => {
     card.className = "request-card";
     card.dataset.id = request.id;
 
-    const isUpcoming = type === "upcoming";
-    const statusLine = isUpcoming
-      ? `<p class="request-complete-text">${escapeHtml(request.status === "rescheduled" ? "Rescheduled consultation" : "Approved consultation")}</p>`
-      : '<p class="request-complete-text">Consultation completed</p>';
-    const statusButton = isUpcoming
-      ? '<button type="button" class="request-complete-button" data-action="complete">Complete</button>'
-      : '';
-    const actionButtons = isUpcoming
-      ? `<div class="request-actions">
-          <button type="button" class="request-view-more-button" data-action="history-toggle">View More</button>
-          <button type="button" class="request-reschedule-button" data-action="reschedule">Reschedule</button>
-          <button type="button" class="request-cancel-button" data-action="cancel">Cancel</button>
-        </div>`
-      : `<button type="button" class="request-view-more-button request-view-more-button--full" data-action="history-toggle">
-          View More
-        </button>`;
+    const statusLine = type === "completed"
+      ? '<p class="request-complete-text">Consultation completed</p>'
+      : `<p class="request-complete-text">${escapeHtml(request.status === "rescheduled" ? "Rescheduled consultation" : "Approved consultation")}</p>`;
 
     card.innerHTML = `
       <div class="request-card-header">
         <p class="request-name">${escapeHtml(request.name)}</p>
-        ${statusButton}
+        <span class="request-avatar" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="8" r="4"></circle>
+            <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8v1H4v-1z"></path>
+          </svg>
+        </span>
       </div>
 
       <p class="request-type">${escapeHtml(request.type)}</p>
@@ -275,7 +267,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
 
-      ${actionButtons}
+      <button type="button" class="request-view-more-button request-view-more-button--full" data-action="history-toggle">
+        View More
+      </button>
     `;
 
     return card;
@@ -433,45 +427,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) return;
 
     container.addEventListener("click", (event) => {
-      const actionButton = event.target.closest("[data-action]");
-      if (!actionButton) return;
+      const toggleButton = event.target.closest('[data-action="history-toggle"]');
+      if (!toggleButton) return;
 
-      const card = actionButton.closest(".request-card");
+      const card = toggleButton.closest(".request-card");
       if (!card) return;
 
-      const requestId = card.dataset.id;
-      const request = REQUESTS.find((r) => r.id === requestId);
-      if (!request) return;
-
-      const action = actionButton.dataset.action;
-
-      if (action === "history-toggle") {
-        const isExpanded = card.classList.toggle("is-expanded");
-        actionButton.textContent = isExpanded ? "View Less" : "View More";
-      }
-
-      if (action === "reschedule") {
-        window.location.href = `reschedule-consultation.html?request_id=${encodeURIComponent(request.id)}`;
-      }
-
-      if (action === "complete" || action === "cancel") {
-        const newStatus = action === "complete" ? "completed" : "cancelled";
-        actionButton.disabled = true;
-        actionButton.textContent = action === "complete" ? "Completed" : "Cancelled";
-
-        try {
-          await updateRequestStatus(request.id, newStatus);
-          request.status = newStatus;
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          actionButton.disabled = false;
-          actionButton.textContent = action === "complete" ? "Complete" : "Cancel";
-          return;
-        }
-
-        window.setTimeout(renderRequests, 700);
-      }
+      const isExpanded = card.classList.toggle("is-expanded");
+      toggleButton.textContent = isExpanded ? "View Less" : "View More";
     });
   });
 

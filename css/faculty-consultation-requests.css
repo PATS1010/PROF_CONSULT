@@ -14,22 +14,7 @@
    PAGE HEADING
 ========================================================= */
 .requests-page-heading {
-  margin-bottom: 20px;
-}
-
-.requests-history-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 110px;
-  padding: 10px 24px;
-  margin-bottom: 18px;
-  border-radius: 999px;
-  background-color: rgba(245, 241, 234, 0.92);
-  color: var(--color-text-dark);
-  font-size: 0.9rem;
-  font-weight: 800;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
 }
 
 .requests-title {
@@ -67,8 +52,7 @@
 .requests-card {
   position: relative;
   overflow: hidden;
-  min-height: 230px;
-  padding: 28px 28px 28px 54px;
+  padding: 28px 28px 28px 44px;
 }
 
 .requests-card::before {
@@ -92,7 +76,6 @@
   overflow-y: hidden;
   padding-bottom: 8px;
   scroll-behavior: smooth;
-  min-height: 170px;
 }
 
 .no-requests-message {
@@ -115,9 +98,9 @@
 ========================================================= */
 .consultation-sections-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
-  margin-top: 34px;
+  margin-top: 32px;
 }
 
 .section-heading {
@@ -141,8 +124,7 @@
 .completed-card-panel {
   position: relative;
   overflow: hidden;
-  min-height: 170px;
-  padding: 24px 24px 24px 44px;
+  padding: 24px 24px 24px 40px;
 }
 
 .upcoming-card-panel::before {
@@ -191,11 +173,11 @@
 .request-card {
   position: relative;
   flex: 0 0 auto;
-  width: 300px;
+  width: 260px;
   background-color: #f5f1ea;
-  border-radius: 18px;
+  border-radius: 20px;
   box-shadow: var(--shadow-card);
-  padding: 20px 20px 22px;
+  padding: 18px 18px 20px;
   transition: width 0.25s ease;
 }
 
@@ -240,27 +222,6 @@
   font-size: 0.76rem;
   font-weight: 700;
   transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.request-complete-button {
-  flex-shrink: 0;
-  padding: 8px 18px;
-  border-radius: 999px;
-  background-color: var(--color-checkin, #2fae4e);
-  color: var(--color-text-light);
-  font-size: 0.76rem;
-  font-weight: 700;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.request-complete-button:hover:not(:disabled) {
-  opacity: 0.9;
-  transform: translateY(-2px);
-}
-
-.request-complete-button:disabled {
-  cursor: default;
-  opacity: 0.85;
 }
 
 .request-accept-button:hover:not(:disabled) {
@@ -348,8 +309,7 @@
 
 .request-view-more-button,
 .request-reschedule-button,
-.request-decline-button,
-.request-cancel-button {
+.request-decline-button {
   width: 100%;
   padding: 9px 16px;
   border-radius: 999px;
@@ -364,8 +324,7 @@
   background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
 }
 
-.request-decline-button,
-.request-cancel-button {
+.request-decline-button {
   background-color: var(--color-red-dark);
 }
 
@@ -375,15 +334,13 @@
 
 .request-view-more-button:hover,
 .request-reschedule-button:hover,
-.request-decline-button:hover:not(:disabled),
-.request-cancel-button:hover:not(:disabled) {
+.request-decline-button:hover:not(:disabled) {
   opacity: 0.9;
   transform: translateY(-2px);
 }
 
 .request-decline-button:disabled,
-.request-view-more-button:disabled,
-.request-cancel-button:disabled {
+.request-view-more-button:disabled {
   cursor: default;
   opacity: 0.6;
 }
@@ -449,15 +406,6 @@
   display: block;
 }
 
-.upcoming-card-list .request-card.is-expanded .request-view-more-button {
-  display: block;
-}
-
-.upcoming-card-list .request-card.is-expanded .request-actions {
-  flex-direction: column;
-  max-width: none;
-}
-
 /* =========================================================
    RESPONSIVE ADJUSTMENTS
 ========================================================= */
@@ -482,7 +430,7 @@
   }
 
   .request-card {
-    width: 260px;
+    width: 220px;
   }
 
   .request-card.is-expanded {
