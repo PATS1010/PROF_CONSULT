@@ -712,6 +712,13 @@ input[type="date"].info-input {
   opacity: 0.95;
 }
 
+.btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.25);
+}
+
 .btn-cancel {
   background: linear-gradient(90deg, var(--color-gradient-end) 0%, var(--color-gradient-start) 100%);
 }

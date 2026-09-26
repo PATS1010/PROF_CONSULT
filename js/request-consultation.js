@@ -320,12 +320,30 @@ document.addEventListener("DOMContentLoaded", () => {
   // entered data structure; wire up the real API call here later.
   // ---------------------------------------------------------
   const form = document.getElementById("requestConsultationForm");
+  const submitRequestButton = document.getElementById("submitRequestButton");
+  let isSubmitting = false;
+
+  function setSubmitting(isBusy) {
+    isSubmitting = isBusy;
+    if (!submitRequestButton) return;
+
+    submitRequestButton.disabled = isBusy;
+    submitRequestButton.textContent = isBusy ? "Submitting..." : "Submit Request";
+  }
+
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      if (isSubmitting) {
+        return;
+      }
+
+      setSubmitting(true);
+
       if (!facultyId) {
         alert("Please select a faculty member from the directory.");
+        setSubmitting(false);
         return;
       }
 
@@ -336,16 +354,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!purpose || !preferredDate || !preferredTime) {
         alert("Please complete the purpose, preferred date, and preferred time.");
+        setSubmitting(false);
         return;
       }
 
       if (preferredDate < todayValue()) {
         alert("Preferred date cannot be in the past.");
+        setSubmitting(false);
         return;
       }
 
       if (isPastSchedule(preferredDate, preferredTime)) {
         alert("Preferred date and time must be in the future.");
+        setSubmitting(false);
         return;
       }
 
@@ -379,6 +400,7 @@ document.addEventListener("DOMContentLoaded", () => {
           requestData.requestId = `REQ-${result.id}`;
         } catch (error) {
           alert(error.message);
+          setSubmitting(false);
           return;
         }
       } else {
