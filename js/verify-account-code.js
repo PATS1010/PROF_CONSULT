@@ -7,8 +7,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const token = sessionStorage.getItem("accountVerificationToken") || "";
   const tokenRole = sessionStorage.getItem("accountVerificationRole") || "";
-  const verificationMethod = sessionStorage.getItem("verificationMethod") || "email";
-
   const backButton = document.getElementById("backButton");
   const subtitle = document.getElementById("verificationSubtitle");
   const form = document.getElementById("verificationForm");
@@ -34,10 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (subtitle) {
-    subtitle.textContent =
-      verificationMethod === "mobile"
-        ? "A 6-digit verification code has been sent to your mobile number."
-        : "A 6-digit verification code has been sent to your email address.";
+    subtitle.textContent = "A 6-digit verification code has been sent to your email address.";
   }
 
   function showError(text) {
