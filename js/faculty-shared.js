@@ -358,6 +358,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // page. The bell icon/design itself is untouched.
   // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("facultyNotificationBellButton");
+  const notificationRefreshIntervalMs = 30000;
+  let notificationRefreshTimer = null;
+
   function setFacultyNotificationUnread(hasUnread) {
     if (!notificationBellButton) return;
 
@@ -384,11 +387,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function startFacultyNotificationBellRefresh() {
+    refreshFacultyNotificationBellStatus();
+
+    if (!notificationRefreshTimer) {
+      notificationRefreshTimer = window.setInterval(
+        refreshFacultyNotificationBellStatus,
+        notificationRefreshIntervalMs
+      );
+    }
+  }
+
   window.setNotificationBellUnread = setFacultyNotificationUnread;
   window.refreshNotificationBellStatus = refreshFacultyNotificationBellStatus;
 
   if (notificationBellButton) {
-    refreshFacultyNotificationBellStatus();
+    startFacultyNotificationBellRefresh();
+    window.addEventListener("pageshow", refreshFacultyNotificationBellStatus);
+    window.addEventListener("focus", refreshFacultyNotificationBellStatus);
+    window.addEventListener("notifications:changed", refreshFacultyNotificationBellStatus);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        refreshFacultyNotificationBellStatus();
+      }
+    });
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "faculty-notifications.html";
     });

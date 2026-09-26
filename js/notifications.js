@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return notification.Read_Status === "unread";
       });
       if (hasUnread) {
-        await fetch("api/notifications.php", {
+        const markReadResponse = await fetch("api/notifications.php", {
           method: "POST",
           cache: "no-store",
           credentials: "same-origin",
@@ -202,9 +202,10 @@ document.addEventListener("DOMContentLoaded", () => {
           },
           body: JSON.stringify({ role: "student", mark_all: true }),
         });
-        if (typeof window.setNotificationBellUnread === "function") {
+        if (markReadResponse.ok && typeof window.setNotificationBellUnread === "function") {
           window.setNotificationBellUnread(false);
         }
+        window.dispatchEvent(new CustomEvent("notifications:changed"));
       }
     } catch (error) {
       renderNotifications([{ message: error.message || "Unable to load notifications.", timestamp: "" }]);

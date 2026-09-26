@@ -1,6 +1,9 @@
 // SYSTEM NOTE: Shows a red dot on notification bells while the signed-in user has unread notifications.
 
 (function () {
+  const refreshIntervalMs = 30000;
+  let refreshTimer = null;
+
   function getBellButton() {
     return document.getElementById("notificationBellButton")
       || document.getElementById("facultyNotificationBellButton");
@@ -70,12 +73,29 @@
     }
   }
 
+  function startBellRefresh() {
+    refreshBellUnreadStatus();
+
+    if (!refreshTimer) {
+      refreshTimer = window.setInterval(refreshBellUnreadStatus, refreshIntervalMs);
+    }
+  }
+
   window.refreshNotificationBellStatus = refreshBellUnreadStatus;
   window.setNotificationBellUnread = setBellUnread;
 
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", refreshBellUnreadStatus);
+    document.addEventListener("DOMContentLoaded", startBellRefresh);
   } else {
-    refreshBellUnreadStatus();
+    startBellRefresh();
   }
+
+  window.addEventListener("pageshow", refreshBellUnreadStatus);
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      refreshBellUnreadStatus();
+    }
+  });
+  window.addEventListener("focus", refreshBellUnreadStatus);
+  window.addEventListener("notifications:changed", refreshBellUnreadStatus);
 })();

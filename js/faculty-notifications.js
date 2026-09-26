@@ -95,7 +95,7 @@ function renderFacultyNotifications(notifications) {
 }
 
 async function markNotificationsSeen() {
-  await fetch("api/notifications.php", {
+  const response = await fetch("api/notifications.php", {
     method: "POST",
     cache: "no-store",
     credentials: "same-origin",
@@ -106,9 +106,10 @@ async function markNotificationsSeen() {
     body: JSON.stringify({ role: "faculty", mark_all: true }),
   });
 
-  if (typeof window.setNotificationBellUnread === "function") {
+  if (response.ok && typeof window.setNotificationBellUnread === "function") {
     window.setNotificationBellUnread(false);
   }
+  window.dispatchEvent(new CustomEvent("notifications:changed"));
 }
 
 async function loadFacultyNotifications() {
