@@ -121,7 +121,7 @@ try {
 
         if ($studentRecord) {
             // Build the message that appears in the student's notifications page/dashboard.
-            $message = 'Your consultation request was ' . $status . '.';
+            $message = notificationMessageForRequestUpdate($status, $preferredDate, $preferredTimeStart);
             $notification = $db->prepare(
                 'INSERT INTO notifications (User_ID, Message, Read_Status)
                  VALUES (?, ?, ?)'
@@ -181,6 +181,34 @@ try {
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     fail('Unable to load consultation requests.', 500);
+}
+
+function notificationMessageForRequestUpdate(string $status, string $preferredDate = '', string $preferredTime = ''): string
+{
+    if ($status !== 'rescheduled') {
+        return 'Your consultation request was ' . $status . '.';
+    }
+
+    $schedule = formatRescheduledSchedule($preferredDate, $preferredTime);
+    if ($schedule === '') {
+        return 'Your consultation request was rescheduled.';
+    }
+
+    return 'Your consultation request was rescheduled to ' . $schedule . '.';
+}
+
+function formatRescheduledSchedule(string $date, string $time): string
+{
+    if ($date === '' || $time === '') {
+        return '';
+    }
+
+    $dateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $date . ' ' . $time);
+    if (!$dateTime) {
+        return '';
+    }
+
+    return $dateTime->format('F j, Y \a\t g:i A');
 }
 
 function markFinishedApprovedRequestsCompleted(PDO $db): void
