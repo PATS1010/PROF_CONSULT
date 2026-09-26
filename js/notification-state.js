@@ -17,6 +17,10 @@
     return `profConsultBrowserNotified:${notificationRole()}`;
   }
 
+  function popupStorageKey() {
+    return `profConsultPopupShown:${notificationRole()}`;
+  }
+
   function browserNotificationsSupported() {
     return "Notification" in window;
   }
@@ -43,6 +47,19 @@
 
   function saveNotifiedIds(ids) {
     localStorage.setItem(notifiedStorageKey(), JSON.stringify(ids.slice(-80)));
+  }
+
+  function storedPopupIds() {
+    try {
+      const value = JSON.parse(localStorage.getItem(popupStorageKey()) || "[]");
+      return Array.isArray(value) ? value.map(String) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function savePopupIds(ids) {
+    localStorage.setItem(popupStorageKey(), JSON.stringify(ids.slice(-80)));
   }
 
   function notificationId(notification) {
@@ -89,6 +106,151 @@
     });
 
     saveNotifiedIds(nextIds);
+  }
+
+  function ensurePopupStyles() {
+    if (document.getElementById("profConsultNotificationPopupStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "profConsultNotificationPopupStyles";
+    style.textContent = `
+      .prof-consult-notification-popup {
+        position: fixed;
+        right: 28px;
+        bottom: 88px;
+        width: min(330px, calc(100vw - 32px));
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+        overflow: hidden;
+        z-index: 9999;
+        transform: translateY(18px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        font-family: inherit;
+      }
+
+      .prof-consult-notification-popup.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .prof-consult-notification-popup__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        background: linear-gradient(90deg, #9b111e 0%, #ef5a18 100%);
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .prof-consult-notification-popup__close {
+        border: 0;
+        background: transparent;
+        color: #ffffff;
+        cursor: pointer;
+        font: inherit;
+        line-height: 1;
+        padding: 0;
+      }
+
+      .prof-consult-notification-popup__body {
+        padding: 14px 16px 16px;
+        color: #191919;
+        text-align: center;
+      }
+
+      .prof-consult-notification-popup__message {
+        margin: 0 0 10px;
+        font-size: 0.78rem;
+        line-height: 1.35;
+      }
+
+      .prof-consult-notification-popup__button {
+        display: inline-block;
+        border: 0;
+        border-radius: 999px;
+        background: #efefef;
+        color: #202020;
+        padding: 5px 12px;
+        font: inherit;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function notificationPageHref() {
+    return notificationRole() === "faculty" ? "faculty-notifications.html" : "notifications.html";
+  }
+
+  function showInAppNotificationPopup(notification) {
+    ensurePopupStyles();
+
+    const existingPopup = document.querySelector(".prof-consult-notification-popup");
+    if (existingPopup) existingPopup.remove();
+
+    const popup = document.createElement("aside");
+    popup.className = "prof-consult-notification-popup";
+    popup.setAttribute("role", "status");
+    popup.setAttribute("aria-live", "polite");
+    popup.innerHTML = `
+      <div class="prof-consult-notification-popup__header">
+        <span>New Notification</span>
+        <button type="button" class="prof-consult-notification-popup__close" aria-label="Close notification">&times;</button>
+      </div>
+      <div class="prof-consult-notification-popup__body">
+        <p class="prof-consult-notification-popup__message"></p>
+        <button type="button" class="prof-consult-notification-popup__button">View More</button>
+      </div>
+    `;
+
+    const message = popup.querySelector(".prof-consult-notification-popup__message");
+    const closeButton = popup.querySelector(".prof-consult-notification-popup__close");
+    const viewButton = popup.querySelector(".prof-consult-notification-popup__button");
+    if (message) message.textContent = notification.Message || "You have a new notification.";
+    if (closeButton) closeButton.addEventListener("click", () => popup.remove());
+    if (viewButton) {
+      viewButton.addEventListener("click", () => {
+        window.location.href = notificationPageHref();
+      });
+    }
+
+    document.body.appendChild(popup);
+    requestAnimationFrame(() => popup.classList.add("is-visible"));
+    window.setTimeout(() => {
+      popup.classList.remove("is-visible");
+      window.setTimeout(() => popup.remove(), 220);
+    }, 9000);
+  }
+
+  function showUnreadNotificationPopups(notifications) {
+    const knownIds = new Set(storedPopupIds());
+    const nextIds = [...knownIds];
+    const freshUnread = unreadNotifications(notifications).filter((notification) => {
+      return !knownIds.has(notificationId(notification));
+    });
+
+    if (freshUnread.length === 0) return;
+
+    const newest = freshUnread[0];
+    showInAppNotificationPopup(newest);
+
+    freshUnread.forEach((notification) => {
+      const id = notificationId(notification);
+      knownIds.add(id);
+      nextIds.push(id);
+    });
+    savePopupIds(nextIds);
   }
 
   function getDot(button) {
@@ -148,6 +310,7 @@
       const hasUnread = response.ok && result.ok && Number(result.unread_count || 0) > 0;
       setBellUnread(hasUnread);
       if (hasUnread) {
+        showUnreadNotificationPopups(result.notifications || []);
         notifyUnreadNotifications(result.notifications || []);
       }
     } catch (error) {
