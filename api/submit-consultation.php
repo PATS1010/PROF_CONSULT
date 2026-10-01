@@ -4,6 +4,7 @@ declare(strict_types=1);
 // SYSTEM NOTE: Creates a student consultation request for the selected faculty member.
 
 require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/mailer.php';
 requirePost();
 
 $user = requireRole('student');
@@ -43,7 +44,11 @@ try {
     }
 
     $faculty = $db->prepare(
-        'SELECT f.Faculty_ID AS "Faculty_ID", f.User_ID AS "User_ID", u.Full_Name AS "Full_Name"
+        'SELECT
+            f.Faculty_ID AS "Faculty_ID",
+            f.User_ID AS "User_ID",
+            u.Full_Name AS "Full_Name",
+            u.Email AS "Email"
          FROM faculty f
          INNER JOIN users u ON u.User_ID = f.User_ID
          WHERE f.Faculty_ID = ? AND u.Role = ? AND u.Account_Status = ?
@@ -86,6 +91,20 @@ try {
     ]);
 
     $db->commit();
+
+    if (userWantsEmailNotifications($db, (int) $facultyRecord['User_ID'])) {
+        try {
+            sendNotificationEmail(
+                (string) $facultyRecord['Email'],
+                (string) $facultyRecord['Full_Name'],
+                'New consultation request',
+                $user['name'] . ' sent you a consultation request for ' . formatConsultationSchedule($date, $preferredTimeStart) . '.'
+            );
+        } catch (Throwable $exception) {
+            error_log('Consultation request email failed: ' . $exception->getMessage());
+        }
+    }
+
     reply(['ok' => true, 'id' => $requestId], 201);
 } catch (PDOException $exception) {
     if (isset($db) && $db->inTransaction()) {
@@ -93,4 +112,14 @@ try {
     }
     error_log($exception->getMessage());
     fail('A database error occurred. Check config.php and import database/schema.sql.', 500);
+}
+
+function formatConsultationSchedule(string $date, string $time): string
+{
+    $dateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $date . ' ' . $time);
+    if (!$dateTime) {
+        return 'the selected schedule';
+    }
+
+    return $dateTime->format('F j, Y \a\t g:i A');
 }

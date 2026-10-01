@@ -4,6 +4,7 @@ declare(strict_types=1);
 // SYSTEM NOTE: Lists consultation requests and lets faculty update request status.
 
 require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/mailer.php';
 
 $requestBody = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -108,7 +109,10 @@ try {
 
         // Find the student user so the system can notify them about the decision.
         $student = $db->prepare(
-            'SELECT u.User_ID AS "User_ID"
+            'SELECT
+                u.User_ID AS "User_ID",
+                u.Full_Name AS "Full_Name",
+                u.Email AS "Email"
              FROM consultation_requests cr
              INNER JOIN students s ON s.Student_ID = cr.Student_ID
              INNER JOIN users u ON u.User_ID = s.User_ID
@@ -128,6 +132,19 @@ try {
             );
             // Save the notification as unread so the student can see the new update.
             $notification->execute([(int) $studentRecord['User_ID'], $message, 'unread']);
+
+            if (userWantsEmailNotifications($db, (int) $studentRecord['User_ID'])) {
+                try {
+                    sendNotificationEmail(
+                        (string) $studentRecord['Email'],
+                        (string) $studentRecord['Full_Name'],
+                        'Consultation request update',
+                        $message
+                    );
+                } catch (Throwable $exception) {
+                    error_log('Consultation update email failed: ' . $exception->getMessage());
+                }
+            }
         }
 
         reply(['ok' => true]);

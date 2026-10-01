@@ -17,6 +17,40 @@ document.addEventListener("DOMContentLoaded", () => {
   const dashboardGreetingEl = document.getElementById("dashboardGreeting");
   const studentGreetingEl = document.getElementById("studentFirstName");
 
+  function cachedStudentNotificationSettings() {
+    try {
+      const parsed = JSON.parse(localStorage.getItem("profconsult_student_settings") || "{}");
+      return {
+        pushNotifications: typeof parsed.pushNotifications === "boolean" ? parsed.pushNotifications : true,
+      };
+    } catch (error) {
+      return { pushNotifications: true };
+    }
+  }
+
+  async function studentNotificationSettings() {
+    try {
+      const response = await fetch("api/notification-settings.php?role=student", {
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: { "Accept": "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) {
+        throw new Error();
+      }
+
+      const settings = {
+        emailNotifications: !!result.settings.email_notifications,
+        pushNotifications: !!result.settings.push_notifications,
+      };
+      localStorage.setItem("profconsult_student_settings", JSON.stringify(settings));
+      return settings;
+    } catch (error) {
+      return cachedStudentNotificationSettings();
+    }
+  }
+
   function firstNameFromFullName(fullName) {
     return String(fullName || "").trim().split(/\s+/)[0] || "Student";
   }
@@ -164,6 +198,21 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  async function openQuickActionAfterLoginWhenEnabled() {
+    if (sessionStorage.getItem("profConsultStudentJustLoggedIn") !== "1") return;
+
+    sessionStorage.removeItem("profConsultStudentJustLoggedIn");
+
+    window.setTimeout(async () => {
+      const settings = await studentNotificationSettings();
+      if (settings.pushNotifications && quickActionPanel && quickActionButton) {
+        openQuickAction();
+      }
+    }, 3000);
+  }
+
+  openQuickActionAfterLoginWhenEnabled();
 
   
 

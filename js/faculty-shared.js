@@ -103,6 +103,59 @@ async function saveFacultyAvailabilityStatus(status) {
   return savedUiStatus;
 }
 
+async function saveFacultyAttendance(action) {
+  const response = await fetch("api/attendance.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({ action }),
+  });
+  const result = await response.json();
+
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to save attendance.");
+  }
+
+  return result;
+}
+
+function facultyCachedNotificationSettings() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem("profconsult_faculty_settings") || "{}");
+    return {
+      emailNotifications: typeof parsed.emailNotifications === "boolean" ? parsed.emailNotifications : true,
+      pushNotifications: typeof parsed.pushNotifications === "boolean"
+        ? parsed.pushNotifications
+        : (typeof parsed.autoCheckInReminder === "boolean" ? parsed.autoCheckInReminder : true),
+    };
+  } catch (error) {
+    return { emailNotifications: true, pushNotifications: true };
+  }
+}
+
+async function facultyNotificationSettings() {
+  try {
+    const response = await fetch("api/notification-settings.php?role=faculty", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      throw new Error();
+    }
+
+    const settings = {
+      emailNotifications: !!result.settings.email_notifications,
+      pushNotifications: !!result.settings.push_notifications,
+    };
+    localStorage.setItem("profconsult_faculty_settings", JSON.stringify(settings));
+    return settings;
+  } catch (error) {
+    return facultyCachedNotificationSettings();
+  }
+}
+
 window.FacultyAvailability = {
   statusForApi: facultyStatusForApi,
   statusForUi: facultyStatusForUi,
@@ -110,6 +163,7 @@ window.FacultyAvailability = {
   currentDateValue: facultyCurrentDateValue,
   currentTimeValue: facultyCurrentTimeValue,
   saveStatus: saveFacultyAvailabilityStatus,
+  saveAttendance: saveFacultyAttendance,
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -300,8 +354,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleCheckIn(event) {
     event.preventDefault();
     try {
+      await saveFacultyAttendance("check_in");
       const savedStatus = await saveFacultyAvailabilityStatus("available");
       setFacultyOnlineStatus(savedStatus);
+      showFacultyCheckInPopup("You are checked in and marked available.");
     } catch (error) {
       alert(error.message);
       return;
@@ -311,8 +367,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function handleCheckOut(event) {
     event.preventDefault();
     try {
+      await saveFacultyAttendance("check_out");
       const savedStatus = await saveFacultyAvailabilityStatus("offline");
       setFacultyOnlineStatus(savedStatus);
+      showFacultyCheckInPopup("You are checked out and marked offline.");
     } catch (error) {
       alert(error.message);
       return;
@@ -330,6 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // the database-backed Dashboard status card.
   updateQuickActionUI();
   loadSavedFacultyStatus();
+  runFacultyAutoCheckInAfterLogin();
 
   document.querySelectorAll('.faculty-sidebar-link[data-page="logout"]').forEach((link) => {
     link.addEventListener("click", async (event) => {
@@ -407,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function notifyUnreadFacultyNotifications(notifications) {
-    if (!facultyBrowserNotificationsSupported() || Notification.permission !== "granted") {
+    if (!facultyCachedNotificationSettings().pushNotifications || !facultyBrowserNotificationsSupported() || Notification.permission !== "granted") {
       return;
     }
 
@@ -558,7 +617,137 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 9000);
   }
 
+  function ensureFacultyCheckInPopupStyles() {
+    if (document.getElementById("profConsultCheckInPopupStyles")) return;
+
+    const style = document.createElement("style");
+    style.id = "profConsultCheckInPopupStyles";
+    style.textContent = `
+      .prof-consult-checkin-popup {
+        position: fixed;
+        right: 28px;
+        bottom: 88px;
+        width: min(330px, calc(100vw - 32px));
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 18px 36px rgba(0, 0, 0, 0.22);
+        overflow: hidden;
+        z-index: 9999;
+        transform: translateY(18px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+        font-family: inherit;
+      }
+
+      .prof-consult-checkin-popup.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .prof-consult-checkin-popup__header {
+        padding: 12px 14px;
+        background: linear-gradient(90deg, #9b111e 0%, #ef5a18 100%);
+        color: #ffffff;
+        font-size: 0.82rem;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+
+      .prof-consult-checkin-popup__body {
+        padding: 14px 16px 16px;
+        color: #191919;
+        text-align: center;
+      }
+
+      .prof-consult-checkin-popup__message {
+        margin: 0 0 10px;
+        font-size: 0.78rem;
+        line-height: 1.35;
+      }
+
+      .prof-consult-checkin-popup__button {
+        border: 0;
+        border-radius: 999px;
+        background: #efefef;
+        color: #202020;
+        padding: 5px 12px;
+        font: inherit;
+        font-size: 0.68rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function showFacultyCheckInPopup(message) {
+    ensureFacultyCheckInPopupStyles();
+
+    const existingPopup = document.querySelector(".prof-consult-checkin-popup");
+    if (existingPopup) existingPopup.remove();
+
+    const popup = document.createElement("aside");
+    popup.className = "prof-consult-checkin-popup";
+    popup.setAttribute("role", "status");
+    popup.setAttribute("aria-live", "polite");
+    popup.innerHTML = `
+      <div class="prof-consult-checkin-popup__header">Faculty Check-In</div>
+      <div class="prof-consult-checkin-popup__body">
+        <p class="prof-consult-checkin-popup__message"></p>
+        <button type="button" class="prof-consult-checkin-popup__button">OK</button>
+      </div>
+    `;
+
+    const messageElement = popup.querySelector(".prof-consult-checkin-popup__message");
+    const okButton = popup.querySelector(".prof-consult-checkin-popup__button");
+    if (messageElement) messageElement.textContent = message;
+    if (okButton) okButton.addEventListener("click", () => popup.remove());
+
+    document.body.appendChild(popup);
+    requestAnimationFrame(() => popup.classList.add("is-visible"));
+    window.setTimeout(() => {
+      popup.classList.remove("is-visible");
+      window.setTimeout(() => popup.remove(), 220);
+    }, 9000);
+  }
+
+  async function runFacultyAutoCheckInAfterLogin() {
+    if (sessionStorage.getItem("profConsultFacultyJustLoggedIn") !== "1") return;
+
+    sessionStorage.removeItem("profConsultFacultyJustLoggedIn");
+
+    window.setTimeout(async () => {
+      try {
+        const settings = await facultyNotificationSettings();
+        const attendance = await saveFacultyAttendance("check_in");
+        const savedStatus = await saveFacultyAvailabilityStatus("available");
+        setFacultyOnlineStatus(savedStatus);
+        if (!settings.pushNotifications) return;
+
+        if (quickActionPanel && quickActionButton) {
+          openQuickAction();
+        }
+
+        const checkedInAt = attendance.checked_in_at || attendance.existing_checked_in_at || "";
+        showFacultyCheckInPopup(
+          checkedInAt
+            ? `You are checked in. Time: ${checkedInAt.slice(0, 5)}`
+            : "You are checked in and marked available."
+        );
+      } catch (error) {
+        if (facultyCachedNotificationSettings().pushNotifications) {
+          showFacultyCheckInPopup(error.message || "Unable to complete auto check-in.");
+        }
+      }
+    }, 3000);
+  }
+
   function showUnreadFacultyNotificationPopups(notifications) {
+    if (!facultyCachedNotificationSettings().pushNotifications) return;
+
     const knownIds = new Set(storedFacultyPopupIds());
     const nextIds = [...knownIds];
     const freshUnread = (notifications || []).filter((notification) => {

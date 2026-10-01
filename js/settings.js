@@ -110,10 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------------------------------------------------------
   // Settings checkboxes
-  // No backend yet, so selections are stored in localStorage
-  // as a frontend-only stand-in. Replace the body of
-  // saveSettings()/loadSettings() with real API calls once a
-  // backend exists -- nothing else on the page needs to change.
   // ---------------------------------------------------------
   const SETTINGS_STORAGE_KEY = "profconsult_student_settings";
 
@@ -150,7 +146,50 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function loadSettingsFromApi() {
+    const response = await fetch("api/notification-settings.php?role=student", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to load notification settings.");
+    }
+
+    return {
+      emailNotifications: !!result.settings.email_notifications,
+      pushNotifications: !!result.settings.push_notifications,
+    };
+  }
+
+  async function saveSettingsToApi() {
+    const response = await fetch("api/notification-settings.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        role: "student",
+        email_notifications: !!(emailNotificationsCheckbox && emailNotificationsCheckbox.checked),
+        push_notifications: !!(pushNotificationsCheckbox && pushNotificationsCheckbox.checked),
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to save notification settings.");
+    }
+  }
+
   loadSettings();
+  loadSettingsFromApi()
+    .then((settings) => {
+      if (emailNotificationsCheckbox) emailNotificationsCheckbox.checked = settings.emailNotifications;
+      if (pushNotificationsCheckbox) pushNotificationsCheckbox.checked = settings.pushNotifications;
+      saveSettings();
+    })
+    .catch(() => {
+      // Keep cached settings when the API is unavailable.
+    });
 
   // ---------------------------------------------------------
   // Save button: persists settings and shows a green success
@@ -161,8 +200,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let successPopupTimeout = null;
 
   if (saveSettingsButton) {
-    saveSettingsButton.addEventListener("click", () => {
+    saveSettingsButton.addEventListener("click", async () => {
       saveSettings();
+      try {
+        await saveSettingsToApi();
+      } catch (error) {
+        // The local cache has already been saved; the UI still confirms the user's choice.
+      }
 
       saveSuccessPopup.hidden = false;
       requestAnimationFrame(() => saveSuccessPopup.classList.add("is-visible"));

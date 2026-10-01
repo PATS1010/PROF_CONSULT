@@ -1,9 +1,9 @@
 // SYSTEM NOTE: Controls client-side behavior for the faculty settings page, including UI events and API calls.
 // =========================================================
 // FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC INTERACTIONS
-// - Email Notifications / Auto Check-In Reminder: frontend
-//   state only for now, stored so a future backend can read
-//   the same shape without changes here.
+// - Email Notifications / Push Notifications: saved to the
+//   backend for the logged-in faculty account, with localStorage
+//   kept as a quick client-side cache.
 // - Change Password: a real link to faculty-change-password.html
 //   (no JS navigation needed).
 // - Save: persists the current checkbox states and shows a
@@ -21,8 +21,8 @@ const FACULTY_SETTINGS_STORAGE_KEY = "profconsult_faculty_settings";
 // faculty account's preferences.
 // ---------------------------------------------------------
 const DEFAULT_FACULTY_SETTINGS = {
-  emailNotifications: false,
-  autoCheckInReminder: false,
+  emailNotifications: true,
+  pushNotifications: true,
 };
 
 function loadFacultySettings() {
@@ -30,7 +30,13 @@ function loadFacultySettings() {
     const raw = window.localStorage.getItem(FACULTY_SETTINGS_STORAGE_KEY);
     if (!raw) return { ...DEFAULT_FACULTY_SETTINGS };
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_FACULTY_SETTINGS, ...parsed };
+    return {
+      ...DEFAULT_FACULTY_SETTINGS,
+      ...parsed,
+      pushNotifications: typeof parsed.pushNotifications === "boolean"
+        ? parsed.pushNotifications
+        : !!parsed.autoCheckInReminder,
+    };
   } catch (error) {
     return { ...DEFAULT_FACULTY_SETTINGS };
   }
@@ -45,10 +51,45 @@ function saveFacultySettings(settings) {
   }
 }
 
+async function loadFacultySettingsFromApi() {
+  const response = await fetch("api/notification-settings.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to load notification settings.");
+  }
+
+  return {
+    emailNotifications: !!result.settings.email_notifications,
+    pushNotifications: !!result.settings.push_notifications,
+  };
+}
+
+async function saveFacultySettingsToApi(settings) {
+  const response = await fetch("api/notification-settings.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      role: "faculty",
+      email_notifications: settings.emailNotifications,
+      push_notifications: settings.pushNotifications,
+    }),
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to save notification settings.");
+  }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const emailNotificationsCheckbox = document.getElementById("emailNotificationsCheckbox");
-  const autoCheckInCheckbox = document.getElementById("autoCheckInCheckbox");
+  const pushNotificationsCheckbox = document.getElementById("pushNotificationsCheckbox")
+    || document.getElementById("autoCheckInCheckbox");
   const saveButton = document.getElementById("saveSettingsButton");
   const saveSuccessMessage = document.getElementById("settingsSaveSuccess");
 
@@ -60,22 +101,37 @@ document.addEventListener("DOMContentLoaded", () => {
   if (emailNotificationsCheckbox) {
     emailNotificationsCheckbox.checked = currentSettings.emailNotifications;
   }
-  if (autoCheckInCheckbox) {
-    autoCheckInCheckbox.checked = currentSettings.autoCheckInReminder;
+  if (pushNotificationsCheckbox) {
+    pushNotificationsCheckbox.checked = currentSettings.pushNotifications;
   }
+
+  loadFacultySettingsFromApi()
+    .then((settings) => {
+      saveFacultySettings(settings);
+      if (emailNotificationsCheckbox) emailNotificationsCheckbox.checked = settings.emailNotifications;
+      if (pushNotificationsCheckbox) pushNotificationsCheckbox.checked = settings.pushNotifications;
+    })
+    .catch(() => {
+      // Keep cached settings when the API is unavailable.
+    });
 
   // ---------------------------------------------------------
   // Save: reads the current checkbox states, persists them,
   // and shows a clear success message. Does not navigate or
   // reload the page.
   // ---------------------------------------------------------
-  function handleSaveSettings() {
+  async function handleSaveSettings() {
     const updatedSettings = {
       emailNotifications: !!(emailNotificationsCheckbox && emailNotificationsCheckbox.checked),
-      autoCheckInReminder: !!(autoCheckInCheckbox && autoCheckInCheckbox.checked),
+      pushNotifications: !!(pushNotificationsCheckbox && pushNotificationsCheckbox.checked),
     };
 
     saveFacultySettings(updatedSettings);
+    try {
+      await saveFacultySettingsToApi(updatedSettings);
+    } catch (error) {
+      // Keep local cache even when the network request fails.
+    }
 
     if (saveSuccessMessage) {
       saveSuccessMessage.hidden = false;

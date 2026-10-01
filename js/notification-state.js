@@ -13,6 +13,21 @@
     return document.getElementById("facultyNotificationBellButton") ? "faculty" : "student";
   }
 
+  function cachedNotificationSettings() {
+    const key = notificationRole() === "faculty"
+      ? "profconsult_faculty_settings"
+      : "profconsult_student_settings";
+
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || "{}");
+      return {
+        pushNotifications: typeof parsed.pushNotifications === "boolean" ? parsed.pushNotifications : true,
+      };
+    } catch (error) {
+      return { pushNotifications: true };
+    }
+  }
+
   function notifiedStorageKey() {
     return `profConsultBrowserNotified:${notificationRole()}`;
   }
@@ -89,7 +104,7 @@
   }
 
   function notifyUnreadNotifications(notifications) {
-    if (!browserNotificationsSupported() || Notification.permission !== "granted") {
+    if (!cachedNotificationSettings().pushNotifications || !browserNotificationsSupported() || Notification.permission !== "granted") {
       return;
     }
 
@@ -234,6 +249,8 @@
   }
 
   function showUnreadNotificationPopups(notifications) {
+    if (!cachedNotificationSettings().pushNotifications) return;
+
     const knownIds = new Set(storedPopupIds());
     const nextIds = [...knownIds];
     const freshUnread = unreadNotifications(notifications).filter((notification) => {

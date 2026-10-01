@@ -71,6 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch("api/login.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "student", identifier: emailInput.value.trim(), password: passwordInput.value }) });
         if (!response.ok) throw new Error();
         loginError.hidden = true;
+        sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
         window.location.href = "student-dashboard.html";
       } catch (error) {
         loginError.hidden = false;

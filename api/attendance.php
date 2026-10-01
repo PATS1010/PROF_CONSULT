@@ -26,6 +26,23 @@ try {
     $now = date('H:i:s');
 
     if ($action === 'check_in') {
+        $existing = $db->prepare(
+            'SELECT Log_ID AS "Log_ID", Check_In AS "Check_In"
+             FROM attendance_logs
+             WHERE Faculty_ID = ? AND Date = ? AND Check_Out IS NULL
+             ORDER BY Log_ID DESC
+             LIMIT 1'
+        );
+        $existing->execute([$facultyId, $today]);
+        $existingRecord = $existing->fetch();
+        if ($existingRecord) {
+            reply([
+                'ok' => true,
+                'id' => (int) $existingRecord['Log_ID'],
+                'existing_checked_in_at' => (string) $existingRecord['Check_In'],
+            ]);
+        }
+
         $statement = $db->prepare(
             'INSERT INTO attendance_logs (Faculty_ID, Date, Check_In)
              VALUES (?, ?, ?)

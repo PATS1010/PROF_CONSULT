@@ -76,6 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (!response.ok) throw new Error();
         loginError.hidden = true;
+        sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
         window.location.href = "faculty-dashboard.html";
       } catch (error) {
         loginError.hidden = false;

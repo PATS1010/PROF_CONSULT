@@ -19,6 +19,15 @@ function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
     sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
 }
 
+function sendNotificationEmail(string $toEmail, string $toName, string $subject, string $message): void
+{
+    if (BREVO_API_KEY === '') {
+        throw new RuntimeException('BREVO_API_KEY is not configured in Railway.');
+    }
+
+    sendNotificationEmailWithBrevoApi($toEmail, $toName, $subject, $message);
+}
+
 function sendOtpSms(string $mobileNumber, string $otpCode): void
 {
     if (BREVO_API_KEY === '') {
@@ -158,6 +167,54 @@ function sendOtpEmailWithBrevoApi(string $toEmail, string $toName, string $otpCo
 
     if (!preg_match('/\s2\d\d\s/', $statusLine)) {
         error_log('Brevo email failed: ' . $statusLine . ' ' . (string) $response);
+        throw new RuntimeException(brevoErrorMessage($response === false ? null : $response));
+    }
+}
+
+function sendNotificationEmailWithBrevoApi(string $toEmail, string $toName, string $subject, string $message): void
+{
+    if (SMTP_FROM_EMAIL === '') {
+        throw new RuntimeException('SMTP_FROM_EMAIL is not configured.');
+    }
+
+    $safeName = htmlspecialchars($toName, ENT_QUOTES, 'UTF-8');
+    $safeMessage = nl2br(htmlspecialchars($message, ENT_QUOTES, 'UTF-8'));
+
+    $payload = [
+        'sender' => [
+            'name' => SMTP_FROM_NAME,
+            'email' => SMTP_FROM_EMAIL,
+        ],
+        'to' => [
+            [
+                'email' => $toEmail,
+                'name' => $toName,
+            ],
+        ],
+        'subject' => $subject,
+        'htmlContent' => "<p>Hello {$safeName},</p><p>{$safeMessage}</p><p>Please open Prof Consult to view the details.</p>",
+        'textContent' => "Hello {$toName},\n\n{$message}\n\nPlease open Prof Consult to view the details.",
+    ];
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => [
+                'Accept: application/json',
+                'Content-Type: application/json',
+                'api-key: ' . BREVO_API_KEY,
+            ],
+            'content' => json_encode($payload),
+            'ignore_errors' => true,
+            'timeout' => 15,
+        ],
+    ]);
+
+    $response = file_get_contents('https://api.brevo.com/v3/smtp/email', false, $context);
+    $statusLine = $http_response_header[0] ?? '';
+
+    if (!preg_match('/\s2\d\d\s/', $statusLine)) {
+        error_log('Brevo notification email failed: ' . $statusLine . ' ' . (string) $response);
         throw new RuntimeException(brevoErrorMessage($response === false ? null : $response));
     }
 }

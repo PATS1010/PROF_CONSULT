@@ -20,6 +20,8 @@ CREATE TABLE users (
   Email VARCHAR(190) NOT NULL UNIQUE,
   Mobile_Number VARCHAR(20) NOT NULL,
   Profile_Photo VARCHAR(255) NULL,
+  Email_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
+  Push_Notifications BOOLEAN NOT NULL DEFAULT TRUE,
   Role VARCHAR(20) NOT NULL CHECK (Role IN ('student', 'faculty', 'admin')),
   Account_Status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (Account_Status IN ('active', 'inactive', 'pending', 'blocked'))
 );

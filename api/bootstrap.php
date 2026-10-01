@@ -111,6 +111,42 @@ function ensureProfilePhotoColumn(PDO $db): void
     }
 }
 
+function ensureNotificationPreferenceColumns(PDO $db): void
+{
+    if (!columnExists($db, 'users', ['email_notifications', 'Email_Notifications'])) {
+        $db->exec('ALTER TABLE users ADD COLUMN Email_Notifications BOOLEAN NOT NULL DEFAULT TRUE');
+    }
+    if (!columnExists($db, 'users', ['push_notifications', 'Push_Notifications'])) {
+        $db->exec('ALTER TABLE users ADD COLUMN Push_Notifications BOOLEAN NOT NULL DEFAULT TRUE');
+    }
+}
+
+function notificationPreferencesForUser(PDO $db, int $userId): array
+{
+    ensureNotificationPreferenceColumns($db);
+
+    $statement = $db->prepare(
+        'SELECT
+            Email_Notifications AS "Email_Notifications",
+            Push_Notifications AS "Push_Notifications"
+         FROM users
+         WHERE User_ID = ?
+         LIMIT 1'
+    );
+    $statement->execute([$userId]);
+    $row = $statement->fetch();
+
+    return [
+        'email_notifications' => $row ? (bool) $row['Email_Notifications'] : true,
+        'push_notifications' => $row ? (bool) $row['Push_Notifications'] : true,
+    ];
+}
+
+function userWantsEmailNotifications(PDO $db, int $userId): bool
+{
+    return notificationPreferencesForUser($db, $userId)['email_notifications'];
+}
+
 function ensureConsultationMessageColumn(PDO $db): void
 {
     if (!columnExists($db, 'consultation_requests', ['additional_message', 'Additional_Message'])) {
