@@ -720,16 +720,19 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.removeItem("profConsultFacultyJustLoggedIn");
 
     window.setTimeout(async () => {
+      let shouldShowPopup = facultyCachedNotificationSettings().pushNotifications;
+
       try {
         const settings = await facultyNotificationSettings();
+        shouldShowPopup = settings.pushNotifications;
+        if (shouldShowPopup && quickActionPanel && quickActionButton) {
+          openQuickAction();
+        }
+
         const attendance = await saveFacultyAttendance("check_in");
         const savedStatus = await saveFacultyAvailabilityStatus("available");
         setFacultyOnlineStatus(savedStatus);
-        if (!settings.pushNotifications) return;
-
-        if (quickActionPanel && quickActionButton) {
-          openQuickAction();
-        }
+        if (!shouldShowPopup) return;
 
         const checkedInAt = attendance.checked_in_at || attendance.existing_checked_in_at || "";
         showFacultyCheckInPopup(
@@ -738,7 +741,7 @@ document.addEventListener("DOMContentLoaded", () => {
             : "You are checked in and marked available."
         );
       } catch (error) {
-        if (facultyCachedNotificationSettings().pushNotifications) {
+        if (shouldShowPopup) {
           showFacultyCheckInPopup(error.message || "Unable to complete auto check-in.");
         }
       }
