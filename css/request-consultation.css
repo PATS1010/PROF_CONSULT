@@ -1,6 +1,5 @@
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Request Consultation */
+
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -26,9 +25,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -57,10 +53,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -79,9 +71,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -105,6 +94,27 @@ input {
   width: auto;
 }
 
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
 .nav-icon-button {
   display: flex;
   align-items: center;
@@ -125,8 +135,6 @@ input {
   border-radius: 2px;
 }
 
-/* Notification bell + Quick Action sit side by side, same pill
-   style and vertically centered on one line. */
 .navbar-right {
   position: relative;
   display: flex;
@@ -161,9 +169,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -215,9 +220,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* Each action is its own row: text on the left, button pinned
-   to the right -- flex row prevents the button from overlapping
-   the item below it. */
 .quick-action-item {
   display: flex;
   align-items: center;
@@ -267,9 +269,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -352,10 +351,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   BACKGROUND
-   Slightly blurred, light white overlay for readability
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -386,9 +381,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   REQUEST CONSULTATION PAGE LAYOUT
-========================================================= */
 .request-page {
   display: flex;
   flex-direction: column;
@@ -418,16 +410,8 @@ input {
   border-radius: 28px;
   box-shadow: var(--shadow-card);
   padding: 36px 40px 36px 54px;
-  /* overflow intentionally NOT hidden here -- clipping this container
-     was cutting off the Preferred Time dropdown. The rounded left
-     accent bar below now carries its own corner radius instead of
-     relying on this container to clip it. */
 }
 
-/* Thick red accent bar along the left edge, matching the
-   Faculty Availability / Recent Notifications panels. Carries its
-   own matching corner radius (instead of depending on .request-card's
-   overflow:hidden) so removing that clip doesn't square off the bar. */
 .request-card::before {
   content: "";
   position: absolute;
@@ -452,12 +436,6 @@ input {
   gap: 16px;
 }
 
-/* =========================================================
-   INFO ROWS
-   Each row is one seamless pill: bold label on the left
-   (blends into the card background), value/input on the
-   right (light gray segment)
-========================================================= */
 .info-row {
   display: flex;
   align-items: stretch;
@@ -507,15 +485,11 @@ input[type="date"].info-input {
   cursor: pointer;
 }
 
-/* Preferred Date rejected an unavailable weekday -- brief red
-   outline to flag it, matching the existing focus-outline pattern */
 .info-input.is-date-invalid {
   outline: 2px solid var(--color-red-primary);
   outline-offset: -2px;
 }
 
-/* Small muted note under Preferred Date showing which days are
-   available; turns red briefly when an unavailable day is rejected */
 .date-availability-hint {
   margin-top: -6px;
   padding-left: 6px;
@@ -527,7 +501,6 @@ input[type="date"].info-input {
   color: var(--color-red-primary);
 }
 
-/* Label-only row (Additional Message heading) */
 .info-row-label-only {
   background-color: #ffffff;
 }
@@ -536,9 +509,6 @@ input[type="date"].info-input {
   width: 100%;
 }
 
-/* =========================================================
-   ADDITIONAL MESSAGE
-========================================================= */
 .message-block {
   display: flex;
   flex-direction: column;
@@ -570,12 +540,6 @@ input[type="date"].info-input {
   outline-offset: 2px;
 }
 
-/* =========================================================
-   CUSTOM DROPDOWN (Preferred Time)
-   Blends into the info-row's value segment like the other
-   fields, while keeping the dropdown itself fully our own
-   HTML/CSS so it can never overflow on mobile.
-========================================================= */
 .info-row-select .custom-select {
   position: relative;
   flex: 1;
@@ -671,18 +635,12 @@ input[type="date"].info-input {
   background-color: rgba(242, 96, 28, 0.15);
 }
 
-/* Time slots outside the faculty's test availability -- visible,
-   grayed out, and not selectable (pointer-events:none blocks both
-   click and hover so they can never become the active/selected slot) */
 .custom-select-options li.is-unavailable {
   color: #b9b9b9;
   cursor: not-allowed;
   pointer-events: none;
 }
 
-/* =========================================================
-   BUTTONS
-========================================================= */
 .request-buttons {
   display: flex;
   gap: 14px;
@@ -716,9 +674,6 @@ input[type="date"].info-input {
   background: linear-gradient(90deg, var(--color-gradient-end) 0%, var(--color-gradient-start) 100%);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -813,15 +768,152 @@ input[type="date"].info-input {
     width: 100%;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
   .sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
+  }
+
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

@@ -1,18 +1,6 @@
-// SYSTEM NOTE: Controls client-side behavior for the student login page, including UI events and API calls.
-// =========================================================
-// STUDENT LOGIN PAGE INTERACTIONS
-// - Back -> choose-account.html
-// - Login form submit -> student-dashboard.html
-// - Forgot Password -> forgot-password.html?from=student
-// - Create Student Account -> create-student-account.html
-// - Remember Me custom circular checkbox toggle
-// =========================================================
-
+// Student Login JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Back -> choose-account.html
-  // ---------------------------------------------------------
   document.querySelectorAll('[data-nav="back"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -20,10 +8,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Forgot Password -> forgot-password.html
-  // (page not built yet -- this link will 404 until it exists)
-  // ---------------------------------------------------------
   document.querySelectorAll('[data-nav="forgot-password"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -31,10 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Create Student Account -> create-student-account.html
-  // (page not built yet -- this link will 404 until it exists)
-  // ---------------------------------------------------------
   document.querySelectorAll('[data-nav="create-account"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
@@ -42,9 +22,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Show/Hide password toggle
-  // ---------------------------------------------------------
   document.querySelectorAll(".password-toggle").forEach((toggleButton) => {
     toggleButton.addEventListener("click", () => {
       const targetId = toggleButton.getAttribute("data-target");
@@ -63,9 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("studentPassword");
   const loginError = document.getElementById("loginError");
 
-  // ---------------------------------------------------------
-  // TEST ACCOUNT CREDENTIALS (frontend-only, no backend yet)
-  // ---------------------------------------------------------
   const TEST_STUDENT_EMAIL = "student@test.com";
   const TEST_STUDENT_PASSWORD = "Student123";
 

@@ -1,34 +1,5 @@
-// =========================================================
-// CHANGE PASSWORD PAGE INTERACTIONS
-//
-// This page is shared by:
-//   Student Settings
-//   Faculty Settings
-//
-// URL examples:
-//
-//   change-password.html?from=student
-//   change-password.html?from=faculty
-//
-// Back / Cancel return to the matching Settings page.
-//
-// Forgot Password reuses the EXISTING Forgot Password page
-// and passes the SAME origin, PLUS a "context" flag so that
-// Forgot Password's Back button knows to return here instead
-// of to the Login page:
-//
-//   forgot-password.html?from=student&context=change-password
-//   forgot-password.html?from=faculty&context=change-password
-//
-// =========================================================
-
-
+// Change Password JS
 document.addEventListener("DOMContentLoaded", () => {
-
-
-  // =========================================================
-  // DETERMINE ORIGIN
-  // =========================================================
 
   const params =
     new URLSearchParams(window.location.search);
@@ -38,27 +9,16 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "faculty"
       : "student";
 
-
-  // Where Back / Cancel should return.
   const originSettingsPage =
     origin === "faculty"
       ? "faculty-settings.html"
       : "settings.html";
 
-
-  // Existing Forgot Password page + existing origin system,
-  // plus a context flag marking that we came from Change Password.
   const forgotPasswordPage =
     `forgot-password.html?from=${origin}&context=change-password`;
 
-
-  // =========================================================
-  // NAVIGATION ELEMENTS
-  // =========================================================
-
   const backButton =
     document.getElementById("backButton");
-
 
   if (backButton) {
 
@@ -69,10 +29,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
   const forgotPasswordLink =
     document.getElementById("forgotPasswordLink");
-
 
   if (forgotPasswordLink) {
 
@@ -82,11 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   }
-
-
-  // =========================================================
-  // BACK / CANCEL
-  // =========================================================
 
   document
     .querySelectorAll('[data-nav="back"]')
@@ -103,56 +56,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-
-  // =========================================================
-  // GET FORM ELEMENTS
-  // =========================================================
-
   const form =
     document.getElementById(
       "changePasswordForm"
     );
-
 
   const currentPassword =
     document.getElementById(
       "currentPassword"
     );
 
-
   const newPassword =
     document.getElementById(
       "newPassword"
     );
-
 
   const confirmPassword =
     document.getElementById(
       "confirmPassword"
     );
 
-
   const saveButton =
     document.getElementById(
       "saveButton"
     );
-
 
   const requirements =
     document.getElementById(
       "passwordRequirements"
     );
 
-
   const message =
     document.getElementById(
       "changePasswordMessage"
     );
-
-
-  // =========================================================
-  // SHOW / HIDE MESSAGE
-  // =========================================================
 
   function showMessage(text, isSuccess) {
 
@@ -176,7 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
   function hideMessage() {
 
     if (!message) {
@@ -188,14 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     message.hidden = true;
 
   }
-
-
-  // =========================================================
-  // PASSWORD SHOW / HIDE
-  //
-  // Each eye button controls ONLY its own input
-  // through data-target.
-  // =========================================================
 
   document
     .querySelectorAll(".password-toggle")
@@ -209,27 +137,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const targetInput =
           document.getElementById(targetId);
 
-
         if (!targetInput) {
           return;
         }
 
-
         const isHidden =
           targetInput.type === "password";
-
 
         targetInput.type =
           isHidden
             ? "text"
             : "password";
 
-
         toggle.classList.toggle(
           "is-visible",
           isHidden
         );
-
 
         toggle.setAttribute(
           "aria-label",
@@ -241,16 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
     });
-
-
-  // =========================================================
-  // PASSWORD RULES
-  //
-  // Exactly three requirements:
-  //   8+ characters
-  //   1 uppercase letter
-  //   1 number
-  // =========================================================
 
   function checkRules(value) {
 
@@ -269,17 +182,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
   function updateRequirements() {
 
     if (!requirements) {
       return;
     }
 
-
     const results =
       checkRules(newPassword.value);
-
 
     requirements
       .querySelectorAll("li")
@@ -296,11 +206,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
   }
-
-
-  // =========================================================
-  // CLEAR ERROR STATE WHILE TYPING
-  // =========================================================
 
   [
     currentPassword,
@@ -330,15 +235,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   });
 
-
-  // =========================================================
-  // VALIDATION
-  // =========================================================
-
   function validateForm() {
 
-
-    // Current Password cannot be empty.
     if (!currentPassword.value.trim()) {
 
       currentPassword.classList.add(
@@ -355,11 +253,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // New Password requirements.
     const results =
       checkRules(newPassword.value);
-
 
     if (
       !results.length ||
@@ -381,8 +276,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // Confirm Password must match.
     if (
       confirmPassword.value !==
       newPassword.value
@@ -402,17 +295,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     return true;
 
   }
-
-
-  // =========================================================
-  // FORM SUBMISSION
-  //
-  // Frontend only.
-  // =========================================================
 
   if (form) {
 
@@ -420,24 +305,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.preventDefault();
 
-
       if (!validateForm()) {
 
         return;
 
       }
 
-
       saveButton.disabled = true;
-
 
       showMessage(
         "Password changed successfully.",
         true
       );
 
-
-      // Return to the correct Settings page.
       setTimeout(() => {
 
         window.location.href =
@@ -448,11 +328,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   }
-
-
-  // =========================================================
-  // INITIAL STATE
-  // =========================================================
 
   updateRequirements();
 

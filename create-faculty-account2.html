@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the create faculty account2 page structure used by the Prof Consult web app. -->
+<!-- Create faculty account2 page -->
 <html lang="en">
 
 <head>
@@ -33,11 +33,6 @@
 
 <body>
 
-
-  <!-- =========================================================
-       BACKGROUND
-  ========================================================== -->
-
   <div
     class="page-background"
     aria-hidden="true"
@@ -54,11 +49,6 @@
   </div>
 
 
-
-  <!-- =========================================================
-       BACK BUTTON
-  ========================================================== -->
-
   <a
     href="create-faculty-account.html"
     class="back-button"
@@ -69,11 +59,6 @@
     Back
   </a>
 
-
-
-  <!-- =========================================================
-       MAIN REGISTRATION CARD
-  ========================================================== -->
 
   <main class="registration-card">
 
@@ -87,11 +72,6 @@
       id="createFacultyAccountStep2Form"
       novalidate
     >
-
-
-      <!-- =====================================================
-           EMAIL ADDRESS
-      ====================================================== -->
 
       <div class="form-field">
 
@@ -118,12 +98,6 @@
         </p>
 
       </div>
-
-
-
-      <!-- =====================================================
-           CONTACT NUMBER
-      ====================================================== -->
 
       <div class="form-field">
 
@@ -168,11 +142,6 @@
       </div>
 
 
-
-      <!-- =====================================================
-           PASSWORD
-      ====================================================== -->
-
       <div class="form-field">
 
         <label for="password">
@@ -212,22 +181,16 @@
           hidden
         ></p>
 
-
         <ul class="password-requirements">
 
-          <li>&check; At least 8 characters</li>
-          <li>&check; One uppercase letter</li>
-          <li>&check; One number</li>
+          <li id="reqLength">&check; At least 8 characters</li>
+          <li id="reqUppercase">&check; One uppercase letter</li>
+          <li id="reqNumber">&check; One number</li>
 
         </ul>
 
       </div>
 
-
-
-      <!-- =====================================================
-           CONFIRM PASSWORD
-      ====================================================== -->
 
       <div class="form-field">
 
@@ -274,10 +237,6 @@
 
 
 
-      <!-- =====================================================
-           TERMS AND CONDITIONS
-      ====================================================== -->
-
       <label class="terms-checkbox">
 
         <input
@@ -297,18 +256,6 @@
       </label>
 
 
-
-      <!-- =====================================================
-           VERIFY ACCOUNT BUTTON
-
-           IMPORTANT:
-           Email + mobile are checked by JavaScript first.
-
-           The ?from=faculty parameter tells the shared
-           verify-account.html page that this came from
-           the faculty registration flow.
-      ====================================================== -->
-
       <a
         href="verify-account.html?from=faculty"
         class="btn verify-account-button"
@@ -318,11 +265,6 @@
       </a>
 
 
-
-      <!-- =====================================================
-           CREATE FACULTY ACCOUNT BUTTON
-      ====================================================== -->
-
       <button
         type="submit"
         class="btn create-account-button"
@@ -330,12 +272,6 @@
       >
         Create Faculty Account
       </button>
-
-
-
-      <!-- =====================================================
-           SUCCESS MESSAGE
-      ====================================================== -->
 
       <p
         class="field-message field-message-success"
@@ -346,12 +282,6 @@
         Account successfully created.
       </p>
 
-
-
-      <!-- =====================================================
-           GENERAL ACCOUNT MESSAGE
-      ====================================================== -->
-
       <p
         class="field-message field-message-error"
         id="accountMessage"
@@ -360,17 +290,12 @@
       ></p>
 
 
-
-      <!-- =====================================================
-           LOGIN
-      ====================================================== -->
-
       <p class="login-text">
 
         Already have an account?
 
         <a
-          href="faculty-login.html"
+          href="login.html"
           class="login-link"
           data-nav="login"
         >

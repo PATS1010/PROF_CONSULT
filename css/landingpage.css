@@ -1,7 +1,5 @@
-/* SYSTEM NOTE: Styles the landingpage page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Landing Page */
+
 :root {
   --color-red-primary: #d81f26;
   --color-maroon-button: #7a1010;
@@ -27,9 +25,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.2);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -57,11 +52,6 @@ img {
   max-width: 100%;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style for major page headings across the
-   Prof Consult website. Arial Black is used ONLY here.
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -81,9 +71,6 @@ img {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   NAVIGATION BAR
-========================================================= */
 .navbar {
   position: fixed;
   top: 0;
@@ -138,14 +125,10 @@ img {
   border-radius: 2px;
 }
 
-/* Offsets the fixed navbar so section content isn't hidden under it */
 .landing-main {
   padding-top: var(--nav-height);
 }
 
-/* =========================================================
-   RECTANGLE 1: HERO
-========================================================= */
 .hero {
   position: relative;
   min-height: calc(100vh - var(--nav-height));
@@ -236,9 +219,6 @@ img {
   opacity: 0.95;
 }
 
-/* =========================================================
-   RECTANGLE 2: WHY CHOOSE PROFCONSULT?
-========================================================= */
 .why-choose {
   position: relative;
   min-height: 100vh;
@@ -353,10 +333,6 @@ img {
   color: rgba(255, 255, 255, 0.92);
 }
 
-/* =========================================================
-   RECTANGLE 3: HOW PROFCONSULT WORKS
-   Same background treatment as Rectangle 1
-========================================================= */
 .how-it-works {
   position: relative;
   min-height: 100vh;
@@ -419,9 +395,6 @@ img {
   font-weight: 700;
 }
 
-/* Process diagram card -- kept at the same size/position as before.
-   Content inside is now a single uploadable placeholder image
-   instead of the numbered workflow steps. */
 .diagram-card {
   position: relative;
   width: 100%;
@@ -436,9 +409,6 @@ img {
   justify-content: center;
 }
 
-/* Uploadable placeholder -- fills the available space inside the
-   card proportionally, without distortion. Replace
-   images/how-it-works-diagram.png with the real diagram later. */
 .diagram-placeholder-image {
   width: 100%;
   height: 100%;
@@ -446,9 +416,6 @@ img {
   object-fit: contain;
 }
 
-/* =========================================================
-   RECTANGLE 4: WHO CAN USE THE SYSTEM?
-========================================================= */
 .who-can-use {
   position: relative;
   min-height: 100vh;
@@ -514,7 +481,6 @@ img {
   gap: 32px;
 }
 
-/* Two wider, equal-sized desktop cards */
 .role-card {
   flex: 0 1 440px;
   width: 100%;
@@ -532,7 +498,6 @@ img {
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.35);
 }
 
-/* Uploadable image area */
 .role-card-image {
   position: relative;
   width: 100%;
@@ -546,7 +511,6 @@ img {
   object-fit: cover;
 }
 
-/* Soft red overlay over each image */
 .role-card-image::after {
   content: "";
   position: absolute;
@@ -575,9 +539,6 @@ img {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   TABLET AND MOBILE
-========================================================= */
 @media (max-width: 768px) {
   .who-can-use {
     height: auto;
@@ -618,10 +579,6 @@ img {
   }
 }
 
-/* =========================================================
-   RECTANGLE 5: READY TO GET STARTED? + CONTACT US + FOOTER
-   Same background treatment as Rectangle 1
-========================================================= */
 .get-started {
   position: relative;
   min-height: 100vh;
@@ -707,7 +664,6 @@ img {
   line-height: 1.7;
 }
 
-/* Footer integrated into the bottom of Rectangle 5 */
 .site-footer {
   position: relative;
   z-index: 3;
@@ -724,9 +680,6 @@ img {
   letter-spacing: 0.3px;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 900px) {
   :root {
     --section-padding-x: 32px;
@@ -773,7 +726,6 @@ img {
     width: 100%;
   }
 
-  /* Rectangle 4 */
   .role-cards {
     flex-direction: column;
     align-items: center;

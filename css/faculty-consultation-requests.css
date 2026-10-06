@@ -1,18 +1,5 @@
-/* =========================================================
-   FACULTY CONSULTATION REQUESTS -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+/* Faculty Consultation Requests */
 
-   Heading gradient is page-local and self-contained (matches
-   the approach already used on Faculty Profile/Notifications)
-   -- no dependency on .format-text or shared CSS variables.
-========================================================= */
-
-/* =========================================================
-   PAGE HEADING
-========================================================= */
 .requests-page-heading {
   margin-bottom: 24px;
 }
@@ -44,11 +31,6 @@
   margin-top: 2px;
 }
 
-/* =========================================================
-   HISTORY / BACK TOGGLE
-   Neutral pill, matching the light rounded-button treatment
-   used elsewhere for secondary/utility actions.
-========================================================= */
 .history-toggle-button {
   display: inline-block;
   margin-bottom: 20px;
@@ -66,11 +48,6 @@
   transform: translateY(-1px);
 }
 
-/* =========================================================
-   REQUESTS CARD
-   White rounded card with a thick red left accent bar,
-   matching the Notifications/Student panel-card treatment.
-========================================================= */
 .requests-card {
   position: relative;
   overflow: hidden;
@@ -87,9 +64,6 @@
   background-color: var(--color-red-primary);
 }
 
-/* =========================================================
-   HORIZONTAL SCROLL CONTAINER (Pending Requests)
-========================================================= */
 .requests-scroll-container {
   display: flex;
   align-items: flex-start;
@@ -111,13 +85,6 @@
   display: none;
 }
 
-/* =========================================================
-   UPCOMING / COMPLETED CONSULTATIONS
-   Two-column grid on desktop, single column (Upcoming first,
-   by source order) on smaller screens. Each section is its
-   own white panel with a distinct accent color so the two
-   are easy to tell apart at a glance.
-========================================================= */
 .consultation-sections-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -178,11 +145,12 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  max-height: 780px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
-/* Cards in the Upcoming/Completed vertical lists fill their
-   column instead of using the Pending section's fixed
-   horizontal-scroll card width. */
 .upcoming-card-list .request-card,
 .completed-card-list .request-card {
   width: 100%;
@@ -193,9 +161,6 @@
   width: 100%;
 }
 
-/* =========================================================
-   REQUEST CARD -- COLLAPSED (default)
-========================================================= */
 .request-card {
   position: relative;
   flex: 0 0 auto;
@@ -221,13 +186,6 @@
   color: var(--color-red-primary);
 }
 
-/* =========================================================
-   STUDENT NAME LINKS
-   Used for the student's name on the request cards and in
-   History. Keeps the name's existing look (color, size,
-   weight) -- it only becomes clickable, with an underline
-   on hover/focus.
-========================================================= */
 .student-name-link {
   color: inherit;
   text-decoration: none;
@@ -295,10 +253,6 @@
   margin-bottom: 14px;
 }
 
-/* =========================================================
-   REQUEST CARD -- EXPANDED-ONLY CONTENT
-   Hidden by default; shown when the card carries .is-expanded.
-========================================================= */
 .request-expanded-info {
   display: none;
   gap: 28px;
@@ -334,8 +288,6 @@
   word-break: break-word;
 }
 
-/* Completed-only: green confirmation line shown inside the
-   expanded details, alongside the same info as other sections */
 .request-complete-text {
   font-size: 0.8rem;
   font-weight: 700;
@@ -343,9 +295,6 @@
   margin-top: 8px;
 }
 
-/* =========================================================
-   ACTION BUTTONS
-========================================================= */
 .request-actions {
   display: flex;
   flex-direction: column;
@@ -390,16 +339,11 @@
   opacity: 0.6;
 }
 
-/* Completed cards show only a single full-width View More/View
-   Less button -- no actions row, since there are no other buttons. */
 .request-view-more-button--full {
   width: 100%;
   margin-top: 4px;
 }
 
-/* Small inline toast, kept for any future transient feedback on
-   a card (not currently used by Reschedule, which now navigates
-   to reschedule-consultation.html instead of showing a toast). */
 .request-toast {
   font-size: 0.72rem;
   font-weight: 600;
@@ -416,9 +360,6 @@
   height: auto;
 }
 
-/* =========================================================
-   REQUEST CARD -- EXPANDED STATE
-========================================================= */
 .request-card.is-expanded {
   width: 560px;
 }
@@ -444,19 +385,10 @@
   max-width: 240px;
 }
 
-/* Completed cards keep their single View More/View Less button
-   visible even while expanded (it becomes the collapse control). */
 .completed-card-list .request-card.is-expanded .request-view-more-button--full {
   display: block;
 }
 
-/* =========================================================
-   HISTORY VIEW
-   Plain, non-interactive entries -- no action buttons, no
-   expand/collapse. Reuses the requests-card white-card shell
-   spacing but WITHOUT the colored left accent bar, matching
-   the reference design (a plain white/cream card).
-========================================================= */
 .history-card {
   padding: 28px;
 }
@@ -467,54 +399,98 @@
   margin-bottom: 20px;
 }
 
-.history-entries-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
+.history-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
   margin-bottom: 8px;
 }
 
+.history-sections-grid[hidden] {
+  display: none;
+}
+
+.history-section {
+  min-width: 0;
+}
+
+.history-section-heading {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 0.86rem;
+  letter-spacing: 0.3px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-bottom: 14px;
+}
+
+.history-section-heading--completed {
+  color: var(--color-status-available);
+}
+
+.history-section-heading--cancelled-rejected {
+  color: var(--color-red-primary);
+}
+
+.history-section-heading--ignored {
+  color: var(--color-text-muted);
+}
+
+.history-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
 .history-empty-message {
-  padding: 24px 4px 8px;
+  padding: 12px 2px;
+  text-align: left;
+  font-size: 0.8rem;
 }
 
 .history-entry {
-  flex: 1 1 240px;
-  max-width: 320px;
   background-color: #f5f1ea;
-  border-radius: 20px;
+  border-radius: 18px;
   box-shadow: var(--shadow-card);
-  padding: 18px 20px;
+  padding: 16px 18px;
 }
 
 .history-entry-name {
-  font-size: 0.98rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: var(--color-red-primary);
   margin-bottom: 6px;
 }
 
 .history-entry-type {
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   color: var(--color-text-dark);
   margin-bottom: 2px;
 }
 
 .history-entry-date {
-  font-size: 0.78rem;
+  font-size: 0.76rem;
   color: var(--color-text-muted);
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .history-entry-status {
   display: inline-block;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.history-entry-status--rejected {
+.history-entry-status--completed {
+  color: var(--color-status-available);
+}
+
+.history-entry-status--declined {
   color: var(--color-red-primary);
 }
 
@@ -522,13 +498,10 @@
   color: var(--color-status-onleave);
 }
 
-.history-entry-status--completed {
-  color: var(--color-status-available);
+.history-entry-status--ignored {
+  color: var(--color-text-muted);
 }
 
-/* =========================================================
-   HISTORY FOOTER: Clear All + confirm/cancel
-========================================================= */
 .history-footer {
   display: flex;
   flex-direction: column;
@@ -602,9 +575,6 @@
   transform: translateY(-1px);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   .requests-card {
     padding: 24px 20px 24px 36px;
@@ -617,6 +587,22 @@
   .upcoming-card-panel,
   .completed-card-panel {
     padding: 20px 20px 20px 34px;
+  }
+
+  .upcoming-card-list,
+  .completed-card-list {
+    max-height: 700px;
+  }
+}
+
+@media (max-width: 860px) {
+  .history-sections-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .history-section-list {
+    max-height: 420px;
   }
 }
 
@@ -648,10 +634,6 @@
     padding: 18px 16px 18px 28px;
   }
 
-  /* Upcoming/Completed cards are already width:100% of their
-     column, so no fixed 220px override is needed here -- this
-     just keeps their expanded state from forcing a fixed width
-     the way the Pending horizontal-scroll cards do. */
   .upcoming-card-list .request-card,
   .completed-card-list .request-card,
   .upcoming-card-list .request-card.is-expanded,
@@ -659,13 +641,17 @@
     width: 100%;
   }
 
+  .upcoming-card-list,
+  .completed-card-list {
+    max-height: 620px;
+  }
+
   .history-card {
     padding: 20px 16px;
   }
 
-  .history-entry {
-    flex: 1 1 100%;
-    max-width: none;
+  .history-section-list {
+    max-height: 360px;
   }
 
   .history-confirm-actions {

@@ -1,101 +1,32 @@
-// =========================================================
-// VERIFY ACCOUNT CODE PAGE
-// Prof Consult
-//
-// FRONTEND ONLY
-//
-// Student:
-//   verify-account.html?from=student
-//        ↓
-//   verify-account-code.html?from=student
-//        ↓
-//   verify-account-successful.html?from=student
-//
-// Faculty:
-//   verify-account.html?from=faculty
-//        ↓
-//   verify-account-code.html?from=faculty
-//        ↓
-//   verify-account-successful.html?from=faculty
-//
-// TEST VERIFICATION CODE:
-//   123456
-//
-// Back:
-//   Always returns to verify-account.html
-// =========================================================
-
-
+// Verify Account Code JS
 document.addEventListener("DOMContentLoaded", () => {
-
-
-  // =======================================================
-  // DETERMINE ORIGIN
-  // =======================================================
 
   const params =
     new URLSearchParams(window.location.search);
-
 
   const origin =
     params.get("from") === "faculty"
       ? "faculty"
       : "student";
 
-
   const originQuery =
     `?from=${origin}`;
 
-
-  // =======================================================
-  // TEST VERIFICATION CODE
-  //
-  // Frontend testing only.
-  //
-  // The correct code is:
-  // 123456
-  //
-  // This can later be replaced with the backend-generated
-  // verification code.
-  // =======================================================
-
   const TEST_VERIFICATION_CODE =
     "123456";
-
-
-
-  // =======================================================
-  // GET SAVED VERIFICATION INFORMATION
-  // =======================================================
 
   const identifier =
     sessionStorage.getItem(
       "verificationIdentifier"
     ) || "";
 
-
   const verificationMethod =
     sessionStorage.getItem(
       "verificationMethod"
     ) || "email";
 
-
-
-  // =======================================================
-  // BACK BUTTON
-  //
-  // Code page Back ALWAYS goes to:
-  //
-  // verify-account.html?from=student
-  //
-  // or:
-  //
-  // verify-account.html?from=faculty
-  // =======================================================
-
   const backButton =
     document.getElementById("backButton");
-
 
   if (backButton) {
 
@@ -104,13 +35,11 @@ document.addEventListener("DOMContentLoaded", () => {
       `verify-account.html${originQuery}`
     );
 
-
     backButton.addEventListener(
       "click",
       (event) => {
 
         event.preventDefault();
-
 
         window.location.href =
           `verify-account.html${originQuery}`;
@@ -119,12 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   }
-
-
-
-  // =======================================================
-  // HANDLE OTHER BACK LINKS
-  // =======================================================
 
   document
     .querySelectorAll('[data-nav="back"]')
@@ -136,7 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           event.preventDefault();
 
-
           window.location.href =
             `verify-account.html${originQuery}`;
 
@@ -145,52 +67,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-
-
-  // =======================================================
-  // GET PAGE ELEMENTS
-  // =======================================================
-
   const subtitle =
     document.getElementById(
       "verificationSubtitle"
     );
-
 
   const form =
     document.getElementById(
       "verificationForm"
     );
 
-
   const verifyButton =
     document.getElementById(
       "verifyButton"
     );
-
 
   const verificationError =
     document.getElementById(
       "verificationError"
     );
 
-
   const resendButton =
     document.getElementById(
       "resendButton"
     );
 
-
   const resendTimerLabel =
     document.getElementById(
       "resendTimer"
     );
-
-
-
-  // =======================================================
-  // GET SIX CODE INPUTS
-  // =======================================================
 
   const codeDigits =
     Array.from(
@@ -198,12 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ".code-digit"
       )
     );
-
-
-
-  // =======================================================
-  // UPDATE DESCRIPTION
-  // =======================================================
 
   if (subtitle) {
 
@@ -223,33 +122,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // SHOW ERROR MESSAGE
-  // =======================================================
-
   function showError(text) {
 
     if (!verificationError) {
       return;
     }
 
-
     verificationError.textContent =
       text;
-
 
     verificationError.hidden =
       false;
 
   }
-
-
-
-  // =======================================================
-  // HIDE ERROR MESSAGE
-  // =======================================================
 
   function hideError() {
 
@@ -257,21 +142,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
     verificationError.textContent =
       "";
-
 
     verificationError.hidden =
       true;
 
   }
-
-
-
-  // =======================================================
-  // REMOVE CODE INPUT ERRORS
-  // =======================================================
 
   function clearCodeErrors() {
 
@@ -287,12 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // ADD CODE INPUT ERRORS
-  // =======================================================
-
   function showCodeErrors() {
 
     codeDigits.forEach(
@@ -307,19 +178,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // SIX-DIGIT CODE INPUT
-  // =======================================================
-
   codeDigits.forEach(
     (input, index) => {
-
-
-      // ===================================================
-      // INPUT
-      // ===================================================
 
       input.addEventListener(
         "input",
@@ -330,19 +190,12 @@ document.addEventListener("DOMContentLoaded", () => {
               .replace(/\D/g, "")
               .slice(-1);
 
-
           input.value =
             digit;
-
 
           hideError();
 
           clearCodeErrors();
-
-
-          // -----------------------------------------------
-          // MOVE TO NEXT INPUT
-          // -----------------------------------------------
 
           if (
             digit &&
@@ -359,20 +212,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
 
-
-
-      // ===================================================
-      // KEYBOARD NAVIGATION
-      // ===================================================
-
       input.addEventListener(
         "keydown",
         (event) => {
-
-
-          // -----------------------------------------------
-          // BACKSPACE
-          // -----------------------------------------------
 
           if (
             event.key === "Backspace"
@@ -391,12 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           }
 
-
-
-          // -----------------------------------------------
-          // ARROW LEFT
-          // -----------------------------------------------
-
           if (
             event.key === "ArrowLeft" &&
             index > 0
@@ -404,18 +240,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             event.preventDefault();
 
-
             codeDigits[
               index - 1
             ].focus();
 
           }
-
-
-
-          // -----------------------------------------------
-          // ARROW RIGHT
-          // -----------------------------------------------
 
           if (
             event.key === "ArrowRight" &&
@@ -425,7 +254,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             event.preventDefault();
 
-
             codeDigits[
               index + 1
             ].focus();
@@ -434,12 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
       );
-
-
-
-      // ===================================================
-      // SELECT VALUE ON FOCUS
-      // ===================================================
 
       input.addEventListener(
         "focus",
@@ -453,12 +275,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   );
 
-
-
-  // =======================================================
-  // GET ENTERED CODE
-  // =======================================================
-
   function getEnteredCode() {
 
     return codeDigits
@@ -470,28 +286,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // RESEND COUNTDOWN
-  // =======================================================
-
   const COUNTDOWN_SECONDS =
     60;
-
 
   let secondsRemaining =
     COUNTDOWN_SECONDS;
 
-
   let countdownInterval =
     null;
-
-
-
-  // =======================================================
-  // FORMAT TIMER
-  // =======================================================
 
   function formatTime(
     totalSeconds
@@ -504,7 +306,6 @@ document.addEventListener("DOMContentLoaded", () => {
       .toString()
       .padStart(2, "0");
 
-
     const seconds =
       (
         totalSeconds % 60
@@ -512,16 +313,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .toString()
       .padStart(2, "0");
 
-
     return `${minutes}:${seconds}`;
 
   }
-
-
-
-  // =======================================================
-  // ENABLE RESEND
-  // =======================================================
 
   function enableResend() {
 
@@ -529,11 +323,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
     resendButton.classList.remove(
       "is-locked"
     );
-
 
     resendButton.setAttribute(
       "aria-disabled",
@@ -542,23 +334,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // DISABLE RESEND
-  // =======================================================
-
   function disableResend() {
 
     if (!resendButton) {
       return;
     }
 
-
     resendButton.classList.add(
       "is-locked"
     );
-
 
     resendButton.setAttribute(
       "aria-disabled",
@@ -567,14 +351,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // START COUNTDOWN
-  // =======================================================
-
   function startCountdown() {
-
 
     if (
       countdownInterval !== null
@@ -586,13 +363,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     secondsRemaining =
       COUNTDOWN_SECONDS;
 
-
     disableResend();
-
 
     if (resendTimerLabel) {
 
@@ -603,13 +377,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     countdownInterval =
       window.setInterval(
         () => {
 
           secondsRemaining -= 1;
-
 
           if (resendTimerLabel) {
 
@@ -620,7 +392,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           }
 
-
           if (
             secondsRemaining <= 0
           ) {
@@ -629,14 +400,11 @@ document.addEventListener("DOMContentLoaded", () => {
               countdownInterval
             );
 
-
             countdownInterval =
               null;
 
-
             secondsRemaining =
               0;
-
 
             if (
               resendTimerLabel
@@ -646,7 +414,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 "(00:00)";
 
             }
-
 
             enableResend();
 
@@ -658,25 +425,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // RESEND CODE
-  //
-  // FRONTEND ONLY
-  //
-  // This does not generate a new real code yet.
-  //
-  // The testing code remains:
-  // 123456
-  // =======================================================
-
   if (resendButton) {
 
     resendButton.addEventListener(
       "click",
       () => {
-
 
         if (
           resendButton.classList.contains(
@@ -688,11 +441,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
-
-        // -----------------------------------------------
-        // CLEAR CODE INPUTS
-        // -----------------------------------------------
-
         codeDigits.forEach(
           (input) => {
 
@@ -701,42 +449,20 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
 
-
         clearCodeErrors();
-
-
-        // -----------------------------------------------
-        // SAVE RESEND STATE
-        // -----------------------------------------------
 
         sessionStorage.setItem(
           "verificationResent",
           "true"
         );
 
-
         hideError();
 
-
-        // -----------------------------------------------
-        // RESTART COUNTDOWN
-        // -----------------------------------------------
-
         startCountdown();
-
-
-        // -----------------------------------------------
-        // FRONTEND NOTICE
-        // -----------------------------------------------
 
         showError(
           "A new verification code has been requested. For testing, use 123456."
         );
-
-
-        // -----------------------------------------------
-        // FOCUS FIRST INPUT
-        // -----------------------------------------------
 
         if (codeDigits[0]) {
 
@@ -749,19 +475,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // VERIFY FORM
-  //
-  // Correct testing code:
-  //
-  // 123456
-  //
-  // Any other 6-digit code:
-  // Incorrect verification code.
-  // =======================================================
-
   if (form) {
 
     form.addEventListener(
@@ -770,25 +483,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         event.preventDefault();
 
-
         hideError();
-
 
         clearCodeErrors();
 
-
-        // =================================================
-        // GET ENTERED CODE
-        // =================================================
-
         const enteredCode =
           getEnteredCode();
-
-
-
-        // =================================================
-        // CHECK IF ALL 6 DIGITS WERE ENTERED
-        // =================================================
 
         if (
           enteredCode.length !== 6
@@ -798,13 +498,11 @@ document.addEventListener("DOMContentLoaded", () => {
             "Please enter the 6-digit verification code."
           );
 
-
           const emptyInput =
             codeDigits.find(
               (input) =>
                 input.value === ""
             );
-
 
           if (emptyInput) {
 
@@ -812,16 +510,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
           }
 
-
           return;
 
         }
-
-
-
-        // =================================================
-        // CHECK TEST VERIFICATION CODE
-        // =================================================
 
         if (
           enteredCode !==
@@ -832,39 +523,23 @@ document.addEventListener("DOMContentLoaded", () => {
             "Incorrect verification code. Please try again."
           );
 
-
           showCodeErrors();
-
 
           return;
 
         }
 
-
-
-        // =================================================
-        // CORRECT CODE
-        // =================================================
-
         clearCodeErrors();
-
-
-
-        // =================================================
-        // SAVE VERIFICATION INFORMATION
-        // =================================================
 
         sessionStorage.setItem(
           "verificationCode",
           enteredCode
         );
 
-
         sessionStorage.setItem(
           "verificationOrigin",
           origin
         );
-
 
         if (identifier) {
 
@@ -875,31 +550,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
-
-
-        // =================================================
-        // SAVE VERIFIED STATE
-        //
-        // This lets the registration page know that the
-        // account verification step was completed.
-        // =================================================
-
         sessionStorage.setItem(
           "accountVerified",
           "true"
         );
-
-
-
-        // =================================================
-        // MOVE TO SUCCESSFUL PAGE
-        //
-        // Student:
-        // verify-account-successful.html?from=student
-        //
-        // Faculty:
-        // verify-account-successful.html?from=faculty
-        // =================================================
 
         window.location.href =
           `verify-account-successful.html${originQuery}`;
@@ -909,14 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-
-  // =======================================================
-  // INITIAL STATE
-  // =======================================================
-
   startCountdown();
-
 
   if (codeDigits[0]) {
 

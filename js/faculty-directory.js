@@ -1,54 +1,8 @@
-// =========================================================
-// FACULTY-DIRECTORY.JS
-// Page-specific behavior for the Faculty Directory:
-// - Renders faculty cards from FACULTY_DIRECTORY_DATA
-// - Each card shows a status dot (same colors as the Student
-//   Dashboard) driven by that faculty's `status` value
-// - Search-as-you-type by name or specialization/program
-// - Combines with the shared status filter (student-shared.js)
-// - "View Profile" switches the page (in-page, no navigation) to
-//   a profile view: the search bar and faculty list are hidden,
-//   and the selected faculty's profile card is shown directly
-//   below the heading/description with a Back button above it.
-//   The profile is populated from the same data object.
-// - "Back" hides the profile and restores the search bar and
-//   faculty list exactly as they were
-// - "Request Consultation" persists the selected professor's
-//   full record to sessionStorage so request-consultation.html
-//   (and, after submitting, request-submitted.html) can display
-//   that SAME professor instead of a hardcoded one
-// - If the page loads with a "?facultyId=" URL param (e.g. from
-//   a Student Dashboard faculty card click), that same faculty
-//   is auto-selected using the EXISTING openProfile() function --
-//   see the AUTO-SELECT FROM URL section near the bottom. Manual
-//   selection via "View Profile" is completely unaffected.
-//
-// NOTE -- TEST DATA ONLY:
-// We are testing from a student account and there is no
-// backend yet, so FACULTY_DIRECTORY_DATA below is prototype
-// data. Faculty status/availability is currently controlled
-// here. Once real faculty accounts exist, this array (and the
-// render/lookup functions that use it) should be replaced by
-// data fetched from those accounts -- the rest of the page
-// logic (search, filter, profile panel, status display,
-// selected-faculty hand-off) should not need to change.
-// =========================================================
-
+// Faculty Directory JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // TEST DATA -- replace with real faculty account data later
-  // ---------------------------------------------------------
-  // All faculty currently share one placeholder office label. Change
-  // this single constant when real office assignments exist per faculty.
   const DEFAULT_OFFICE = "Faculty Room";
 
-  // STATUS: each faculty's `status` (one of the existing values:
-  // available, teaching, meeting, consultation, onleave, offline)
-  // picks the dot color, and `statusLabel` is the text shown after
-  // "Status:" in the profile. Both the list and the profile read
-  // these SAME two fields -- update them here (or from the backend
-  // later) and every view updates on the next render.
   const FACULTY_DIRECTORY_DATA = [
     {
       id: "maria-nina-sales",
@@ -137,14 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   ];
 
-  // Key used to hand the selected professor off to
-  // request-consultation.html and, from there, request-submitted.html.
-  // Frontend-only stand-in until real faculty accounts/backend exist.
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
-  // ---------------------------------------------------------
-  // Element references
-  // ---------------------------------------------------------
   const facultyListEl = document.getElementById("facultyList");
   const noResultsMessage = document.getElementById("noResultsMessage");
   const searchInput = document.getElementById("facultySearchInput");
@@ -155,9 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedFacultyId = null;
 
-  // ---------------------------------------------------------
-  // Render the faculty list from FACULTY_DIRECTORY_DATA
-  // ---------------------------------------------------------
   function renderFacultyList() {
     facultyListEl.innerHTML = "";
 
@@ -167,9 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
       card.dataset.status = faculty.status;
       card.dataset.facultyId = faculty.id;
 
-      // The status dot uses the shared .status-dot + .status-<status>
-      // classes (same colors as the Student Dashboard), so its color
-      // always comes from faculty.status -- nothing is hardcoded here.
       card.innerHTML = `
         <img src="${faculty.photo}" alt="${faculty.fullName}" class="faculty-photo">
         <div class="faculty-info">
@@ -192,7 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
       facultyListEl.appendChild(card);
     });
 
-    // Wire up "View Profile" buttons after render
     Array.from(facultyListEl.querySelectorAll(".view-profile-button")).forEach((button) => {
       button.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -201,20 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Search + status filter (status comes from student-shared.js)
-  //
-  // FIX: status is now read directly from the card's own
-  // `data-status` attribute (set in renderFacultyList above),
-  // the same reliable pattern student-dashboard.js already uses
-  // for its own filter. Previously this re-derived status by
-  // looking the card back up in FACULTY_DIRECTORY_DATA via
-  // card.dataset.facultyId -- if that lookup ever came back
-  // undefined for any card, `faculty.status` threw and silently
-  // aborted the whole filter loop, so nothing ever got hidden.
-  // The lookup is now only used (safely, with a fallback) for
-  // the name/program text search, which was working already.
-  // ---------------------------------------------------------
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
     const activeStatus = (window.StudentShared && window.StudentShared.activeStatus) || null;
@@ -243,14 +170,8 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("input", applyFilters);
   }
 
-  // student-shared.js dispatches this when a status filter option is toggled
   document.addEventListener("statusfilterchange", applyFilters);
 
-  // ---------------------------------------------------------
-  // Profile panel: builds the markup for the selected faculty,
-  // then switches the page into the profile view (search + list
-  // hidden, profile shown under the heading).
-  // ---------------------------------------------------------
   function buildProfileMarkup(faculty) {
     const hoursRows = faculty.hours.map((entry) => `
       <li class="profile-hours-row">
@@ -259,9 +180,6 @@ document.addEventListener("DOMContentLoaded", () => {
       </li>
     `).join("");
 
-    // Status sits directly below the office/room line. It reads the same
-    // faculty.status / faculty.statusLabel fields as the list dot, so the
-    // list and profile can never disagree.
     return `
       <img src="${faculty.photo}" alt="${faculty.fullName}" class="profile-photo">
       <p class="profile-name">${faculty.fullName}</p>
@@ -292,8 +210,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     selectedFacultyId = facultyId;
 
-    // Highlight the selected card (it is hidden in the profile view, but
-    // this keeps the existing selection state consistent)
     Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
       card.classList.toggle("is-selected", card.dataset.facultyId === facultyId);
     });
@@ -301,43 +217,24 @@ document.addEventListener("DOMContentLoaded", () => {
     profilePanel.innerHTML = buildProfileMarkup(faculty);
     profilePanel.hidden = false;
 
-    // Profile view: CSS hides the search bar + faculty list and stacks
-    // the profile card under the heading. The Back button appears above it.
     directoryContainer.classList.add("is-profile-view");
     if (backRow) backRow.hidden = false;
 
-    // Persist the selected faculty so request-consultation.html (and,
-    // after submission, request-submitted.html) can display the same
-    // professor instead of a hardcoded one. sessionStorage is a
-    // frontend-only stand-in until real faculty accounts/backend exist.
-    // The facultyId query param on the link above is kept as a fallback.
     const requestConsultationLink = profilePanel.querySelector(".request-consultation-button");
     if (requestConsultationLink) {
       requestConsultationLink.addEventListener("click", () => {
         try {
           sessionStorage.setItem(SELECTED_FACULTY_STORAGE_KEY, JSON.stringify(faculty));
         } catch (error) {
-          // sessionStorage unavailable -- request-consultation.html will
-          // fall back to its own neutral placeholder if it can't read this
         }
       });
     }
 
-    // Start at the top so the heading, Back button and profile are in
-    // view (the list above it is no longer in the way)
     window.scrollTo(0, 0);
 
-    // Let the browser paint `hidden` removal first so the
-    // opacity/transform transition actually animates in
     requestAnimationFrame(() => profilePanel.classList.add("is-visible"));
   }
 
-  // ---------------------------------------------------------
-  // Back: leave the profile view and restore the normal directory
-  // (search bar + faculty list). Purely in-page -- no navigation
-  // or reload. The search text / status filter the student had
-  // before opening the profile are left as they were.
-  // ---------------------------------------------------------
   function closeProfile() {
     selectedFacultyId = null;
 
@@ -359,27 +256,72 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.addEventListener("click", closeProfile);
   }
 
-  // ---------------------------------------------------------
-  // Initial render
-  // ---------------------------------------------------------
   renderFacultyList();
   applyFilters();
 
-  // ---------------------------------------------------------
-  // AUTO-SELECT FROM URL: if the page was opened with
-  // "?facultyId=<id>" (e.g. clicking a faculty card on the
-  // Student Dashboard -- see student-dashboard.js), automatically
-  // open that same faculty's profile using the EXISTING
-  // openProfile() function above -- no separate/duplicate
-  // selection logic, and no per-faculty special-casing. Falls
-  // through silently (normal, unselected directory view) if the
-  // param is missing or doesn't match a real faculty id, so
-  // opening the page normally is completely unaffected.
-  // ---------------------------------------------------------
   const initialParams = new URLSearchParams(window.location.search);
   const initialFacultyId = initialParams.get("facultyId");
   if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
     openProfile(initialFacultyId);
   }
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+  <!--Faculty Availability -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -12,15 +13,11 @@
   <!-- Shared Faculty layout -->
   <link rel="stylesheet" href="css/faculty-shared.css">
 
-  <!-- Availability page styles -->
   <link rel="stylesheet" href="css/faculty-availability.css">
 </head>
 
 <body data-active-page="availability">
 
-  <!-- ==========================
-       TOP NAVIGATION BAR
-  =========================== -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
       <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
@@ -69,9 +66,6 @@
     </div>
   </header>
 
-  <!-- ==========================
-       SIDEBAR
-  =========================== -->
 
   <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
 
@@ -94,42 +88,20 @@
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
       <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
-      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+      <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
 
   </aside>
 
-  <!-- ==========================
-       BACKGROUND
-  =========================== -->
 
   <div class="faculty-page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
     <div class="faculty-page-background-overlay"></div>
   </div>
 
-  <!-- ==========================
-       AVAILABILITY CONTENT
-  =========================== -->
 
   <main class="faculty-main-content">
 
-    <!-- Build the Availability page here -->
-<!-- =========================================================
-     FACULTY AVAILABILITY -- MAIN CONTENT
-     Paste this inside <main class="faculty-main-content">...</main>
-     on faculty-availability.html, alongside the shared navbar/
-     sidebar/background shell. Do not duplicate the shell here,
-     and do not touch faculty-shared.css/faculty-shared.js.
-========================================================= -->
-
-<<!-- =========================================================
-     FACULTY AVAILABILITY -- MAIN CONTENT
-     Paste this inside <main class="faculty-main-content">...</main>
-     on faculty-availability.html, alongside the shared navbar/
-     sidebar/background shell. Do not duplicate the shell here,
-     and do not touch faculty-shared.css/faculty-shared.js.
-========================================================= -->
 
 <div class="availability-page-heading">
   <h1 class="availability-title">Availability</h1>
@@ -137,7 +109,6 @@
 
 <div class="availability-grid">
 
-  <!-- LEFT: current status pill + Change Status dropdown -->
   <div class="availability-column-left">
     <div class="faculty-status-row">
       <div class="faculty-status-pill">
@@ -150,8 +121,6 @@
           Change Status
         </button>
 
-        <!-- Status selection popup -- anchored directly below
-             the Change Status button, not the status pill -->
         <div class="faculty-status-panel" id="statusPanel" hidden>
           <button type="button" class="faculty-status-option" data-status="available" data-label="Available">
             <span class="faculty-status-radio" aria-hidden="true"></span> Available
@@ -177,16 +146,11 @@
     </div>
   </div>
 
-  <!-- RIGHT: weekly Available Hours schedule -->
   <section class="faculty-card availability-hours-card">
     <h2 class="availability-hours-title">Available Hours:</h2>
 
     <div class="availability-hours-list" id="availabilityHoursList">
-      <!-- Day rows (with each day's own independent time dropdown)
-           are rendered by faculty-availability.js from the
-           AVAILABLE_HOURS data array, so this can later be
-           connected to real faculty account data without
-           touching this markup. -->
+     
     </div>
 
     <div class="availability-hours-actions">

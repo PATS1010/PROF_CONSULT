@@ -9,6 +9,10 @@
 //     -> if present, this page was reached from Change Password,
 //        not from a Login page's "Forgot Password?" link, so
 //        Back must return to Change Password instead of Login.
+//   context=delete-account (optional)
+//     -> if present, this page was reached from the Delete
+//        Account confirmation modal on the Settings page, so
+//        Back must return to Settings instead of Login.
 //
 // Examples:
 //   forgot-password.html?from=student
@@ -16,6 +20,9 @@
 //   forgot-password.html?from=faculty&context=change-password
 //     -> came from Faculty Change Password,
 //        Back -> change-password.html?from=faculty
+//   forgot-password.html?from=student&context=delete-account
+//     -> came from the Delete Account modal on Settings,
+//        Back -> settings.html
 //
 // Supports Email or Mobile Number as the reset identifier.
 // Frontend-only: no backend call — validates, then goes straight
@@ -30,15 +37,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const params = new URLSearchParams(window.location.search);
   const origin = params.get("from") === "faculty" ? "faculty" : "student";
-  const cameFromChangePassword = params.get("context") === "change-password";
+  const context = params.get("context");
 
-  const originLoginPage = origin === "faculty" ? "faculty-login.html" : "student-login.html";
+  const originLoginPage = origin === "faculty" ? "faculty-login.html" : "login.html";
   const originChangePasswordPage = `change-password.html?from=${origin}`;
+  const originSettingsPage = origin === "faculty" ? "faculty-settings.html" : "settings.html";
 
-  // Where the Back button (and any [data-nav="back"] element) should go.
-  const backDestination = cameFromChangePassword
-    ? originChangePasswordPage
-    : originLoginPage;
+  // Where the Back button (and any [data-nav="back"] element) should go,
+  // based on which flow sent the person here.
+  const backDestination =
+    context === "change-password" ? originChangePasswordPage :
+    context === "delete-account" ? originSettingsPage :
+    originLoginPage;
 
   const backButton = document.getElementById("backButton");
   const loginLink = document.getElementById("loginLink");

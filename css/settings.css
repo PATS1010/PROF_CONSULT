@@ -1,7 +1,5 @@
-/* SYSTEM NOTE: Styles the settings page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Account Settings */
+
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -27,9 +25,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -58,10 +53,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -80,9 +71,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -106,6 +94,27 @@ input {
   width: auto;
 }
 
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
 .nav-icon-button {
   display: flex;
   align-items: center;
@@ -126,14 +135,6 @@ input {
   border-radius: 2px;
 }
 
-/* -----------------------------------------------------------
-   RIGHT-SIDE NAV ICONS (Notification bell + Quick Action)
-   Bell sits on the left, Quick Action trigger on the right,
-   both centered on the same horizontal line with even spacing.
-   position: static overrides any absolute/fixed positioning
-   coming from elsewhere so both buttons participate in the
-   flex layout instead of pinning to a corner.
------------------------------------------------------------ */
 .navbar-right {
   position: relative;
   display: flex;
@@ -175,9 +176,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -229,9 +227,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* Each action is its own row: text on the left, button pinned
-   to the right -- flex row prevents the button from overlapping
-   the item below it. */
 .quick-action-item {
   display: flex;
   align-items: center;
@@ -281,9 +276,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -366,10 +358,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   BACKGROUND
-   Slightly blurred, light white overlay for readability
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -400,10 +388,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   NOTIFICATION BELL ICON
-   Sits beside the Quick Action trigger in the navbar
-========================================================= */
 .notification-bell-button {
   width: 40px;
   height: 40px;
@@ -418,9 +402,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   ACCOUNT SETTINGS PAGE LAYOUT
-========================================================= */
 .settings-page {
   display: flex;
   flex-direction: column;
@@ -447,7 +428,6 @@ input {
   margin-bottom: 32px;
 }
 
-/* Inner card holding all the settings options */
 .settings-inner-card {
   width: 100%;
   background-color: #f7f4ee;
@@ -458,9 +438,6 @@ input {
   align-items: center;
 }
 
-/* =========================================================
-   SETTINGS OPTIONS
-========================================================= */
 .settings-options {
   width: 100%;
   display: flex;
@@ -501,7 +478,6 @@ input {
   max-width: 380px;
 }
 
-/* Custom checkbox -- rounded square, gradient fill when checked */
 .settings-checkbox {
   position: relative;
   flex-shrink: 0;
@@ -553,13 +529,6 @@ input {
   outline-offset: 2px;
 }
 
-/* =========================================================
-   CHANGE PASSWORD LINK
-   Underlined so it reads as a link. The underline color is
-   set explicitly because .format-text makes the text color
-   transparent, which would otherwise make the underline
-   invisible.
-========================================================= */
 .change-password-link {
   font-size: 1.05rem;
   text-decoration: underline;
@@ -569,9 +538,26 @@ input {
   cursor: pointer;
 }
 
-/* =========================================================
-   SAVE BUTTON + SUCCESS POPUP
-========================================================= */
+.settings-secondary-action-button {
+  margin-top: 22px;
+  padding: 10px 28px;
+  border: 2px solid var(--color-red-primary);
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-red-primary);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.settings-secondary-action-button:hover {
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+  transform: translateY(-2px);
+}
+
 .save-button-wrapper {
   display: flex;
   flex-direction: column;
@@ -618,9 +604,6 @@ input {
   transform: translateY(0);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -682,15 +665,394 @@ input {
     width: 100%;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
   .sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
+  }
+
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
+  }
+}
+.pc-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 420;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-delete-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-delete-modal {
+  width: 100%;
+  max-width: 440px;
+  background-color: #ffffff;
+  border: 1px solid #141414;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-delete-overlay.is-open .pc-delete-modal {
+  transform: translateY(0);
+}
+
+.pc-delete-modal-body {
+  padding: 30px 30px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.pc-delete-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.35;
+  color: var(--color-red-primary);
+  text-align: left;
+  align-self: stretch;
+}
+
+.pc-delete-warning {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-delete-warning-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  color: var(--color-text-light);
+}
+
+.pc-delete-warning-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pc-delete-warning-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-light);
+}
+
+.pc-delete-password-label {
+  align-self: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.pc-delete-password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pc-delete-password-input {
+  width: 100%;
+  padding: 13px 44px;
+  border: none;
+  border-radius: 999px;
+  background-color: #d9d9d9;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.pc-delete-password-input::placeholder {
+  color: #6f6f6f;
+}
+
+.pc-delete-password-input:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 2px;
+}
+
+.pc-delete-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #6f6f6f;
+  padding: 0;
+}
+
+.pc-delete-password-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pc-delete-password-input.has-error {
+  outline: 2px solid var(--color-red-primary);
+  outline-offset: 2px;
+}
+
+.pc-delete-password-error {
+  width: 100%;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-red-primary);
+}
+
+.pc-delete-password-error[hidden] {
+  display: none;
+}
+
+.pc-delete-forgot-password-link {
+  align-self: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-red-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pc-delete-modal-actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.pc-delete-cancel-button,
+.pc-delete-yes-button {
+  flex: 1 1 0;
+  padding: 11px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-delete-cancel-button {
+  background-color: #e4e0d8;
+  color: var(--color-text-dark);
+}
+
+.pc-delete-yes-button {
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+}
+
+.pc-delete-cancel-button:hover,
+.pc-delete-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.pc-delete-loading {
+  padding: 60px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pc-delete-loading[hidden] {
+  display: none;
+}
+
+.pc-delete-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid #e4e0d8;
+  border-top-color: var(--color-red-primary);
+  animation: pc-delete-spin 0.8s linear infinite;
+}
+
+@keyframes pc-delete-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .pc-delete-modal {
+    max-width: 320px;
+  }
+
+  .pc-delete-modal-body {
+    padding: 24px 20px 22px;
+    gap: 14px;
+  }
+
+  .pc-delete-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .pc-delete-modal-actions {
+    flex-direction: column;
   }
 }

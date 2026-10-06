@@ -1,9 +1,6 @@
-/* SYSTEM NOTE: Styles the choose account page so its layout, spacing, and visual states match the system design. */
+/* Choose Account */
 @import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap");
 
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
 :root {
   --color-red-primary: #d90000;
   --color-card-start: #b70024;
@@ -16,9 +13,6 @@
   --shadow-card: 0 8px 18px rgba(126, 10, 19, 0.28);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -48,9 +42,6 @@ img {
   max-width: 100%;
 }
 
-/* =========================================================
-   BACKGROUND
-========================================================= */
 .page-background {
   position: fixed;
   inset: 0;
@@ -81,9 +72,6 @@ img {
   );
 }
 
-/* =========================================================
-   BACK BUTTON
-========================================================= */
 .back-button {
   position: fixed;
   top: 48px;
@@ -108,9 +96,6 @@ img {
   transform: translateX(-3px);
 }
 
-/* =========================================================
-   MAIN ACCOUNT PANEL
-========================================================= */
 .account-container {
   position: relative;
   z-index: 5;
@@ -125,19 +110,12 @@ img {
   align-items: center;
 }
 
-/* =========================================================
-   PROF CONSULT LOGO
-========================================================= */
 .account-logo {
   width: min(100%, 220px);
   height: auto;
   margin-bottom: 17px;
 }
 
-/* =========================================================
-   TITLE
-   Black-to-orange text transition
-========================================================= */
 .account-title {
   margin-bottom: 22px;
   font-family: var(--font-main);
@@ -161,9 +139,6 @@ img {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   ACCOUNT OPTIONS
-========================================================= */
 .account-cards {
   width: 100%;
   display: flex;
@@ -226,9 +201,6 @@ img {
   transform: scale(1.02);
 }
 
-/* =========================================================
-   MOBILE / TABLET
-========================================================= */
 @media (max-width: 600px) {
   .back-button {
     top: 20px;

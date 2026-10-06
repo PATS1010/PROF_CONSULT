@@ -1,21 +1,5 @@
-/* =========================================================
-   FACULTY SHARED LAYOUT STYLES
-   Reused across every Faculty page.
+/* Faculty Shared Layout Styles */
 
-   Handles:
-   - Navbar
-   - Notification bell
-   - Notification badge
-   - Quick Action
-   - Sidebar
-   - Background
-   - Main content
-   - Shared cards
-========================================================= */
-
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -45,10 +29,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
-
 * {
   margin: 0;
   padding: 0;
@@ -73,10 +53,6 @@ button {
   border: none;
 }
 
-/* =========================================================
-   FORMATTEXT
-========================================================= */
-
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -96,10 +72,6 @@ button {
   color: transparent;
   -webkit-text-fill-color: transparent;
 }
-
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 
 .faculty-navbar {
   position: sticky;
@@ -129,6 +101,8 @@ button {
 .faculty-navbar-logo {
   height: 38px;
   width: auto;
+
+  cursor: pointer;
 }
 
 .faculty-nav-icon-button {
@@ -137,10 +111,6 @@ button {
   justify-content: center;
   background: transparent;
 }
-
-/* =========================================================
-   HAMBURGER
-========================================================= */
 
 .faculty-hamburger-button {
   flex-direction: column;
@@ -155,10 +125,6 @@ button {
   border-radius: 2px;
 }
 
-/* =========================================================
-   NAVBAR RIGHT SIDE
-========================================================= */
-
 .faculty-navbar-right {
   position: relative;
 
@@ -166,10 +132,6 @@ button {
   align-items: center;
   gap: 12px;
 }
-
-/* =========================================================
-   NOTIFICATION + QUICK ACTION BUTTONS
-========================================================= */
 
 .faculty-notification-bell-button,
 .faculty-quick-action-button {
@@ -201,14 +163,6 @@ button {
   margin: 0 auto;
 }
 
-/* =========================================================
-   NOTIFICATION RED BADGE
-   Appears on the top-right of the notification bell when
-   there are unread/pending notifications.
-
-   JS adds .has-notifications to the bell button.
-========================================================= */
-
 .faculty-notification-bell-button.has-notifications::after {
   content: "";
 
@@ -233,7 +187,6 @@ button {
   z-index: 5;
 }
 
-/* Slight pulse so a new notification is noticeable */
 .faculty-notification-bell-button.has-notifications::before {
   content: "";
 
@@ -272,10 +225,6 @@ button {
     opacity: 0;
   }
 }
-
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 
 .faculty-quick-action-panel {
   position: absolute;
@@ -350,10 +299,6 @@ button {
   font-size: 1.05rem;
 }
 
-/* =========================================================
-   QUICK ACTION BUTTONS
-========================================================= */
-
 .faculty-quick-action-actions {
   display: flex;
   flex-direction: column;
@@ -396,10 +341,6 @@ button {
     var(--color-gradient-end) 100%
   );
 }
-
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 
 .faculty-sidebar-overlay {
   position: fixed;
@@ -468,6 +409,8 @@ button {
 .faculty-sidebar-logo {
   height: 34px;
   width: auto;
+
+  cursor: pointer;
 }
 
 .faculty-sidebar-close {
@@ -518,10 +461,6 @@ button {
   color: var(--color-red-primary);
 }
 
-/* =========================================================
-   BACKGROUND
-========================================================= */
-
 .faculty-page-background {
   position: fixed;
 
@@ -564,10 +503,6 @@ button {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
-/* =========================================================
-   MAIN CONTENT CONTAINER
-========================================================= */
-
 .faculty-main-content {
   max-width: 1400px;
 
@@ -599,10 +534,6 @@ button {
   color: var(--color-text-muted);
 }
 
-/* =========================================================
-   GENERIC FACULTY CARD
-========================================================= */
-
 .faculty-card {
   position: relative;
 
@@ -623,10 +554,6 @@ button {
 
   margin-bottom: 18px;
 }
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
 
 @media (max-width: 1024px) {
   :root {
@@ -666,22 +593,6 @@ button {
   }
 }
 
-/* =========================================================
-   NEW NOTIFICATION TOAST CARDS  (ADDED)
-
-   Bottom-right cards that slide in from the right edge,
-   stack (newest in front, older ones behind), auto-remove
-   after 10 seconds by sliding back out to the right, and
-   can be dismissed instantly with the X button.
-
-   Built by faculty-shared.js. Stack position is driven by
-   the --stack-* variables that the JS sets on each card;
-   the slide in/out is driven by --toast-x.
-
-   z-index 250: above the navbar (100) and Quick Action
-   popup (200), below the sidebar overlay/sidebar (300+).
-========================================================= */
-
 .faculty-toast-stack {
   position: fixed;
   right: 20px;
@@ -692,7 +603,6 @@ button {
 
   z-index: 250;
 
-  /* Only the cards themselves catch clicks */
   pointer-events: none;
 }
 
@@ -735,12 +645,10 @@ button {
   pointer-events: auto;
 }
 
-/* Slid in */
 .faculty-toast.is-in {
   --toast-x: 0px;
 }
 
-/* Reverse of the entrance: back out through the right edge */
 .faculty-toast.is-leaving {
   --toast-x: var(--toast-off);
 }
@@ -862,5 +770,182 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .faculty-toast {
     transition-duration: 0.01s;
+  }
+}
+
+/* ---------------------------------------------------------
+   LOGOUT CONFIRMATION MODAL
+   Built/appended to <body> by faculty-shared.js when the
+   sidebar's Logout link is present -- shared across every
+   Faculty page, same as the toast stack above.
+--------------------------------------------------------- */
+.faculty-logout-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 400;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+
+  background-color: rgba(20, 10, 10, 0.45);
+
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+
+  opacity: 0;
+  pointer-events: none;
+
+  transition: opacity 0.2s ease;
+}
+
+.faculty-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.faculty-logout-modal {
+  width: 100%;
+  max-width: 400px;
+
+  background-color: #ffffff;
+
+  border-radius: 22px;
+  overflow: hidden;
+
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.faculty-logout-overlay.is-open .faculty-logout-modal {
+  transform: translateY(0);
+}
+
+.faculty-logout-modal-header {
+  position: relative;
+
+  height: 40px;
+
+  background-color: var(--color-red-primary);
+}
+
+.faculty-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+
+  transform: translateY(-50%);
+
+  width: 26px;
+  height: 26px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: transparent;
+
+  color: var(--color-text-light);
+
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+
+  border-radius: 50%;
+
+  transition: background-color 0.2s ease;
+}
+
+.faculty-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.faculty-logout-modal-body {
+  padding: 34px 28px 30px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.faculty-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+
+  color: var(--color-red-primary);
+}
+
+.faculty-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.faculty-logout-cancel-button,
+.faculty-logout-yes-button {
+  padding: 11px 32px;
+
+  border-radius: 999px;
+
+  color: var(--color-text-light);
+
+  font-size: 0.88rem;
+  font-weight: 700;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.faculty-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.faculty-logout-yes-button {
+  background: linear-gradient(
+    90deg,
+    var(--color-gradient-start) 0%,
+    var(--color-gradient-end) 100%
+  );
+}
+
+.faculty-logout-cancel-button:hover,
+.faculty-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .faculty-logout-modal {
+    max-width: 320px;
+  }
+
+  .faculty-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .faculty-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .faculty-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .faculty-logout-cancel-button,
+  .faculty-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

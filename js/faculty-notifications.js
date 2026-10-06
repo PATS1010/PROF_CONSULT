@@ -1,65 +1,10 @@
-// =========================================================
-// FACULTY NOTIFICATIONS
-//
-// SYNCED WITH CONSULTATION REQUESTS STATE.
-//
-// Notifications are no longer a separate hardcoded test list --
-// they are derived live from the same consultations data that
-// faculty-consultation-requests.js reads/writes in localStorage
-// (CONSULTATIONS_STORAGE_KEY below). Only two kinds are shown:
-//
-//   1. A "pending" consultation  ->
-//        "<Name> sent a request for consultation."
-//
-//   2. An "upcoming" consultation whose preferredDateISO is
-//      today (Asia/Manila) ->
-//        "Your consultation with <Name> is today at <time>."
-//
-// Each has a "View" link that:
-//   1. Remembers which request/section to open (sessionStorage),
-//   2. Navigates to faculty-consultation-requests.html, which
-//      reads that on load and expands/scrolls to that exact card.
-//
-// The student's name is now ALSO a separate link, to the (not yet
-// built) page where the faculty views that student's profile --
-// see STUDENT NAME LINKS below.
-//
-// Gated by window.TEST_FACULTY_ACCOUNT (set in faculty-shared.js) --
-// for any other account this renders empty, same as before.
-//
-// Opening this page still marks notifications as viewed (clears
-// the shared navbar red dot) via window.setFacultyNotificationCount(0).
-// =========================================================
-
-
-// =========================================================
-// SHARED STORAGE KEYS
-// =========================================================
-
-// Must match CONSULTATIONS_STORAGE_KEY in
-// faculty-consultation-requests.js -- this is the single
-// source of truth both pages read from.
+// Faculty Notifications JS
 const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 
-// Written by this page right before navigating via a
-// notification's "View" link; read by
-// faculty-consultation-requests.js on load to expand/scroll to
-// the matching card.
 const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
 
-// ---------------------------------------------------------
-// STUDENT NAME LINKS
-// A student's name links to the (not yet built) page where the
-// faculty views that student's profile. Change
-// STUDENT_PROFILE_PAGE_URL once the real page exists -- nothing
-// else needs to change. The student is identified by the same
-// studentId already stored on every consultation.
-// ---------------------------------------------------------
 const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
 
-// This file only ever links from Faculty Notifications, so the origin
-// is fixed here -- it's what lets faculty-student-profile.html's Back
-// button know to return to faculty-notifications.html.
 const STUDENT_PROFILE_ORIGIN = "notifications";
 
 function getStudentProfileUrl(studentId) {
@@ -69,19 +14,6 @@ function getStudentProfileUrl(studentId) {
   });
   return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
 }
-
-
-// =========================================================
-// MOCK/TEST CONSULTATIONS (READ-ONLY FALLBACK)
-//
-// Only used if this page is opened before
-// faculty-consultation-requests.html has ever seeded
-// localStorage. Must stay identical to DEFAULT_CONSULTATIONS
-// in faculty-consultation-requests.js so both pages agree on
-// the same test data. This page NEVER writes this back to
-// localStorage -- it only reads, so it can never conflict with
-// the requests page's own seeding/reset logic.
-// =========================================================
 
 const DEFAULT_CONSULTATIONS = [
   {
@@ -138,15 +70,6 @@ const DEFAULT_CONSULTATIONS = [
   },
 ];
 
-
-// =========================================================
-// READ CONSULTATIONS (READ-ONLY)
-//
-// Never writes back to localStorage -- this page only reads
-// the requests page's state so the two can never fight over
-// who owns the data.
-// =========================================================
-
 function loadConsultationsReadOnly() {
 
   try {
@@ -156,12 +79,10 @@ function loadConsultationsReadOnly() {
         CONSULTATIONS_STORAGE_KEY
       );
 
-
     if (stored) {
 
       const parsed =
         JSON.parse(stored);
-
 
       if (Array.isArray(parsed)) {
 
@@ -171,17 +92,10 @@ function loadConsultationsReadOnly() {
 
   } catch (error) {
 
-    // fall through to defaults below
   }
-
 
   return DEFAULT_CONSULTATIONS.slice();
 }
-
-
-// =========================================================
-// "IS THIS TODAY?" (Philippine time)
-// =========================================================
 
 const PH_TODAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
   timeZone: "Asia/Manila",
@@ -195,28 +109,15 @@ function getTodayISO() {
   return PH_TODAY_KEY_FORMATTER.format(new Date());
 }
 
-
-// =========================================================
-// BUILD NOTIFICATIONS FROM CONSULTATION STATE
-//
-// Only two kinds, in this order: pending requests first, then
-// today's upcoming consultations. Each notification also
-// carries the student's studentId, so the row can be built
-// with a clickable student name (see buildNotificationRow).
-// =========================================================
-
 function buildFacultyNotifications() {
 
   const consultations =
     loadConsultationsReadOnly();
 
-
   const todayISO =
     getTodayISO();
 
-
   const notifications = [];
-
 
   consultations
     .filter((request) => request.status === "pending")
@@ -233,7 +134,6 @@ function buildFacultyNotifications() {
         targetSection: "pending",
       });
     });
-
 
   consultations
     .filter(
@@ -258,20 +158,8 @@ function buildFacultyNotifications() {
       });
     });
 
-
   return notifications;
 }
-
-
-// =========================================================
-// BUILD NOTIFICATION ROW
-//
-// The row's text is built in three pieces so the student's name
-// can be its own clickable link:
-//   "<messageBefore>" + "<Name link>" + "<messageAfter>" + "<View link>"
-// e.g. "Your consultation with " + "Juan Dela Cruz" + " is today at
-// 10:00 AM – 10:30 AM." + " " + "View"
-// =========================================================
 
 function buildNotificationRow(notification) {
 
@@ -283,7 +171,6 @@ function buildNotificationRow(notification) {
 
   li.dataset.id =
     notification.id;
-
 
   const icon =
     document.createElement("span");
@@ -299,15 +186,12 @@ function buildNotificationRow(notification) {
   icon.textContent =
     "\u2714";
 
-
   const message =
     document.createElement("p");
 
   message.className =
     "notification-message";
 
-
-  // Leading plain-text piece, if any (e.g. "Your consultation with ")
   if (notification.messageBefore) {
 
     message.appendChild(
@@ -317,10 +201,6 @@ function buildNotificationRow(notification) {
     );
   }
 
-
-  // Student's name -- its own link to the (not yet built) student
-  // profile page. Falls back to plain text if this notification
-  // somehow has no studentId.
   if (notification.studentId) {
 
     const nameLink =
@@ -348,15 +228,11 @@ function buildNotificationRow(notification) {
     );
   }
 
-
-  // Trailing plain-text piece, then a trailing space so
-  // "message. View" doesn't run together.
   message.appendChild(
     document.createTextNode(
       `${notification.messageAfter} `
     )
   );
-
 
   const link =
     document.createElement("a");
@@ -370,9 +246,6 @@ function buildNotificationRow(notification) {
   link.textContent =
     notification.linkText;
 
-
-  // Remember exactly which request/section to open on the
-  // Consultation Requests page, right before navigating there.
   link.addEventListener(
     "click",
     () => {
@@ -389,12 +262,9 @@ function buildNotificationRow(notification) {
 
       } catch (error) {
 
-        // sessionStorage unavailable -- link still navigates
-        // normally, it just won't auto-open the matching card.
       }
     }
   );
-
 
   message.appendChild(link);
 
@@ -402,18 +272,8 @@ function buildNotificationRow(notification) {
 
   li.appendChild(message);
 
-
   return li;
 }
-
-
-// =========================================================
-// RENDER NOTIFICATIONS
-//
-// Displays the live notifications for the test account (empty
-// for any other account), then marks them viewed by clearing
-// the shared navbar notification count -- same as before.
-// =========================================================
 
 function renderFacultyNotifications() {
 
@@ -427,16 +287,13 @@ function renderFacultyNotifications() {
       "noNotificationsMessage"
     );
 
-
   if (!listEl) {
 
     return;
   }
 
-
   listEl.innerHTML =
     "";
-
 
   const isTestAccount =
     window.TEST_FACULTY_ACCOUNT === true;
@@ -445,7 +302,6 @@ function renderFacultyNotifications() {
     isTestAccount
       ? buildFacultyNotifications()
       : [];
-
 
   notifications.forEach(
     (notification) => {
@@ -458,13 +314,11 @@ function renderFacultyNotifications() {
     }
   );
 
-
   if (emptyMessageEl) {
 
     emptyMessageEl.hidden =
       notifications.length > 0;
   }
-
 
   if (
     typeof window.setFacultyNotificationCount ===
@@ -476,11 +330,6 @@ function renderFacultyNotifications() {
     );
   }
 }
-
-
-// =========================================================
-// PAGE LOAD
-// =========================================================
 
 document.addEventListener(
   "DOMContentLoaded",

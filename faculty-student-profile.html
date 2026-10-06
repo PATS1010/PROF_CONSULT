@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Student profile  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,19 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Shared Faculty layout -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
 
-  <!-- Faculty Student Profile page styles -->
   <link rel="stylesheet" href="css/faculty-student-profile.css">
 </head>
 
 <body>
 
-  <!-- ==========================
-       TOP NAVIGATION BAR (shared shell -- do not duplicate
-       edits here; change faculty-shared.css/js instead)
-  =========================== -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
       <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
@@ -57,12 +53,6 @@
     </div>
   </header>
 
-  <!-- ==========================
-       SIDEBAR (shared shell)
-       No link here points to this page, so no data-page is
-       marked active -- the faculty always arrives via a
-       student's name, never via the sidebar.
-  =========================== -->
   <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
 
   <aside class="faculty-sidebar" id="facultySidebar">
@@ -78,30 +68,17 @@
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
       <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
-      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+      <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
   </aside>
 
-  <!-- ==========================
-       BACKGROUND (shared shell)
-  =========================== -->
   <div class="faculty-page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
     <div class="faculty-page-background-overlay"></div>
   </div>
 
-  <!-- ==========================
-       FACULTY STUDENT PROFILE CONTENT
-       Read-only view of the selected student's profile.
-       Which student and where Back should return to both come
-       from the URL (?studentId=...&from=...) -- see
-       faculty-student-profile.js.
-  =========================== -->
   <main class="faculty-main-content">
 
-    <!-- Back button lives OUTSIDE the profile card, near the
-         top-left of the content area. Its destination is set by
-         JS based on the "from" URL parameter. -->
     <button type="button" class="student-profile-back-button" id="studentProfileBackButton">
       Back
     </button>
@@ -152,8 +129,6 @@
 
       </div>
 
-      <!-- Shown instead of the info card above when the studentId
-           in the URL doesn't match any known student. -->
       <p class="student-profile-not-found" id="studentProfileNotFound" hidden>
         This student's profile could not be found.
       </p>
@@ -162,10 +137,8 @@
 
   </main>
 
-  <!-- Shared Faculty layout behavior -->
   <script src="js/faculty-shared.js"></script>
 
-  <!-- Page-specific behavior -->
   <script src="js/faculty-student-profile.js"></script>
 
 </body>

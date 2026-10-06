@@ -1,25 +1,4 @@
-/* =========================================================
-   STUDENT NEW NOTIFICATION TOAST CARDS
-   Standalone file -- does not depend on (or change) any
-   existing student CSS. All class names start with
-   .student-toast so nothing collides.
-
-   Bottom-right cards that slide in from the right edge,
-   stack (newest in front, older ones behind), auto-remove
-   after 10 seconds by sliding back out to the right, and
-   can be dismissed instantly with the X button.
-
-   Built by student-notification-toast.js. Stack position is
-   driven by the --stack-* variables the JS sets on each card;
-   the slide in/out is driven by --toast-x.
-
-   z-index 250: above the navbar (100) and Quick Action popup
-   (200), below the sidebar overlay/sidebar (300+).
-
-   Uses the existing --color-gradient-* / --font-main
-   variables, with the same values as fallbacks in case a
-   page doesn't define them.
-========================================================= */
+  /* Student Notification Toast */
 
 .student-toast-stack {
   position: fixed;
@@ -31,7 +10,7 @@
 
   z-index: 250;
 
-  /* Only the cards themselves catch clicks */
+
   pointer-events: none;
 }
 
@@ -81,12 +60,11 @@
   pointer-events: auto;
 }
 
-/* Slid in */
+
 .student-toast.is-in {
   --toast-x: 0px;
 }
 
-/* Reverse of the entrance: back out through the right edge */
 .student-toast.is-leaving {
   --toast-x: var(--toast-off);
 }

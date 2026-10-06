@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Reschedule consultation  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,17 +8,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <!-- Shared Faculty layout styles -- load on every Faculty page -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
-  <!-- Page-specific styles -->
   <link rel="stylesheet" href="css/reschedule-consultation.css">
 </head>
 <body data-active-page="consultation-requests">
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR (shared shell -- identical to every
-       other Faculty page; do not edit here)
-  ========================================================= -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
       <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
@@ -29,17 +25,14 @@
     </div>
 
     <div class="faculty-navbar-right">
-      <!-- Notification bell -- clickable, functionality not implemented yet -->
       <button type="button" class="faculty-nav-icon-button faculty-notification-bell-button" id="facultyNotificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="faculty-nav-icon-button faculty-quick-action-button" id="facultyQuickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup -->
       <div class="faculty-quick-action-panel" id="facultyQuickActionPanel" hidden>
         <div class="faculty-quick-action-header">
           <span class="faculty-quick-action-icon-wrap">
@@ -56,9 +49,6 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR (shared shell)
-  ========================================================= -->
   <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
 
   <aside class="faculty-sidebar" id="facultySidebar">
@@ -74,29 +64,22 @@
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
       <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
-      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+      <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND (shared shell)
-  ========================================================= -->
   <div class="faculty-page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
     <div class="faculty-page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN CONTENT
-  ========================================================= -->
   <main class="faculty-main-content">
 
     <div class="reschedule-page-heading">
       <h1 class="reschedule-title">Reschedule Consultation</h1>
       <p class="reschedule-subtitle">
         <p class="reschedule-subtitle">
-  Complete the form below to reschedule the consultation. The student will be
-  notified of your updated consultation schedule through FINDPROF.
+  Complete the form below to reschedule the consultation. 
 </p>
       </p>
     </div>
@@ -105,10 +88,6 @@
 
       <div class="reschedule-columns">
 
-        <!-- =========================================================
-             LEFT COLUMN -- read-only, from the original request, plus
-             the optional Message for the Student at the bottom
-        ========================================================= -->
         <div class="reschedule-column">
 
           <div class="info-row">
@@ -123,9 +102,6 @@
             <p class="message-display" id="rescheduleMessage"></p>
           </div>
 
-          <!-- Optional -- faculty can leave this blank. If left blank,
-               no message is included with the student's reschedule
-               notification (see reschedule-consultation.js). -->
           <div class="message-block">
             <div class="info-row info-row-label-only">
               <span class="info-label">Message for the Student</span>
@@ -141,9 +117,6 @@
 
         </div>
 
-        <!-- =========================================================
-             RIGHT COLUMN -- Preferred Date/Time are editable
-        ========================================================= -->
         <div class="reschedule-column">
 
           <div class="info-row">
@@ -181,15 +154,11 @@
                 <span class="custom-select-value" data-placeholder="Select Time">Select Time</span>
               </button>
               <ul class="custom-select-options" id="reschedulePreferredTimeOptions" role="listbox" hidden>
-                <!-- Populated by reschedule-consultation.js with 30-minute slots, 8:00 AM - 8:00 PM -->
               </ul>
               <input type="hidden" id="reschedulePreferredTime" name="reschedulePreferredTime" required>
             </div>
           </div>
 
-          <!-- =========================================================
-               BUTTONS
-          ========================================================= -->
           <div class="reschedule-buttons">
             <a href="faculty-consultation-requests.html" class="btn btn-cancel" data-nav="cancel">Cancel</a>
             <button type="submit" class="btn btn-submit" id="submitRescheduleButton">Submit New Schedule</button>
@@ -204,9 +173,7 @@
 
   </main>
 
-  <!-- Shared Faculty layout behavior -- load on every Faculty page -->
   <script src="js/faculty-shared.js"></script>
-  <!-- Page-specific behavior -->
   <script src="js/reschedule-consultation.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Faculty profile  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,18 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Shared Faculty layout -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
 
-  <!-- Profile page styles -->
   <link rel="stylesheet" href="css/faculty-profile.css">
 </head>
 
 <body data-active-page="profile">
 
-  <!-- ==========================
-       TOP NAVIGATION BAR
-  =========================== -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
       <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
@@ -69,10 +66,6 @@
     </div>
   </header>
 
-  <!-- ==========================
-       SIDEBAR
-  =========================== -->
-
   <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
 
   <aside class="faculty-sidebar" id="facultySidebar">
@@ -94,47 +87,17 @@
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
       <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
-      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+      <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
 
   </aside>
-
-  <!-- ==========================
-       BACKGROUND
-  =========================== -->
 
   <div class="faculty-page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
     <div class="faculty-page-background-overlay"></div>
   </div>
 
-  <!-- ==========================
-       PROFILE CONTENT
-  =========================== -->
-
   <main class="faculty-main-content">
-
-<!-- =========================================================
-     FACULTY PROFILE -- MAIN CONTENT
-     Paste this inside <main class="faculty-main-content">...</main>
-     on faculty-profile.html, alongside the shared navbar/
-     sidebar/background shell. Do not duplicate the shell here.
-
-     UPDATED: "Edit Profile" button moved out of
-     .faculty-profile-left and placed as its own element below
-     .faculty-profile-body (still above .faculty-profile-footer),
-     so it renders full-width/centered under the whole card,
-     matching the Student Profile reference. Same id
-     (editProfileButton), same attributes -- faculty-profile.js's
-     existing listener is unaffected by the move.
-
-     UPDATED (name fields): the separate Save button is gone.
-     #editProfileButton is now the ONLY profile action button:
-     it reads "Edit Profile" in view mode and "Save Changes" in
-     edit mode (label + behavior toggled by faculty-profile.js).
-     The single Faculty Name input in edit mode is replaced by
-     three inputs: First Name / Middle Initial / Last Name.
-========================================================= -->
 
 <section class="faculty-card faculty-profile-card">
 
@@ -142,7 +105,6 @@
 
   <div class="faculty-profile-body">
 
-    <!-- LEFT: photo only -->
     <div class="faculty-profile-left">
       <div class="faculty-profile-photo-wrap">
         <img
@@ -154,17 +116,15 @@
       </div>
     </div>
 
-    <!-- RIGHT: faculty info card (view mode + edit mode) -->
     <div class="faculty-profile-right">
 
-      <!-- ================= VIEW MODE ================= -->
       <div class="faculty-profile-info-card faculty-profile-view" id="facultyProfileView">
         <p class="faculty-profile-name" id="viewFacultyName">Juan Dela Cruz</p>
         <p class="faculty-profile-id" id="viewFacultyId">24-00001</p>
 
         <dl class="faculty-profile-details">
           <div class="faculty-profile-detail-row">
-            <dt>Program:</dt>
+            <dt>Department:</dt>
             <dd id="viewFacultyProgram">Computer Engineering</dd>
           </div>
           <div class="faculty-profile-detail-row">
@@ -178,11 +138,8 @@
         </dl>
       </div>
 
-      <!-- ================= EDIT MODE ================= -->
       <form class="faculty-profile-info-card faculty-profile-edit" id="facultyProfileEdit" novalidate hidden>
 
-        <!-- Name: three independent inputs on one row.
-             Nothing is auto-split; First Name may hold several words. -->
         <div class="faculty-form-group">
           <div class="faculty-name-row">
 
@@ -199,6 +156,18 @@
             <div class="faculty-name-field">
               <label for="editLastName">Last Name</label>
               <input type="text" id="editLastName" class="faculty-form-input" autocomplete="off">
+            </div>
+
+            <div class="faculty-name-field">
+              <label for="editFacultySuffix">Suffix</label>
+              <select id="editFacultySuffix" class="faculty-form-input faculty-select">
+                <option value="" selected>None</option>
+                <option value="Sr.">Sr.</option>
+                <option value="Jr.">Jr.</option>
+                <option value="I">I</option>
+                <option value="II">II</option>
+                <option value="III">III</option>
+              </select>
             </div>
 
           </div>
@@ -232,9 +201,6 @@
               <span class="faculty-dropdown-caret" aria-hidden="true">&#9660;</span>
             </button>
             <ul class="faculty-dropdown-list" id="programDropdownList" role="listbox" hidden>
-              <!-- Options rendered by faculty-profile.js from the
-                   PROGRAM_OPTIONS array, so new programs can be
-                   added later without touching this markup. -->
             </ul>
           </div>
         </div>
@@ -268,10 +234,6 @@
 
   </div>
 
-  <!-- Single profile action button. View mode: "Edit Profile".
-       Edit mode: "Save Changes". It is a direct child of the card,
-       so .faculty-profile-card's align-items:center centers it
-       below the whole card, matching the Student Profile reference. -->
   <button type="button" class="faculty-edit-profile-button" id="editProfileButton">
     Edit Profile
   </button>

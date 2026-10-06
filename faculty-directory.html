@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Faculty directory  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,9 +14,6 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR
-  ========================================================= -->
   <header class="dashboard-navbar">
     <div class="navbar-left">
       <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
@@ -23,21 +21,20 @@
         <span></span>
         <span></span>
       </button>
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+      <a href="student-dashboard.html" class="navbar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+</a>
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- placeholder, navigates to notifications.html -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup -->
       <div class="quick-action-panel" id="quickActionPanel" hidden>
         <div class="quick-action-header">
           <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
@@ -60,14 +57,13 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR
-  ========================================================= -->
   <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <a href="student-dashboard.html" class="sidebar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+</a>
       <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
     </div>
 
@@ -78,25 +74,18 @@
       <a href="notifications.html" class="sidebar-link">Notifications</a>
       <a href="student-profile.html" class="sidebar-link">Profile</a>
       <a href="settings.html" class="sidebar-link">Settings</a>
-      <a href="student-login.html" class="sidebar-link">Logout</a>
+      <a href="login.html" class="sidebar-link" id="logoutLink">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND
-  ========================================================= -->
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN DIRECTORY CONTENT (page-specific)
-  ========================================================= -->
   <main class="directory-content">
     <div class="directory-container" id="directoryContainer">
 
-      <!-- LIST PANEL: heading, search, faculty cards -->
       <section class="directory-list-panel" id="directoryListPanel">
 
         <h1 class="directory-heading format-text">FACULTY DIRECTORY</h1>
@@ -128,24 +117,17 @@
 
         <div class="faculty-list-container">
           <div class="faculty-list" id="facultyList">
-            <!-- Faculty cards are rendered here by faculty-directory.js
-                 from the FACULTY_DIRECTORY_DATA test data array -->
           </div>
           <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected status.</p>
         </div>
 
       </section>
 
-      <!-- BACK BUTTON: only shown while a faculty profile is being viewed
-           (toggled by faculty-directory.js). Returns to the list/search
-           in-page -- no navigation or reload. -->
       <div class="directory-back-row" id="directoryBackRow" hidden>
         <button type="button" class="directory-back-button" id="directoryBackButton">Back</button>
       </div>
 
-      <!-- PROFILE PANEL: detailed faculty profile, shown in place of the list -->
       <section class="directory-profile-panel" id="directoryProfilePanel" hidden>
-        <!-- Populated by faculty-directory.js when "View Profile" is clicked -->
       </section>
 
     </div>

@@ -1,8 +1,5 @@
-/* SYSTEM NOTE: Styles the style page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   CSS VARIABLES
-   Centralized colors & sizing for easy future edits
-========================================================= */
+/* Splash page css */
+
 :root {
   --color-overlay-orange: rgba(255, 140, 60, 0.18);
   --color-overlay-white: rgba(255, 255, 255, 0.55);
@@ -20,9 +17,6 @@
   --logo-width-brand: 1024px;
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -37,9 +31,6 @@ body {
   font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
-/* =========================================================
-   FULL SCREEN LOADING CONTAINER
-========================================================= */
 .loading-screen {
   position: relative;
   width: 100vw;
@@ -50,9 +41,6 @@ body {
   overflow: hidden;
 }
 
-/* =========================================================
-   BACKGROUND IMAGE LAYER
-========================================================= */
 .background-image {
   position: absolute;
   top: 0;
@@ -66,9 +54,6 @@ body {
   z-index: 1;
 }
 
-/* =========================================================
-   OVERLAY LAYER
-========================================================= */
 .overlay {
   position: absolute;
   top: 0;
@@ -95,9 +80,6 @@ body {
   z-index: 2;
 }
 
-/* =========================================================
-   CONTENT WRAPPER
-========================================================= */
 .content-wrapper {
   position: relative;
   z-index: 3;
@@ -111,9 +93,6 @@ body {
   padding: 0 20px;
 }
 
-/* =========================================================
-   UNIVERSITY LOGOS ROW
-========================================================= */
 .logo-row {
   display: flex;
   align-items: center;
@@ -135,9 +114,6 @@ body {
   line-height: 1;
 }
 
-/* =========================================================
-   MAIN BRAND LOGO
-========================================================= */
 .brand-logo {
   display: flex;
   align-items: center;
@@ -154,9 +130,6 @@ body {
   transform: translateX(-12px);
 }
 
-/* =========================================================
-   BOTTOM AREA
-========================================================= */
 .bottom-area {
   position: relative;
   display: flex;
@@ -167,9 +140,6 @@ body {
   margin-bottom: var(--spacing-section-gap);
 }
 
-/* =========================================================
-   LOADING TEXT
-========================================================= */
 .loading-text {
   font-size: 0.95rem;
   letter-spacing: 1px;
@@ -177,9 +147,6 @@ body {
   font-weight: 500;
 }
 
-/* =========================================================
-   CONTINUE BUTTON
-========================================================= */
 .continue-button {
   position: absolute;
   top: 50%;
@@ -203,10 +170,6 @@ body {
   pointer-events: auto;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-   Desktop styles above remain unchanged.
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --logo-width-brand: 500px;
@@ -214,7 +177,6 @@ body {
   }
 }
 
-/* Tablet and mobile only */
 @media (max-width: 768px) {
   :root {
     --logo-width-brand: 340px;
@@ -223,17 +185,14 @@ body {
     --spacing-top-offset: 6vh;
   }
 
-  /* Shows the calmer upper portion of the image on mobile. */
   .background-image {
     background-position: center top;
   }
 
-  /* Reduces the extra colour overlay on smaller screens. */
   .overlay {
     opacity: 0.75;
   }
 
-  /* Keeps the ProfConsult logo centred and makes it larger. */
   .brand-logo {
     flex: 1;
     display: flex;
@@ -248,7 +207,6 @@ body {
   }
 }
 
-/* Phones */
 @media (max-width: 480px) {
   :root {
     --logo-width-brand: 260px;

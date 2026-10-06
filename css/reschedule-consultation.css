@@ -1,27 +1,5 @@
-/* =========================================================
-   RESCHEDULE CONSULTATION -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content) is
-   defined here. Navbar/sidebar/quick action/background styling
-   lives in faculty-shared.css and is not duplicated here.
+/* Reschedule Consultation */
 
-   Heading gradient follows the same page-local, self-contained
-   approach as faculty-consultation-requests.css's .requests-title
-   (no dependency on .format-text or shared CSS variables for the
-   gradient itself; other values like --color-red-primary,
-   --shadow-card etc. are still assumed to come from
-   faculty-shared.css, same as faculty-consultation-requests.css).
-
-   Info-row / custom dropdown / date-availability / button styles
-   below are carried over from request-consultation.css so
-   Preferred Date/Time behave identically to Request Consultation,
-   per spec ("Date/time must work the same way as Request
-   Consultation, including existing availability/validation rules
-   and custom dropdowns").
-========================================================= */
-
-/* =========================================================
-   PAGE HEADING
-========================================================= */
 .reschedule-page-heading {
   margin-bottom: 24px;
 }
@@ -54,15 +32,6 @@
   max-width: 780px;
 }
 
-/* =========================================================
-   RESCHEDULE CARD
-   Same white-panel-with-red-accent-bar treatment as
-   .requests-card. overflow is intentionally NOT hidden --
-   clipping this container would cut off the Preferred Time
-   dropdown, the same issue already fixed on Request
-   Consultation. The accent bar carries its own corner radius
-   instead of relying on the container to clip it.
-========================================================= */
 .reschedule-card {
   position: relative;
   max-width: 1100px;
@@ -94,9 +63,6 @@
   gap: 16px;
 }
 
-/* =========================================================
-   INFO ROWS -- identical pattern to Request Consultation
-========================================================= */
 .info-row {
   display: flex;
   align-items: stretch;
@@ -142,8 +108,6 @@ input[type="date"].info-input {
   cursor: pointer;
 }
 
-/* Preferred Date rejected an unavailable weekday -- brief red
-   outline, same pattern as Request Consultation */
 .info-input.is-date-invalid {
   outline: 2px solid var(--color-red-primary);
   outline-offset: -2px;
@@ -168,11 +132,6 @@ input[type="date"].info-input {
   width: 100%;
 }
 
-/* =========================================================
-   ADDITIONAL MESSAGE -- read-only display (not an editable
-   textarea; only Preferred Date/Time and the new Message for
-   the Student field below are editable per spec)
-========================================================= */
 .message-block {
   display: flex;
   flex-direction: column;
@@ -193,11 +152,6 @@ input[type="date"].info-input {
   line-height: 1.6;
 }
 
-/* =========================================================
-   MESSAGE FOR THE STUDENT -- optional, editable. Same white
-   rounded box look as the read-only Additional Message display
-   above, but a real <textarea> so the faculty can type into it.
-========================================================= */
 .message-textarea {
   display: block;
   min-height: 90px;
@@ -216,10 +170,6 @@ input[type="date"].info-input {
   outline-offset: -2px;
 }
 
-/* =========================================================
-   CUSTOM DROPDOWN (Preferred Time) -- identical pattern to
-   Request Consultation, own HTML/CSS so it can never overflow
-========================================================= */
 .info-row-select .custom-select {
   position: relative;
   flex: 1;
@@ -321,10 +271,6 @@ input[type="date"].info-input {
   pointer-events: none;
 }
 
-/* =========================================================
-   BUTTONS -- red -> orange gradient for both. Submit must NOT
-   be green (spec explicitly calls this out).
-========================================================= */
 .reschedule-buttons {
   display: flex;
   gap: 14px;
@@ -364,9 +310,6 @@ input[type="date"].info-input {
   background: linear-gradient(90deg, var(--color-gradient-end) 0%, var(--color-gradient-start) 100%);
 }
 
-/* Submit button turns green after a successful submission --
-   pre-submission state above (still red -> orange via .btn) is
-   unchanged; this is the only new rule in this file. */
 .btn-submit.is-submitted {
   background: var(--color-checkin, #2fae4e);
 }
@@ -378,9 +321,6 @@ input[type="date"].info-input {
   color: var(--color-text-muted);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   .reschedule-columns {
     grid-template-columns: 1fr;

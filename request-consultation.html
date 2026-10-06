@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Request a consultation  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,9 +14,6 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR -- identical to the Student Dashboard
-  ========================================================= -->
   <header class="dashboard-navbar">
     <div class="navbar-left">
       <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
@@ -23,21 +21,20 @@
         <span></span>
         <span></span>
       </button>
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+     <a href="student-dashboard.html" class="navbar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+</a>
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- navigates to notifications.html -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup: two actions, one shared "View Directory" button -->
       <div class="quick-action-panel" id="quickActionPanel" hidden>
         <div class="quick-action-header">
           <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
@@ -60,14 +57,13 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR -- identical to the Student Dashboard
-  ========================================================= -->
   <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <a href="student-dashboard.html" class="sidebar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+</a>
       <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
     </div>
 
@@ -78,36 +74,26 @@
       <a href="notifications.html" class="sidebar-link">Notifications</a>
       <a href="student-profile.html" class="sidebar-link">Profile</a>
       <a href="settings.html" class="sidebar-link">Settings</a>
-      <a href="student-login.html" class="sidebar-link">Logout</a>
+     <a href="login.html" class="sidebar-link" id="logoutLink">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND -- identical to the Student Dashboard
-  ========================================================= -->
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN CONTENT
-  ========================================================= -->
   <main class="request-page">
 
     <h1 class="format-text request-title">Request a Consultation</h1>
     <p class="request-subtitle">
-      Complete the form below to submit your consultation request. Your selected faculty
-      member will review your request and respond through FINDPROF.
+      Complete the form below to submit your consultation request. 
     </p>
 
     <form class="request-card" id="requestConsultationForm" novalidate>
 
       <div class="request-columns">
 
-        <!-- =========================================================
-             LEFT COLUMN
-        ========================================================= -->
         <div class="request-column">
 
           <div class="info-row">
@@ -143,9 +129,6 @@
 
         </div>
 
-        <!-- =========================================================
-             RIGHT COLUMN
-        ========================================================= -->
         <div class="request-column">
 
           <div class="info-row">
@@ -188,15 +171,11 @@
                 <span class="custom-select-value" data-placeholder="Select Time">Select Time</span>
               </button>
               <ul class="custom-select-options" id="preferredTimeOptions" role="listbox" hidden>
-                <!-- Populated by request-consultation.js with 30-minute slots, 8:00 AM - 8:00 PM -->
               </ul>
               <input type="hidden" id="preferredTime" name="preferredTime" required>
             </div>
           </div>
 
-          <!-- =========================================================
-               BUTTONS
-          ========================================================= -->
           <div class="request-buttons">
             <a href="faculty-directory.html" class="btn btn-cancel" data-nav="cancel">Cancel</a>
             <button type="submit" class="btn btn-submit" id="submitRequestButton">Submit Request</button>

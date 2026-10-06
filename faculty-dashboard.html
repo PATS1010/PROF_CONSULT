@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!--= Faculty dashboard  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,19 +9,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Shared Faculty layout styles -- load on every Faculty page -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
-
-  <!-- Page-specific styles -- only this file changes per page -->
   <link rel="stylesheet" href="css/faculty-dashboard.css">
 </head>
 
 <body data-active-page="dashboard">
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR (shared shell -- do not duplicate
-       edits here; change faculty-shared.css/js instead)
-  ========================================================= -->
   <header class="faculty-navbar">
 
     <div class="faculty-navbar-left">
@@ -46,7 +41,6 @@
 
     <div class="faculty-navbar-right">
 
-      <!-- Notification bell -- clickable, functionality not implemented yet -->
       <button
         type="button"
         class="faculty-nav-icon-button faculty-notification-bell-button"
@@ -56,7 +50,6 @@
         <img src="images/bell.png" alt="">
       </button>
 
-      <!-- Quick Action trigger -->
       <button
         type="button"
         class="faculty-nav-icon-button faculty-quick-action-button"
@@ -68,7 +61,6 @@
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup -->
       <div
         class="faculty-quick-action-panel"
         id="facultyQuickActionPanel"
@@ -113,10 +105,6 @@
 
   </header>
 
-
-  <!-- =========================================================
-       BURGER SIDEBAR (shared shell)
-  ========================================================= -->
 
   <div
     class="faculty-sidebar-overlay"
@@ -195,7 +183,7 @@
   </a>
 
   <a
-    href="faculty-login.html"
+    href="login.html"
     class="faculty-sidebar-link"
     data-page="logout"
   >
@@ -206,10 +194,6 @@
 
   </aside>
 
-
-  <!-- =========================================================
-       BACKGROUND (shared shell)
-  ========================================================= -->
 
   <div
     class="faculty-page-background"
@@ -225,11 +209,6 @@
   </div>
 
 
-  <!-- =========================================================
-       MAIN CONTENT AREA
-       Only this section differs from page to page.
-  ========================================================= -->
-
   <main class="faculty-main-content">
 
     <div class="faculty-page-heading">
@@ -244,7 +223,6 @@
         </span>!
       </h1>
 
-      <!-- Added live Philippine date/time -->
       <p
         class="faculty-page-datetime"
         id="facultyPageDateTime"
@@ -261,14 +239,8 @@
     <div class="faculty-dashboard-grid">
 
 
-      <!-- =====================================================
-           LEFT COLUMN
-      ====================================================== -->
-
       <div class="faculty-dashboard-column">
 
-
-        <!-- TODAY'S STATUS -->
 
         <section class="faculty-card faculty-status-card">
 
@@ -303,8 +275,6 @@
               Change Status
             </button>
 
-
-            <!-- Status selection popup -->
 
             <div
               class="faculty-status-panel"
@@ -411,8 +381,6 @@
         </section>
 
 
-        <!-- TODAY'S SCHEDULE -->
-
         <section class="faculty-card faculty-schedule-card">
 
           <h2 class="faculty-card-title">
@@ -438,10 +406,6 @@
 
       </div>
 
-
-      <!-- =====================================================
-           RIGHT COLUMN
-      ====================================================== -->
 
       <div class="faculty-dashboard-column">
 
@@ -512,10 +476,8 @@
   </main>
 
 
-  <!-- Shared Faculty layout behavior -- load on every Faculty page -->
   <script src="js/faculty-shared.js"></script>
 
-  <!-- Page-specific behavior -->
   <script src="js/faculty-dashboard.js"></script>
 
 </body>

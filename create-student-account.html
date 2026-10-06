@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the create student account page structure used by the Prof Consult web app. -->
+<!-- Create student account page -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -12,27 +12,18 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       BACKGROUND
-       Full-viewport background image, blurred, with a dark
-       maroon (upper-left) -> bright orange (right) gradient
-       overlay, matching the Student Login page
-  ========================================================= -->
+ 
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       BACK BUTTON -> student-login.html
-  ========================================================= -->
-  <a href="student-login.html" class="back-button" id="backButton" data-nav="back">
+ 
+  <a href="login.html" class="back-button" id="backButton" data-nav="back">
     <span aria-hidden="true">&larr;</span> Back
   </a>
 
-  <!-- =========================================================
-       MAIN CONTAINER: registration card
-  ========================================================= -->
+
   <main class="registration-card">
 
     <h1 class="format-text registration-title">Create Student Account</h1>
@@ -54,11 +45,6 @@
         >
       </div>
 
-      <!-- =========================================================
-           Name fields: First Name / Middle Initial / Last Name on
-           one row. Each is its own independent input (the old
-           single Full Name field is replaced).
-      ========================================================= -->
       <div class="form-row form-row-name">
 
         <div class="form-field">
@@ -97,6 +83,31 @@
           >
         </div>
 
+       
+        <div class="form-field">
+          <label for="suffixTrigger">Suffix</label>
+          <div class="custom-select" id="suffixSelect" data-name="suffix">
+            <button
+              type="button"
+              class="custom-select-trigger"
+              id="suffixTrigger"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+            >
+              <span class="custom-select-value" data-placeholder="Suffix">Suffix</span>
+            </button>
+            <ul class="custom-select-options" role="listbox" hidden>
+              <li role="option" data-value="">None</li>
+              <li role="option" data-value="Sr.">Sr.</li>
+              <li role="option" data-value="Jr.">Jr.</li>
+              <li role="option" data-value="I">I</li>
+              <li role="option" data-value="II">II</li>
+              <li role="option" data-value="III">III</li>
+            </ul>
+            <input type="hidden" id="suffix" name="suffix">
+          </div>
+        </div>
+
       </div>
 
       <div class="form-field">
@@ -112,19 +123,14 @@
             <span class="custom-select-value" data-placeholder="Select Program">Select Program</span>
           </button>
           <ul class="custom-select-options" role="listbox" hidden>
-            <!-- More programs can be added here later as additional <li> options -->
+         
             <li role="option" data-value="computer-engineering">Computer Engineering</li>
           </ul>
           <input type="hidden" id="courseProgram" name="courseProgram" required>
         </div>
       </div>
 
-      <!-- =========================================================
-           Year Level + Section, side by side.
-           Wrapped in .form-row purely for horizontal layout --
-           the Year Level field itself (ids/classes/markup) is
-           untouched from the original.
-      ========================================================= -->
+   
       <div class="form-row form-row-year-section">
 
         <div class="form-field">

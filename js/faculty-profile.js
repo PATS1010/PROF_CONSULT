@@ -1,9 +1,12 @@
 // =========================================================
 // FACULTY PROFILE -- PAGE-SPECIFIC INTERACTIONS
 // - View/Edit mode toggle (ONE button: "Edit Profile" <-> "Save Changes")
-// - Name: shown as one full name in view mode; edited as three
-//   separate fields (First Name / Middle Initial / Last Name)
+// - Name: shown as one full name in view mode; edited as four
+//   separate fields (First Name / Middle Initial / Last Name / Suffix)
 // - Custom Program dropdown (data-driven, not a native <select>)
+// - Custom Suffix dropdown (ADDED) -- same component pattern as
+//   Program, with its own "None" option (Sr., Jr., I, II, III, or
+//   None) so an accidental pick can always be cleared.
 // - Name / Email / Phone validation on Save
 // - Faculty ID always read-only, never editable
 //
@@ -25,16 +28,18 @@
 // Prototype logged-in faculty account -- replace with real
 // session data once backend authentication exists.
 //
-// Name is stored as three separate parts (firstName,
-// middleInitial, lastName) -- the same fields Create Account
-// now produces. `name` is the combined full name, kept in sync
-// so anything else reading FACULTY_ACCOUNT.name keeps working.
+// Name is stored as four separate parts (firstName,
+// middleInitial, lastName, suffix) -- the same fields Create
+// Account now produces. `name` is the combined full name, kept
+// in sync so anything else reading FACULTY_ACCOUNT.name keeps
+// working. suffix defaults to "" (None).
 // ---------------------------------------------------------
 const FACULTY_ACCOUNT = {
   firstName: "Juan",
   middleInitial: "",
   lastName: "Dela Cruz",
-  name: "", // combined below from the three parts
+  suffix: "",
+  name: "", // combined below from the four parts
   facultyId: "24-00001",
   program: "Computer Engineering",
   email: "juan.delacruz@cvsu.edu.ph",
@@ -72,6 +77,9 @@ function saveFacultyAccount() {
 }
 
 // Apply any previously-saved account data over the defaults above.
+// (A stored account saved before Suffix existed simply has no
+// "suffix" key, so Object.assign leaves the "" default above in
+// place -- no extra fallback needed.)
 const storedFacultyAccount = loadStoredFacultyAccount();
 if (storedFacultyAccount) {
   Object.assign(FACULTY_ACCOUNT, storedFacultyAccount);
@@ -91,11 +99,12 @@ function normalizeName(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
-// First Name + Middle Initial + Last Name, joined with normal
-// spaces only. Empty parts are skipped; no commas, periods or
-// dashes are ever added.
-function combineName(firstName, middleInitial, lastName) {
-  return [firstName, middleInitial, lastName]
+// First Name + Middle Initial + Last Name + Suffix, joined with
+// normal spaces only. Empty parts are skipped; no commas,
+// periods or dashes are added beyond whatever Suffix itself
+// already contains (e.g. "Sr.").
+function combineName(firstName, middleInitial, lastName, suffix) {
+  return [firstName, middleInitial, lastName, suffix]
     .map(normalizeName)
     .filter(Boolean)
     .join(" ");
@@ -106,6 +115,9 @@ function combineName(firstName, middleInitial, lastName) {
 // word as "the" first name: the LAST word becomes the last name,
 // a single-letter word before it becomes the middle initial, and
 // EVERYTHING else stays together as First Name (multi-word safe).
+// Does not attempt to detect a trailing Suffix -- legacy data has
+// no way to distinguish "Jr." as a suffix from part of the name,
+// so it's left for the person to set via the new dropdown.
 function splitLegacyName(fullName) {
   const words = normalizeName(fullName).split(" ").filter(Boolean);
   if (words.length <= 1) {
@@ -126,7 +138,8 @@ if (FACULTY_ACCOUNT.firstName === undefined && FACULTY_ACCOUNT.lastName === unde
 FACULTY_ACCOUNT.name = combineName(
   FACULTY_ACCOUNT.firstName,
   FACULTY_ACCOUNT.middleInitial,
-  FACULTY_ACCOUNT.lastName
+  FACULTY_ACCOUNT.lastName,
+  FACULTY_ACCOUNT.suffix
 );
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -160,6 +173,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const programTrigger = document.getElementById("programDropdownTrigger");
   const programValueEl = document.getElementById("programDropdownValue");
   const programList = document.getElementById("programDropdownList");
+
+  // CHANGED: Suffix is now a plain <select>, matching Student
+  // Profile exactly -- no custom dropdown open/close logic needed.
+  const suffixSelect = document.getElementById("editFacultySuffix");
 
   const saveSuccessMessage = document.getElementById("saveSuccessMessage");
 
@@ -306,7 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
     clearFieldError(lastNameInput, null);
   }
 
-  // First Name and Last Name are required; Middle Initial is optional.
+  // First Name and Last Name are required; Middle Initial and
+  // Suffix are optional.
   function validateName() {
     firstNameInput.value = normalizeName(firstNameInput.value);
     lastNameInput.value = normalizeName(lastNameInput.value);
@@ -380,6 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
     idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
     selectedProgram = FACULTY_ACCOUNT.program;
     programValueEl.textContent = selectedProgram;
+    if (suffixSelect) suffixSelect.value = FACULTY_ACCOUNT.suffix || "";
     emailInput.value = FACULTY_ACCOUNT.email;
     phoneInput.value = FACULTY_ACCOUNT.phone;
 
@@ -427,10 +446,12 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.firstName = firstNameInput.value;
     FACULTY_ACCOUNT.middleInitial = middleInitialInput.value;
     FACULTY_ACCOUNT.lastName = lastNameInput.value;
+    FACULTY_ACCOUNT.suffix = suffixSelect ? suffixSelect.value : FACULTY_ACCOUNT.suffix;
     FACULTY_ACCOUNT.name = combineName(
       FACULTY_ACCOUNT.firstName,
       FACULTY_ACCOUNT.middleInitial,
-      FACULTY_ACCOUNT.lastName
+      FACULTY_ACCOUNT.lastName,
+      FACULTY_ACCOUNT.suffix
     );
     FACULTY_ACCOUNT.program = selectedProgram;
     FACULTY_ACCOUNT.email = emailInput.value.trim();

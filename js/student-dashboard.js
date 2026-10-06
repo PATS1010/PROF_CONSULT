@@ -1,51 +1,12 @@
-// =========================================================
-// STUDENT DASHBOARD INTERACTIONS
-// - Populates the greeting from the SAME stored name fields as
-//   Student Profile (see STUDENT_NAME_STORAGE_KEY below) -- the
-//   greeting uses ONLY the stored First Name, never derived by
-//   splitting a combined full-name string, so the two pages can
-//   never disagree about what the student's first name is, and
-//   a multi-word first name (e.g. "Mary Jane") is preserved as-is.
-// - Live Philippine date and time, updated every second
-// - Burger menu: slide-in sidebar with dim/blur overlay
-// - Quick Action: fade/slide popup with Find Faculty and
-//   Request Consultation actions
-// - Notification bell: navigates to notifications.html, and
-//   shows a shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
-// - Search Professor: real-time, case-insensitive, partial-match
-//   filtering, combined with an optional status filter, with a
-//   shared empty state when nothing matches
-// - Clicking a faculty card navigates to Faculty Directory with
-//   that same faculty pre-selected (see the FACULTY CARD CLICK
-//   section below) -- generic for any card with data-faculty-id,
-//   no per-faculty special-casing.
-// - Recent Notifications: renders from the SAME notification
-//   data/store as the Notifications page (notifications.js), so
-//   this never shows something different from the full page --
-//   see the RECENT NOTIFICATIONS section below. Its heading is a
-//   plain link to notifications.html (styled in the HTML/CSS,
-//   nothing to wire up here).
-// =========================================================
-
+// Student Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Sample student account -- replace with real session/user
-  // data once backend authentication exists
-  // ---------------------------------------------------------
   const SAMPLE_STUDENT = {
     studentId: "24-00001",
     program: "BSCPE (Computer Engineering)",
     yearLevel: "3rd Year",
   };
 
-  // ---------------------------------------------------------
-  // Name -- read from the same localStorage key Student Profile
-  // saves to (STUDENT_NAME_STORAGE_KEY), so this page and the
-  // Profile page always show a consistent first name and the
-  // greeting survives a refresh once the student has edited it.
-  // ---------------------------------------------------------
   const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
 
   const DEFAULT_STUDENT_NAME = {
@@ -68,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } catch (error) {
-      // fall through to defaults
     }
     return { ...DEFAULT_STUDENT_NAME };
   }
@@ -77,18 +37,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const firstNameEl = document.getElementById("studentFirstName");
   if (firstNameEl) {
-    // First Name is the source of truth for the greeting --
-    // never derived by splitting a connected full name.
     firstNameEl.textContent = studentName.firstName;
   }
 
-  // ---------------------------------------------------------
-  // Live Philippine date and time, directly below the greeting.
-  // Uses Intl.DateTimeFormat with the Asia/Manila timezone so
-  // it always reflects Philippine time regardless of the
-  // visitor's own device timezone, and re-renders every second
-  // via setInterval so it stays live without a page refresh.
-  // ---------------------------------------------------------
   const dashboardDateTimeEl = document.getElementById("dashboardDateTime");
 
   if (dashboardDateTimeEl) {
@@ -105,9 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function renderPhilippineDateTime() {
-      // Intl.DateTimeFormat.formatToParts lets us control spacing/
-      // punctuation exactly (e.g. "June 22, 2026 9:56:03 PM")
-      // instead of depending on the locale's default separators.
       const parts = philippineDateTimeFormatter.formatToParts(new Date());
       const get = (type) => {
         const part = parts.find((p) => p.type === type);
@@ -131,11 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(renderPhilippineDateTime, 1000);
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // dashboard behind it. Closes via the X button or clicking
-  // the overlay outside the sidebar.
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -165,10 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // Closes when clicking its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -198,16 +137,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
-  // TEST/DEMO ONLY: no real notification data or backend yet,
-  // this just routes the whole button (not only the image) to
-  // the Notifications page.
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
@@ -218,11 +147,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ---------------------------------------------------------
-  // Status Filter popup: fades/slides in below the filter icon
-  // at the right edge of the search bar. Closes when clicking
-  // its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const filterButton = document.getElementById("filterButton");
   const filterPanel = document.getElementById("filterPanel");
   const filterOptions = filterPanel
@@ -255,8 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Close the Quick Action popup and/or the Filter popup when
-  // clicking anywhere outside of them
   document.addEventListener("click", (event) => {
     if (
       quickActionPanel &&
@@ -278,14 +200,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------------------------------------------------------
-  // Search Professor + Status Filter: real-time, case-insensitive,
-  // partial-match search combined with an optional status filter.
-  // Both apply together -- a professor must match the search text
-  // AND the selected status (when one is active) to stay visible.
-  // Shows a shared empty-state message when nothing matches;
-  // empty search and/or no active filter restores the full list.
-  // ---------------------------------------------------------
   const searchInput = document.getElementById("professorSearchInput");
   const professorCards = Array.from(document.querySelectorAll(".professor-card"));
   const noResultsMessage = document.getElementById("noResultsMessage");
@@ -322,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = option.dataset.status;
 
       if (activeStatus === status) {
-        // Clicking the already-active filter clears it
         activeStatus = null;
         option.classList.remove("is-active");
       } else {
@@ -335,22 +248,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // FACULTY CARD CLICK -> Faculty Directory, same faculty selected.
-  //
-  // Reuses the exact same "?facultyId=" query-param hand-off
-  // mechanism already used elsewhere in the project (e.g.
-  // faculty-directory.js's own Request Consultation link uses
-  // "request-consultation.html?facultyId=..."), and relies on
-  // Faculty Directory's EXISTING openProfile() selection logic
-  // to actually show the profile once it arrives there (see
-  // faculty-directory.js) -- nothing about faculty selection is
-  // duplicated here.
-  //
-  // Generic for any card that has a data-faculty-id attribute --
-  // no specific faculty name is referenced or special-cased, so
-  // this works for every current and future card the same way.
-  // ---------------------------------------------------------
   professorCards.forEach((card) => {
     const facultyId = card.dataset.facultyId;
     if (!facultyId) return;
@@ -359,27 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
     });
   });
-
-  // =========================================================
-  // RECENT NOTIFICATIONS
-  //
-  // Reads/formats notifications EXACTLY the way notifications.js
-  // does (same storage key, same supported types, same sample
-  // fallback, same time-ago wording, same optional "Professor's
-  // message" line for a rescheduled record) so this panel can
-  // never disagree with the full Notifications page. It's
-  // mirrored here rather than imported since this is a separate
-  // static page with no build step/shared JS module system in
-  // this project -- if that ever changes, this block and
-  // notifications.js's equivalent block are the two places to
-  // consolidate.
-  //
-  // Only the topmost few are shown here ("recent"), taken from
-  // the exact same ordered list notifications.js renders in full
-  // (real/stored records first, newest first, then the test
-  // samples) -- so "recent" is always the literal top of the full
-  // page, never a separately-decided subset.
-  // =========================================================
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
 
@@ -402,16 +278,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (error) {
-      // fall through to no stored records
     }
     return [];
   }
 
-  // TEST DATA ONLY -- identical to notifications.js's
-  // getSampleRecords(), so Recent Notifications and the full
-  // Notifications page always agree on the test account's sample
-  // data too. Delete this function (and its use below) at the
-  // same time it's deleted from notifications.js.
   function getSampleNotificationRecords() {
     const now = Date.now();
     const MINUTE = 60 * 1000;
@@ -566,5 +436,64 @@ document.addEventListener("DOMContentLoaded", () => {
   renderRecentNotifications(
     buildRecentNotificationRows(allNotificationsInPageOrder.slice(0, RECENT_NOTIFICATIONS_LIMIT))
   );
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

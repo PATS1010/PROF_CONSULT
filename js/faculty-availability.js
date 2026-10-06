@@ -1,56 +1,8 @@
-// =========================================================
-// FACULTY AVAILABILITY -- PAGE-SPECIFIC INTERACTIONS
-// - Current Status pill + Change Status dropdown, anchored
-//   directly below the Change Status button. Selecting an
-//   option updates the main status display immediately as a
-//   PENDING preview; it only becomes the SHARED faculty
-//   status (see faculty-shared.js) once Save Changes is
-//   clicked, so Quick Action and faculty-dashboard stay in
-//   sync.
-// - Available Hours: six independent day rows. Hours are shown
-//   as plain text and are NEVER directly editable. Clicking
-//   Edit reveals a black downward-arrow button on every row
-//   (hidden the rest of the time) and turns Edit into Cancel.
-//   Clicking a day's arrow opens THAT day's own time dropdown
-//   (preset options + "Unavailable") -- every day is fully
-//   independent of the others. Save commits only the days that
-//   were actually changed; Cancel discards all pending changes,
-//   restores the previously saved hours, hides the arrows again,
-//   and turns Cancel back into Edit.
-//
-// FACULTY TEST ACCOUNT -- no backend yet. Current status lives
-// in faculty-shared.js's shared status (persisted via
-// localStorage) instead of a page-local variable.
-//
-// SAVED HOURS PERSIST: clicking Save writes the weekly hours to
-// localStorage (AVAILABLE_HOURS_STORAGE_KEY), and they are loaded
-// back on every page load, so a refresh no longer resets them.
-// A faculty account that has never saved any hours (e.g. a newly
-// created account) starts with every day showing "No hours set"
-// (NOT_SET_LABEL) -- different from "Unavailable", which is a
-// choice the faculty makes on purpose. Once a backend exists,
-// loadAvailableHours()/saveAvailableHours() are the two functions
-// to swap for real API calls; nothing else here needs to change.
-//
-// Shared shell behavior (navbar, sidebar, quick action,
-// notification bell) lives in faculty-shared.js.
-// =========================================================
-
-// ---------------------------------------------------------
-// Storage key for the saved weekly hours (frontend-only
-// stand-in until a backend exists).
-// ---------------------------------------------------------
+// Faculty Availability JS
 const AVAILABLE_HOURS_STORAGE_KEY = "profconsult_faculty_available_hours";
 
-// Shown for a day the faculty has not set any hours for yet
 const NOT_SET_LABEL = "No hours set";
 
-// ---------------------------------------------------------
-// Default weekly schedule for an account that has never saved
-// its hours: every day is "No hours set". `time` is the
-// currently SAVED value for that day; "Unavailable" is a valid
-// saved value, same as any time range.
-// ---------------------------------------------------------
 const DEFAULT_AVAILABLE_HOURS = [
   { day: "Monday", short: "Mon", time: NOT_SET_LABEL },
   { day: "Tuesday", short: "Tue", time: NOT_SET_LABEL },
@@ -70,8 +22,6 @@ function loadAvailableHours() {
     const saved = JSON.parse(raw);
     if (!Array.isArray(saved)) return defaults;
 
-    // Match by day so a missing/invalid entry just falls back to
-    // "No hours set" for that day instead of breaking the page
     return defaults.map((entry) => {
       const match = saved.find((item) => item && item.day === entry.day);
       if (match && typeof match.time === "string" && match.time) {
@@ -80,7 +30,6 @@ function loadAvailableHours() {
       return entry;
     });
   } catch (error) {
-    // Nothing saved yet, or storage unavailable -- use the defaults
     return defaults;
   }
 }
@@ -89,7 +38,6 @@ function saveAvailableHours(hours) {
   try {
     localStorage.setItem(AVAILABLE_HOURS_STORAGE_KEY, JSON.stringify(hours));
   } catch (error) {
-    // Storage unavailable -- hours just won't persist across reloads
   }
 }
 
@@ -110,18 +58,6 @@ const UNAVAILABLE_LABEL = "Unavailable";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Current Status pill + Change Status dropdown -- anchored to
-  // the button itself (see .faculty-change-status-wrap in the
-  // CSS/HTML), so the popup always opens directly below the
-  // Change Status button rather than the status pill.
-  //
-  // The real current status comes from faculty-shared.js
-  // (window.getFacultyOnlineStatus) -- faculty-shared.js
-  // already paints the pill and highlights the matching
-  // option on load, so this file only needs to read the
-  // selection back out when Save Changes is clicked.
-  // ---------------------------------------------------------
   const changeStatusButton = document.getElementById("changeStatusButton");
   const statusPanel = document.getElementById("statusPanel");
   const statusOptions = statusPanel
@@ -142,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     changeStatusButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       statusPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (changeStatusButton) {
@@ -164,8 +100,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusOptions.forEach((opt) => opt.classList.remove("is-selected"));
       option.classList.add("is-selected");
 
-      // Update the main display immediately on selection (pending
-      // preview only -- not saved/shared until Save Changes).
       const status = option.dataset.status;
       const label = option.dataset.label;
       if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
@@ -178,9 +112,6 @@ document.addEventListener("DOMContentLoaded", () => {
       event.stopPropagation();
       const selectedOption = statusOptions.find((opt) => opt.classList.contains("is-selected"));
       if (selectedOption && typeof window.setFacultyOnlineStatus === "function") {
-        // Updates the SHARED status (localStorage + Quick Action +
-        // this page's pill + faculty-dashboard's pill, if that
-        // page is open elsewhere).
         window.setFacultyOnlineStatus(selectedOption.dataset.status);
       }
       closeStatusPanel();
@@ -199,12 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------------------------------------------------------
-  // If the shared status changes while the panel is open
-  // (e.g. Check In/Out clicked from Quick Action), re-highlight
-  // the option that matches the new real status so an unrelated
-  // pending click here doesn't overwrite it with something stale.
-  // ---------------------------------------------------------
   document.addEventListener("faculty-status-changed", (event) => {
     const newStatus = event.detail && event.detail.status;
     if (!newStatus) return;
@@ -214,17 +139,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Available Hours
-  // ---------------------------------------------------------
   const hoursListEl = document.getElementById("availabilityHoursList");
   const editButton = document.getElementById("editHoursButton");
   const saveHoursButton = document.getElementById("saveHoursButton");
 
   let isEditingHours = false;
-  // Draft copy edited during an edit session; only written back
-  // into AVAILABLE_HOURS when Save is clicked. Cancel just
-  // discards this and re-renders from AVAILABLE_HOURS untouched.
   let draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
 
   function buildTimeDropdown(dayIndex) {
@@ -288,17 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const timeText = document.createElement("span");
       timeText.className = "availability-time-text";
-      // "Unavailable" and "No hours set" share the same muted,
-      // italic look (existing .is-unavailable style)
       if (entry.time === UNAVAILABLE_LABEL || entry.time === NOT_SET_LABEL) {
         timeText.classList.add("is-unavailable");
       }
       timeText.textContent = entry.time;
       timeWrap.appendChild(timeText);
 
-      // Arrow is ALWAYS in the markup but hidden outside edit
-      // mode -- never becomes a text input, and clicking it is
-      // the only way to change a day's hours.
       const arrowButton = document.createElement("button");
       arrowButton.type = "button";
       arrowButton.className = "availability-time-arrow";
@@ -327,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (arrowButton) {
         event.stopPropagation();
-        if (!isEditingHours) return; // arrows are inert unless in edit mode
+        if (!isEditingHours) return;
 
         const dayIndex = arrowButton.dataset.dayIndex;
         const dropdown = arrowButton.parentElement.querySelector(
@@ -352,8 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const dayIndex = Number(dropdown ? dropdown.dataset.dayIndex : NaN);
         if (Number.isNaN(dayIndex) || !draftHours[dayIndex]) return;
 
-        // Only THIS day's draft entry changes -- every other day
-        // stays exactly as it was.
         draftHours[dayIndex] = { ...draftHours[dayIndex], time: optionButton.dataset.value };
         renderAvailableHours();
       }
@@ -371,12 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (saveHoursButton) {
     saveHoursButton.addEventListener("click", () => {
       if (isEditingHours) {
-        // Commit the draft -- only days that actually changed
-        // differ from AVAILABLE_HOURS; unchanged days are
-        // written back identically, so nothing is lost.
         AVAILABLE_HOURS = draftHours.map((entry) => ({ ...entry }));
 
-        // Persist so the saved hours survive a page refresh
         saveAvailableHours(AVAILABLE_HOURS);
       }
 
@@ -390,15 +298,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editButton) {
     editButton.addEventListener("click", () => {
       if (isEditingHours) {
-        // Currently showing "Cancel" -- discard any pending
-        // changes and restore the previously saved hours.
         isEditingHours = false;
         editButton.textContent = "Edit";
         closeAllTimeDropdowns();
         renderAvailableHours();
       } else {
-        // Currently showing "Edit" -- enter edit mode with a
-        // fresh draft copied from the saved hours.
         isEditingHours = true;
         draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
         editButton.textContent = "Cancel";

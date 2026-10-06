@@ -1,41 +1,4 @@
-// =========================================================
-// FACULTY STUDENT PROFILE -- PAGE-SPECIFIC INTERACTIONS
-//
-// Read-only view of a single student's profile, opened when a
-// faculty member clicks a student's name on the Dashboard,
-// Consultation Requests, or Notifications page (see
-// student-name-link / notification-student-link in those
-// files). No Edit/Save controls -- faculty can only view.
-//
-// WHICH STUDENT + WHERE TO GO BACK
-// Both come from the URL query string:
-//   ?studentId=<id>&from=<dashboard|consultation-requests|notifications>
-// - studentId picks the profile from FACULTY_STUDENT_PROFILES
-//   below.
-// - from picks the page the Back button returns to (see
-//   ORIGIN_PAGES). Any missing/unrecognized "from" falls back
-//   to the Dashboard, so Back never dead-ends.
-//
-// TEST DATA -- no backend yet.
-// FACULTY_STUDENT_PROFILES holds the SAME four test students
-// already used as the studentId values on
-// faculty-consultation-requests.js / faculty-dashboard.js /
-// faculty-notifications.js (Juan Dela Cruz, Joselita Rizal,
-// Mark Santos, Angela Cruz) -- the exact IDs and names already
-// in DEFAULT_CONSULTATIONS on those pages. This is intentionally
-// a separate small data source (this page doesn't read/write the
-// consultations localStorage) so it can later be swapped for a
-// real "fetch this student's profile by ID" call without any
-// other page needing to change -- every student-name link on
-// every page already just passes a studentId here.
-//
-// All four test students currently share the same placeholder
-// photo (images/student-profile-photo.jpg), because that is the
-// only student profile photo asset in the project right now --
-// add a `photo` path per student below once real/distinct photos
-// exist; nothing else needs to change.
-// =========================================================
-
+// Faculty Student Profile JS
 const FACULTY_STUDENT_PROFILES = {
   "22-00145": {
     fullName: "Juan Dela Cruz",
@@ -79,12 +42,6 @@ const FACULTY_STUDENT_PROFILES = {
   },
 };
 
-// ---------------------------------------------------------
-// Back button destinations -- must match the "from" values the
-// student-name links on each page pass (dashboard,
-// consultation-requests, notifications). Anything else, or a
-// missing "from", falls back to the Dashboard.
-// ---------------------------------------------------------
 const ORIGIN_PAGES = {
   "dashboard": "faculty-dashboard.html",
   "consultation-requests": "faculty-consultation-requests.html",
@@ -99,11 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentId = params.get("studentId");
   const from = params.get("from");
 
-  // ---------------------------------------------------------
-  // Back button -- origin-aware. Reads "from" once on load, so
-  // the button always knows which page to return to regardless
-  // of how it was reached.
-  // ---------------------------------------------------------
   const backButton = document.getElementById("studentProfileBackButton");
   const backDestination = ORIGIN_PAGES[from] || DEFAULT_ORIGIN_PAGE;
 
@@ -113,9 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Render the selected student's profile
-  // ---------------------------------------------------------
   const photoEl = document.getElementById("studentProfilePhoto");
   const nameEl = document.getElementById("studentProfileName");
   const infoCardEl = document.getElementById("studentProfileInfoCard");
@@ -131,8 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const profile = studentId ? FACULTY_STUDENT_PROFILES[studentId] : null;
 
   if (!profile) {
-    // No/unknown studentId -- show the not-found message instead
-    // of a blank or misleading profile.
     if (nameEl) nameEl.textContent = "Student Not Found";
     if (photoEl) photoEl.hidden = true;
     if (infoCardEl) infoCardEl.hidden = true;

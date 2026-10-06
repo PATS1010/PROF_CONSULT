@@ -1,18 +1,5 @@
-/* =========================================================
-   FACULTY AVAILABILITY -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+/* Faculty Availability */
 
-   Heading gradient is page-local and self-contained (matches
-   the approach already used on Faculty Profile/Notifications/
-   Consultation Requests) -- no dependency on .format-text.
-========================================================= */
-
-/* =========================================================
-   PAGE HEADING
-========================================================= */
 .availability-page-heading {
   margin-bottom: 32px;
 }
@@ -38,9 +25,6 @@
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   LAYOUT
-========================================================= */
 .availability-grid {
   display: flex;
   align-items: flex-start;
@@ -54,9 +38,6 @@
   min-width: 0;
 }
 
-/* =========================================================
-   STATUS PILL + CHANGE STATUS DROPDOWN
-========================================================= */
 .status-dot {
   flex-shrink: 0;
   width: 10px;
@@ -91,9 +72,6 @@
   color: var(--color-text-dark);
 }
 
-/* Wraps just the button, so the popup can anchor to the button
-   itself rather than the whole status row (which would place it
-   under the status pill instead). */
 .faculty-change-status-wrap {
   position: relative;
   flex-shrink: 0;
@@ -197,9 +175,6 @@
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   AVAILABLE HOURS CARD
-========================================================= */
 .availability-hours-card {
   flex: 1 1 460px;
   min-width: 0;
@@ -252,8 +227,6 @@
   font-weight: 700;
 }
 
-/* Light/white time display -- explicitly NOT a black background,
-   per the correction. */
 .availability-time-wrap {
   position: relative;
   flex: 1;
@@ -280,7 +253,6 @@
   font-style: italic;
 }
 
-/* Arrow button -- BLACK, hidden until Edit mode is active */
 .availability-time-arrow {
   flex-shrink: 0;
   display: flex;
@@ -307,7 +279,6 @@
   transform: rotate(180deg);
 }
 
-/* Per-day time dropdown -- opens directly below that day's row */
 .availability-time-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -398,9 +369,6 @@
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   .availability-grid {
     flex-direction: column;

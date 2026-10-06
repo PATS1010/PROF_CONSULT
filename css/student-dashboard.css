@@ -1,6 +1,5 @@
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Student Dashboard */
+
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -27,9 +26,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -58,10 +54,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -80,9 +72,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -104,6 +93,27 @@ input {
 .navbar-logo {
   height: 38px;
   width: auto;
+}
+
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
 }
 
 .nav-icon-button {
@@ -161,9 +171,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -215,9 +222,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* Each action is its own row: text on the left, button pinned
-   to the right -- flex row prevents the button from overlapping
-   the item below it. */
 .quick-action-item {
   display: flex;
   align-items: center;
@@ -267,9 +271,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -352,10 +353,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   BACKGROUND
-   Slightly blurred, light white overlay for readability
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -386,9 +383,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   MAIN DASHBOARD CONTENT
-========================================================= */
 .dashboard-content {
   display: flex;
   align-items: flex-start;
@@ -411,9 +405,6 @@ input {
   gap: 24px;
 }
 
-/* =========================================================
-   GREETING
-========================================================= */
 .dashboard-greeting {
   font-family: var(--font-main);
   font-weight: 800;
@@ -435,9 +426,6 @@ input {
   margin-bottom: 24px;
 }
 
-/* =========================================================
-   SEARCH BAR
-========================================================= */
 .search-bar {
   position: relative;
   width: 100%;
@@ -474,7 +462,6 @@ input {
   outline-offset: 2px;
 }
 
-/* Filter trigger -- sits on the far right edge of the search bar */
 .filter-button {
   position: absolute;
   top: 50%;
@@ -502,8 +489,6 @@ input {
   line-height: 1;
 }
 
-/* Status filter popup -- gradient card with white pill buttons,
-   matching the system's brand gradient */
 .filter-panel {
   position: absolute;
   top: calc(100% + 10px);
@@ -552,9 +537,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   PROFESSOR LIST
-========================================================= */
 .professor-list-container {
   max-width: 460px;
   background-color: #ffffff;
@@ -653,10 +635,6 @@ input {
 .status-onleave { background-color: var(--color-status-onleave); }
 .status-consultation { background-color: var(--color-status-consultation); }
 
-/* =========================================================
-   SIDE PANELS
-   Faculty Availability / Recent Notifications
-========================================================= */
 .panel-card {
   position: relative;
   background-color: #f5f1ea;
@@ -666,7 +644,6 @@ input {
   overflow: hidden;
 }
 
-/* Thick red accent bar along the left edge */
 .panel-card::before {
   content: "";
   position: absolute;
@@ -684,11 +661,6 @@ input {
   margin-bottom: 18px;
 }
 
-/* Recent Notifications' heading is now a link to notifications.html
-   (Faculty Availability's heading is plain text and unaffected --
-   this rule only applies where the HTML wraps the text in an
-   anchor). Same color/size/weight as before via inherit; only the
-   underline is new, to signal it's clickable. */
 .panel-title-link {
   color: inherit;
   text-decoration: underline;
@@ -721,9 +693,6 @@ input {
   color: var(--color-text-dark);
 }
 
-/* Recent Notifications items can carry an optional second (message)
-   line and a timestamp line below the main text -- align to the
-   top instead of centering when that happens. */
 .notifications-list li {
   align-items: flex-start;
 }
@@ -772,9 +741,6 @@ input {
   margin-top: 2px;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -830,20 +796,16 @@ input {
     padding: 22px 20px 22px 32px;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, per spec */
   .sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
   }
 
-  /* Stack text above button on narrow screens instead of a
-     cramped side-by-side row */
   .quick-action-item {
     flex-direction: column;
     align-items: flex-start;
@@ -858,9 +820,147 @@ input {
     max-height: 300px;
   }
 
-  /* Filter popup stays fully visible and doesn't overflow the screen */
   .filter-panel {
     width: min(200px, 70vw);
     right: -4px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
+  }
+
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

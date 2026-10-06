@@ -1,35 +1,4 @@
-// =========================================================
-// RESCHEDULE CONSULTATION -- PAGE-SPECIFIC INTERACTIONS
-// - Loads the exact consultation to reschedule via the id handed
-//   off in sessionStorage (set by faculty-consultation-requests.js
-//   when Reschedule is clicked) and reads it from the shared
-//   consultations state in localStorage -- same storage keys used
-//   there, nothing is duplicated into a separate data structure.
-// - Purpose of Consultation / Additional Message / Student Name /
-//   Year and Set are read-only, populated from that consultation.
-// - Preferred Date/Time reuse the same 8:00 AM-8:00 PM, 30-minute
-//   slot, test-availability logic as request-consultation.js
-//   (Monday/Wednesday/Friday, 1:00 PM-2:30 PM). It's mirrored here
-//   rather than imported since this is a separate static page with
-//   no build step/shared JS module system in this project -- if
-//   that ever changes, this block and request-consultation.js's
-//   equivalent block are the two places to consolidate.
-// - Message for the Student (optional): a plain textarea the
-//   faculty can leave blank. See the STUDENT NOTIFICATION section
-//   below for how/when it's included.
-// - Submit New Schedule updates that consultation's date/time in
-//   place (status untouched), writes a "rescheduled" notification
-//   record for the student (same store/shape notifications.js and
-//   student-dashboard.js already read), turns the submit button
-//   green, then redirects back to faculty-consultation-requests.html
-//   after a 3-2-1 countdown.
-// - Cancel just navigates back without changing anything.
-//
-// Frontend/prototype only -- no backend. Shared shell behavior
-// (navbar, sidebar, quick action, notification bell) lives in
-// faculty-shared.js and is untouched by this file.
-// =========================================================
-
+// Reschedule Consultation JS
 document.addEventListener("DOMContentLoaded", () => {
 
   const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
@@ -43,7 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (error) {
-      // fall through
     }
     return [];
   }
@@ -52,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       localStorage.setItem(CONSULTATIONS_STORAGE_KEY, JSON.stringify(list));
     } catch (error) {
-      // Storage unavailable -- the change just won't persist
     }
   }
 
@@ -68,34 +35,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const targetId = getRescheduleTargetId();
   const request = targetId ? consultations.find((item) => item.id === targetId) : null;
 
-  // No valid target (e.g. this page was opened directly, or
-  // storage was cleared) -- there's no real consultation to
-  // reschedule, so return to the list rather than invent data.
   if (!request) {
     window.location.href = "faculty-consultation-requests.html";
     return;
   }
 
-  // ---------------------------------------------------------
-  // STUDENT NOTIFICATION -- same storage key/record shape the
-  // Student side already reads (see notifications.js and
-  // student-dashboard.js's SUPPORTED_NOTIFICATION_TYPES /
-  // isSupportedRecord / buildNotificationRows). Written here,
-  // read there -- no separate/duplicate notification system.
-  //
-  // "message" is the professor's optional note to the student.
-  // It is only ever added to the record when the faculty actually
-  // typed something -- an empty/whitespace-only textarea means the
-  // record has NO "message" property at all, so the Notifications
-  // page's "Professor's message: ..." line never renders empty.
-  // ---------------------------------------------------------
   const STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
 
-  // Matches the faculty name already used elsewhere in the test
-  // data (e.g. notifications.js's sample records, faculty-dashboard.js's
-  // SAMPLE_FACULTY "Engr. Maria Nina Sales"). Replace with the real
-  // logged-in faculty's display name once accounts/backend exist --
-  // nothing else about this record needs to change.
   const RESCHEDULE_NOTIFICATION_FACULTY_NAME = "Engr. Sales";
 
   function loadStudentNotificationRecords() {
@@ -106,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (error) {
-      // fall through
     }
     return [];
   }
@@ -115,13 +60,9 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       localStorage.setItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY, JSON.stringify(list));
     } catch (error) {
-      // Storage unavailable -- the notification just won't persist
     }
   }
 
-  // ---------------------------------------------------------
-  // Populate read-only fields from the selected consultation
-  // ---------------------------------------------------------
   const purposeEl = document.getElementById("reschedulePurpose");
   const messageEl = document.getElementById("rescheduleMessage");
   const studentNameEl = document.getElementById("rescheduleStudentName");
@@ -136,12 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (yearSetEl) yearSetEl.textContent = request.yearSet;
   if (dateInput) dateInput.value = request.preferredDateISO || "";
 
-  // ---------------------------------------------------------
-  // Preferred Time: same 8:00 AM-8:00 PM, 30-minute-slot,
-  // test-availability logic as Request Consultation.
-  // ---------------------------------------------------------
-  const TIME_RANGE_START_MINUTES = 8 * 60;   // 8:00 AM
-  const TIME_RANGE_END_MINUTES = 20 * 60;    // 8:00 PM
+  const TIME_RANGE_START_MINUTES = 8 * 60;
+  const TIME_RANGE_END_MINUTES = 20 * 60;
 
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
@@ -165,8 +102,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return slots;
   }
 
-  // FRONTEND TEST/DEMO faculty availability data ONLY -- same
-  // test data as request-consultation.js (Mon/Wed/Fri, 1-2:30 PM).
   const TEST_AVAILABLE_TIME_LABELS = [
     buildTimeLabel(13 * 60, 13 * 60 + 30),
     buildTimeLabel(13 * 60 + 30, 14 * 60),
@@ -174,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ];
 
   const FACULTY_AVAILABILITY_TEST = {
-    availableDaysOfWeek: [1, 3, 5], // Monday, Wednesday, Friday
+    availableDaysOfWeek: [1, 3, 5],
     availableTimeSlotsByDay: {
       1: TEST_AVAILABLE_TIME_LABELS,
       3: TEST_AVAILABLE_TIME_LABELS,
@@ -295,7 +230,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Pre-fill the dropdown with this consultation's current schedule
   const initialDayOfWeek = request.preferredDateISO
     ? new Date(`${request.preferredDateISO}T00:00:00`).getDay()
     : DEFAULT_PREVIEW_DAY_OF_WEEK;
@@ -303,11 +237,6 @@ document.addEventListener("DOMContentLoaded", () => {
   updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(initialDayOfWeek));
   if (request.preferredTimeLabel) selectTimeSlot(request.preferredTimeLabel);
 
-  // ---------------------------------------------------------
-  // Preferred Date availability -- same validate-on-change
-  // approach as Request Consultation (native date inputs can't
-  // gray out individual weekdays in their own calendar UI).
-  // ---------------------------------------------------------
   function setDateErrorState(isError) {
     if (dateInput) dateInput.classList.toggle("is-date-invalid", isError);
     if (dateHint) dateHint.classList.toggle("is-error", isError);
@@ -339,9 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Submit New Schedule
-  // ---------------------------------------------------------
   function formatDisplayDate(isoDate, timeLabel) {
     const startTimeText = timeLabel.split("\u2013")[0].trim();
     const dateObj = new Date(`${isoDate}T00:00:00`);
@@ -360,22 +286,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const newDateISO = dateInput ? dateInput.value : "";
       const newTimeLabel = hiddenTimeInput ? hiddenTimeInput.value : "";
 
-      if (!newDateISO || !newTimeLabel) return; // required fields incomplete -- nothing to submit yet
+      if (!newDateISO || !newTimeLabel) return;
 
-      // Update this exact consultation's schedule in place --
-      // status (pending/upcoming) is left untouched, per spec.
       request.preferredDateISO = newDateISO;
       request.preferredTimeLabel = newTimeLabel;
       request.date = formatDisplayDate(newDateISO, newTimeLabel);
 
       saveConsultations(consultations);
 
-      // ---------------------------------------------------------
-      // Notify the student -- one "rescheduled" record, written to
-      // the same store the Notifications page and Dashboard read.
-      // The optional message is only attached when the faculty
-      // actually typed one (trimmed, non-empty).
-      // ---------------------------------------------------------
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
 
       const notificationRecord = {
@@ -393,19 +311,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const studentNotificationRecords = loadStudentNotificationRecords();
-      studentNotificationRecords.unshift(notificationRecord); // newest first
+      studentNotificationRecords.unshift(notificationRecord);
       saveStudentNotificationRecords(studentNotificationRecords);
 
       try {
         sessionStorage.removeItem(RESCHEDULE_TARGET_STORAGE_KEY);
       } catch (error) {
-        // Not critical -- a stale key just gets overwritten next time
       }
 
       if (submitButton) {
         submitButton.textContent = "New Schedule Submitted";
         submitButton.disabled = true;
-        submitButton.classList.add("is-submitted"); // turns the button green (see reschedule-consultation.css)
+        submitButton.classList.add("is-submitted");
       }
 
       let secondsLeft = 3;
@@ -423,18 +340,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Cancel -- navigates back without changing anything (the
-  // anchor's href does the navigation; this just clears the
-  // hand-off key so a stale target isn't reused later).
-  // ---------------------------------------------------------
   const cancelLink = document.querySelector('.reschedule-buttons [data-nav="cancel"]');
   if (cancelLink) {
     cancelLink.addEventListener("click", () => {
       try {
         sessionStorage.removeItem(RESCHEDULE_TARGET_STORAGE_KEY);
       } catch (error) {
-        // Not critical
       }
     });
   }

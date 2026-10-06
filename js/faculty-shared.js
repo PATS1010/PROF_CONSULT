@@ -1,99 +1,14 @@
-// =========================================================
-// FACULTY SHARED LAYOUT INTERACTIONS
-//
-// Used by every Faculty page.
-//
-// Handles:
-// - Burger sidebar
-// - Active sidebar page
-// - Quick Action
-// - Check In / Check Out
-// - Persistent faculty status (SINGLE SOURCE OF TRUTH)
-// - Notification bell
-// - Notification badge
-//
-// IMPORTANT:
-// This version uses localStorage for the TEST ACCOUNT only.
-// No backend is used.
-// =========================================================
-
-
-// =========================================================
-// TEST ACCOUNT STORAGE
-// =========================================================
-
+// Faculty Shared JS
 const FACULTY_ONLINE_STATUS_STORAGE_KEY =
   "facultyTestOnlineStatus";
 
 const FACULTY_NOTIFICATION_STORAGE_KEY =
   "facultyTestNotifications";
 
-
-// =========================================================
-// INCOMING NOTIFICATION (ADDED)
-//
-// Written at the exact moment something is sent to the
-// faculty (e.g. a student submits a consultation request).
-// The sender raises the unread count first (so the red dot
-// shows on the bell of every open Faculty page), then
-// writes the incoming notification:
-//
-// const count =
-//   Number(localStorage.getItem("facultyTestNotifications")) || 0;
-//
-// localStorage.setItem("facultyTestNotifications", String(count + 1));
-//
-// localStorage.setItem(
-//   "facultyTestIncomingNotification",
-//   JSON.stringify({
-//     id: Date.now() + "-" + Math.random(),
-//     message: "Juan Dela Cruz sent a request for consultation."
-//   })
-// );
-//
-// Whichever Faculty page is open at that moment hears the
-// browser's "storage" event and shows ONE toast card. Pages
-// opened later do not replay it. Frontend-only stand-in for
-// a real push from the backend.
-// =========================================================
-
 const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
   "facultyTestIncomingNotification";
 
-
-// =========================================================
-// TEST ACCOUNT FLAG
-//
-// This project has no backend/login system yet, so there is
-// no real per-account identification -- every Faculty file's
-// own comments already describe this whole section as a
-// single test account. faculty-notifications.html already
-// refers to a "TEST_FACULTY_ACCOUNT flag" that decides
-// whether the test notification is shown; this is that flag,
-// defined here since faculty-shared.js loads on every page.
-//
-// Once real accounts/login exist, replace this with the
-// actual "is this the designated test account" check (e.g.
-// based on the logged-in user's ID) -- nothing else that
-// reads window.TEST_FACULTY_ACCOUNT needs to change.
-// =========================================================
-
 window.TEST_FACULTY_ACCOUNT = true;
-
-
-// =========================================================
-// FACULTY STATUS MODEL
-//
-// SINGLE SOURCE OF TRUTH for faculty status.
-//
-// These are the app's existing status values -- the same
-// six values already used by the faculty-dashboard and
-// faculty-availability status panels (data-status), and the
-// same six colors already defined in :root above as
-// --color-status-*. Quick Action, the Dashboard, and
-// Availability all read/write this one model instead of
-// keeping their own separate status state.
-// =========================================================
 
 const FACULTY_STATUS_LABELS = {
   available: "Available",
@@ -115,7 +30,6 @@ const FACULTY_STATUS_COLOR_VARS = {
 
 const FACULTY_STATUS_DEFAULT = "available";
 
-
 function isValidFacultyStatus(value) {
 
   return Object.prototype.hasOwnProperty.call(
@@ -124,40 +38,12 @@ function isValidFacultyStatus(value) {
   );
 }
 
-
-// =========================================================
-// CURRENT STATUS
-//
-// Possible values (existing app status model):
-// "available"
-// "teaching"
-// "meeting"
-// "consultation"
-// "onleave"
-// "offline"
-// =========================================================
-
 let facultyOnlineStatus = FACULTY_STATUS_DEFAULT;
 
 let checkInTimeoutId = null;
 
-
-// =========================================================
-// CHECK-IN TIMEOUT
-//
-// The test account automatically goes Offline after 5 minutes
-// if the user forgets to Check Out.
-//
-// This is frontend-only.
-// =========================================================
-
 const CHECK_IN_TIMEOUT =
   5 * 60 * 1000;
-
-
-// =========================================================
-// LOAD SAVED FACULTY STATUS
-// =========================================================
 
 function loadFacultyOnlineStatus() {
 
@@ -167,7 +53,6 @@ function loadFacultyOnlineStatus() {
       localStorage.getItem(
         FACULTY_ONLINE_STATUS_STORAGE_KEY
       );
-
 
     facultyOnlineStatus =
       isValidFacultyStatus(savedStatus)
@@ -180,11 +65,6 @@ function loadFacultyOnlineStatus() {
       FACULTY_STATUS_DEFAULT;
   }
 }
-
-
-// =========================================================
-// SAVE FACULTY STATUS
-// =========================================================
 
 function saveFacultyOnlineStatus(
   status
@@ -199,14 +79,8 @@ function saveFacultyOnlineStatus(
 
   } catch (error) {
 
-    // Ignore storage errors.
   }
 }
-
-
-// =========================================================
-// GET NOTIFICATION COUNT
-// =========================================================
 
 function getFacultyNotificationCount() {
 
@@ -217,16 +91,13 @@ function getFacultyNotificationCount() {
         FACULTY_NOTIFICATION_STORAGE_KEY
       );
 
-
     if (savedCount === null) {
 
       return 0;
     }
 
-
     const count =
       Number(savedCount);
-
 
     if (
       !Number.isFinite(count) ||
@@ -236,7 +107,6 @@ function getFacultyNotificationCount() {
       return 0;
     }
 
-
     return Math.floor(count);
 
   } catch (error) {
@@ -244,11 +114,6 @@ function getFacultyNotificationCount() {
     return 0;
   }
 }
-
-
-// =========================================================
-// SET NOTIFICATION COUNT
-// =========================================================
 
 function setFacultyNotificationCount(
   count
@@ -262,7 +127,6 @@ function setFacultyNotificationCount(
       )
     );
 
-
   try {
 
     localStorage.setItem(
@@ -272,24 +136,10 @@ function setFacultyNotificationCount(
 
   } catch (error) {
 
-    // Ignore storage errors.
   }
-
 
   updateFacultyNotificationBadge();
 }
-
-
-// =========================================================
-// UPDATE NOTIFICATION BADGE
-//
-// The red dot appears whenever the notification count
-// is greater than zero.
-//
-// The CSS class used is:
-//
-// .has-notifications
-// =========================================================
 
 function updateFacultyNotificationBadge() {
 
@@ -298,23 +148,19 @@ function updateFacultyNotificationBadge() {
       "facultyNotificationBellButton"
     );
 
-
   if (!notificationBellButton) {
 
     return;
   }
 
-
   const notificationCount =
     getFacultyNotificationCount();
-
 
   if (notificationCount > 0) {
 
     notificationBellButton.classList.add(
       "has-notifications"
     );
-
 
     notificationBellButton.setAttribute(
       "aria-label",
@@ -327,7 +173,6 @@ function updateFacultyNotificationBadge() {
       "has-notifications"
     );
 
-
     notificationBellButton.setAttribute(
       "aria-label",
       "Notifications"
@@ -335,64 +180,21 @@ function updateFacultyNotificationBadge() {
   }
 }
 
-
-// =========================================================
-// PUBLIC NOTIFICATION FUNCTIONS
-//
-// Other Faculty scripts can use:
-//
-// window.setFacultyNotificationCount(1);
-//
-// or:
-//
-// window.setFacultyNotificationCount(0);
-//
-// =========================================================
-
 window.setFacultyNotificationCount =
   setFacultyNotificationCount;
 
 window.getFacultyNotificationCount =
   getFacultyNotificationCount;
 
-
-// =========================================================
-// NEW NOTIFICATION TOAST CARDS  (ADDED)
-//
-// Bottom-right cards shown on every Faculty page.
-//
-// - A new card slides in from the right edge.
-// - Cards stack: the newest is in front, older ones sit
-//   behind it (only the front card is clickable).
-// - Each card removes itself after 10 seconds by sliding
-//   back out through the right edge (reverse of entrance).
-//   Every card has its own 10-second timer.
-// - The X button removes a card instantly (no animation).
-// - View More opens faculty-notifications.html.
-//
-// Other Faculty scripts can show one with:
-//
-// window.showFacultyNotificationToast(
-//   "Juan Dela Cruz sent a request for consultation."
-// );
-//
-// Styling lives in faculty-shared.css (.faculty-toast*).
-// =========================================================
-
 const FACULTY_TOAST_DURATION = 10 * 1000;
 
 const FACULTY_TOAST_EXIT_MS = 400;
 
-// How many stacked cards can be seen at once. Extra cards
-// stay in the stack (and keep their timers) but are hidden
-// until the cards in front of them are gone.
 const FACULTY_TOAST_MAX_VISIBLE = 3;
 
 let facultyToastStackEl = null;
 
-// Index 0 = newest (front of the stack)
 const facultyToasts = [];
-
 
 function getFacultyToastStack() {
 
@@ -403,7 +205,6 @@ function getFacultyToastStack() {
 
     return facultyToastStackEl;
   }
-
 
   facultyToastStackEl =
     document.createElement("div");
@@ -425,14 +226,9 @@ function getFacultyToastStack() {
     facultyToastStackEl
   );
 
-
   return facultyToastStackEl;
 }
 
-
-// Positions every card that is still in the stack.
-// (A card that is sliding out is no longer in the array,
-// so it keeps whatever position it had.)
 function layoutFacultyToasts() {
 
   facultyToasts.forEach(
@@ -442,7 +238,6 @@ function layoutFacultyToasts() {
 
       const isVisible =
         depth < FACULTY_TOAST_MAX_VISIBLE;
-
 
       el.style.setProperty(
         "--stack-y",
@@ -474,7 +269,6 @@ function layoutFacultyToasts() {
   );
 }
 
-
 function removeFacultyToast(
   toast,
   animate
@@ -483,12 +277,10 @@ function removeFacultyToast(
   const index =
     facultyToasts.indexOf(toast);
 
-
   if (index === -1) {
 
     return;
   }
-
 
   facultyToasts.splice(index, 1);
 
@@ -498,14 +290,12 @@ function removeFacultyToast(
 
   layoutFacultyToasts();
 
-
   if (!animate) {
 
     toast.el.remove();
 
     return;
   }
-
 
   toast.el.style.pointerEvents =
     "none";
@@ -524,7 +314,6 @@ function removeFacultyToast(
   );
 }
 
-
 function showFacultyNotificationToast(
   message,
   title
@@ -533,21 +322,17 @@ function showFacultyNotificationToast(
   const stack =
     getFacultyToastStack();
 
-
   const el =
     document.createElement("div");
 
   el.className =
     "faculty-toast";
 
-
-  // Header: title + X
   const header =
     document.createElement("div");
 
   header.className =
     "faculty-toast-header";
-
 
   const titleEl =
     document.createElement("p");
@@ -557,7 +342,6 @@ function showFacultyNotificationToast(
 
   titleEl.textContent =
     title || "New Notification";
-
 
   const closeButton =
     document.createElement("button");
@@ -576,19 +360,15 @@ function showFacultyNotificationToast(
   closeButton.textContent =
     "\u00d7";
 
-
   header.appendChild(titleEl);
 
   header.appendChild(closeButton);
 
-
-  // Body: message + View More
   const body =
     document.createElement("div");
 
   body.className =
     "faculty-toast-body";
-
 
   const messageEl =
     document.createElement("p");
@@ -598,7 +378,6 @@ function showFacultyNotificationToast(
 
   messageEl.textContent =
     message || "";
-
 
   const viewMoreLink =
     document.createElement("a");
@@ -612,9 +391,6 @@ function showFacultyNotificationToast(
   viewMoreLink.textContent =
     "View More";
 
-
-  // Same as the bell: viewing notifications clears the
-  // red dot. The link itself then opens the page.
   viewMoreLink.addEventListener(
     "click",
     () => {
@@ -623,24 +399,19 @@ function showFacultyNotificationToast(
     }
   );
 
-
   body.appendChild(messageEl);
 
   body.appendChild(viewMoreLink);
 
-
   el.appendChild(header);
 
   el.appendChild(body);
-
 
   const toast = {
     el: el,
     timerId: null,
   };
 
-
-  // X = remove instantly
   closeButton.addEventListener(
     "click",
     () => {
@@ -652,23 +423,16 @@ function showFacultyNotificationToast(
     }
   );
 
-
-  // Newest goes to the front of the stack.
   facultyToasts.unshift(toast);
 
   stack.appendChild(el);
 
   layoutFacultyToasts();
 
-
-  // Force a reflow so the card starts off-screen on the
-  // right, then slides in.
   void el.offsetWidth;
 
   el.classList.add("is-in");
 
-
-  // Each card removes itself after 10 seconds.
   toast.timerId =
     window.setTimeout(
       () => {
@@ -683,54 +447,223 @@ function showFacultyNotificationToast(
     );
 }
 
-
 window.showFacultyNotificationToast =
   showFacultyNotificationToast;
 
+// ---------------------------------------------------------
+// LOGOUT CONFIRMATION MODAL
+// Built once per page (lazily, only if a sidebar Logout link
+// exists) and appended to <body>, the same way the toast stack
+// above is built. Shared across every Faculty page since it
+// lives in this shared file -- no HTML/CSS needs to be added to
+// individual pages for this.
+//
+// Clicking the sidebar's Logout link no longer navigates
+// immediately: it opens this modal instead. "Cancel" (or the
+// close button, or clicking the dark backdrop) just closes the
+// modal -- nothing else happens, same as before the click.
+// "Yes" does exactly what the old immediate-navigation Logout
+// link used to do (clear the auto-check-in "shown" flag, then
+// go to the link's own href) before actually navigating, so
+// per-page href differences are respected rather than hardcoded.
+// ---------------------------------------------------------
+function buildFacultyLogoutModal(logoutLink) {
 
-// =========================================================
-// INITIALIZE
-// =========================================================
+  const overlay =
+    document.createElement("div");
+
+  overlay.className =
+    "faculty-logout-overlay";
+
+  overlay.hidden = true;
+
+  const modal =
+    document.createElement("div");
+
+  modal.className =
+    "faculty-logout-modal";
+
+  modal.setAttribute("role", "dialog");
+
+  modal.setAttribute("aria-modal", "true");
+
+  modal.setAttribute(
+    "aria-label",
+    "Log out of your account?"
+  );
+
+  const header =
+    document.createElement("div");
+
+  header.className =
+    "faculty-logout-modal-header";
+
+  const closeButton =
+    document.createElement("button");
+
+  closeButton.type = "button";
+
+  closeButton.className =
+    "faculty-logout-modal-close";
+
+  closeButton.setAttribute(
+    "aria-label",
+    "Close"
+  );
+
+  closeButton.textContent = "\u00d7";
+
+  header.appendChild(closeButton);
+
+  const body =
+    document.createElement("div");
+
+  body.className =
+    "faculty-logout-modal-body";
+
+  const title =
+    document.createElement("p");
+
+  title.className =
+    "faculty-logout-modal-title";
+
+  title.textContent =
+    "Log out of your account?";
+
+  const actions =
+    document.createElement("div");
+
+  actions.className =
+    "faculty-logout-modal-actions";
+
+  const cancelButton =
+    document.createElement("button");
+
+  cancelButton.type = "button";
+
+  cancelButton.className =
+    "faculty-logout-cancel-button";
+
+  cancelButton.textContent = "Cancel";
+
+  const yesButton =
+    document.createElement("button");
+
+  yesButton.type = "button";
+
+  yesButton.className =
+    "faculty-logout-yes-button";
+
+  yesButton.textContent = "Yes";
+
+  actions.appendChild(cancelButton);
+
+  actions.appendChild(yesButton);
+
+  body.appendChild(title);
+
+  body.appendChild(actions);
+
+  modal.appendChild(header);
+
+  modal.appendChild(body);
+
+  overlay.appendChild(modal);
+
+  document.body.appendChild(overlay);
+
+  function openModal() {
+
+    overlay.hidden = false;
+
+    requestAnimationFrame(() => {
+
+      overlay.classList.add("is-open");
+    });
+  }
+
+  function closeModal() {
+
+    overlay.classList.remove("is-open");
+
+    window.setTimeout(() => {
+
+      overlay.hidden = true;
+
+    }, 200);
+  }
+
+  closeButton.addEventListener(
+    "click",
+    closeModal
+  );
+
+  cancelButton.addEventListener(
+    "click",
+    closeModal
+  );
+
+  overlay.addEventListener(
+    "click",
+    (event) => {
+
+      if (event.target === overlay) {
+
+        closeModal();
+      }
+    }
+  );
+
+  yesButton.addEventListener(
+    "click",
+    () => {
+
+      try {
+
+        sessionStorage.removeItem(
+          "profconsult_faculty_auto_checkin_shown"
+        );
+
+      } catch (error) {
+
+      }
+
+      window.location.href =
+        logoutLink.getAttribute("href") ||
+        "faculty-login.html";
+    }
+  );
+
+  return {
+    open: openModal,
+  };
+}
 
 document.addEventListener(
   "DOMContentLoaded",
   () => {
 
-
-    // =======================================================
-    // LOAD PERSISTENT STATUS
-    // =======================================================
-
     loadFacultyOnlineStatus();
-
-
-    // =======================================================
-    // BURGER SIDEBAR
-    // =======================================================
 
     const hamburgerButton =
       document.getElementById(
         "facultyHamburgerButton"
       );
 
-
     const sidebar =
       document.getElementById(
         "facultySidebar"
       );
-
 
     const sidebarOverlay =
       document.getElementById(
         "facultySidebarOverlay"
       );
 
-
     const sidebarClose =
       document.getElementById(
         "facultySidebarClose"
       );
-
 
     function openSidebar() {
 
@@ -742,15 +675,12 @@ document.addEventListener(
         return;
       }
 
-
       sidebar.classList.add(
         "is-open"
       );
 
-
       sidebarOverlay.hidden =
         false;
-
 
       requestAnimationFrame(
         () => {
@@ -763,7 +693,6 @@ document.addEventListener(
       );
     }
 
-
     function closeSidebar() {
 
       if (
@@ -774,16 +703,13 @@ document.addEventListener(
         return;
       }
 
-
       sidebar.classList.remove(
         "is-open"
       );
 
-
       sidebarOverlay.classList.remove(
         "is-open"
       );
-
 
       window.setTimeout(
         () => {
@@ -796,7 +722,6 @@ document.addEventListener(
       );
     }
 
-
     if (hamburgerButton) {
 
       hamburgerButton.addEventListener(
@@ -804,7 +729,6 @@ document.addEventListener(
         openSidebar
       );
     }
-
 
     if (sidebarClose) {
 
@@ -814,7 +738,6 @@ document.addEventListener(
       );
     }
 
-
     if (sidebarOverlay) {
 
       sidebarOverlay.addEventListener(
@@ -823,14 +746,8 @@ document.addEventListener(
       );
     }
 
-
-    // =======================================================
-    // ACTIVE SIDEBAR PAGE
-    // =======================================================
-
     const activePage =
       document.body.dataset.activePage;
-
 
     if (
       activePage &&
@@ -842,7 +759,6 @@ document.addEventListener(
           `.faculty-sidebar-link[data-page="${activePage}"]`
         );
 
-
       if (activeLink) {
 
         activeLink.classList.add(
@@ -851,20 +767,31 @@ document.addEventListener(
       }
     }
 
+    const facultyLogoLinks =
+      document.querySelectorAll(
+        ".faculty-navbar-logo, .faculty-sidebar-logo"
+      );
 
-    // =======================================================
-    // LOGOUT RESETS THE DASHBOARD "AUTO CHECK IN REMINDER"  (ADDED)
-    //
-    // The Dashboard opens Quick Action once per login (see
-    // faculty-dashboard.js) when Auto Check In Reminder is on.
-    // Logging out clears that "already shown" flag, so the NEXT
-    // login shows it again.
-    //
-    // Traveling between pages does NOT clear it, so coming back
-    // to the Dashboard from another page never re-opens the
-    // popup.
-    // =======================================================
+    facultyLogoLinks.forEach(
+      (logo) => {
 
+        logo.addEventListener(
+          "click",
+          () => {
+
+            window.location.href =
+              "faculty-dashboard.html";
+          }
+        );
+      }
+    );
+
+    // ---------------------------------------------------------
+    // Logout: clicking the sidebar link now opens the confirm
+    // modal (built above) instead of navigating right away.
+    // Cancel/close/backdrop click just closes it; Yes performs
+    // the same cleanup + navigation the link used to do directly.
+    // ---------------------------------------------------------
     const logoutLink =
       sidebar
         ? sidebar.querySelector(
@@ -872,43 +799,33 @@ document.addEventListener(
           )
         : null;
 
-
     if (logoutLink) {
+
+      const logoutModal =
+        buildFacultyLogoutModal(
+          logoutLink
+        );
 
       logoutLink.addEventListener(
         "click",
-        () => {
+        (event) => {
 
-          try {
+          event.preventDefault();
 
-            sessionStorage.removeItem(
-              "profconsult_faculty_auto_checkin_shown"
-            );
-
-          } catch (error) {
-
-            // Ignore storage errors.
-          }
+          logoutModal.open();
         }
       );
     }
-
-
-    // =======================================================
-    // QUICK ACTION
-    // =======================================================
 
     const quickActionButton =
       document.getElementById(
         "facultyQuickActionButton"
       );
 
-
     const quickActionPanel =
       document.getElementById(
         "facultyQuickActionPanel"
       );
-
 
     function openQuickAction() {
 
@@ -920,10 +837,8 @@ document.addEventListener(
         return;
       }
 
-
       quickActionPanel.hidden =
         false;
-
 
       requestAnimationFrame(
         () => {
@@ -935,13 +850,11 @@ document.addEventListener(
         }
       );
 
-
       quickActionButton.setAttribute(
         "aria-expanded",
         "true"
       );
     }
-
 
     function closeQuickAction() {
 
@@ -953,17 +866,14 @@ document.addEventListener(
         return;
       }
 
-
       quickActionPanel.classList.remove(
         "is-open"
       );
-
 
       quickActionButton.setAttribute(
         "aria-expanded",
         "false"
       );
-
 
       window.setTimeout(
         () => {
@@ -976,7 +886,6 @@ document.addEventListener(
       );
     }
 
-
     if (quickActionButton) {
 
       quickActionButton.addEventListener(
@@ -985,13 +894,11 @@ document.addEventListener(
 
           event.stopPropagation();
 
-
           const isOpen =
             quickActionPanel &&
             quickActionPanel.classList.contains(
               "is-open"
             );
-
 
           if (isOpen) {
 
@@ -1004,7 +911,6 @@ document.addEventListener(
         }
       );
     }
-
 
     document.addEventListener(
       "click",
@@ -1028,22 +934,15 @@ document.addEventListener(
       }
     );
 
-
-    // =======================================================
-    // QUICK ACTION STATUS UI
-    // =======================================================
-
     const checkInButton =
       document.getElementById(
         "facultyCheckInButton"
       );
 
-
     const checkOutButton =
       document.getElementById(
         "facultyCheckOutButton"
       );
-
 
     const quickActionHeader =
       quickActionPanel
@@ -1052,18 +951,11 @@ document.addEventListener(
           )
         : null;
 
-
     let quickActionStatusDot =
       null;
 
-
     let quickActionStatusLabel =
       null;
-
-
-    // =======================================================
-    // CREATE STATUS LINE
-    // =======================================================
 
     if (
       quickActionPanel &&
@@ -1078,10 +970,8 @@ document.addEventListener(
           "p"
         );
 
-
       statusRow.className =
         "faculty-quick-action-status";
-
 
       statusRow.style.cssText =
         "display:flex;" +
@@ -1092,18 +982,15 @@ document.addEventListener(
         "color:#2b2b2b;" +
         "margin:0 0 14px;";
 
-
       quickActionStatusDot =
         document.createElement(
           "span"
         );
 
-
       quickActionStatusDot.setAttribute(
         "aria-hidden",
         "true"
       );
-
 
       quickActionStatusDot.style.cssText =
         "display:inline-block;" +
@@ -1112,12 +999,10 @@ document.addEventListener(
         "border-radius:50%;" +
         "flex-shrink:0;";
 
-
       quickActionStatusLabel =
         document.createElement(
           "span"
         );
-
 
       statusRow.appendChild(
         document.createTextNode(
@@ -1125,22 +1010,18 @@ document.addEventListener(
         )
       );
 
-
       statusRow.appendChild(
         quickActionStatusDot
       );
-
 
       statusRow.appendChild(
         quickActionStatusLabel
       );
 
-
       quickActionHeader.insertAdjacentElement(
         "afterend",
         statusRow
       );
-
 
     } else if (
       quickActionPanel
@@ -1151,7 +1032,6 @@ document.addEventListener(
           ".faculty-quick-action-status"
         );
 
-
       if (existingRow) {
 
         quickActionStatusDot =
@@ -1159,21 +1039,10 @@ document.addEventListener(
             "span"
           );
 
-
         quickActionStatusLabel =
           existingRow.lastElementChild;
       }
     }
-
-
-    // =======================================================
-    // UPDATE QUICK ACTION UI
-    //
-    // Always reflects the actual current faculty status
-    // (not just Available/Offline). Check In only shows while
-    // Offline; Check Out shows for any active status, since
-    // Checking Out always returns to Offline.
-    // =======================================================
 
     function updateQuickActionUI() {
 
@@ -1181,20 +1050,17 @@ document.addEventListener(
         facultyOnlineStatus ===
         "offline";
 
-
       const colorVar =
         FACULTY_STATUS_COLOR_VARS[
           facultyOnlineStatus
         ] ||
         FACULTY_STATUS_COLOR_VARS.offline;
 
-
       if (quickActionStatusDot) {
 
         quickActionStatusDot.style.backgroundColor =
           `var(${colorVar})`;
       }
-
 
       if (quickActionStatusLabel) {
 
@@ -1205,13 +1071,11 @@ document.addEventListener(
           FACULTY_STATUS_LABELS.offline;
       }
 
-
       if (checkInButton) {
 
         checkInButton.hidden =
           !isOffline;
       }
-
 
       if (checkOutButton) {
 
@@ -1220,11 +1084,6 @@ document.addEventListener(
       }
     }
 
-
-    // =======================================================
-    // UPDATE DASHBOARD STATUS
-    // =======================================================
-
     function updateDashboardStatusUI() {
 
       const dashboardStatusDot =
@@ -1232,12 +1091,10 @@ document.addEventListener(
           "currentStatusDot"
         );
 
-
       const dashboardStatusLabel =
         document.getElementById(
           "currentStatusLabel"
         );
-
 
       if (
         !dashboardStatusDot ||
@@ -1247,10 +1104,8 @@ document.addEventListener(
         return;
       }
 
-
       dashboardStatusDot.className =
         `status-dot status-${facultyOnlineStatus}`;
-
 
       dashboardStatusLabel.textContent =
         FACULTY_STATUS_LABELS[
@@ -1259,11 +1114,6 @@ document.addEventListener(
         FACULTY_STATUS_LABELS.offline;
     }
 
-
-    // =======================================================
-    // UPDATE AVAILABILITY STATUS
-    // =======================================================
-
     function updateAvailabilityStatusUI() {
 
       const availabilityStatusDot =
@@ -1271,12 +1121,10 @@ document.addEventListener(
           "availabilityStatusDot"
         );
 
-
       const availabilityStatusLabel =
         document.getElementById(
           "availabilityStatusLabel"
         );
-
 
       if (
         !availabilityStatusDot ||
@@ -1286,10 +1134,8 @@ document.addEventListener(
         return;
       }
 
-
       availabilityStatusDot.className =
         `status-dot status-${facultyOnlineStatus}`;
-
 
       availabilityStatusLabel.textContent =
         FACULTY_STATUS_LABELS[
@@ -1298,16 +1144,6 @@ document.addEventListener(
         FACULTY_STATUS_LABELS.offline;
     }
 
-
-    // =======================================================
-    // SYNC STATUS PANEL SELECTION
-    //
-    // Dashboard and Availability both reuse the same
-    // #statusPanel / .faculty-status-option markup, so this
-    // one function keeps whichever one is on the current page
-    // highlighting the option that matches the real status.
-    // =======================================================
-
     function syncStatusPanelSelection() {
 
       const statusPanel =
@@ -1315,12 +1151,10 @@ document.addEventListener(
           "statusPanel"
         );
 
-
       if (!statusPanel) {
 
         return;
       }
-
 
       const options =
         Array.from(
@@ -1328,7 +1162,6 @@ document.addEventListener(
             ".faculty-status-option"
           )
         );
-
 
       options.forEach((option) => {
 
@@ -1340,17 +1173,6 @@ document.addEventListener(
       });
     }
 
-
-    // =======================================================
-    // SET FACULTY STATUS
-    //
-    // SINGLE SOURCE OF TRUTH. Every page/component that
-    // changes the faculty status (Quick Action Check In/Out,
-    // Dashboard's Change Status, Availability's Change
-    // Status) must call this instead of writing its own
-    // status state.
-    // =======================================================
-
     function setFacultyOnlineStatus(
       newStatus
     ) {
@@ -1360,11 +1182,9 @@ document.addEventListener(
           ? newStatus
           : FACULTY_STATUS_DEFAULT;
 
-
       saveFacultyOnlineStatus(
         facultyOnlineStatus
       );
-
 
       updateQuickActionUI();
 
@@ -1374,11 +1194,6 @@ document.addEventListener(
 
       syncStatusPanelSelection();
 
-
-      // Same-page notice, so a Change Status panel that is
-      // already open (e.g. on Dashboard/Availability) can
-      // re-sync itself if the status changed from elsewhere
-      // (Quick Action, or another tab) while it was open.
       document.dispatchEvent(
         new CustomEvent(
           "faculty-status-changed",
@@ -1391,10 +1206,6 @@ document.addEventListener(
       );
     }
 
-
-    // Exposed so faculty-dashboard.js / faculty-availability.js
-    // can update the one shared status instead of keeping their
-    // own separate state.
     window.setFacultyOnlineStatus =
       setFacultyOnlineStatus;
 
@@ -1404,22 +1215,15 @@ document.addEventListener(
     window.FACULTY_STATUS_LABELS =
       FACULTY_STATUS_LABELS;
 
-
-    // =======================================================
-    // CHECK IN
-    // =======================================================
-
     function handleCheckIn(
       event
     ) {
 
       event.preventDefault();
 
-
       setFacultyOnlineStatus(
         "available"
       );
-
 
       if (checkInTimeoutId) {
 
@@ -1427,7 +1231,6 @@ document.addEventListener(
           checkInTimeoutId
         );
       }
-
 
       checkInTimeoutId =
         window.setTimeout(
@@ -1437,7 +1240,6 @@ document.addEventListener(
               "offline"
             );
 
-
             checkInTimeoutId =
               null;
 
@@ -1446,22 +1248,15 @@ document.addEventListener(
         );
     }
 
-
-    // =======================================================
-    // CHECK OUT
-    // =======================================================
-
     function handleCheckOut(
       event
     ) {
 
       event.preventDefault();
 
-
       setFacultyOnlineStatus(
         "offline"
       );
-
 
       if (checkInTimeoutId) {
 
@@ -1469,12 +1264,10 @@ document.addEventListener(
           checkInTimeoutId
         );
 
-
         checkInTimeoutId =
           null;
       }
     }
-
 
     if (checkInButton) {
 
@@ -1484,7 +1277,6 @@ document.addEventListener(
       );
     }
 
-
     if (checkOutButton) {
 
       checkOutButton.addEventListener(
@@ -1492,11 +1284,6 @@ document.addEventListener(
         handleCheckOut
       );
     }
-
-
-    // =======================================================
-    // INITIAL UI
-    // =======================================================
 
     updateQuickActionUI();
 
@@ -1506,49 +1293,10 @@ document.addEventListener(
 
     syncStatusPanelSelection();
 
-
-    // =======================================================
-    // VIEWING THE NOTIFICATIONS PAGE = NOTIFICATIONS SEEN
-    //
-    // Covers every way of getting there (bell, View More,
-    // sidebar link): the red dot on the bell is cleared.
-    //
-    // Moved above the TEST ONLY block below so that when the
-    // test block re-arms the badge, it can correctly check
-    // "did this same load already mark it read" via activePage.
-    // =======================================================
-
     if (activePage === "notifications") {
 
       setFacultyNotificationCount(0);
     }
-
-
-    // =======================================================
-    // TEST ONLY (ADDED)
-    //
-    // Shows a demo toast card EVERY time a Faculty page loads
-    // (not gated by sessionStorage), for the designated test
-    // account only, so the pop-up keeps appearing while you're
-    // testing it instead of showing just once. Also re-arms
-    // the red bell badge each load (unless you're currently on
-    // the Notifications page, which already marked it read
-    // just above) since otherwise the badge only ever gets set
-    // once (on the very first load ever) and stays cleared
-    // forever after the first visit to Notifications.
-    //
-    // This entire block, including the badge re-arm, is gated
-    // by FACULTY_TOAST_TEST_DEMO and TEST_FACULTY_ACCOUNT, so
-    // it has NO effect on real accounts/backend behavior: once
-    // a backend exists (TEST_FACULTY_ACCOUNT = false, or this
-    // block deleted), the badge goes back to only being driven
-    // by real notification counts -- viewed stays viewed, and
-    // red only reappears when an actual new notification is
-    // written via FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY.
-    //
-    // Delete this whole block (or set the flag to false) once
-    // real notifications arrive through that storage-event path.
-    // =======================================================
 
     const FACULTY_TOAST_TEST_DEMO = true;
 
@@ -1567,29 +1315,12 @@ document.addEventListener(
       }
     }
 
-
-    // =======================================================
-    // NOTIFICATION BADGE
-    // =======================================================
-
     updateFacultyNotificationBadge();
-
-
-    // =======================================================
-    // NOTIFICATION BELL
-    //
-    // Clicking the bell:
-    //
-    // 1. Clears the notification count.
-    // 2. Removes the red dot immediately.
-    // 3. Opens the Notifications page.
-    // =======================================================
 
     const notificationBellButton =
       document.getElementById(
         "facultyNotificationBellButton"
       );
-
 
     if (notificationBellButton) {
 
@@ -1597,26 +1328,15 @@ document.addEventListener(
         "click",
         () => {
 
-          // Mark all notifications as viewed.
           setFacultyNotificationCount(
             0
           );
 
-
-          // Open Notifications page.
           window.location.href =
             "faculty-notifications.html";
         }
       );
     }
-
-
-    // =======================================================
-    // STORAGE EVENT
-    //
-    // If another Faculty page/tab changes the status or
-    // notification count, this page updates automatically.
-    // =======================================================
 
     window.addEventListener(
       "storage",
@@ -1629,18 +1349,13 @@ document.addEventListener(
 
           loadFacultyOnlineStatus();
 
-
           updateQuickActionUI();
-
 
           updateDashboardStatusUI();
 
-
           updateAvailabilityStatusUI();
 
-
           syncStatusPanelSelection();
-
 
           document.dispatchEvent(
             new CustomEvent(
@@ -1654,7 +1369,6 @@ document.addEventListener(
           );
         }
 
-
         if (
           event.key ===
           FACULTY_NOTIFICATION_STORAGE_KEY
@@ -1663,9 +1377,6 @@ document.addEventListener(
           updateFacultyNotificationBadge();
         }
 
-
-        // A notification was just sent to the faculty:
-        // show ONE toast on whichever page is open now.
         if (
           event.key ===
             FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY &&
@@ -1676,7 +1387,6 @@ document.addEventListener(
 
             const incoming =
               JSON.parse(event.newValue);
-
 
             if (
               incoming &&
@@ -1691,7 +1401,6 @@ document.addEventListener(
 
           } catch (error) {
 
-            // Ignore malformed data.
           }
         }
       }

@@ -1,28 +1,5 @@
-/* SYSTEM NOTE: Styles the faculty profile page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   FACULTY PROFILE -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+/* Faculty Profile */
 
-   UPDATED: visual design (spacing, card proportions, shadows,
-   typography) now matches the Student Profile reference.
-   No HTML structure or JS-facing classes were changed --
-   only property values inside existing selectors.
-
-   UPDATED (name fields): added .faculty-name-row /
-   .faculty-name-field for the three-across First Name /
-   Middle Initial / Last Name inputs in edit mode. Nothing else
-   was changed.
-========================================================= */
-
-/* =========================================================
-   OUTER CARD
-   One large white rounded card holding everything: title,
-   photo + Edit Profile, faculty info, and the Save button.
-   Sizing/shape now matches Student Profile's .profile-card.
-========================================================= */
 .faculty-profile-card {
   max-width: 760px;
   margin: 0 auto;
@@ -45,14 +22,6 @@
   width: 100%;
   text-align: center;
 
-  /* Page-local black -> orange fade, fully self-contained (no
-     dependency on faculty-shared.css variables, and no
-     dependency on .format-text). Fade holds mostly black
-     through the first half, then eases into orange toward the
-     end. !important guards the properties that actually make
-     the gradient text render -- if anything else on the page
-     sets color/background on headings, it cannot silently
-     cancel this effect. */
   background: linear-gradient(
     90deg,
     #000000 0%,
@@ -66,11 +35,6 @@
   -webkit-text-fill-color: transparent !important;
 }
 
-/* =========================================================
-   BODY: photo/Edit Profile on the left, info card on the right
-   Now styled as the single light "inner card" (matches Student
-   Profile's beige .profile-info-card) that wraps both columns.
-========================================================= */
 .faculty-profile-body {
   width: 100%;
   display: flex;
@@ -84,7 +48,6 @@
   margin-bottom: 32px;
 }
 
-/* ---- LEFT: photo + Edit Profile ---- */
 .faculty-profile-left {
   flex: 0 0 auto;
   display: flex;
@@ -161,17 +124,11 @@
   display: none;
 }
 
-/* ---- RIGHT: faculty info card ---- */
 .faculty-profile-right {
   flex: 1 1 320px;
   min-width: 260px;
 }
 
-/* Flattened: this now sits directly inside the beige
-   .faculty-profile-body wrapper, so it no longer needs its
-   own white background/shadow/padding (avoids a double-card
-   look and matches the Student Profile reference, where
-   fields sit directly in the single inner card). */
 .faculty-profile-info-card {
   background-color: transparent;
   border-radius: 0;
@@ -183,7 +140,6 @@
   display: none;
 }
 
-/* View mode */
 .faculty-profile-name {
   font-size: 1.1rem;
   font-weight: 700;
@@ -225,9 +181,6 @@
   font-weight: 500;
 }
 
-/* =========================================================
-   EDIT MODE FORM
-========================================================= */
 .faculty-profile-edit {
   display: flex;
   flex-direction: column;
@@ -246,13 +199,9 @@
   color: var(--color-text-muted);
 }
 
-/* ---- Name row: First Name / Middle Initial / Last Name ----
-   Middle Initial is a fixed narrow column; First + Last split
-   the remaining width equally. Each field is a label + input
-   stacked, matching .faculty-form-group. */
 .faculty-name-row {
   display: flex;
-  align-items: flex-end; /* inputs share one bottom edge, so they line up even if a label ever wraps */
+  align-items: flex-end;
   gap: 14px;
 }
 
@@ -264,10 +213,12 @@
   gap: 6px;
 }
 
-/* Middle Initial: fixed narrow column, wide enough that its
-   label stays on one line so all three inputs line up. */
 .faculty-name-field:nth-child(2) {
-  flex: 0 0 124px;
+  flex: 0 0 76px;
+}
+
+.faculty-name-field:nth-child(4) {
+  flex: 0 0 130px;
 }
 
 .faculty-name-field label {
@@ -312,7 +263,6 @@
   display: none;
 }
 
-/* Phone: fixed +63 prefix beside the editable local number */
 .faculty-phone-input-wrap {
   display: flex;
   align-items: center;
@@ -351,13 +301,6 @@
   box-shadow: none;
 }
 
-/* =========================================================
-   PROGRAM DROPDOWN
-   Custom component (not a native <select>) so the options
-   list never gets invisibly clipped by an overflow:hidden
-   ancestor -- matches the dropdown pattern used elsewhere
-   in Prof Consult.
-========================================================= */
 .faculty-dropdown {
   position: relative;
 }
@@ -420,9 +363,6 @@
   pointer-events: auto;
 }
 
-/* [hidden] only controls presence in the DOM flow; is-open
-   (toggled a frame later by JS) drives the actual fade/slide
-   animation -- same pattern as the Quick Action popup. */
 .faculty-dropdown-list[hidden] {
   display: none;
 }
@@ -447,9 +387,16 @@
   font-weight: 700;
 }
 
-/* =========================================================
-   FOOTER: Save button + success message
-========================================================= */
+.faculty-dropdown-list {
+  overflow-x: hidden;
+}
+
+.faculty-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: default;
+}
+
 .faculty-profile-footer {
   margin-top: 8px;
   display: flex;
@@ -490,9 +437,6 @@
   display: none;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 720px) {
   .faculty-profile-card {
     padding: 36px 28px;
@@ -520,8 +464,6 @@
   }
 }
 
-/* Name inputs stack on narrow screens instead of squeezing
-   three across */
 @media (max-width: 600px) {
   .faculty-name-row {
     flex-direction: column;
@@ -530,7 +472,8 @@
   }
 
   .faculty-name-field,
-  .faculty-name-field:nth-child(2) {
+  .faculty-name-field:nth-child(2),
+  .faculty-name-field:nth-child(4) {
     flex: none;
   }
 }

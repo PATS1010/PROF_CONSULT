@@ -1,36 +1,6 @@
-// =========================================================
-// REQUEST CONSULTATION PAGE INTERACTIONS
-// - Burger menu + Quick Action + Notification bell: same
-//   behavior as the Dashboard / Faculty Directory. Bell also
-//   renders the shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
-// - Faculty Member auto-fills from the professor the student
-//   selected in the Faculty Directory (handed off via
-//   sessionStorage from faculty-directory.js) -- never
-//   hardcoded to a specific professor
-// - Student Name/ID/Program & Year auto-fill from sample
-//   student data (structured so it's easy to swap for the
-//   real logged-in student once the backend exists)
-// - Preferred Time: custom dropdown populated with every
-//   30-minute slot from 8:00 AM to 8:00 PM
-// - Faculty availability (FRONTEND TEST DATA ONLY): dates and
-//   times outside the test faculty's availability stay visible
-//   but grayed out and unselectable; see FACULTY_AVAILABILITY_TEST
-// - Submit Request -> request-submitted.html
-// =========================================================
-
+// Request Consultation JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Selected faculty -- set by faculty-directory.js
-  // (sessionStorage) when the student clicks "Request
-  // Consultation" on a professor's profile. There is no
-  // backend yet, so sessionStorage is the frontend-only
-  // hand-off mechanism; this page never hardcodes a specific
-  // professor. Falls back to a neutral placeholder only if
-  // the student somehow lands here without selecting anyone
-  // (e.g. navigating here directly).
-  // ---------------------------------------------------------
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
   function getSelectedFaculty() {
@@ -47,21 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ? selectedFaculty.fullName
     : "Selected Faculty Member";
 
-  // ---------------------------------------------------------
-  // Sample student data -- replace with the logged-in
-  // student's real record once the backend exists.
-  //
-  // course / yearLevel / section deliberately use the same
-  // field names and values as Student Profile's own sample
-  // data (see student-profile.js: SAMPLE_STUDENT.course,
-  // .yearLevel, .section) so that once Student Profile shares
-  // its data somewhere accessible (e.g. the same sessionStorage
-  // hand-off pattern used for Selected Faculty above, or a real
-  // backend), this object can be replaced with that shared data
-  // without changing how Program & Year is built below.
-  // Student Profile itself has not been modified to expose this
-  // data yet -- that wasn't requested.
-  // ---------------------------------------------------------
   const COURSE_LABELS = {
     "computer-engineering": "BSCPE (Computer Engineering)",
   };
@@ -74,9 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     section: "A",
   };
 
-  // Builds "<Program Label> - <Year><Section>", e.g.
-  // "BSCPE (Computer Engineering) - 3A". Never hardcode the
-  // combined string -- always derive it from the year/section values.
   function buildProgramYearDisplay(courseValue, yearLevel, section) {
     const programLabel = COURSE_LABELS[courseValue] || courseValue;
     return `${programLabel} - ${yearLevel}${section}`;
@@ -98,9 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -124,9 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sidebarClose) sidebarClose.addEventListener("click", closeSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
-  // ---------------------------------------------------------
-  // Quick Action popup (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -167,13 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
@@ -184,13 +123,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ---------------------------------------------------------
-  // Preferred Time: build every 30-minute slot from 8:00 AM to
-  // 8:00 PM (8:00 AM - 8:30 AM, 8:30 AM - 9:00 AM, ... through
-  // 7:30 PM - 8:00 PM), then populate the dropdown.
-  // ---------------------------------------------------------
-  const TIME_RANGE_START_MINUTES = 8 * 60;   // 8:00 AM
-  const TIME_RANGE_END_MINUTES = 20 * 60;    // 8:00 PM
+  const TIME_RANGE_START_MINUTES = 8 * 60;
+  const TIME_RANGE_END_MINUTES = 20 * 60;
 
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
@@ -214,29 +148,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return slots;
   }
 
-  // ---------------------------------------------------------
-  // FRONTEND TEST/DEMO faculty availability data ONLY.
-  // There is no backend yet -- this stands in for the real
-  // per-faculty availability schedule and is deliberately kept
-  // in one small, swappable object so it can later be replaced
-  // with real data (e.g. fetched per selected faculty) without
-  // touching the dropdown-building or date-validation logic
-  // below, which just read from this object.
-  //
-  // Test faculty is available:
-  //   Days: Monday, Wednesday, Friday
-  //   Time: 1:00 PM - 2:30 PM (three 30-minute slots)
-  // ---------------------------------------------------------
   const TEST_AVAILABLE_TIME_LABELS = [
-    buildTimeLabel(13 * 60, 13 * 60 + 30),       // 1:00 PM - 1:30 PM
-    buildTimeLabel(13 * 60 + 30, 14 * 60),       // 1:30 PM - 2:00 PM
-    buildTimeLabel(14 * 60, 14 * 60 + 30),       // 2:00 PM - 2:30 PM
+    buildTimeLabel(13 * 60, 13 * 60 + 30),
+    buildTimeLabel(13 * 60 + 30, 14 * 60),
+    buildTimeLabel(14 * 60, 14 * 60 + 30),
   ];
 
-  // 0 = Sunday, 1 = Monday, 2 = Tuesday, 3 = Wednesday,
-  // 4 = Thursday, 5 = Friday, 6 = Saturday
   const FACULTY_AVAILABILITY_TEST = {
-    availableDaysOfWeek: [1, 3, 5], // Monday, Wednesday, Friday
+    availableDaysOfWeek: [1, 3, 5],
     availableTimeSlotsByDay: {
       1: TEST_AVAILABLE_TIME_LABELS,
       3: TEST_AVAILABLE_TIME_LABELS,
@@ -244,9 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   };
 
-  // Used to preview time-slot availability before a date is
-  // chosen. All currently-available days share the same test
-  // time slots, so Monday's set doubles as the default preview.
   const DEFAULT_PREVIEW_DAY_OF_WEEK = 1;
 
   function isDateAvailable(dayOfWeek) {
@@ -269,9 +185,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Clears the current time selection back to the placeholder --
-  // used whenever the previously-picked slot is no longer valid
-  // for the newly selected date.
   function clearSelectedTime() {
     const timeSelectEl = document.getElementById("preferredTimeSelect");
     if (!timeSelectEl) return;
@@ -285,11 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
     timeSelectEl.querySelectorAll("li.is-active").forEach((li) => li.classList.remove("is-active"));
   }
 
-  // Marks every rendered time option as available/unavailable
-  // based on the given list of available labels. Unavailable
-  // options stay in the list (per spec) but get the
-  // .is-unavailable class, which grays them out and blocks
-  // clicks via CSS pointer-events:none.
   function updateTimeSlotAvailability(availableSlots) {
     if (!preferredTimeOptions) return;
     const availableSet = new Set(availableSlots);
@@ -308,14 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Initial preview (before any date is picked)
   updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
 
-  // ---------------------------------------------------------
-  // Custom dropdown behavior (Preferred Time) -- same pattern
-  // used elsewhere in the project so it can never be sized or
-  // positioned by the browser/OS in a way that overflows on mobile.
-  // ---------------------------------------------------------
   const timeSelect = document.getElementById("preferredTimeSelect");
 
   if (timeSelect) {
@@ -342,7 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
     optionsList.addEventListener("click", (event) => {
       const option = event.target.closest("li[role='option']");
       if (!option) return;
-      if (option.classList.contains("is-unavailable")) return; // grayed-out slots are not selectable
+      if (option.classList.contains("is-unavailable")) return;
 
       optionsList.querySelectorAll("li").forEach((li) => li.classList.remove("is-active"));
       option.classList.add("is-active");
@@ -363,16 +265,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Preferred Date availability (FRONTEND TEST DATA ONLY).
-  // Native <input type="date"> can't gray out individual
-  // weekdays inside its own calendar UI (that's browser/OS
-  // rendered), so this validates on change instead: picking an
-  // unavailable day immediately clears the field and flags it,
-  // so an unavailable date can never remain selected. Picking a
-  // valid day also refreshes which time slots are available,
-  // since date and time availability work together.
-  // ---------------------------------------------------------
   const preferredDateInput = document.getElementById("preferredDate");
   const preferredDateHint = document.getElementById("preferredDateHint");
 
@@ -407,11 +299,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Submit Request -> request-submitted.html
-  // No backend yet, so this just collects and forwards the
-  // entered data structure; wire up the real API call here later.
-  // ---------------------------------------------------------
   const form = document.getElementById("requestConsultationForm");
   if (form) {
     form.addEventListener("submit", (event) => {
@@ -432,14 +319,8 @@ document.addEventListener("DOMContentLoaded", () => {
         status: "Pending Approval",
       };
 
-      // Future: POST requestData to the backend here instead of
-      // storing it locally -- sessionStorage is a frontend-only
-      // stand-in so request-submitted.html can display it
       sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
 
-      // Also add this request to the persistent My Requests list
-      // so it automatically shows up on my-requests.html, growing
-      // that list every time a request is submitted.
       try {
         const MY_REQUESTS_KEY = "profconsult_my_requests";
         const existing = JSON.parse(localStorage.getItem(MY_REQUESTS_KEY) || "[]");
@@ -459,12 +340,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem(MY_REQUESTS_KEY, JSON.stringify(existing));
       } catch (error) {
-        // Storage unavailable -- the request still submits, it just
-        // won't show up on My Requests until storage works again
       }
 
       window.location.href = "request-submitted.html";
     });
   }
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

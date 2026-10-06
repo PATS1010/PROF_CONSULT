@@ -1,20 +1,6 @@
-// SYSTEM NOTE: Controls client-side behavior for the create new password page, including UI events and API calls.
-// =========================================================
-// CREATE NEW PASSWORD PAGE INTERACTIONS
-// - Back -> verification-code.html (preserving ?from= origin)
-// - Show/Hide password toggle -- independent per field (New Password, Confirm Password)
-// - Validates: 8+ characters, one uppercase letter, one number,
-//   and that Confirm Password matches New Password
-// - On success -> saves the new password through api/reset-password.php
-// =========================================================
-
+// Create New Password JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Preserve the ?from= origin param through Back and the
-  // eventual success redirect, same pattern as the rest of
-  // the forgot-password flow
-  // ---------------------------------------------------------
   const params = new URLSearchParams(window.location.search);
   const origin = params.get("from") === "faculty" ? "faculty" : "student";
   const originQuery = `?from=${origin}`;
@@ -32,11 +18,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Show/Hide password toggle -- independent per field
-  // ---------------------------------------------------------
   const newPasswordInput = document.getElementById("newPassword");
   const confirmPasswordInput = document.getElementById("confirmNewPassword");
+
+  const requirementItems = document.querySelectorAll(".password-requirements li");
+  const requirementChecks = [
+    (value) => value.length >= 8,
+    (value) => /[A-Z]/.test(value),
+    (value) => /[0-9]/.test(value)
+  ];
+
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener("input", () => {
+      requirementItems.forEach((item, index) => {
+        const check = requirementChecks[index];
+        item.classList.toggle("requirement-met", !!check && check(newPasswordInput.value));
+      });
+    });
+  }
 
   document.querySelectorAll(".password-toggle").forEach((toggleButton) => {
     toggleButton.addEventListener("click", () => {
@@ -51,9 +50,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Form validation + submit
-  // ---------------------------------------------------------
   const form = document.getElementById("createNewPasswordForm");
   const newPasswordError = document.getElementById("newPasswordError");
   const confirmPasswordError = document.getElementById("confirmPasswordError");
@@ -64,8 +60,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       let isValid = true;
 
-      // New Password: length -> uppercase -> number, in that order.
-      // Only the single most relevant message is shown at a time.
       let newPasswordOk = true;
 
       if (newPasswordInput.value.length < 8) {
@@ -88,7 +82,6 @@ document.addEventListener("DOMContentLoaded", () => {
         isValid = false;
       }
 
-      // Confirm Password: only checked once New Password itself is valid
       if (newPasswordOk) {
         const passwordsMatch = newPasswordInput.value === confirmPasswordInput.value;
         confirmPasswordError.hidden = passwordsMatch;
@@ -106,7 +99,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!isValid) return;
 
       try {
-        // Sends the verified reset token and new password to PHP for saving.
         const response = await fetch("api/reset-password.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

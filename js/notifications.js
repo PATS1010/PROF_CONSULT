@@ -1,47 +1,10 @@
-// =========================================================
-// NOTIFICATIONS PAGE INTERACTIONS
-// - Burger menu + Quick Action: copied verbatim from the
-//   proven-working Student Dashboard implementation
-// - Notification bell icon: already on this page, so its click
-//   does nothing; still renders the shared badge (which will
-//   already be cleared below by the time it renders)
-// - Viewing this page is what marks the shared notification
-//   state as READ (see notification-state.js /
-//   window.ProfConsultNotifications). Every other Student
-//   Dashboard page only READS this state -- this is the one
-//   and only place that clears it.
-// - Renders the notification list, newest first. ONLY three
-//   kinds of notification are shown: accepted, declined, and
-//   rescheduled (see the NOTIFICATIONS LIST section below).
-//   The wording comes from
-//   window.formatStudentNotificationMessage (defined in
-//   student-notification-toast.js), so this list and the
-//   pop-up card always say the same thing.
-// - A "rescheduled" notification can also carry an optional
-//   `message` from the faculty (see reschedule-consultation.js).
-//   When present, it's shown as a second line, "Professor's
-//   message: <text>", below the main notification text -- see
-//   buildNotificationRows()/renderNotifications() below. When
-//   absent, no such line is rendered at all.
-// =========================================================
-
+// Notifications JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Viewing the Notifications page is what actually marks the
-  // shared notification state as read, whether the student
-  // arrived here via the bell or via the sidebar link -- both
-  // paths land here, so both paths produce the same result.
-  // ---------------------------------------------------------
   if (window.ProfConsultNotifications) {
     window.ProfConsultNotifications.markRead();
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // dashboard behind it. Closes via the X button or clicking
-  // the overlay outside the sidebar.
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -50,8 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     sidebar.classList.add("is-open");
     sidebarOverlay.hidden = false;
-    // Let the browser paint `hidden` removal first so the
-    // opacity transition on the overlay actually animates in
     requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
   }
 
@@ -60,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.classList.remove("is-open");
     window.setTimeout(() => {
       sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
+    }, 250);
   }
 
   if (hamburgerButton) {
@@ -73,10 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // Closes when clicking its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -91,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quickActionButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (quickActionButton) {
@@ -117,56 +74,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
-
-  // ---------------------------------------------------------
-  // Notification bell -- already on this page, so clicking it
-  // does nothing; still renders the shared badge (read-only
-  // call, same as every other page -- it will render as absent
-  // since markRead() above already ran).
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
-      // Already on Notifications -- nothing to navigate to
     });
     if (window.ProfConsultNotifications) {
       window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
     }
   }
-
-  // =========================================================
-  // NOTIFICATIONS LIST
-  //
-  // Only THREE kinds of notification are accepted here:
-  //
-  //   type "accepted"    -> Engr. Sales accepted your consultation request.
-  //   type "declined"    -> Engr. Sales declined your consultation request.
-  //   type "rescheduled" -> accepted: true
-  //                           Engr. Sales accepted and moved your consultation
-  //                           at 3:00 PM - 3:30 PM, September 19, 2026.
-  //                         accepted: false
-  //                           Engr. Sales moved your consultation request
-  //                           at 3:00 PM - 3:30 PM, September 19, 2026.
-  //
-  //                         A "rescheduled" record can also carry an
-  //                         optional `message` from the faculty (see
-  //                         reschedule-consultation.js) -- when present,
-  //                         it's shown as a second line, "Professor's
-  //                         message: <text>", below the line above.
-  //
-  // Each one has a time line under it: "2 minutes ago", then
-  // "Today", "Yesterday", and after that the date.
-  //
-  // Record shape (see student-notification-toast.js for how the
-  // faculty side writes one):
-  //   { id, type, facultyName, accepted, dateISO, timeLabel, createdAt, message? }
-  //
-  // Records the faculty side saved are read from localStorage
-  // ("studentTestNotificationRecords", newest first). Once a
-  // backend exists, fetch the records and pass them through
-  // buildNotificationRows() -- the rendering below doesn't change.
-  // =========================================================
 
   const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
 
@@ -188,18 +103,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (Array.isArray(parsed)) return parsed;
       }
     } catch (error) {
-      // fall through to no stored records
     }
     return [];
   }
 
-  // ---------------------------------------------------------
-  // TEST DATA ONLY: sample records for the test student
-  // account, shown after any real (stored) records. createdAt
-  // is relative to "now" so the time lines read like the real
-  // thing. Delete this function (and its use below) once real
-  // notifications exist.
-  // ---------------------------------------------------------
   function getSampleRecords() {
     const now = Date.now();
     const MINUTE = 60 * 1000;
@@ -239,14 +146,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ];
   }
 
-  // ---------------------------------------------------------
-  // Time line under each notification. Philippine time.
-  //   under 1 minute   -> "Just now"
-  //   under 1 hour     -> "2 minutes ago"
-  //   same day         -> "Today"
-  //   previous day     -> "Yesterday"
-  //   older            -> "September 16, 2026"
-  // ---------------------------------------------------------
   const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
     year: "numeric",
@@ -283,15 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return PH_DATE_LABEL_FORMATTER.format(new Date(created));
   }
 
-  // ---------------------------------------------------------
-  // Record -> { message, professorMessage, timestamp } row for
-  // renderNotifications(). professorMessage is only set for a
-  // "rescheduled" record that actually has a non-empty `message`
-  // (see reschedule-consultation.js -- it omits the property
-  // entirely when the faculty left the field blank), so a
-  // reschedule with no message never renders an empty
-  // "Professor's message:" line.
-  // ---------------------------------------------------------
   function buildNotificationRows(records) {
     return records.filter(isSupportedRecord).map((record) => {
       const message =
@@ -355,7 +245,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Real (stored) records first, newest first; then the test samples.
   const storedRecords = loadStoredRecords()
     .filter(isSupportedRecord)
     .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
@@ -363,5 +252,64 @@ document.addEventListener("DOMContentLoaded", () => {
   renderNotifications(
     buildNotificationRows(storedRecords.concat(getSampleRecords()))
   );
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

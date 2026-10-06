@@ -1,10 +1,4 @@
-/* =========================================================
-   FACULTY DASHBOARD -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and should not be
-   duplicated or overridden on a per-page basis.
-========================================================= */
+/* Faculty Dashboard */
 
 .faculty-dashboard-grid {
   display: flex;
@@ -22,20 +16,12 @@
   gap: 24px;
 }
 
-/* =========================================================
-   REAL-TIME DATE/TIME
-========================================================= */
-
 .faculty-page-datetime {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-red-primary);
   margin-bottom: 14px;
 }
-
-/* =========================================================
-   STATUS DOT COLORS
-========================================================= */
 
 .status-dot {
   flex-shrink: 0;
@@ -67,10 +53,6 @@
 .status-consultation {
   background-color: var(--color-status-consultation);
 }
-
-/* =========================================================
-   TODAY'S STATUS
-========================================================= */
 
 .faculty-status-row {
   position: relative;
@@ -113,10 +95,6 @@
   opacity: 0.92;
   transform: translateY(-2px);
 }
-
-/* =========================================================
-   STATUS SELECTION POPUP
-========================================================= */
 
 .faculty-status-panel {
   position: absolute;
@@ -202,10 +180,6 @@
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   TODAY'S SCHEDULE
-========================================================= */
-
 .faculty-schedule-list {
   list-style: none;
   display: flex;
@@ -239,12 +213,6 @@
   font-weight: 700;
 }
 
-/* ---------------------------------------------------------
-   Detailed schedule entry: name + "View" link on one line,
-   then the purpose, then the time. Same text styling as the
-   cards on Faculty Consultation Requests.
---------------------------------------------------------- */
-
 .faculty-schedule-list .faculty-schedule-item {
   align-items: flex-start;
 }
@@ -271,7 +239,6 @@
   color: var(--color-red-primary);
 }
 
-/* Plain underlined text -- no background, no button styling */
 .faculty-schedule-view-link {
   font-size: 0.8rem;
   font-weight: 700;
@@ -296,12 +263,6 @@
   color: var(--color-text-muted);
 }
 
-/* =========================================================
-   STUDENT NAME LINKS
-   Keeps the name's existing look (color, size, weight) --
-   it only becomes clickable, with an underline on hover/focus.
-========================================================= */
-
 .student-name-link {
   color: inherit;
   text-decoration: none;
@@ -314,25 +275,16 @@
   text-underline-offset: 3px;
 }
 
-/* =========================================================
-   PENDING CONSULTATION REQUESTS
-   MATCHES THE STUDENT DASHBOARD CARD STYLE
-========================================================= */
-
 .faculty-requests-card {
   position: relative;
 
-  /* Student dashboard style background */
   background-color: #f5f1ea;
 
-  /* Extra left padding so content sits beside red accent */
   padding: 28px 28px 28px 40px;
 
-  /* Keeps red accent contained inside the card */
   overflow: hidden;
 }
 
-/* Red vertical accent on the far-left side */
 .faculty-requests-card::before {
   content: "";
   position: absolute;
@@ -343,7 +295,6 @@
   background-color: var(--color-red-primary);
 }
 
-/* Red Student Dashboard-style heading */
 .faculty-requests-title {
   max-width: 260px;
   font-size: 1.3rem;
@@ -434,10 +385,6 @@
   transform: translateY(-2px);
   box-shadow: 0 14px 28px rgba(0, 0, 0, 0.16);
 }
-
-/* =========================================================
-   RESPONSIVE
-========================================================= */
 
 @media (max-width: 1024px) {
   .faculty-dashboard-grid {

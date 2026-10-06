@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Account settings  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -13,36 +14,27 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR
-       Copied verbatim from the Student Dashboard (working reference),
-       with an added Notification bell icon beside Quick Action
-  ========================================================= -->
   <header class="dashboard-navbar">
     <div class="navbar-left">
-      <!-- Hamburger menu -- clickable, functionality not implemented yet -->
       <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+     <a href="student-dashboard.html" class="navbar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+</a>
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- navigates to notifications.html on click (see settings.js).
-           TEST/DEMO ONLY: no real notification data or backend yet.
-           Image is a placeholder -- swap the src below for the real icon whenever it's ready. -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="Notifications">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup -->
       <div class="quick-action-panel" id="quickActionPanel" hidden>
         <div class="quick-action-header">
           <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
@@ -65,15 +57,13 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR
-       Copied verbatim from the Student Dashboard (working reference)
-  ========================================================= -->
   <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+    <a href="student-dashboard.html" class="sidebar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+</a>
       <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
     </div>
 
@@ -84,22 +74,15 @@
       <a href="notifications.html" class="sidebar-link">Notifications</a>
       <a href="student-profile.html" class="sidebar-link">Profile</a>
       <a href="settings.html" class="sidebar-link is-active">Settings</a>
-      <a href="student-login.html" class="sidebar-link">Logout</a>
+     <a href="login.html" class="sidebar-link" id="logoutLink">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND
-       Copied verbatim from the Student Dashboard (working reference)
-  ========================================================= -->
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN CONTENT
-  ========================================================= -->
   <main class="settings-page">
 
     <div class="settings-outer-card">
@@ -137,6 +120,10 @@
         <a href="change-password.html?from=student" class="format-text change-password-link" id="changePasswordLink">
           Change Password
         </a>
+
+        <button type="button" class="settings-secondary-action-button" id="deleteAccountButton">
+          Delete Account
+        </button>
 
       </div>
 

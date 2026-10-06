@@ -1,22 +1,7 @@
-// =========================================================
-// MY CONSULTATION REQUESTS PAGE INTERACTIONS
-// - Burger menu + Quick Action: copied verbatim from the
-//   proven-working Student Dashboard implementation
-// - Notification bell icon: navigates to notifications.html
-//   and shows the shared unread-indicator badge (see
-//   notification-state.js / window.ProfConsultNotifications)
-// - Renders sample requests plus any real requests the student
-//   has submitted (read from the same localStorage list that
-//   request-consultation.js appends to on every submission)
-// =========================================================
+// My Consultation Requests
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // dashboard behind it. Closes via the X button or clicking
-  // the overlay outside the sidebar.
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -25,8 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     sidebar.classList.add("is-open");
     sidebarOverlay.hidden = false;
-    // Let the browser paint `hidden` removal first so the
-    // opacity transition on the overlay actually animates in
     requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
   }
 
@@ -35,7 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.classList.remove("is-open");
     window.setTimeout(() => {
       sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
+    }, 250);
   }
 
   if (hamburgerButton) {
@@ -48,10 +31,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // Closes when clicking its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -66,7 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quickActionButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (quickActionButton) {
@@ -92,13 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html, and
-  // renders the shared unread-indicator badge (read-only here;
-  // only notifications.js clears the state).
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
@@ -109,17 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // ---------------------------------------------------------
-  // Consultation requests
-  // Sample data for the current test student account (matches
-  // the reference design), combined with any real requests the
-  // student has actually submitted via Request Consultation --
-  // those are read from the same localStorage list that
-  // request-consultation.js appends to on every submission,
-  // which is what makes this list grow automatically over time.
-  // Replace SAMPLE_REQUESTS with a real API call once a backend
-  // exists; renderRequests() itself doesn't need to change.
-  // ---------------------------------------------------------
   const MY_REQUESTS_STORAGE_KEY = "profconsult_my_requests";
 
   const SAMPLE_REQUESTS = [
@@ -127,6 +88,53 @@ document.addEventListener("DOMContentLoaded", () => {
     { title: "Capstone Consultation", date: "July 18", time: "2:00 PM", status: "approved", statusLabel: "Approved" },
     { title: "OJT Consultation", date: "July 8", time: "", status: "completed", statusLabel: "Completed" },
   ];
+
+  const MONTH_INDEX = {
+    jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+    jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  };
+
+  function parseRequestDate(request) {
+    const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(request.dateISO || request.date || "").trim());
+    if (iso) {
+      return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]));
+    }
+
+    const text = String(request.date || "");
+    const pattern = /([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?/g;
+    let match;
+
+    while ((match = pattern.exec(text)) !== null) {
+      const month = MONTH_INDEX[match[1].slice(0, 3).toLowerCase()];
+      if (month === undefined) continue;
+
+      const year = match[3] ? Number(match[3]) : new Date().getFullYear();
+      return Date.UTC(year, month, Number(match[2]));
+    }
+
+    return null;
+  }
+
+  function parseRequestTime(request) {
+    const match = /(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec(String(request.time || ""));
+    if (!match) return 0;
+
+    let hours = Number(match[1]) % 12;
+    if (match[3].toUpperCase() === "PM") hours += 12;
+    return hours * 60 + Number(match[2]);
+  }
+
+  function compareByDateTime(a, b) {
+    const dateA = parseRequestDate(a);
+    const dateB = parseRequestDate(b);
+
+    if (dateA === null && dateB === null) return 0;
+    if (dateA === null) return 1;
+    if (dateB === null) return -1;
+    if (dateA !== dateB) return dateA - dateB;
+
+    return parseRequestTime(a) - parseRequestTime(b);
+  }
 
   function getSubmittedRequests() {
     try {
@@ -142,10 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const noResultsEl = document.getElementById("noRequestsMessage");
     if (!listEl) return;
 
-    // Real submissions first (newest submitted = newest at the
-    // front already, since request-consultation.js prepends),
-    // then the sample data for the test account.
-    const requests = [...getSubmittedRequests(), ...SAMPLE_REQUESTS];
+    const requests = [...getSubmittedRequests(), ...SAMPLE_REQUESTS].sort(compareByDateTime);
 
     listEl.innerHTML = "";
 
@@ -187,8 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = document.createElement("p");
       status.className = "request-status";
 
-      // "Completed" shows as plain bold text with no dot,
-      // matching the reference design
       if (request.status !== "completed") {
         const dot = document.createElement("span");
         dot.className = `status-dot status-${request.status}`;
@@ -209,9 +212,67 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderRequests();
 
-  // Re-render if a new request is submitted from another tab/page
   window.addEventListener("storage", (event) => {
     if (event.key === MY_REQUESTS_STORAGE_KEY) renderRequests();
+  });
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
   });
 
 });

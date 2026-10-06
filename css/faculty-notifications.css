@@ -1,15 +1,5 @@
-/* =========================================================
-   FACULTY NOTIFICATIONS -- PAGE-SPECIFIC STYLES
+/* Faculty Notifications */
 
-   Only the main content area is defined here.
-   Navbar/sidebar/quick action/background styling lives in
-   faculty-shared.css.
-========================================================= */
-
-
-/* =========================================================
-   PAGE HEADING
-========================================================= */
 
 .notifications-page-heading {
   margin-bottom: 28px;
@@ -40,12 +30,6 @@
 }
 
 
-/* =========================================================
-   NOTIFICATIONS CARD
-
-   White rounded card with a thick red left accent bar.
-========================================================= */
-
 .notifications-card {
   position: relative;
   overflow: hidden;
@@ -67,10 +51,6 @@
 }
 
 
-/* =========================================================
-   INNER CONTAINER
-========================================================= */
-
 .notifications-list-container {
   background-color: #f4f4f6;
 
@@ -79,10 +59,6 @@
   padding: 32px 28px;
 }
 
-
-/* =========================================================
-   NOTIFICATION LIST
-========================================================= */
 
 .notifications-list {
   list-style: none;
@@ -101,10 +77,6 @@
 }
 
 
-/* =========================================================
-   EMPTY STATE
-========================================================= */
-
 .no-notifications-message {
   padding: 24px 4px;
 
@@ -120,10 +92,6 @@
 }
 
 
-/* =========================================================
-   NOTIFICATION ROW
-========================================================= */
-
 .notification-row {
   display: flex;
 
@@ -132,10 +100,6 @@
   gap: 12px;
 }
 
-
-/* =========================================================
-   NOTIFICATION ICON
-========================================================= */
 
 .notification-icon {
   flex-shrink: 0;
@@ -148,10 +112,6 @@
 }
 
 
-/* =========================================================
-   NOTIFICATION MESSAGE
-========================================================= */
-
 .notification-message {
   font-size: 0.92rem;
 
@@ -162,13 +122,6 @@
   line-height: 1.6;
 }
 
-
-/* =========================================================
-   STUDENT NAME LINK
-   The student's name inside the notification message. Keeps
-   the surrounding text's weight/color -- it's just bolded
-   slightly and underlines on hover/focus to read as a link.
-========================================================= */
 
 .notification-student-link {
   color: inherit;
@@ -183,10 +136,6 @@
   text-underline-offset: 2px;
 }
 
-
-/* =========================================================
-   VIEW LINK
-========================================================= */
 
 .notification-view-link {
   margin-left: 4px;
@@ -204,10 +153,6 @@
   color: var(--color-red-primary);
 }
 
-
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 
 @media (max-width: 1024px) {
 

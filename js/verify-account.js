@@ -1,33 +1,5 @@
-// =========================================================
-// VERIFY ACCOUNT PAGE
-// Prof Consult
-//
-// FRONTEND ONLY
-//
-// Shared by:
-//   Student
-//   Faculty
-//
-// URL examples:
-//   verify-account.html?from=student
-//   verify-account.html?from=faculty
-//
-// Behavior:
-//   1. Validate email or mobile number.
-//   2. Save the information using sessionStorage.
-//   3. If valid, immediately proceed to:
-//        verify-account-code.html?from=student
-//        verify-account-code.html?from=faculty
-//
-// No backend verification is being used yet.
-// =========================================================
-
-
+// Verify Account JS
 document.addEventListener("DOMContentLoaded", () => {
-
-  // =======================================================
-  // DETERMINE REGISTRATION ORIGIN
-  // =======================================================
 
   const params = new URLSearchParams(
     window.location.search
@@ -38,36 +10,13 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "faculty"
       : "student";
 
-
-  // =======================================================
-  // CREATE ACCOUNT 2 DESTINATION
-  //
-  // Used by the Back button.
-  // =======================================================
-
   const originCreateAccountPage =
     origin === "faculty"
       ? "create-faculty-account2.html"
       : "create-student-account2.html";
 
-
-  // =======================================================
-  // VERIFICATION CODE PAGE
-  //
-  // Student:
-  // verify-account-code.html?from=student
-  //
-  // Faculty:
-  // verify-account-code.html?from=faculty
-  // =======================================================
-
   const verificationCodePage =
     `verify-account-code.html?from=${origin}`;
-
-
-  // =======================================================
-  // BACK BUTTON
-  // =======================================================
 
   const backButton =
     document.getElementById("backButton");
@@ -91,11 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
   }
-
-
-  // =======================================================
-  // GET FORM ELEMENTS
-  // =======================================================
 
   const form =
     document.getElementById(
@@ -147,17 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "verificationMessage"
     );
 
-
-  // =======================================================
-  // CURRENT INPUT MODE
-  // =======================================================
-
   let currentMode = "email";
-
-
-  // =======================================================
-  // SHOW VALIDATION MESSAGE
-  // =======================================================
 
   function showMessage(text) {
 
@@ -170,11 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // HIDE VALIDATION MESSAGE
-  // =======================================================
-
   function hideMessage() {
 
     if (!message) {
@@ -186,11 +115,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // EMAIL VALIDATION
-  // =======================================================
-
   function isValidEmail(email) {
 
     const emailPattern =
@@ -200,42 +124,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // PHILIPPINE MOBILE VALIDATION
-  //
-  // Example:
-  // 9171234567
-  //
-  // Exactly 10 digits.
-  // First digit must be 9.
-  // =======================================================
-
   function isValidMobile(mobile) {
 
     return /^9\d{9}$/.test(mobile);
 
   }
 
-
-  // =======================================================
-  // NORMALIZE MOBILE
-  //
-  // 9171234567
-  //      ↓
-  // +639171234567
-  // =======================================================
-
   function normalizeMobile(mobile) {
 
     return `+63${mobile}`;
 
   }
-
-
-  // =======================================================
-  // SET EMAIL MODE
-  // =======================================================
 
   function setEmailMode() {
 
@@ -277,11 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // SET MOBILE MODE
-  // =======================================================
-
   function setMobileMode() {
 
     currentMode = "mobile";
@@ -322,11 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // EMAIL / MOBILE TOGGLE
-  // =======================================================
-
   if (switchMethod) {
 
     switchMethod.addEventListener(
@@ -349,11 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   }
-
-
-  // =======================================================
-  // MOBILE INPUT
-  // =======================================================
 
   if (mobileInput) {
 
@@ -390,11 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // EMAIL INPUT
-  // =======================================================
-
   if (emailInput) {
 
     emailInput.addEventListener(
@@ -412,16 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-
-  // =======================================================
-  // VALIDATE INPUT
-  // =======================================================
-
   function validateInput() {
-
-    // =====================================================
-    // EMAIL MODE
-    // =====================================================
 
     if (currentMode === "email") {
 
@@ -444,7 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
 
-
       if (!isValidEmail(email)) {
 
         emailInput.classList.add(
@@ -461,7 +330,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       }
 
-
       emailInput.classList.remove(
         "input-error"
       );
@@ -470,14 +338,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // =====================================================
-    // MOBILE MODE
-    // =====================================================
-
     const mobile =
       mobileInput.value.trim();
-
 
     if (!mobile) {
 
@@ -495,7 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     if (!isValidMobile(mobile)) {
 
       mobileInput.classList.add(
@@ -512,7 +373,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     mobileInput.classList.remove(
       "input-error"
     );
@@ -520,21 +380,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return normalizeMobile(mobile);
 
   }
-
-
-  // =======================================================
-  // FORM SUBMISSION
-  //
-  // IMPORTANT:
-  //
-  // There is NO backend yet.
-  //
-  // If the email/mobile is valid:
-  //   → save information
-  //   → proceed directly to verification-code page
-  //
-  // We DO NOT show the old backend notice anymore.
-  // =======================================================
 
   if (form) {
 
@@ -544,22 +389,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         event.preventDefault();
 
-
-        // Validate email/mobile
         const identifier =
           validateInput();
 
-
-        // Invalid input:
-        // stay on this page.
         if (!identifier) {
           return;
         }
-
-
-        // =================================================
-        // SAVE VERIFICATION INFORMATION
-        // =================================================
 
         sessionStorage.setItem(
           "verificationIdentifier",
@@ -576,11 +411,6 @@ document.addEventListener("DOMContentLoaded", () => {
           origin
         );
 
-
-        // =================================================
-        // PROCEED TO VERIFICATION CODE PAGE
-        // =================================================
-
         window.location.href =
           verificationCodePage;
 
@@ -588,11 +418,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   }
-
-
-  // =======================================================
-  // INITIAL STATE
-  // =======================================================
 
   setEmailMode();
 
