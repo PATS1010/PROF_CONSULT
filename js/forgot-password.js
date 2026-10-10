@@ -102,6 +102,20 @@ document.addEventListener("DOMContentLoaded", () => {
     message.style.display = "block";
   }
 
+  function setSubmitLoading(isLoading) {
+    const submitButton = form ? form.querySelector('button[type="submit"]') : null;
+    if (!submitButton) return;
+
+    if (isLoading) {
+      submitButton.dataset.originalText = submitButton.textContent;
+      submitButton.textContent = "Sending...";
+      submitButton.disabled = true;
+    } else {
+      submitButton.textContent = submitButton.dataset.originalText || "Continue";
+      submitButton.disabled = false;
+    }
+  }
+
   function hideMessage() {
     if (!message) return;
     message.textContent = "";
@@ -221,16 +235,47 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const identifier = validateInput();
       if (!identifier) return;
 
-      sessionStorage.setItem("resetIdentifier", identifier);
-      sessionStorage.setItem("resetMethod", currentMode);
+      hideMessage();
+      setSubmitLoading(true);
 
-      window.location.href = `verification-code.html?from=${origin}`;
+      try {
+        const response = await fetch("api/request-reset-code.php", {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            identifier,
+            role: origin,
+            method: currentMode,
+          }),
+        });
+        const result = await response.json();
+
+        if (!response.ok || !result.ok || !result.token) {
+          showMessage(result.message || "Unable to send the verification code. Please try again.");
+          return;
+        }
+
+        sessionStorage.setItem("resetIdentifier", identifier);
+        sessionStorage.setItem("resetMethod", currentMode);
+
+        window.location.href =
+          `verification-code.html?from=${origin}&token=${encodeURIComponent(result.token)}`;
+      } catch (error) {
+        showMessage("Unable to connect to the server. Please try again.");
+      } finally {
+        setSubmitLoading(false);
+      }
     });
   }
 
