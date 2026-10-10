@@ -77,6 +77,23 @@ document.addEventListener("DOMContentLoaded", () => {
     return /^[A-Za-z]{2,}$/.test(topLevelDomain);
   }
 
+  function correctedCommonEmailDomain(value) {
+    const atIndex = value.lastIndexOf("@");
+    if (atIndex <= 0) return value;
+
+    const localPart = value.slice(0, atIndex);
+    const domain = value.slice(atIndex + 1).toLowerCase();
+    const domainCorrections = {
+      "gamial.com": "gmail.com",
+      "gamil.com": "gmail.com",
+      "gmial.com": "gmail.com",
+      "gmai.com": "gmail.com",
+    };
+    const correctedDomain = domainCorrections[domain];
+
+    return correctedDomain ? `${localPart}@${correctedDomain}` : value;
+  }
+
   function validateIdentifier(value) {
     if (!value) return MESSAGES.identifierEmpty;
 
@@ -155,7 +172,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const result = await logIn(enteredIdentifier, enteredPassword);
+        let result = null;
+        try {
+          result = await logIn(enteredIdentifier, enteredPassword);
+        } catch (loginError) {
+          const correctedIdentifier = correctedCommonEmailDomain(enteredIdentifier);
+          if (correctedIdentifier === enteredIdentifier) {
+            throw loginError;
+          }
+          result = await logIn(correctedIdentifier, enteredPassword);
+        }
         const role = result && result.user ? result.user.role : "";
 
         if (role === "faculty") {
