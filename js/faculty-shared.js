@@ -630,7 +630,7 @@ function buildFacultyLogoutModal(logoutLink) {
 
       const redirectPage =
         logoutLink.getAttribute("href") ||
-        "faculty-login.html";
+        "login.html";
 
       if (
         window.ProfConsultAuth &&

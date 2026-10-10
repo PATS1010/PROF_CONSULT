@@ -118,12 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   passwordInput.addEventListener("input", clearMessages);
 
-  async function logInAs(role, identifier, password) {
+  async function logIn(identifier, password) {
     const response = await fetch("api/login.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ role, identifier, password }),
+      body: JSON.stringify({ identifier, password }),
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) {
@@ -155,22 +155,25 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        await logInAs("student", enteredIdentifier, enteredPassword);
-        sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
-        window.location.href = "student-dashboard.html";
-        return;
-      } catch (error) {
-      }
+        const result = await logIn(enteredIdentifier, enteredPassword);
+        const role = result && result.user ? result.user.role : "";
 
-      try {
-        await logInAs("faculty", enteredIdentifier, enteredPassword);
-        sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
-        window.location.href = "faculty-dashboard.html";
-        return;
-      } catch (error) {
-      }
+        if (role === "faculty") {
+          sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
+          window.location.href = "faculty-dashboard.html";
+          return;
+        }
 
-      showLoginError(MESSAGES.invalidCredentials);
+        if (role === "student") {
+          sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
+          window.location.href = "student-dashboard.html";
+          return;
+        }
+
+        throw new Error(MESSAGES.invalidCredentials);
+      } catch (error) {
+        showLoginError(error.message || MESSAGES.invalidCredentials);
+      }
     });
   }
 

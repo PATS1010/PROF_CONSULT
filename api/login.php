@@ -11,27 +11,34 @@ $role = clean((string) ($data['role'] ?? ''));
 $identifier = strtolower(clean((string) ($data['identifier'] ?? '')));
 $password = (string) ($data['password'] ?? '');
 
-if (!in_array($role, ['student', 'faculty'], true) || $identifier === '' || $password === '') {
+if (($role !== '' && !in_array($role, ['student', 'faculty'], true))
+    || $identifier === ''
+    || $password === '') {
     fail('Please enter your account details.');
 }
 
 try {
     $db = database();
+    $roleFilter = $role !== '' ? 'Role = ?' : "Role IN ('student', 'faculty')";
+    $parameters = $role !== ''
+        ? [$role, $identifier, $identifier]
+        : [$identifier, $identifier];
+
     $statement = $db->prepare(
-        'SELECT
-            User_ID AS "User_ID",
-            Username AS "Username",
-            Password AS "Password",
-            Full_Name AS "Full_Name",
-            Email AS "Email",
-            Mobile_Number AS "Mobile_Number",
-            Role AS "Role",
-            Account_Status AS "Account_Status"
+        "SELECT
+            User_ID AS \"User_ID\",
+            Username AS \"Username\",
+            Password AS \"Password\",
+            Full_Name AS \"Full_Name\",
+            Email AS \"Email\",
+            Mobile_Number AS \"Mobile_Number\",
+            Role AS \"Role\",
+            Account_Status AS \"Account_Status\"
          FROM users
-         WHERE Role = ? AND (LOWER(Email) = ? OR LOWER(Username) = ?)
-         LIMIT 1'
+         WHERE {$roleFilter} AND (LOWER(Email) = ? OR LOWER(Username) = ?)
+         LIMIT 1"
     );
-    $statement->execute([$role, $identifier, $identifier]);
+    $statement->execute($parameters);
     $record = $statement->fetch();
 
     if (!$record
@@ -42,7 +49,7 @@ try {
 
     session_regenerate_id(true);
     $_SESSION['user'] = rememberUserSession(publicUser($record));
-    if ($role === 'faculty') {
+    if ($_SESSION['user']['role'] === 'faculty') {
         try {
             saveFacultyAvailabilityForUser(
                 $db,

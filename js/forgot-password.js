@@ -1,6 +1,6 @@
 // =========================================================
 // FORGOT PASSWORD PAGE INTERACTIONS
-// Shared by Student Login, Faculty Login, and Change Password.
+// Shared by the Login page, Faculty/Student settings, and Change Password.
 //
 // URL params:
 //   from=student | from=faculty
@@ -15,8 +15,8 @@
 //        Back must return to Settings instead of Login.
 //
 // Examples:
-//   forgot-password.html?from=student
-//     -> came from Student Login, Back -> student-login.html
+//   forgot-password.html
+//     -> came from the shared Login page, Back -> login.html
 //   forgot-password.html?from=faculty&context=change-password
 //     -> came from Faculty Change Password,
 //        Back -> change-password.html?from=faculty
@@ -25,8 +25,8 @@
 //        Back -> settings.html
 //
 // Supports Email or Mobile Number as the reset identifier.
-// Frontend-only: no backend call — validates, then goes straight
-// to verification-code.html, carrying the origin and identifier.
+// Sends a backend reset code, then carries the returned token into
+// verification-code.html.
 //
 // IMPORTANT: visibility of the email vs mobile input is controlled
 // ONLY by setting element.style.display directly in this file.
@@ -36,11 +36,14 @@
 document.addEventListener("DOMContentLoaded", () => {
 
   const params = new URLSearchParams(window.location.search);
-  const origin = params.get("from") === "faculty" ? "faculty" : "student";
+  const requestedOrigin = params.get("from");
+  const origin = requestedOrigin === "faculty" || requestedOrigin === "student"
+    ? requestedOrigin
+    : "";
   const context = params.get("context");
 
-  const originLoginPage = origin === "faculty" ? "faculty-login.html" : "login.html";
-  const originChangePasswordPage = `change-password.html?from=${origin}`;
+  const originLoginPage = "login.html";
+  const originChangePasswordPage = `change-password.html?from=${origin || "student"}`;
   const originSettingsPage = origin === "faculty" ? "faculty-settings.html" : "settings.html";
 
   // Where the Back button (and any [data-nav="back"] element) should go,
@@ -270,7 +273,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sessionStorage.setItem("resetMethod", currentMode);
 
         window.location.href =
-          `verification-code.html?from=${origin}&token=${encodeURIComponent(result.token)}`;
+          `verification-code.html?from=${encodeURIComponent(result.role || origin || "student")}&token=${encodeURIComponent(result.token)}`;
       } catch (error) {
         showMessage("Unable to connect to the server. Please try again.");
       } finally {

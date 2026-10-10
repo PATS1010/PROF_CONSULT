@@ -13,10 +13,10 @@ set_time_limit(20);
 
 $data = input();
 $identifier = strtolower(clean((string) ($data['identifier'] ?? '')));
-$role = clean((string) ($data['role'] ?? 'student'));
+$role = clean((string) ($data['role'] ?? ''));
 $method = clean((string) ($data['method'] ?? ''));
 
-if ($identifier === '' || !in_array($role, ['student', 'faculty'], true)) {
+if ($identifier === '' || ($role !== '' && !in_array($role, ['student', 'faculty'], true))) {
     fail('Please enter your registered email address or mobile number.');
 }
 
@@ -27,28 +27,25 @@ $sendBySms = $method === 'mobile' || ($emailCandidate === '' && $phoneCandidate 
 try {
     $db = database();
     ensurePasswordResetTable($db);
+    $roleFilter = $role !== '' ? 'Role = ? AND' : "Role IN ('student', 'faculty') AND";
+    $parameters = $role !== ''
+        ? [$role, $emailCandidate, $phoneCandidate, '0' . $phoneCandidate, '63' . $phoneCandidate, 'active']
+        : [$emailCandidate, $phoneCandidate, '0' . $phoneCandidate, '63' . $phoneCandidate, 'active'];
 
     $lookup = $db->prepare(
-        'SELECT User_ID AS "User_ID", Full_Name AS "Full_Name", Email AS "Email", Mobile_Number AS "Mobile_Number"
+        "SELECT User_ID AS \"User_ID\", Full_Name AS \"Full_Name\", Email AS \"Email\", Mobile_Number AS \"Mobile_Number\", Role AS \"Role\"
          FROM users
-         WHERE Role = ?
-           AND (
+         WHERE {$roleFilter}
+           (
              LOWER(Email) = ?
              OR Mobile_Number = ?
-             OR REGEXP_REPLACE(Mobile_Number, \'\D\', \'\', \'g\') = ?
-             OR REGEXP_REPLACE(Mobile_Number, \'\D\', \'\', \'g\') = ?
+             OR REGEXP_REPLACE(Mobile_Number, '\\D', '', 'g') = ?
+             OR REGEXP_REPLACE(Mobile_Number, '\\D', '', 'g') = ?
            )
            AND Account_Status = ?
-         LIMIT 1'
+         LIMIT 1"
     );
-    $lookup->execute([
-        $role,
-        $emailCandidate,
-        $phoneCandidate,
-        '0' . $phoneCandidate,
-        '63' . $phoneCandidate,
-        'active',
-    ]);
+    $lookup->execute($parameters);
     $user = $lookup->fetch();
 
     if (!$user) {
@@ -84,6 +81,7 @@ try {
         'ok' => true,
         'message' => 'Verification code sent.',
         'token' => $token,
+        'role' => $user['Role'],
         'sent_to' => $sentTo,
     ]);
 } catch (RuntimeException $exception) {
