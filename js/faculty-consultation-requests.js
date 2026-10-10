@@ -27,60 +27,7 @@ const HISTORY_STATUS_INFO = {
   ignored: { group: "ignored", label: "Ignored" },
 };
 
-const DEFAULT_CONSULTATIONS = [
-  {
-    id: "req-1",
-    name: "Juan Dela Cruz",
-    studentId: "22-00145",
-    type: "Research Proposal",
-    date: "October 15, 10:00 AM",
-    preferredDateISO: "2026-10-15",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-    status: "pending",
-  },
-  {
-    id: "req-2",
-    name: "Joselita Rizal",
-    studentId: "22-00098",
-    type: "Research Proposal",
-    date: "October 16, 1:00 PM",
-    preferredDateISO: "2026-10-16",
-    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-    status: "pending",
-  },
-  {
-    id: "req-3",
-    name: "Mark Santos",
-    studentId: "21-00567",
-    type: "Thesis Defense Prep",
-    date: "September 22, 9:30 AM",
-    preferredDateISO: "2026-09-22",
-    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
-    program: "BS Computer Engineering",
-    yearSet: "4A",
-    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-    status: "pending",
-  },
-  {
-    id: "req-4",
-    name: "Angela Cruz",
-    studentId: "23-00212",
-    type: "Grade Concern",
-    date: "October 18, 2:00 PM",
-    preferredDateISO: "2026-10-18",
-    preferredTimeLabel: "2:00 PM \u2013 2:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "2A",
-    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-    status: "pending",
-  },
-];
+const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
   try {
@@ -121,27 +68,7 @@ function applyIgnoredStatusToPastPending(list) {
 }
 
 function loadConsultations() {
-  try {
-    if (isPageReload()) {
-      const defaults = DEFAULT_CONSULTATIONS.slice();
-      applyIgnoredStatusToPastPending(defaults);
-      saveConsultations(defaults);
-      return defaults;
-    }
-    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        if (applyIgnoredStatusToPastPending(parsed)) saveConsultations(parsed);
-        return parsed;
-      }
-    }
-  } catch (error) {
-  }
-  const defaults = DEFAULT_CONSULTATIONS.slice();
-  applyIgnoredStatusToPastPending(defaults);
-  saveConsultations(defaults);
-  return defaults;
+  return DEFAULT_CONSULTATIONS.slice();
 }
 
 function saveConsultations(list) {
@@ -194,6 +121,75 @@ function formatPreferredDateTime(request) {
 }
 
 function notifyRequestAnswered(request, decision) {
+}
+
+function formatTimeRange(timeValue) {
+  const [hourText, minuteText] = String(timeValue || "00:00").split(":");
+  const start = new Date();
+  start.setHours(Number(hourText) || 0, Number(minuteText) || 0, 0, 0);
+  const end = new Date(start.getTime() + CONSULTATION_SLOT_MINUTES * 60000);
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  return `${formatter.format(start)} \u2013 ${formatter.format(end)}`;
+}
+
+function formatRequestDate(dateValue, timeValue) {
+  const date = new Date(`${dateValue}T00:00:00`);
+  const dateLabel = Number.isNaN(date.getTime())
+    ? String(dateValue || "")
+    : date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+  return `${dateLabel}, ${formatTimeRange(timeValue).split("\u2013")[0].trim()}`;
+}
+
+function mapApiRequest(record) {
+  const apiStatus = String(record.Status || "pending").toLowerCase();
+  const status = apiStatus === "approved" || apiStatus === "rescheduled" ? "upcoming" : apiStatus;
+  return {
+    id: String(record.Request_ID),
+    name: record.Student_Name || "",
+    studentId: record.Student_Number || "",
+    type: record.Purpose || "Consultation",
+    date: formatRequestDate(record.Request_Date, record.Preferred_Time),
+    preferredDateISO: record.Request_Date || "",
+    preferredTimeLabel: formatTimeRange(record.Preferred_Time),
+    program: record.Program || "",
+    yearSet: `${record.Year_Level || ""}${record.Section || ""}`,
+    message: record.Additional_Message || "",
+    status,
+  };
+}
+
+async function loadRequestsFromApi() {
+  const response = await fetch("api/consultation-requests.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok || !Array.isArray(result.requests)) {
+    throw new Error(result.message || "Unable to load consultation requests.");
+  }
+  REQUESTS = result.requests.map(mapApiRequest);
+}
+
+async function updateRequestStatus(request, status) {
+  const response = await fetch("api/consultation-requests.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      role: "faculty",
+      request_id: Number(request.id),
+      status,
+    }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to update consultation request.");
+  }
 }
 
 function applyNotificationViewTarget() {
@@ -422,6 +418,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderAll();
 
+  loadRequestsFromApi()
+    .then(() => {
+      applyIgnoredStatusToPastPending(REQUESTS);
+      renderAll();
+    })
+    .catch(() => {
+      REQUESTS = [];
+      renderAll();
+    });
+
   applyNotificationViewTarget();
 
   let isHistoryOpen = false;
@@ -487,7 +493,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function handleAction(event, section) {
+  async function handleAction(event, section) {
     const actionButton = event.target.closest("[data-action]");
     if (!actionButton) return;
 
@@ -521,6 +527,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (action === "reschedule") {
       try {
+        saveConsultations(REQUESTS);
         sessionStorage.setItem(RESCHEDULE_TARGET_STORAGE_KEY, request.id);
       } catch (error) {
       }
@@ -542,9 +549,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const rescheduleButton = card.querySelector(".request-reschedule-button");
       if (rescheduleButton) rescheduleButton.disabled = true;
 
-      request.status = isComplete ? "completed" : "upcoming";
-      saveConsultations(REQUESTS);
-      notifyRequestAnswered(request, isComplete ? "completed" : "accepted");
+      try {
+        await updateRequestStatus(request, isComplete ? "completed" : "approved");
+        request.status = isComplete ? "completed" : "upcoming";
+        notifyRequestAnswered(request, isComplete ? "completed" : "accepted");
+      } catch (error) {
+        window.alert(error.message || "Unable to update request.");
+      }
 
       window.setTimeout(renderAll, 900);
       return;
@@ -564,9 +575,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const rescheduleButton = card.querySelector(".request-reschedule-button");
       if (rescheduleButton) rescheduleButton.disabled = true;
 
-      request.status = isCancel ? "cancelled" : "declined";
-      saveConsultations(REQUESTS);
-      notifyRequestAnswered(request, isCancel ? "cancelled" : "declined");
+      try {
+        await updateRequestStatus(request, isCancel ? "cancelled" : "declined");
+        request.status = isCancel ? "cancelled" : "declined";
+        notifyRequestAnswered(request, isCancel ? "cancelled" : "declined");
+      } catch (error) {
+        window.alert(error.message || "Unable to update request.");
+      }
 
       window.setTimeout(renderAll, 900);
       return;
@@ -574,13 +589,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (pendingContainer) {
-    pendingContainer.addEventListener("click", (event) => handleAction(event, "pending"));
+    pendingContainer.addEventListener("click", (event) => {
+      handleAction(event, "pending");
+    });
   }
   if (upcomingContainer) {
-    upcomingContainer.addEventListener("click", (event) => handleAction(event, "upcoming"));
+    upcomingContainer.addEventListener("click", (event) => {
+      handleAction(event, "upcoming");
+    });
   }
   if (completedContainer) {
-    completedContainer.addEventListener("click", (event) => handleAction(event, "completed"));
+    completedContainer.addEventListener("click", (event) => {
+      handleAction(event, "completed");
+    });
   }
 
   document.addEventListener("click", (event) => {

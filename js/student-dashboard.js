@@ -1,44 +1,23 @@
 // Student Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_STUDENT = {
-    studentId: "24-00001",
-    program: "BSCPE (Computer Engineering)",
-    yearLevel: "3rd Year",
-  };
-
-  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
-
-  const DEFAULT_STUDENT_NAME = {
-    firstName: "John",
-    middleInitial: "D",
-    lastName: "Cruz",
-  };
-
-  function loadStudentName() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          return {
-            firstName: parsed.firstName || "",
-            middleInitial: parsed.middleInitial || "",
-            lastName: parsed.lastName || "",
-          };
-        }
-      }
-    } catch (error) {
-    }
-    return { ...DEFAULT_STUDENT_NAME };
-  }
-
-  const studentName = loadStudentName();
-
   const firstNameEl = document.getElementById("studentFirstName");
-  if (firstNameEl) {
-    firstNameEl.textContent = studentName.firstName;
-  }
+
+  fetch("api/session.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
+      if (firstNameEl && fullName) {
+        firstNameEl.textContent = fullName.split(/\s+/)[0];
+      }
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   const dashboardDateTimeEl = document.getElementById("dashboardDateTime");
 
@@ -282,45 +261,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return [];
   }
 
-  function getSampleNotificationRecords() {
-    const now = Date.now();
-    const MINUTE = 60 * 1000;
-    const DAY = 24 * 60 * MINUTE;
-
-    return [
-      {
-        id: "sample-1",
-        type: "accepted",
-        facultyName: "Engr. Sales",
-        createdAt: now - 2 * MINUTE,
-      },
-      {
-        id: "sample-2",
-        type: "rescheduled",
-        accepted: true,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - 90 * MINUTE,
-      },
-      {
-        id: "sample-3",
-        type: "rescheduled",
-        accepted: false,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - DAY,
-      },
-      {
-        id: "sample-4",
-        type: "declined",
-        facultyName: "Engr. Sales",
-        createdAt: now - 3 * DAY,
-      },
-    ];
-  }
-
   const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
     year: "numeric",
@@ -431,10 +371,8 @@ document.addEventListener("DOMContentLoaded", () => {
     .filter(isSupportedNotificationRecord)
     .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
 
-  const allNotificationsInPageOrder = storedNotificationRecords.concat(getSampleNotificationRecords());
-
   renderRecentNotifications(
-    buildRecentNotificationRows(allNotificationsInPageOrder.slice(0, RECENT_NOTIFICATIONS_LIMIT))
+    buildRecentNotificationRows(storedNotificationRecords.slice(0, RECENT_NOTIFICATIONS_LIMIT))
   );
 
 });

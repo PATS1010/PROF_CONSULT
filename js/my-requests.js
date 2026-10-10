@@ -81,13 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const MY_REQUESTS_STORAGE_KEY = "profconsult_my_requests";
-
-  const SAMPLE_REQUESTS = [
-    { title: "Research Consultation", date: "July 15", time: "10:00 AM", status: "waiting", statusLabel: "Waiting" },
-    { title: "Capstone Consultation", date: "July 18", time: "2:00 PM", status: "approved", statusLabel: "Approved" },
-    { title: "OJT Consultation", date: "July 8", time: "", status: "completed", statusLabel: "Completed" },
-  ];
+  let REQUESTS = [];
 
   const MONTH_INDEX = {
     jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
@@ -136,13 +130,36 @@ document.addEventListener("DOMContentLoaded", () => {
     return parseRequestTime(a) - parseRequestTime(b);
   }
 
-  function getSubmittedRequests() {
-    try {
-      const raw = localStorage.getItem(MY_REQUESTS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (error) {
-      return [];
-    }
+  function formatTimeLabel(timeValue) {
+    const [hourText, minuteText] = String(timeValue || "00:00").split(":");
+    const date = new Date();
+    date.setHours(Number(hourText) || 0, Number(minuteText) || 0, 0, 0);
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(date);
+  }
+
+  function mapApiRequest(record) {
+    const status = String(record.Status || "pending").toLowerCase();
+    const statusMap = {
+      pending: ["waiting", "Waiting"],
+      approved: ["approved", "Approved"],
+      rescheduled: ["approved", "Rescheduled"],
+      completed: ["completed", "Completed"],
+      declined: ["declined", "Declined"],
+      cancelled: ["declined", "Cancelled"],
+    };
+    const mappedStatus = statusMap[status] || ["waiting", status || "Pending"];
+    return {
+      title: record.Purpose || "Consultation",
+      date: record.Request_Date || "",
+      dateISO: record.Request_Date || "",
+      time: formatTimeLabel(record.Preferred_Time),
+      status: mappedStatus[0],
+      statusLabel: mappedStatus[1],
+    };
   }
 
   function renderRequests() {
@@ -150,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const noResultsEl = document.getElementById("noRequestsMessage");
     if (!listEl) return;
 
-    const requests = [...getSubmittedRequests(), ...SAMPLE_REQUESTS].sort(compareByDateTime);
+    const requests = REQUESTS.slice().sort(compareByDateTime);
 
     listEl.innerHTML = "";
 
@@ -210,11 +227,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  renderRequests();
-
-  window.addEventListener("storage", (event) => {
-    if (event.key === MY_REQUESTS_STORAGE_KEY) renderRequests();
-  });
+  fetch("api/consultation-requests.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      REQUESTS = Array.isArray(result.requests) ? result.requests.map(mapApiRequest) : [];
+      renderRequests();
+    })
+    .catch(() => {
+      REQUESTS = [];
+      renderRequests();
+    });
 
 });
 // Logout confirmation modal

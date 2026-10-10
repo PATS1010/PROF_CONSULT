@@ -1298,23 +1298,6 @@ document.addEventListener(
       setFacultyNotificationCount(0);
     }
 
-    const FACULTY_TOAST_TEST_DEMO = false;
-
-    if (
-      FACULTY_TOAST_TEST_DEMO &&
-      window.TEST_FACULTY_ACCOUNT === true
-    ) {
-
-      showFacultyNotificationToast(
-        "Juan Dela Cruz sent a request for consultation."
-      );
-
-      if (activePage !== "notifications") {
-
-        setFacultyNotificationCount(1);
-      }
-    }
-
     updateFacultyNotificationBadge();
 
     const notificationBellButton =

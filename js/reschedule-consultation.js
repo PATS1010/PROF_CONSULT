@@ -40,29 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
-
-  const RESCHEDULE_NOTIFICATION_FACULTY_NAME = "Engr. Sales";
-
-  function loadStudentNotificationRecords() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (error) {
-    }
-    return [];
-  }
-
-  function saveStudentNotificationRecords(list) {
-    try {
-      localStorage.setItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY, JSON.stringify(list));
-    } catch (error) {
-    }
-  }
-
   const purposeEl = document.getElementById("reschedulePurpose");
   const messageEl = document.getElementById("rescheduleMessage");
   const studentNameEl = document.getElementById("rescheduleStudentName");
@@ -280,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const countdownEl = document.getElementById("rescheduleCountdown");
 
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const newDateISO = dateInput ? dateInput.value : "";
@@ -288,31 +265,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!newDateISO || !newTimeLabel) return;
 
-      request.preferredDateISO = newDateISO;
-      request.preferredTimeLabel = newTimeLabel;
-      request.date = formatDisplayDate(newDateISO, newTimeLabel);
-
-      saveConsultations(consultations);
-
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
-
-      const notificationRecord = {
-        id: `reschedule-${request.id}-${Date.now()}`,
-        type: "rescheduled",
-        accepted: false,
-        facultyName: RESCHEDULE_NOTIFICATION_FACULTY_NAME,
-        dateISO: newDateISO,
-        timeLabel: newTimeLabel,
-        createdAt: Date.now(),
-      };
-
-      if (messageForStudentRaw) {
-        notificationRecord.message = messageForStudentRaw;
+      try {
+        const response = await fetch("api/consultation-requests.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "faculty",
+            request_id: Number(request.id),
+            status: "rescheduled",
+            preferred_date: newDateISO,
+            preferred_time: newTimeLabel,
+            response: messageForStudentRaw,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to reschedule consultation.");
+        }
+      } catch (error) {
+        window.alert(error.message || "Unable to reschedule consultation.");
+        return;
       }
-
-      const studentNotificationRecords = loadStudentNotificationRecords();
-      studentNotificationRecords.unshift(notificationRecord);
-      saveStudentNotificationRecords(studentNotificationRecords);
 
       try {
         sessionStorage.removeItem(RESCHEDULE_TARGET_STORAGE_KEY);

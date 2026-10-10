@@ -1,86 +1,17 @@
 // Student Profile JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_STUDENT = {
-    studentNumber: "24-00001",
-    course: "computer-engineering",
-    yearLevel: "3",
-    section: "A",
-    email: "john.delacruz@example.com",
-    phone: "912-345-6789",
-  };
-
-  const STUDENT_DETAILS_STORAGE_KEY = "profconsult_student_details";
-
-  function loadStudentDetails() {
-    try {
-      const stored = localStorage.getItem(STUDENT_DETAILS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          return {
-            course: parsed.course || SAMPLE_STUDENT.course,
-            yearLevel: parsed.yearLevel || SAMPLE_STUDENT.yearLevel,
-            section: parsed.section || SAMPLE_STUDENT.section,
-            email: parsed.email || SAMPLE_STUDENT.email,
-            phone: parsed.phone || SAMPLE_STUDENT.phone,
-          };
-        }
-      }
-    } catch (error) {
-    }
+  function emptyStudentDetails() {
     return {
-      course: SAMPLE_STUDENT.course,
-      yearLevel: SAMPLE_STUDENT.yearLevel,
-      section: SAMPLE_STUDENT.section,
-      email: SAMPLE_STUDENT.email,
-      phone: SAMPLE_STUDENT.phone,
+      course: "",
+      yearLevel: "",
+      section: "",
+      email: "",
+      phone: "",
     };
   }
 
-  function saveStudentDetails(details) {
-    try {
-      localStorage.setItem(STUDENT_DETAILS_STORAGE_KEY, JSON.stringify(details));
-    } catch (error) {
-    }
-  }
-
-  let studentDetails = loadStudentDetails();
-
-  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
-
-  const DEFAULT_STUDENT_NAME = {
-    firstName: "John",
-    middleInitial: "D",
-    lastName: "Cruz",
-    suffix: "",
-  };
-
-  function loadStudentName() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          return {
-            firstName: parsed.firstName || "",
-            middleInitial: parsed.middleInitial || "",
-            lastName: parsed.lastName || "",
-            suffix: parsed.suffix || "",
-          };
-        }
-      }
-    } catch (error) {
-    }
-    return { ...DEFAULT_STUDENT_NAME };
-  }
-
-  function saveStudentName(nameParts) {
-    try {
-      localStorage.setItem(STUDENT_NAME_STORAGE_KEY, JSON.stringify(nameParts));
-    } catch (error) {
-    }
-  }
+  let studentDetails = emptyStudentDetails();
 
   function sanitizeNamePart(value) {
     return (value || "").replace(/[,.\-]/g, "");
@@ -93,7 +24,12 @@ document.addEventListener("DOMContentLoaded", () => {
       .join(" ");
   }
 
-  let studentName = loadStudentName();
+  let studentName = {
+    firstName: "",
+    middleInitial: "",
+    lastName: "",
+    suffix: "",
+  };
 
   const fullNameViewGroup = document.getElementById("profileFullNameView");
   const fullNameDisplay = document.getElementById("profileFullNameDisplay");
@@ -142,12 +78,69 @@ document.addEventListener("DOMContentLoaded", () => {
   const phoneError = document.getElementById("phoneError");
   const phoneGroup = document.getElementById("profilePhoneGroup");
 
-  if (studentNumberInput) studentNumberInput.value = SAMPLE_STUDENT.studentNumber;
+  if (studentNumberInput) studentNumberInput.value = "";
   if (courseSelect) courseSelect.value = studentDetails.course;
   if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
   if (sectionSelect) sectionSelect.value = studentDetails.section;
   if (emailInput) emailInput.value = studentDetails.email;
   if (phoneInput) phoneInput.value = studentDetails.phone;
+
+  function splitFullName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return { firstName: "", middleInitial: "", lastName: "", suffix: "" };
+    if (parts.length === 1) return { firstName: parts[0], middleInitial: "", lastName: "", suffix: "" };
+    const lastName = parts.pop();
+    let middleInitial = "";
+    if (parts.length > 1 && parts[parts.length - 1].length === 1) {
+      middleInitial = parts.pop();
+    }
+    return { firstName: parts.join(" "), middleInitial, lastName, suffix: "" };
+  }
+
+  function normalizeProgramValue(value) {
+    const raw = String(value || "").toLowerCase();
+    if (raw.includes("computer")) return "computer-engineering";
+    return value || "";
+  }
+
+  function normalizeYearLevel(value) {
+    const match = String(value || "").match(/\d/);
+    return match ? match[0] : String(value || "");
+  }
+
+  function applySessionProfile(result) {
+    const user = result.user || {};
+    const profile = result.profile || {};
+
+    studentName = splitFullName(user.name || "");
+    studentDetails = {
+      course: normalizeProgramValue(profile.Program || profile.program || ""),
+      yearLevel: normalizeYearLevel(profile.Year_Level || profile.year_level || ""),
+      section: profile.Section || profile.section || "",
+      email: user.email || "",
+      phone: formatPhoneInput(user.phone || ""),
+    };
+
+    if (studentNumberInput) studentNumberInput.value = user.username || "";
+    if (courseSelect) courseSelect.value = studentDetails.course;
+    if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
+    if (sectionSelect) sectionSelect.value = studentDetails.section;
+    if (emailInput) emailInput.value = studentDetails.email;
+    if (phoneInput) phoneInput.value = studentDetails.phone;
+    renderFullNameDisplay();
+    populateNameEditInputs();
+  }
+
+  fetch("api/session.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then(applySessionProfile)
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   function formatPhoneInput(rawValue) {
     const digits = rawValue.replace(/\D/g, "").slice(0, 10);
@@ -309,7 +302,35 @@ document.addEventListener("DOMContentLoaded", () => {
     editProfileButton.textContent = "Save Changes";
   }
 
-  function exitEditMode() {
+  async function saveStudentProfileToApi() {
+    const fullName = buildFullName(
+      sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
+      sanitizeNamePart(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
+      sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
+      suffixSelect ? suffixSelect.value : studentName.suffix
+    );
+
+    const response = await fetch("api/student-profile.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        full_name: fullName,
+        email: emailInput ? emailInput.value.trim() : "",
+        phone: phoneInput ? phoneInput.value.trim() : "",
+        program: courseSelect ? courseSelect.options[courseSelect.selectedIndex].textContent : "",
+        year_level: yearLevelSelect ? `${yearLevelSelect.value}${yearLevelSelect.value ? " Year" : ""}` : "",
+        section: sectionSelect ? sectionSelect.value : "",
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to update the student profile.");
+    }
+    applySessionProfile(result);
+  }
+
+  async function exitEditMode() {
     isEditing = false;
     editableFields.forEach((field) => {
       if (!field) return;
@@ -326,7 +347,6 @@ document.addEventListener("DOMContentLoaded", () => {
       lastName: sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
       suffix: suffixSelect ? suffixSelect.value : studentName.suffix,
     };
-    saveStudentName(studentName);
     renderFullNameDisplay();
 
     studentDetails = {
@@ -336,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
       email: emailInput ? emailInput.value.trim() : studentDetails.email,
       phone: phoneInput ? phoneInput.value.trim() : studentDetails.phone,
     };
-    saveStudentDetails(studentDetails);
+    await saveStudentProfileToApi();
 
     if (fullNameEditGroup) fullNameEditGroup.hidden = true;
     if (fullNameViewGroup) fullNameViewGroup.hidden = false;
@@ -355,7 +375,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isEmailValid || !isPhoneValid) {
           return;
         }
-        exitEditMode();
+        exitEditMode().catch((error) => {
+          showFieldError(emailInput, emailError, error.message || "Unable to save profile.");
+        });
       } else {
         enterEditMode();
       }

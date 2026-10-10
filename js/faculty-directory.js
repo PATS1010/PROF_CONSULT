@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const DEFAULT_OFFICE = "Faculty Room";
 
-  const FACULTY_DIRECTORY_DATA = [
+  let FACULTY_DIRECTORY_DATA = [
     {
       id: "maria-nina-sales",
       lastName: "Sales",
@@ -102,6 +102,57 @@ document.addEventListener("DOMContentLoaded", () => {
   const backButton = document.getElementById("directoryBackButton");
 
   let selectedFacultyId = null;
+
+  function normalizeStatus(value) {
+    const raw = String(value || "offline").toLowerCase();
+    if (raw === "in class") return "teaching";
+    if (raw === "on leave") return "onleave";
+    if (raw === "unavailable") return "offline";
+    return raw;
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      available: "Available",
+      teaching: "In Class",
+      meeting: "Meeting",
+      consultation: "Consultation",
+      onleave: "On Leave",
+      offline: "Offline",
+    };
+    return labels[status] || "Offline";
+  }
+
+  function mapFacultyRecord(record) {
+    const status = normalizeStatus(record.Current_Status);
+    const fullName = record.Full_Name || "";
+    const nameParts = fullName.trim().split(/\s+/);
+    return {
+      id: String(record.Faculty_ID),
+      lastName: nameParts[nameParts.length - 1] || fullName,
+      fullName,
+      program: record.Department || "Faculty",
+      office: record.Office || DEFAULT_OFFICE,
+      status,
+      statusLabel: statusLabel(status),
+      photo: record.Profile_Photo || "images/user.png",
+      hours: parseConsultationHours(record.Consultation_Hours),
+    };
+  }
+
+  function parseConsultationHours(value) {
+    const rows = String(value || "").split(/\r?\n|;/).map((item) => item.trim()).filter(Boolean);
+    if (rows.length === 0) {
+      return [{ day: "Schedule", time: "Consultation hours not set" }];
+    }
+    return rows.map((row) => {
+      const parts = row.split(/:\s*/);
+      return {
+        day: parts.length > 1 ? parts.shift() : "Schedule",
+        time: parts.join(": ") || row,
+      };
+    });
+  }
 
   function renderFacultyList() {
     facultyListEl.innerHTML = "";
@@ -256,14 +307,30 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.addEventListener("click", closeProfile);
   }
 
-  renderFacultyList();
-  applyFilters();
+  function renderInitialView() {
+    renderFacultyList();
+    applyFilters();
 
-  const initialParams = new URLSearchParams(window.location.search);
-  const initialFacultyId = initialParams.get("facultyId");
-  if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
-    openProfile(initialFacultyId);
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialFacultyId = initialParams.get("facultyId");
+    if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
+      openProfile(initialFacultyId);
+    }
   }
+
+  fetch("api/faculty-directory.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      if (result && Array.isArray(result.faculty)) {
+        FACULTY_DIRECTORY_DATA = result.faculty.map(mapFacultyRecord);
+      }
+      renderInitialView();
+    })
+    .catch(renderInitialView);
 
 });
 // Logout confirmation modal

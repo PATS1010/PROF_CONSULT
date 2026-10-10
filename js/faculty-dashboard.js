@@ -19,60 +19,7 @@ function studentNameLinkHtml(request) {
   return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
 }
 
-const DEFAULT_CONSULTATIONS = [
-  {
-    id: "req-1",
-    name: "Juan Dela Cruz",
-    studentId: "22-00145",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-    status: "pending",
-  },
-  {
-    id: "req-2",
-    name: "Joselita Rizal",
-    studentId: "22-00098",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-    status: "pending",
-  },
-  {
-    id: "req-3",
-    name: "Mark Santos",
-    studentId: "21-00567",
-    type: "Thesis Defense Prep",
-    date: "July 21, 1:00 PM",
-    preferredDateISO: "2026-07-21",
-    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "4A",
-    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-    status: "pending",
-  },
-  {
-    id: "req-4",
-    name: "Angela Cruz",
-    studentId: "23-00212",
-    type: "Grade Concern",
-    date: "July 22, 9:30 AM",
-    preferredDateISO: "2026-07-22",
-    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
-    program: "BS Computer Engineering",
-    yearSet: "2A",
-    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-    status: "pending",
-  },
-];
+const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
   try {
@@ -87,19 +34,6 @@ function isPageReload() {
 }
 
 function loadConsultations() {
-  try {
-    if (isPageReload()) {
-      saveConsultations(DEFAULT_CONSULTATIONS);
-      return DEFAULT_CONSULTATIONS.slice();
-    }
-    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (error) {
-  }
-  saveConsultations(DEFAULT_CONSULTATIONS);
   return DEFAULT_CONSULTATIONS.slice();
 }
 
@@ -152,16 +86,24 @@ function formatPreferredDateTime(request) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_FACULTY = {
-    fullName: "Engr. Maria Nina Sales",
-    lastName: "Professor",
-  };
-
   const nameEl = document.getElementById("facultyLastName");
 
-  if (nameEl) {
-    nameEl.textContent = SAMPLE_FACULTY.lastName;
-  }
+  fetch("api/session.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
+      if (nameEl && fullName) {
+        const parts = fullName.split(/\s+/);
+        nameEl.textContent = parts[parts.length - 1] || fullName;
+      }
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   const facultyPageDateTimeEl =
     document.getElementById("facultyPageDateTime");
@@ -404,6 +346,74 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   let requests = loadConsultations();
+
+  function formatTimeRange(timeValue) {
+    const [hourText, minuteText] = String(timeValue || "00:00").split(":");
+    const start = new Date();
+    start.setHours(Number(hourText) || 0, Number(minuteText) || 0, 0, 0);
+    const end = new Date(start.getTime() + CONSULTATION_SLOT_MINUTES * 60000);
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${formatter.format(start)} \u2013 ${formatter.format(end)}`;
+  }
+
+  function formatRequestDate(dateValue, timeValue) {
+    const date = new Date(`${dateValue}T00:00:00`);
+    const dateLabel = Number.isNaN(date.getTime())
+      ? String(dateValue || "")
+      : date.toLocaleDateString("en-US", { month: "long", day: "numeric" });
+    return `${dateLabel}, ${formatTimeRange(timeValue).split("\u2013")[0].trim()}`;
+  }
+
+  function mapApiRequest(record) {
+    const status = record.Status === "approved" ? "upcoming" : String(record.Status || "pending").toLowerCase();
+    return {
+      id: String(record.Request_ID),
+      name: record.Student_Name || "",
+      studentId: record.Student_Number || "",
+      type: record.Purpose || "Consultation",
+      date: formatRequestDate(record.Request_Date, record.Preferred_Time),
+      preferredDateISO: record.Request_Date || "",
+      preferredTimeLabel: formatTimeRange(record.Preferred_Time),
+      program: record.Program || "",
+      yearSet: `${record.Year_Level || ""}${record.Section || ""}`,
+      message: record.Additional_Message || "",
+      status,
+    };
+  }
+
+  async function loadConsultationsFromApi() {
+    const response = await fetch("api/consultation-requests.php?role=faculty", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok || !Array.isArray(result.requests)) {
+      throw new Error(result.message || "Unable to load consultation requests.");
+    }
+    requests = result.requests.map(mapApiRequest);
+  }
+
+  async function updateRequestStatus(request, status) {
+    const response = await fetch("api/consultation-requests.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        role: "faculty",
+        request_id: Number(request.id),
+        status,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to update consultation request.");
+    }
+  }
 
   function notifyRequestAnswered(
     request,
@@ -723,11 +733,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderTodaysSchedule();
 
+  loadConsultationsFromApi()
+    .then(() => {
+      renderDashboardRequest();
+      renderTodaysSchedule();
+    })
+    .catch(() => {
+      requests = [];
+      renderDashboardRequest();
+      renderTodaysSchedule();
+    });
+
   if (acceptButton) {
 
     acceptButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
         const request =
           getNextPendingRequest();
@@ -749,15 +770,18 @@ document.addEventListener("DOMContentLoaded", () => {
             true;
         }
 
-        request.status =
-          "upcoming";
+        try {
+          await updateRequestStatus(request, "approved");
+          request.status =
+            "upcoming";
 
-        saveConsultations(requests);
-
-        notifyRequestAnswered(
-          request,
-          "accepted"
-        );
+          notifyRequestAnswered(
+            request,
+            "accepted"
+          );
+        } catch (error) {
+          window.alert(error.message || "Unable to accept request.");
+        }
 
         window.setTimeout(
           () => {
@@ -776,7 +800,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     declineButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
         const request =
           getNextPendingRequest();
@@ -798,15 +822,18 @@ document.addEventListener("DOMContentLoaded", () => {
             true;
         }
 
-        request.status =
-          "declined";
+        try {
+          await updateRequestStatus(request, "declined");
+          request.status =
+            "declined";
 
-        saveConsultations(requests);
-
-        notifyRequestAnswered(
-          request,
-          "declined"
-        );
+          notifyRequestAnswered(
+            request,
+            "declined"
+          );
+        } catch (error) {
+          window.alert(error.message || "Unable to decline request.");
+        }
 
         window.setTimeout(
           renderDashboardRequest,

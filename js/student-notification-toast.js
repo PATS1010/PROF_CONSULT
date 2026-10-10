@@ -400,70 +400,10 @@
     }
   );
 
-  const STUDENT_TOAST_TEST_DEMO = false;
-
-  if (STUDENT_TOAST_TEST_DEMO) {
-
-    let alreadyShownThisSession = true;
-
-    try {
-
-      alreadyShownThisSession =
-        sessionStorage.getItem(
-          "studentTestToastDemoShown"
-        ) === "true";
-
-      sessionStorage.setItem(
-        "studentTestToastDemoShown",
-        "true"
-      );
-
-    } catch (error) {
-
-      alreadyShownThisSession = true;
-    }
-
-    if (!alreadyShownThisSession) {
-
-      showStudentNotificationToast(
-        "Engr. Sales accepted your consultation request."
-      );
-
-      window.setTimeout(
-        () => {
-
-          showStudentNotificationToast(
-            "Engr. Sales rescheduled your consultation request."
-          );
-
-        },
-        1500
-      );
-    }
-  }
-
-  const STUDENT_BADGE_TEST_DEMO = false;
-
   function isOnStudentNotificationsPage() {
 
     return /(^|\/)notifications\.html(\?|$)/i.test(
       window.location.pathname + window.location.search
-    );
-  }
-
-  if (STUDENT_BADGE_TEST_DEMO) {
-
-    document.addEventListener(
-      "DOMContentLoaded",
-      () => {
-
-        if (isOnStudentNotificationsPage()) {
-
-          return;
-        }
-
-        raiseBellIndicator();
-      }
     );
   }
 

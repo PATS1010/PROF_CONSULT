@@ -10,16 +10,6 @@
 // - Name / Email / Phone validation on Save
 // - Faculty ID always read-only, never editable
 //
-// Represents the currently logged-in faculty account. Prototype
-// data for now -- once the backend exists, FACULTY_ACCOUNT should
-// be populated from the logged-in session instead, and this same
-// object should feed the Faculty Directory and other faculty
-// pages so there's a single source of truth per account.
-//
-// UPDATED: FACULTY_ACCOUNT is now persisted to localStorage so
-// Save Changes survives a page refresh instead of resetting
-// back to the hardcoded prototype values below.
-//
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
@@ -35,55 +25,16 @@
 // working. suffix defaults to "" (None).
 // ---------------------------------------------------------
 const FACULTY_ACCOUNT = {
-  firstName: "Juan",
+  firstName: "",
   middleInitial: "",
-  lastName: "Dela Cruz",
+  lastName: "",
   suffix: "",
   name: "", // combined below from the four parts
-  facultyId: "24-00001",
-  program: "Computer Engineering",
-  email: "juan.delacruz@cvsu.edu.ph",
-  phone: "912-345-6789", // local part only; +63 prefix is fixed in the UI
+  facultyId: "",
+  program: "",
+  email: "",
+  phone: "", // local part only; +63 prefix is fixed in the UI
 };
-
-// ---------------------------------------------------------
-// Persistence -- same reasoning as the Student Profile page's
-// localStorage use: without this, Save Changes only updates the
-// in-memory object above, so a refresh silently discards it.
-// ---------------------------------------------------------
-const FACULTY_ACCOUNT_STORAGE_KEY = "profconsult_faculty_account";
-
-function loadStoredFacultyAccount() {
-  try {
-    const stored = localStorage.getItem(FACULTY_ACCOUNT_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (parsed && typeof parsed === "object") {
-        return parsed;
-      }
-    }
-  } catch (error) {
-    // fall through -- keep the prototype defaults above
-  }
-  return null;
-}
-
-function saveFacultyAccount() {
-  try {
-    localStorage.setItem(FACULTY_ACCOUNT_STORAGE_KEY, JSON.stringify(FACULTY_ACCOUNT));
-  } catch (error) {
-    // Storage unavailable -- the change just won't persist/sync
-  }
-}
-
-// Apply any previously-saved account data over the defaults above.
-// (A stored account saved before Suffix existed simply has no
-// "suffix" key, so Object.assign leaves the "" default above in
-// place -- no extra fallback needed.)
-const storedFacultyAccount = loadStoredFacultyAccount();
-if (storedFacultyAccount) {
-  Object.assign(FACULTY_ACCOUNT, storedFacultyAccount);
-}
 
 // Structured so more programs can be added later without
 // touching any markup or logic -- just extend this array.
@@ -195,6 +146,38 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderViewMode();
+
+  function applySessionProfile(result) {
+    const user = result.user || {};
+    const profile = result.profile || {};
+    const nameParts = splitLegacyName(user.name || "");
+    FACULTY_ACCOUNT.firstName = nameParts.firstName;
+    FACULTY_ACCOUNT.middleInitial = nameParts.middleInitial;
+    FACULTY_ACCOUNT.lastName = nameParts.lastName;
+    FACULTY_ACCOUNT.suffix = "";
+    FACULTY_ACCOUNT.name = combineName(
+      FACULTY_ACCOUNT.firstName,
+      FACULTY_ACCOUNT.middleInitial,
+      FACULTY_ACCOUNT.lastName,
+      FACULTY_ACCOUNT.suffix
+    );
+    FACULTY_ACCOUNT.facultyId = user.username || "";
+    FACULTY_ACCOUNT.program = profile.Department || profile.department || "";
+    FACULTY_ACCOUNT.email = user.email || "";
+    FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || "");
+    renderViewMode();
+  }
+
+  fetch("api/session.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then(applySessionProfile)
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   // ---------------------------------------------------------
   // Program dropdown -- built from PROGRAM_OPTIONS so future
@@ -428,7 +411,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // mode if everything passes. Faculty ID is never read from
   // the form (it's read-only and never changes).
   // ---------------------------------------------------------
-  function handleSave() {
+  async function saveFacultyProfileToApi() {
+    const response = await fetch("api/faculty-profile.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        full_name: FACULTY_ACCOUNT.name,
+        email: FACULTY_ACCOUNT.email,
+        phone: FACULTY_ACCOUNT.phone,
+        department: FACULTY_ACCOUNT.program,
+        office: "",
+        consultation_hours: "",
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to update the faculty profile.");
+    }
+    applySessionProfile(result);
+  }
+
+  async function handleSave() {
     // Do nothing if not currently editing -- Save only acts on
     // the edit form's values.
     if (editForm.hidden) return;
@@ -459,11 +463,14 @@ document.addEventListener("DOMContentLoaded", () => {
     // FACULTY_ACCOUNT.facultyId intentionally left untouched --
     // the Faculty ID field is never a source of updates.
 
-    // Persist so the change survives a refresh.
-    saveFacultyAccount();
-
-    renderViewMode();
-    exitEditMode();
+    try {
+      await saveFacultyProfileToApi();
+      renderViewMode();
+      exitEditMode();
+    } catch (error) {
+      showFieldError(emailInput, emailError, error.message || "Unable to save profile.");
+      return;
+    }
 
     if (saveSuccessMessage) {
       saveSuccessMessage.hidden = false;

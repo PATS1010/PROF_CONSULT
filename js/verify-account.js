@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     backButton.addEventListener(
       "click",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
@@ -396,23 +396,48 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        sessionStorage.setItem(
-          "verificationIdentifier",
-          identifier
-        );
+        try {
+          const response = await fetch("api/request-account-verification-code.php", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json", "Accept": "application/json" },
+            body: JSON.stringify({
+              role: origin,
+              method: currentMode,
+              identifier,
+              email: currentMode === "email" ? identifier : "",
+            }),
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.ok) {
+            throw new Error(result.message || "Unable to request a verification code.");
+          }
 
-        sessionStorage.setItem(
-          "verificationMethod",
-          currentMode
-        );
+          sessionStorage.setItem(
+            "verificationIdentifier",
+            identifier
+          );
 
-        sessionStorage.setItem(
-          "verificationOrigin",
-          origin
-        );
+          sessionStorage.setItem(
+            "verificationMethod",
+            currentMode
+          );
 
-        window.location.href =
-          verificationCodePage;
+          sessionStorage.setItem(
+            "verificationOrigin",
+            origin
+          );
+
+          sessionStorage.setItem(
+            "verificationToken",
+            result.token || ""
+          );
+
+          window.location.href =
+            verificationCodePage;
+        } catch (error) {
+          showMessage(error.message || "Unable to request a verification code.");
+        }
 
       }
     );
