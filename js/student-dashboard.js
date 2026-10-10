@@ -180,19 +180,143 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const searchInput = document.getElementById("professorSearchInput");
-  const professorCards = Array.from(document.querySelectorAll(".professor-card"));
+  const professorList = document.getElementById("professorList");
+  const availabilityList = document.getElementById("availabilityList");
   const noResultsMessage = document.getElementById("noResultsMessage");
 
   let activeStatus = null;
+  let facultyDashboardData = [];
+  let isFacultyLoading = true;
+
+  function normalizeStatus(value) {
+    const raw = String(value || "offline").toLowerCase();
+    if (raw === "in class") return "teaching";
+    if (raw === "on leave") return "onleave";
+    if (raw === "unavailable") return "offline";
+    return raw;
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      available: "Available",
+      teaching: "In Class",
+      meeting: "Meeting",
+      consultation: "Consultation",
+      onleave: "On Leave",
+      offline: "Offline",
+    };
+    return labels[status] || "Offline";
+  }
+
+  function mapFacultyRecord(record) {
+    const status = normalizeStatus(record.Current_Status);
+    return {
+      id: String(record.Faculty_ID || ""),
+      fullName: String(record.Full_Name || "Faculty").trim() || "Faculty",
+      program: String(record.Department || "Faculty").trim() || "Faculty",
+      status,
+      statusLabel: statusLabel(status),
+      photo: String(record.Profile_Photo || "images/user.png").trim() || "images/user.png",
+    };
+  }
+
+  function createStatusDot(faculty) {
+    const dot = document.createElement("span");
+    dot.className = `status-dot status-${faculty.status}`;
+    dot.setAttribute("aria-hidden", "true");
+    dot.title = faculty.statusLabel;
+    return dot;
+  }
+
+  function renderProfessorCards() {
+    if (!professorList) return;
+
+    professorList.innerHTML = "";
+
+    facultyDashboardData.forEach((faculty) => {
+      const card = document.createElement("article");
+      card.className = "professor-card";
+      card.dataset.status = faculty.status;
+      card.dataset.facultyId = faculty.id;
+      card.tabIndex = 0;
+
+      const photo = document.createElement("img");
+      photo.src = faculty.photo;
+      photo.alt = faculty.fullName;
+      photo.className = "professor-photo";
+
+      const info = document.createElement("div");
+      info.className = "professor-info";
+
+      const name = document.createElement("p");
+      name.className = "professor-name";
+      name.textContent = faculty.fullName;
+
+      const meta = document.createElement("p");
+      meta.className = "professor-meta";
+      meta.textContent = `${faculty.program} | ${faculty.statusLabel}`;
+
+      info.appendChild(name);
+      info.appendChild(meta);
+      card.appendChild(photo);
+      card.appendChild(info);
+      card.appendChild(createStatusDot(faculty));
+
+      card.addEventListener("click", () => {
+        window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(faculty.id)}`;
+      });
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          card.click();
+        }
+      });
+
+      professorList.appendChild(card);
+    });
+  }
+
+  function renderAvailabilityList() {
+    if (!availabilityList) return;
+
+    availabilityList.innerHTML = "";
+
+    if (isFacultyLoading) {
+      const item = document.createElement("li");
+      item.textContent = "Loading faculty...";
+      availabilityList.appendChild(item);
+      return;
+    }
+
+    if (facultyDashboardData.length === 0) {
+      const item = document.createElement("li");
+      item.textContent = "No faculty accounts found.";
+      availabilityList.appendChild(item);
+      return;
+    }
+
+    facultyDashboardData.forEach((faculty) => {
+      const item = document.createElement("li");
+      item.appendChild(createStatusDot(faculty));
+      item.appendChild(document.createTextNode(` ${faculty.fullName} | ${faculty.statusLabel}`));
+      availabilityList.appendChild(item);
+    });
+  }
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const professorCards = professorList
+      ? Array.from(professorList.querySelectorAll(".professor-card"))
+      : [];
     let visibleCount = 0;
 
     professorCards.forEach((card) => {
-      const name = card.querySelector(".professor-name").textContent.toLowerCase();
+      const nameEl = card.querySelector(".professor-name");
+      const metaEl = card.querySelector(".professor-meta");
+      const name = nameEl ? nameEl.textContent.toLowerCase() : "";
+      const meta = metaEl ? metaEl.textContent.toLowerCase() : "";
       const status = card.dataset.status || "";
-      const matchesSearch = query === "" || name.includes(query);
+      const matchesSearch = query === "" || name.includes(query) || meta.includes(query);
       const matchesStatus = !activeStatus || status === activeStatus;
       const matches = matchesSearch && matchesStatus;
 
@@ -201,8 +325,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (noResultsMessage) {
-      noResultsMessage.hidden = visibleCount > 0;
+      noResultsMessage.hidden = isFacultyLoading || visibleCount > 0;
     }
+  }
+
+  function renderFacultyDashboard() {
+    renderProfessorCards();
+    renderAvailabilityList();
+    applyFilters();
   }
 
   if (searchInput) {
@@ -227,14 +357,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  professorCards.forEach((card) => {
-    const facultyId = card.dataset.facultyId;
-    if (!facultyId) return;
+  renderFacultyDashboard();
 
-    card.addEventListener("click", () => {
-      window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
+  fetch("api/faculty-directory.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      facultyDashboardData = result && Array.isArray(result.faculty)
+        ? result.faculty.map(mapFacultyRecord)
+        : [];
+      isFacultyLoading = false;
+      renderFacultyDashboard();
+    })
+    .catch(() => {
+      facultyDashboardData = [];
+      isFacultyLoading = false;
+      renderFacultyDashboard();
     });
-  });
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
 

@@ -183,6 +183,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  async function deleteCurrentAccount(password) {
+    const deleteResponse = await fetch("api/delete-account.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ role: origin, password }),
+    });
+    const deleteResult = await deleteResponse.json().catch(() => ({}));
+    if (!deleteResponse.ok || !deleteResult.ok) {
+      throw new Error(deleteResult.message || "Unable to delete account.");
+    }
+  }
+
   function openModal() {
     passwordInput.value = "";
     clearPasswordError();
@@ -242,9 +255,16 @@ document.addEventListener("DOMContentLoaded", () => {
     clearPasswordError();
     modalBody.hidden = true;
     loadingEl.hidden = false;
-    window.setTimeout(() => {
-      window.location.href = "login.html";
-    }, 3000);
+    try {
+      await deleteCurrentAccount(enteredPassword);
+      window.location.href = "faculty-login.html";
+    } catch (error) {
+      yesButton.disabled = false;
+      modalBody.hidden = false;
+      loadingEl.hidden = true;
+      showPasswordError(error.message || "Unable to delete account.");
+      passwordInput.focus();
+    }
   });
 
   try {
