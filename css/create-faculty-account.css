@@ -380,9 +380,15 @@ button {
     padding-right: 40px;
   }
 
-  .form-row {
+    .form-row {
     flex-direction: column;
+    align-items: stretch;
     gap: 20px;
+  }
+
+  .form-row .form-field {
+    flex: 0 0 auto;
+    width: 100%;
   }
 
   .btn {

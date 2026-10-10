@@ -143,6 +143,39 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function getPasswordIssue() {
+
+    const value =
+      passwordInput.value;
+
+    if (value.length < 8) {
+      return "Password must contain at least 8 characters.";
+    }
+
+    if (!/[A-Z]/.test(value)) {
+      return "Password must contain at least one uppercase letter.";
+    }
+
+    if (!/[0-9]/.test(value)) {
+      return "Password must contain at least one number.";
+    }
+
+    return "";
+  }
+
+  function isPasswordValid() {
+
+    return getPasswordIssue() === "";
+  }
+
+  function doPasswordsMatch() {
+
+    return (
+      passwordInput.value ===
+      confirmPasswordInput.value
+    );
+  }
+
   function formatMobileNumber(value) {
 
     const digitsOnly =
@@ -209,8 +242,18 @@ document.addEventListener("DOMContentLoaded", () => {
         contactNumberInput.value
       );
 
+    const passwordOk =
+      isPasswordValid();
+
+    const confirmOk =
+      passwordOk &&
+      doPasswordsMatch();
+
     const canVerify =
-      emailOk && mobileOk;
+      emailOk &&
+      mobileOk &&
+      passwordOk &&
+      confirmOk;
 
     if (accountVerified) {
 
@@ -331,7 +374,22 @@ document.addEventListener("DOMContentLoaded", () => {
           contactNumberInput.value
         );
 
-      if (!emailOk || !mobileOk) {
+      const passwordIssue =
+        getPasswordIssue();
+
+      const passwordOk =
+        passwordIssue === "";
+
+      const confirmOk =
+        passwordOk &&
+        doPasswordsMatch();
+
+      if (
+        !emailOk ||
+        !mobileOk ||
+        !passwordOk ||
+        !confirmOk
+      ) {
 
         event.preventDefault();
 
@@ -351,6 +409,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
           contactNumberError.textContent =
             "Please enter a valid Philippine mobile number.";
+        }
+
+        if (!passwordOk) {
+
+          passwordFieldError.textContent =
+            passwordIssue;
+
+          passwordFieldError.hidden = false;
+
+          passwordError.hidden = true;
+
+        } else {
+
+          passwordFieldError.hidden = true;
+
+          passwordError.hidden =
+            confirmOk;
         }
 
         updateVerifyButton();
@@ -416,6 +491,16 @@ document.addEventListener("DOMContentLoaded", () => {
     () => {
 
       updatePasswordRequirements();
+
+      updateVerifyButton();
+    }
+  );
+
+  confirmPasswordInput.addEventListener(
+    "input",
+    () => {
+
+      updateVerifyButton();
     }
   );
 

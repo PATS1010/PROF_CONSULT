@@ -5,11 +5,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prof Consult | Student Dashboard</title>
+    <script src="js/dark-theme.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/student-dashboard.css">
   <link rel="stylesheet" href="css/student-notification-toast.css">
+    <link rel="stylesheet" href="css/dark-theme.css">
   <script src="js/student-notification-toast.js"></script>
 </head>
 <body>
@@ -105,24 +107,19 @@
           autocomplete="off"
         >
 
-        <button type="button" class="filter-button" id="filterButton" aria-haspopup="true" aria-expanded="false" aria-label="Filter by status">
+        <button type="button" class="filter-button" id="filterButton" aria-haspopup="true" aria-expanded="false" aria-label="Filter by department">
           <span class="filter-icon" aria-hidden="true">&#9660;</span>
         </button>
 
         <div class="filter-panel" id="filterPanel" hidden>
-          <button type="button" class="filter-option" data-status="available">Available</button>
-          <button type="button" class="filter-option" data-status="teaching">In Class</button>
-          <button type="button" class="filter-option" data-status="meeting">Meeting</button>
-          <button type="button" class="filter-option" data-status="consultation">Consultation</button>
-          <button type="button" class="filter-option" data-status="onleave">On Leave</button>
-          <button type="button" class="filter-option" data-status="offline">Offline</button>
+          <button type="button" class="filter-option" data-department="computer-engineering">Computer Engineering</button>
         </div>
       </div>
 
       <div class="professor-list-container">
         <div class="professor-list" id="professorList">
 
-          <article class="professor-card" data-status="available" data-faculty-id="maria-nina-sales">
+          <article class="professor-card" data-status="available" data-department="computer-engineering" data-faculty-id="maria-nina-sales">
             <img src="images/nina.png" alt="Engr. Maria Nina Sales" class="professor-photo">
             <div class="professor-info">
               <p class="professor-name">Engr. Maria Nina Sales</p>
@@ -131,7 +128,7 @@
             <span class="status-dot status-available" aria-hidden="true"></span>
           </article>
 
-          <article class="professor-card" data-status="onleave" data-faculty-id="bernard-bisuecos">
+          <article class="professor-card" data-status="onleave" data-department="computer-engineering" data-faculty-id="bernard-bisuecos">
             <img src="images/bis.png" alt="Engr. Bernard Bisuecos" class="professor-photo">
             <div class="professor-info">
               <p class="professor-name">Engr. Bernard Bisuecos</p>
@@ -140,7 +137,7 @@
             <span class="status-dot status-onleave" aria-hidden="true"></span>
           </article>
 
-          <article class="professor-card" data-status="teaching" data-faculty-id="mervin-molina">
+          <article class="professor-card" data-status="teaching" data-department="computer-engineering" data-faculty-id="mervin-molina">
             <img src="images/mervin.png" alt="Engr. Mervin Molina" class="professor-photo">
             <div class="professor-info">
               <p class="professor-name">Engr. Mervin Molina</p>
@@ -149,7 +146,7 @@
             <span class="status-dot status-teaching" aria-hidden="true"></span>
           </article>
 
-          <article class="professor-card" data-status="offline" data-faculty-id="melody-paned">
+          <article class="professor-card" data-status="offline" data-department="computer-engineering" data-faculty-id="melody-paned">
             <img src="images/paned.jpg" alt="Engr. Melody Paned" class="professor-photo">
             <div class="professor-info">
               <p class="professor-name">Engr. Melody Paned</p>
@@ -160,7 +157,7 @@
 
         </div>
 
-        <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected status.</p>
+        <p class="no-results-message" id="noResultsMessage" hidden>No faculty members match your search or selected department.</p>
       </div>
 
     </section>
