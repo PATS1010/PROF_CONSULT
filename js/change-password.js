@@ -1,198 +1,334 @@
-// SYSTEM NOTE: Handles the shared logged-in Change Password page for students and faculty.
-
+// Change Password JS
 document.addEventListener("DOMContentLoaded", () => {
-  const params = new URLSearchParams(window.location.search);
-  const origin = params.get("from") === "faculty" ? "faculty" : "student";
-  const settingsPage = origin === "faculty" ? "faculty-settings.html" : "settings.html";
-  const loginPage = origin === "faculty" ? "faculty-login.html" : "student-login.html";
 
-  const form = document.getElementById("changePasswordForm");
-  const currentPasswordInput = document.getElementById("currentPassword");
-  const newPasswordInput = document.getElementById("newPassword");
-  const confirmPasswordInput = document.getElementById("confirmPassword");
-  const message = document.getElementById("changePasswordMessage");
-  const saveButton = document.getElementById("saveButton");
-  const forgotPasswordLink = document.getElementById("forgotPasswordLink");
-  const requirementItems = Array.from(document.querySelectorAll("#passwordRequirements [data-rule]"));
-  let isSubmitting = false;
+  const params =
+    new URLSearchParams(window.location.search);
 
-  function setBackLinks() {
-    document.querySelectorAll('[data-nav="back"]').forEach((element) => {
-      if (element.tagName === "A") {
-        element.setAttribute("href", settingsPage);
-      }
+  const origin =
+    params.get("from") === "faculty"
+      ? "faculty"
+      : "student";
+
+  const originSettingsPage =
+    origin === "faculty"
+      ? "faculty-settings.html"
+      : "settings.html";
+
+  const forgotPasswordPage =
+    `forgot-password.html?from=${origin}&context=change-password`;
+
+  const backButton =
+    document.getElementById("backButton");
+
+  if (backButton) {
+
+    backButton.setAttribute(
+      "href",
+      originSettingsPage
+    );
+
+  }
+
+  const forgotPasswordLink =
+    document.getElementById("forgotPasswordLink");
+
+  if (forgotPasswordLink) {
+
+    forgotPasswordLink.setAttribute(
+      "href",
+      forgotPasswordPage
+    );
+
+  }
+
+  document
+    .querySelectorAll('[data-nav="back"]')
+    .forEach((element) => {
 
       element.addEventListener("click", (event) => {
+
         event.preventDefault();
-        window.location.href = settingsPage;
+
+        window.location.href =
+          originSettingsPage;
+
       });
+
     });
 
-    if (forgotPasswordLink) {
-      forgotPasswordLink.setAttribute("href", `forgot-password.html?from=${origin}`);
-    }
-  }
+  const form =
+    document.getElementById(
+      "changePasswordForm"
+    );
 
-  function showMessage(text, type = "error") {
-    if (!message) return;
-    message.textContent = text;
-    message.hidden = false;
-    message.classList.toggle("field-message-success", type === "success");
-    message.classList.toggle("field-message-error", type !== "success");
-  }
+  const currentPassword =
+    document.getElementById(
+      "currentPassword"
+    );
 
-  function hideMessage() {
-    if (!message) return;
-    message.textContent = "";
-    message.hidden = true;
-  }
+  const newPassword =
+    document.getElementById(
+      "newPassword"
+    );
 
-  function setInputError(input, hasError) {
-    if (input) input.classList.toggle("input-error", hasError);
-  }
+  const confirmPassword =
+    document.getElementById(
+      "confirmPassword"
+    );
 
-  function passwordRules(value) {
-    return {
-      length: value.length >= 8,
-      uppercase: /[A-Z]/.test(value),
-      number: /[0-9]/.test(value),
-    };
-  }
+  const saveButton =
+    document.getElementById(
+      "saveButton"
+    );
 
-  function updateRequirements() {
-    const rules = passwordRules(newPasswordInput ? newPasswordInput.value : "");
-    requirementItems.forEach((item) => {
-      item.classList.toggle("is-met", Boolean(rules[item.dataset.rule]));
-    });
-  }
+  const requirements =
+    document.getElementById(
+      "passwordRequirements"
+    );
 
-  function validateForm() {
-    const currentPassword = currentPasswordInput ? currentPasswordInput.value : "";
-    const newPassword = newPasswordInput ? newPasswordInput.value : "";
-    const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value : "";
-    const rules = passwordRules(newPassword);
+  const message =
+    document.getElementById(
+      "changePasswordMessage"
+    );
 
-    setInputError(currentPasswordInput, false);
-    setInputError(newPasswordInput, false);
-    setInputError(confirmPasswordInput, false);
+  function showMessage(text, isSuccess) {
 
-    if (currentPassword.trim() === "") {
-      setInputError(currentPasswordInput, true);
-      showMessage("Current password is required.");
-      return null;
-    }
-
-    if (!rules.length || !rules.uppercase || !rules.number) {
-      setInputError(newPasswordInput, true);
-      showMessage("New password must have at least 8 characters, one uppercase letter, and one number.");
-      return null;
-    }
-
-    if (newPassword === currentPassword) {
-      setInputError(newPasswordInput, true);
-      showMessage("New password must be different from your current password.");
-      return null;
-    }
-
-    if (confirmPassword !== newPassword) {
-      setInputError(confirmPasswordInput, true);
-      showMessage("New Password and Confirm Password do not match.");
-      return null;
-    }
-
-    hideMessage();
-    return { currentPassword, newPassword };
-  }
-
-  async function submitPasswordChange(event) {
-    event.preventDefault();
-
-    if (isSubmitting) {
+    if (!message) {
       return;
     }
 
-    const values = validateForm();
-    if (!values) return;
+    message.textContent = text;
 
-    isSubmitting = true;
-    if (saveButton) {
-      saveButton.disabled = true;
-      saveButton.textContent = "Saving...";
-    }
+    message.classList.toggle(
+      "field-message-error",
+      !isSuccess
+    );
 
-    try {
-      const response = await fetch("api/change-password.php", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({
-          current_password: values.currentPassword,
-          new_password: values.newPassword,
-        }),
-      });
-      const result = await response.json();
+    message.classList.toggle(
+      "field-message-success",
+      Boolean(isSuccess)
+    );
 
-      const authMessage = String(result.message || "").toLowerCase();
-      if (
-        response.status === 403 ||
-        (response.status === 401 && (authMessage.includes("log in") || authMessage.includes("not allowed")))
-      ) {
-        showMessage(result.message || "Please log in again before changing your password.");
-        window.setTimeout(() => {
-          window.location.href = loginPage;
-        }, 1200);
-        return;
-      }
+    message.hidden = false;
 
-      if (!response.ok || !result.ok) {
-        showMessage(result.message || "Unable to change password.");
-        return;
-      }
-
-      form.reset();
-      updateRequirements();
-      document.querySelectorAll(".password-input").forEach((input) => {
-        input.type = "password";
-      });
-      document.querySelectorAll(".password-toggle").forEach((button) => {
-        button.setAttribute("aria-label", "Show password");
-      });
-      showMessage(result.message || "Password changed.", "success");
-    } catch (error) {
-      showMessage("Unable to connect to the server. Please try again.");
-    } finally {
-      isSubmitting = false;
-      if (saveButton) {
-        saveButton.disabled = false;
-        saveButton.textContent = "Save";
-      }
-    }
   }
 
-  document.querySelectorAll(".password-toggle").forEach((button) => {
-    button.addEventListener("click", () => {
-      const target = document.getElementById(button.dataset.target);
-      if (!target) return;
+  function hideMessage() {
 
-      const showPassword = target.type === "password";
-      target.type = showPassword ? "text" : "password";
-      button.setAttribute("aria-label", showPassword ? "Hide password" : "Show password");
+    if (!message) {
+      return;
+    }
+
+    message.textContent = "";
+
+    message.hidden = true;
+
+  }
+
+  document
+    .querySelectorAll(".password-toggle")
+    .forEach((toggle) => {
+
+      toggle.addEventListener("click", () => {
+
+        const targetId =
+          toggle.getAttribute("data-target");
+
+        const targetInput =
+          document.getElementById(targetId);
+
+        if (!targetInput) {
+          return;
+        }
+
+        const isHidden =
+          targetInput.type === "password";
+
+        targetInput.type =
+          isHidden
+            ? "text"
+            : "password";
+
+        toggle.classList.toggle(
+          "is-visible",
+          isHidden
+        );
+
+        toggle.setAttribute(
+          "aria-label",
+          isHidden
+            ? "Hide password"
+            : "Show password"
+        );
+
+      });
+
     });
-  });
 
-  [currentPasswordInput, newPasswordInput, confirmPasswordInput].forEach((input) => {
-    if (!input) return;
+  function checkRules(value) {
+
+    return {
+
+      length:
+        value.length >= 8,
+
+      uppercase:
+        /[A-Z]/.test(value),
+
+      number:
+        /\d/.test(value)
+
+    };
+
+  }
+
+  function updateRequirements() {
+
+    if (!requirements) {
+      return;
+    }
+
+    const results =
+      checkRules(newPassword.value);
+
+    requirements
+      .querySelectorAll("li")
+      .forEach((item) => {
+
+        const rule =
+          item.getAttribute("data-rule");
+
+        item.classList.toggle(
+          "is-met",
+          Boolean(results[rule])
+        );
+
+      });
+
+  }
+
+  [
+    currentPassword,
+    newPassword,
+    confirmPassword
+  ].forEach((input) => {
+
+    if (!input) {
+      return;
+    }
+
     input.addEventListener("input", () => {
-      setInputError(input, false);
+
+      input.classList.remove(
+        "input-error"
+      );
+
       hideMessage();
-      updateRequirements();
+
+      if (input === newPassword) {
+
+        updateRequirements();
+
+      }
+
     });
+
   });
 
-  setBackLinks();
-  updateRequirements();
+  function validateForm() {
+
+    if (!currentPassword.value.trim()) {
+
+      currentPassword.classList.add(
+        "input-error"
+      );
+
+      showMessage(
+        "Please enter your current password."
+      );
+
+      currentPassword.focus();
+
+      return false;
+
+    }
+
+    const results =
+      checkRules(newPassword.value);
+
+    if (
+      !results.length ||
+      !results.uppercase ||
+      !results.number
+    ) {
+
+      newPassword.classList.add(
+        "input-error"
+      );
+
+      showMessage(
+        "New password must be at least 8 characters and include one uppercase letter and one number."
+      );
+
+      newPassword.focus();
+
+      return false;
+
+    }
+
+    if (
+      confirmPassword.value !==
+      newPassword.value
+    ) {
+
+      confirmPassword.classList.add(
+        "input-error"
+      );
+
+      showMessage(
+        "Passwords do not match."
+      );
+
+      confirmPassword.focus();
+
+      return false;
+
+    }
+
+    return true;
+
+  }
 
   if (form) {
-    form.addEventListener("submit", submitPasswordChange);
+
+    form.addEventListener("submit", (event) => {
+
+      event.preventDefault();
+
+      if (!validateForm()) {
+
+        return;
+
+      }
+
+      saveButton.disabled = true;
+
+      showMessage(
+        "Password changed successfully.",
+        true
+      );
+
+      setTimeout(() => {
+
+        window.location.href =
+          originSettingsPage;
+
+      }, 1200);
+
+    });
+
   }
+
+  updateRequirements();
+
 });

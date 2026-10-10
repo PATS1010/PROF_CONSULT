@@ -1,38 +1,47 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty availability page, including UI events and API calls.
-// =========================================================
-// FACULTY AVAILABILITY -- PAGE-SPECIFIC INTERACTIONS
-// - Current Status pill + Change Status dropdown, anchored
-//   directly below the Change Status button. Selecting an
-//   option updates the main status display immediately as a
-//   PENDING choice; it only becomes the saved status once
-//   Save Changes is clicked.
-// - Available Hours: six independent day rows. Hours are shown
-//   as plain text and are NEVER directly editable. Clicking
-//   Edit reveals a black downward-arrow button on every row
-//   (hidden the rest of the time) and turns Edit into Cancel.
-//   Clicking a day's arrow opens THAT day's own time dropdown
-//   (preset options + "Unavailable") -- every day is fully
-//   independent of the others. Save commits only the days that
-//   were actually changed; Cancel discards all pending changes,
-//   restores the previously saved hours, hides the arrows again,
-//   and turns Cancel back into Edit.
-//
-// Shared shell behavior (navbar, sidebar, quick action,
-// notification bell) lives in faculty-shared.js.
-// =========================================================
+// Faculty Availability JS
+const AVAILABLE_HOURS_STORAGE_KEY = "profconsult_faculty_available_hours";
 
-// ---------------------------------------------------------
-// Default weekly schedule. The logged-in faculty member's saved
-// schedule is loaded from the backend and replaces this when set.
-// ---------------------------------------------------------
-let AVAILABLE_HOURS = [
-  { day: "Monday", short: "Mon", time: "11:00 AM - 1:00 PM" },
-  { day: "Tuesday", short: "Tue", time: "11:00 AM - 1:00 PM" },
-  { day: "Wednesday", short: "Wed", time: "11:00 AM - 1:00 PM" },
-  { day: "Thursday", short: "Thurs", time: "11:00 AM - 1:00 PM" },
-  { day: "Friday", short: "Fri", time: "11:00 AM - 1:00 PM" },
-  { day: "Saturday", short: "Sat", time: "11:00 AM - 1:00 PM" },
+const NOT_SET_LABEL = "No hours set";
+
+const DEFAULT_AVAILABLE_HOURS = [
+  { day: "Monday", short: "Mon", time: NOT_SET_LABEL },
+  { day: "Tuesday", short: "Tue", time: NOT_SET_LABEL },
+  { day: "Wednesday", short: "Wed", time: NOT_SET_LABEL },
+  { day: "Thursday", short: "Thurs", time: NOT_SET_LABEL },
+  { day: "Friday", short: "Fri", time: NOT_SET_LABEL },
+  { day: "Saturday", short: "Sat", time: NOT_SET_LABEL },
 ];
+
+function loadAvailableHours() {
+  const defaults = DEFAULT_AVAILABLE_HOURS.map((entry) => ({ ...entry }));
+
+  try {
+    const raw = localStorage.getItem(AVAILABLE_HOURS_STORAGE_KEY);
+    if (!raw) return defaults;
+
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return defaults;
+
+    return defaults.map((entry) => {
+      const match = saved.find((item) => item && item.day === entry.day);
+      if (match && typeof match.time === "string" && match.time) {
+        return { ...entry, time: match.time };
+      }
+      return entry;
+    });
+  } catch (error) {
+    return defaults;
+  }
+}
+
+function saveAvailableHours(hours) {
+  try {
+    localStorage.setItem(AVAILABLE_HOURS_STORAGE_KEY, JSON.stringify(hours));
+  } catch (error) {
+  }
+}
+
+let AVAILABLE_HOURS = loadAvailableHours();
 
 const TIME_OPTIONS = [
   "8:00 AM - 10:00 AM",
@@ -49,12 +58,6 @@ const UNAVAILABLE_LABEL = "Unavailable";
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Current Status pill + Change Status dropdown -- anchored to
-  // the button itself (see .faculty-change-status-wrap in the
-  // CSS/HTML), so the popup always opens directly below the
-  // Change Status button rather than the status pill.
-  // ---------------------------------------------------------
   const changeStatusButton = document.getElementById("changeStatusButton");
   const statusPanel = document.getElementById("statusPanel");
   const statusOptions = statusPanel
@@ -63,132 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveStatusButton = document.getElementById("saveStatusButton");
   const currentStatusDot = document.getElementById("availabilityStatusDot");
   const currentStatusLabel = document.getElementById("availabilityStatusLabel");
-
-  // Tracks the currently SAVED status vs. a pending in-progress
-  // selection -- selecting an option updates the main display
-  // right away (per spec), but Cancel-by-closing-without-saving
-  // isn't requested for status, only for hours; Save Changes is
-  // what makes a selection the new source of truth.
-  let savedStatus = { status: "consultation", label: "Consultation" };
-
-  function statusForApi(status) {
-    const map = {
-      teaching: "in class",
-      onleave: "on leave",
-    };
-
-    return map[status] || status;
-  }
-
-  function statusForUi(status) {
-    const map = {
-      "in class": "teaching",
-      "on leave": "onleave",
-      unavailable: "offline",
-    };
-
-    return map[String(status || "").toLowerCase()] || String(status || "offline").toLowerCase();
-  }
-
-  function statusLabel(status) {
-    const labels = {
-      available: "Available",
-      teaching: "In Class",
-      meeting: "Meeting",
-      consultation: "Consultation",
-      onleave: "On Leave",
-      offline: "Offline",
-    };
-
-    return labels[status] || "Offline";
-  }
-
-  function currentTimeValue() {
-    const now = new Date();
-    return `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
-  }
-
-  function currentDateValue() {
-    const now = new Date();
-    return [
-      now.getFullYear(),
-      String(now.getMonth() + 1).padStart(2, "0"),
-      String(now.getDate()).padStart(2, "0"),
-    ].join("-");
-  }
-
-  function renderStatus(status, label) {
-    if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
-    if (currentStatusLabel) currentStatusLabel.textContent = label;
-  }
-
-  function markSelectedStatus(status) {
-    statusOptions.forEach((option) => {
-      option.classList.toggle("is-selected", option.dataset.status === status);
-    });
-  }
-
-  function redirectToFacultyLogin() {
-    window.location.href = "faculty-login.html";
-  }
-
-  function handleAuthFailure(response, result) {
-    const message = String(result && result.message ? result.message : "").toLowerCase();
-    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
-      redirectToFacultyLogin();
-      return true;
-    }
-
-    return false;
-  }
-
-  async function saveCurrentStatus(status) {
-    const response = await fetch("api/availability.php", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        status: statusForApi(status),
-        date: currentDateValue(),
-        time: currentTimeValue(),
-      }),
-    });
-    const result = await response.json();
-
-    if (handleAuthFailure(response, result)) {
-      throw new Error("AUTH_REQUIRED");
-    }
-
-    if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Unable to save availability status.");
-    }
-
-    return statusForUi(result.status || status);
-  }
-
-  async function loadSavedStatus() {
-    try {
-      const response = await fetch(`api/availability.php?role=faculty&date=${encodeURIComponent(currentDateValue())}`, {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) return;
-
-      const latest = (result.availability || []).slice(-1)[0];
-      if (!latest) return;
-
-      const status = statusForUi(latest.Status);
-      savedStatus = { status, label: statusLabel(status) };
-      renderStatus(savedStatus.status, savedStatus.label);
-      markSelectedStatus(savedStatus.status);
-    } catch (error) {
-      // Keep the default display if availability cannot be loaded.
-    }
-  }
-
-  loadSavedStatus();
 
   function openStatusPanel() {
     statusPanel.hidden = false;
@@ -201,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     changeStatusButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       statusPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (changeStatusButton) {
@@ -223,29 +100,19 @@ document.addEventListener("DOMContentLoaded", () => {
       statusOptions.forEach((opt) => opt.classList.remove("is-selected"));
       option.classList.add("is-selected");
 
-      // Update the main display immediately on selection.
       const status = option.dataset.status;
       const label = option.dataset.label;
-      renderStatus(status, label);
+      if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
+      if (currentStatusLabel) currentStatusLabel.textContent = label;
     });
   });
 
   if (saveStatusButton) {
-    saveStatusButton.addEventListener("click", async (event) => {
+    saveStatusButton.addEventListener("click", (event) => {
       event.stopPropagation();
       const selectedOption = statusOptions.find((opt) => opt.classList.contains("is-selected"));
-      if (selectedOption) {
-        try {
-          const savedUiStatus = await saveCurrentStatus(selectedOption.dataset.status);
-          savedStatus = { status: savedUiStatus, label: statusLabel(savedUiStatus) };
-          renderStatus(savedStatus.status, savedStatus.label);
-          markSelectedStatus(savedStatus.status);
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          renderStatus(savedStatus.status, savedStatus.label);
-          return;
-        }
+      if (selectedOption && typeof window.setFacultyOnlineStatus === "function") {
+        window.setFacultyOnlineStatus(selectedOption.dataset.status);
       }
       closeStatusPanel();
     });
@@ -263,134 +130,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------------------------------------------------------
-  // Available Hours
-  // ---------------------------------------------------------
+  document.addEventListener("faculty-status-changed", (event) => {
+    const newStatus = event.detail && event.detail.status;
+    if (!newStatus) return;
+
+    statusOptions.forEach((opt) => {
+      opt.classList.toggle("is-selected", opt.dataset.status === newStatus);
+    });
+  });
+
   const hoursListEl = document.getElementById("availabilityHoursList");
   const editButton = document.getElementById("editHoursButton");
   const saveHoursButton = document.getElementById("saveHoursButton");
-  const hoursSaveMessage = document.getElementById("hoursSaveMessage");
 
   let isEditingHours = false;
-  let savedMessageTimeoutId = null;
-  // Draft copy edited during an edit session; only written back
-  // into AVAILABLE_HOURS when Save is clicked. Cancel just
-  // discards this and re-renders from AVAILABLE_HOURS untouched.
   let draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
-
-  function setHoursSavedState(isSaved) {
-    if (saveHoursButton) {
-      saveHoursButton.textContent = isSaved ? "Saved" : "Save";
-      saveHoursButton.classList.toggle("is-saved", isSaved);
-    }
-
-    if (hoursSaveMessage) {
-      hoursSaveMessage.hidden = !isSaved;
-    }
-
-    if (savedMessageTimeoutId) {
-      window.clearTimeout(savedMessageTimeoutId);
-      savedMessageTimeoutId = null;
-    }
-
-    if (isSaved && hoursSaveMessage) {
-      savedMessageTimeoutId = window.setTimeout(() => {
-        hoursSaveMessage.hidden = true;
-        savedMessageTimeoutId = null;
-      }, 2500);
-    }
-  }
-
-  function scheduleToText(hours) {
-    return hours
-      .map((entry) => `${entry.short}: ${entry.time}`)
-      .join("; ");
-  }
-
-  function normalizeDayLabel(day) {
-    const normalized = String(day || "").trim().toLowerCase();
-    const map = {
-      monday: "Mon",
-      mon: "Mon",
-      tuesday: "Tue",
-      tue: "Tue",
-      tues: "Tue",
-      wednesday: "Wed",
-      wed: "Wed",
-      thursday: "Thurs",
-      thu: "Thurs",
-      thur: "Thurs",
-      thurs: "Thurs",
-      friday: "Fri",
-      fri: "Fri",
-      saturday: "Sat",
-      sat: "Sat",
-    };
-
-    return map[normalized] || "";
-  }
-
-  function parseScheduleText(value) {
-    const parsed = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
-    const rows = String(value || "")
-      .split(/\r?\n|;/)
-      .map((row) => row.trim())
-      .filter(Boolean);
-
-    rows.forEach((row) => {
-      const parts = row.split(/\s*:\s*/);
-      if (parts.length < 2) return;
-
-      const short = normalizeDayLabel(parts.shift());
-      const index = parsed.findIndex((entry) => entry.short === short);
-      if (index === -1) return;
-
-      const time = parts.join(":").trim();
-      if (time) parsed[index] = { ...parsed[index], time };
-    });
-
-    return parsed;
-  }
-
-  async function loadSavedHours() {
-    try {
-      const response = await fetch("api/faculty-hours.php", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-
-      if (handleAuthFailure(response, result)) return;
-      if (!response.ok || !result.ok || !result.consultation_hours) return;
-
-      AVAILABLE_HOURS = parseScheduleText(result.consultation_hours);
-      draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
-      renderAvailableHours();
-    } catch (error) {
-      // Keep default hours if the saved schedule cannot be loaded.
-    }
-  }
-
-  async function saveHours(hours) {
-    const response = await fetch("api/faculty-hours.php", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({ consultation_hours: scheduleToText(hours) }),
-    });
-    const result = await response.json();
-
-    if (handleAuthFailure(response, result)) {
-      throw new Error("AUTH_REQUIRED");
-    }
-
-    if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Unable to save available hours.");
-    }
-
-    return parseScheduleText(result.consultation_hours);
-  }
 
   function buildTimeDropdown(dayIndex) {
     const dropdown = document.createElement("div");
@@ -453,13 +207,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const timeText = document.createElement("span");
       timeText.className = "availability-time-text";
-      if (entry.time === UNAVAILABLE_LABEL) timeText.classList.add("is-unavailable");
+      if (entry.time === UNAVAILABLE_LABEL || entry.time === NOT_SET_LABEL) {
+        timeText.classList.add("is-unavailable");
+      }
       timeText.textContent = entry.time;
       timeWrap.appendChild(timeText);
 
-      // Arrow is ALWAYS in the markup but hidden outside edit
-      // mode -- never becomes a text input, and clicking it is
-      // the only way to change a day's hours.
       const arrowButton = document.createElement("button");
       arrowButton.type = "button";
       arrowButton.className = "availability-time-arrow";
@@ -480,7 +233,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderAvailableHours();
-  loadSavedHours();
 
   if (hoursListEl) {
     hoursListEl.addEventListener("click", (event) => {
@@ -489,7 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (arrowButton) {
         event.stopPropagation();
-        if (!isEditingHours) return; // arrows are inert unless in edit mode
+        if (!isEditingHours) return;
 
         const dayIndex = arrowButton.dataset.dayIndex;
         const dropdown = arrowButton.parentElement.querySelector(
@@ -514,10 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const dayIndex = Number(dropdown ? dropdown.dataset.dayIndex : NaN);
         if (Number.isNaN(dayIndex) || !draftHours[dayIndex]) return;
 
-        // Only THIS day's draft entry changes -- every other day
-        // stays exactly as it was.
         draftHours[dayIndex] = { ...draftHours[dayIndex], time: optionButton.dataset.value };
-        setHoursSavedState(false);
         renderAvailableHours();
       }
     });
@@ -532,21 +281,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (saveHoursButton) {
-    saveHoursButton.addEventListener("click", async () => {
+    saveHoursButton.addEventListener("click", () => {
       if (isEditingHours) {
-        try {
-          saveHoursButton.disabled = true;
-          AVAILABLE_HOURS = await saveHours(draftHours);
-          draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
-          setHoursSavedState(true);
-        } catch (error) {
-          if (error.message !== "AUTH_REQUIRED") {
-            alert(error.message);
-          }
-          return;
-        } finally {
-          saveHoursButton.disabled = false;
-        }
+        AVAILABLE_HOURS = draftHours.map((entry) => ({ ...entry }));
+
+        saveAvailableHours(AVAILABLE_HOURS);
       }
 
       isEditingHours = false;
@@ -559,19 +298,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (editButton) {
     editButton.addEventListener("click", () => {
       if (isEditingHours) {
-        // Currently showing "Cancel" -- discard any pending
-        // changes and restore the previously saved hours.
         isEditingHours = false;
         editButton.textContent = "Edit";
         closeAllTimeDropdowns();
         renderAvailableHours();
       } else {
-        // Currently showing "Edit" -- enter edit mode with a
-        // fresh draft copied from the saved hours.
         isEditingHours = true;
         draftHours = AVAILABLE_HOURS.map((entry) => ({ ...entry }));
         editButton.textContent = "Cancel";
-        setHoursSavedState(false);
         renderAvailableHours();
       }
     });

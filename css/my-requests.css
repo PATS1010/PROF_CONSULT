@@ -1,6 +1,5 @@
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* My Consultation Requests */
+
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -26,9 +25,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -57,10 +53,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -79,9 +71,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -105,6 +94,27 @@ input {
   width: auto;
 }
 
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
 .nav-icon-button {
   display: flex;
   align-items: center;
@@ -125,14 +135,6 @@ input {
   border-radius: 2px;
 }
 
-/* -----------------------------------------------------------
-   RIGHT-SIDE NAV ICONS (Notification bell + Quick Action)
-   Bell sits on the left, Quick Action trigger on the right,
-   both centered on the same horizontal line with even spacing.
-   position: static overrides any absolute/fixed positioning
-   coming from elsewhere so both buttons participate in the
-   flex layout instead of pinning to a corner.
------------------------------------------------------------ */
 .navbar-right {
   position: relative;
   display: flex;
@@ -174,9 +176,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -228,9 +227,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* Each action is its own row: text on the left, button pinned
-   to the right -- flex row prevents the button from overlapping
-   the item below it. */
 .quick-action-item {
   display: flex;
   align-items: center;
@@ -280,9 +276,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -365,10 +358,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   BACKGROUND
-   Slightly blurred, light white overlay for readability
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -399,10 +388,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   NOTIFICATION BELL ICON
-   Sits beside the Quick Action trigger in the navbar
-========================================================= */
 .notification-bell-button {
   width: 40px;
   height: 40px;
@@ -417,9 +402,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   MY CONSULTATION REQUESTS PAGE LAYOUT
-========================================================= */
 .requests-page {
   display: flex;
   flex-direction: column;
@@ -439,11 +421,6 @@ input {
   margin-bottom: 32px;
 }
 
-/* =========================================================
-   REQUEST CARDS
-   3-column grid on desktop, sized to support an unlimited
-   number of future requests wrapping onto new rows
-========================================================= */
 .requests-list {
   width: 100%;
   max-width: 1080px;
@@ -461,8 +438,6 @@ input {
   overflow: hidden;
 }
 
-/* Thick red accent bar along the left edge, matching the
-   Faculty Availability / Recent Notifications panel style */
 .request-card::before {
   content: "";
   position: absolute;
@@ -481,7 +456,6 @@ input {
   margin-bottom: 16px;
 }
 
-/* Nested light-gray box holding date, time, and status */
 .request-card-body {
   background-color: #f2f0eb;
   border-radius: 16px;
@@ -514,15 +488,6 @@ input {
   color: var(--color-text-dark);
 }
 
-.request-response {
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(122, 16, 16, 0.15);
-  font-size: 0.85rem;
-  line-height: 1.45;
-  color: var(--color-text-muted);
-}
-
 .status-dot {
   flex-shrink: 0;
   width: 9px;
@@ -536,18 +501,12 @@ input {
 .status-rescheduled { background-color: var(--color-status-meeting); }
 .status-completed { background-color: var(--color-text-muted); }
 
-/* =========================================================
-   NO REQUESTS MESSAGE
-========================================================= */
 .no-requests-message {
   font-size: 0.9rem;
   color: var(--color-text-muted);
   margin-top: 8px;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -590,15 +549,152 @@ input {
     border-radius: 18px;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
   .sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
+  }
+
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

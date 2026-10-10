@@ -1,455 +1,602 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty consultation requests page, including UI events and API calls.
-// =========================================================
-// FACULTY CONSULTATION REQUESTS -- PAGE-SPECIFIC INTERACTIONS
-// - Renders pending requests from api/consultation-requests.php.
-// - View More expands a card in place to show Program, Year
-//   and Set, and Additional Message; clicking outside any
-//   expanded card collapses it back.
-// - Accept / Decline mark the request answered, then remove it
-//   from the pending queue so the next one moves up.
-// - Reschedule opens the reschedule form for the selected request.
-//
-// Shared shell behavior (navbar, sidebar, quick action,
-// notification bell) lives in faculty-shared.js and is untouched
-// by this file.
-// =========================================================
+// Faculty Consultation Requests JS
+const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
+const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
 
-let REQUESTS = [];
+const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
+
+const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
+
+function getStudentProfileUrl(studentId, from) {
+  const params = new URLSearchParams({ studentId: studentId });
+  if (from) params.set("from", from);
+  return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
+}
+
+const STUDENT_PROFILE_ORIGIN = "consultation-requests";
+
+function studentNameLinkHtml(request) {
+  if (!request) return "";
+  if (!request.studentId) return request.name;
+  return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
+}
+
+const HISTORY_STATUS_INFO = {
+  completed: { group: "completed", label: "Completed" },
+  declined: { group: "cancelled-rejected", label: "Rejected" },
+  cancelled: { group: "cancelled-rejected", label: "Cancelled" },
+  ignored: { group: "ignored", label: "Ignored" },
+};
+
+const DEFAULT_CONSULTATIONS = [
+  {
+    id: "req-1",
+    name: "Juan Dela Cruz",
+    studentId: "22-00145",
+    type: "Research Proposal",
+    date: "October 15, 10:00 AM",
+    preferredDateISO: "2026-10-15",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
+    status: "pending",
+  },
+  {
+    id: "req-2",
+    name: "Joselita Rizal",
+    studentId: "22-00098",
+    type: "Research Proposal",
+    date: "October 16, 1:00 PM",
+    preferredDateISO: "2026-10-16",
+    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
+    status: "pending",
+  },
+  {
+    id: "req-3",
+    name: "Mark Santos",
+    studentId: "21-00567",
+    type: "Thesis Defense Prep",
+    date: "September 22, 9:30 AM",
+    preferredDateISO: "2026-09-22",
+    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
+    program: "BS Computer Engineering",
+    yearSet: "4A",
+    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
+    status: "pending",
+  },
+  {
+    id: "req-4",
+    name: "Angela Cruz",
+    studentId: "23-00212",
+    type: "Grade Concern",
+    date: "October 18, 2:00 PM",
+    preferredDateISO: "2026-10-18",
+    preferredTimeLabel: "2:00 PM \u2013 2:30 PM",
+    program: "BS Computer Engineering",
+    yearSet: "2A",
+    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
+    status: "pending",
+  },
+];
+
+function isPageReload() {
+  try {
+    const navEntries = performance.getEntriesByType("navigation");
+    if (navEntries.length > 0) return navEntries[0].type === "reload";
+    if (performance.navigation) {
+      return performance.navigation.type === performance.navigation.TYPE_RELOAD;
+    }
+  } catch (error) {
+  }
+  return false;
+}
+
+function getTodayISODate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function applyIgnoredStatusToPastPending(list) {
+  const todayISO = getTodayISODate();
+  let changed = false;
+
+  list.forEach((request) => {
+    if (
+      request.status === "pending" &&
+      request.preferredDateISO &&
+      request.preferredDateISO < todayISO
+    ) {
+      request.status = "ignored";
+      changed = true;
+    }
+  });
+
+  return changed;
+}
+
+function loadConsultations() {
+  try {
+    if (isPageReload()) {
+      const defaults = DEFAULT_CONSULTATIONS.slice();
+      applyIgnoredStatusToPastPending(defaults);
+      saveConsultations(defaults);
+      return defaults;
+    }
+    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        if (applyIgnoredStatusToPastPending(parsed)) saveConsultations(parsed);
+        return parsed;
+      }
+    }
+  } catch (error) {
+  }
+  const defaults = DEFAULT_CONSULTATIONS.slice();
+  applyIgnoredStatusToPastPending(defaults);
+  saveConsultations(defaults);
+  return defaults;
+}
+
+function saveConsultations(list) {
+  try {
+    localStorage.setItem(CONSULTATIONS_STORAGE_KEY, JSON.stringify(list));
+  } catch (error) {
+  }
+}
+
+let REQUESTS = loadConsultations();
+
+const CONSULTATION_SLOT_MINUTES = 30;
+
+function formatPreferredDateTime(request) {
+  const raw = String((request && request.date) || "");
+
+  if (/\d\s*(AM|PM)\s*[\u2013\u2014-]\s*\d/i.test(raw)) return raw;
+
+  const match = raw.match(/^(.*?)(\d{1,2}):(\d{2})\s*(AM|PM)\s*$/i);
+  if (!match) return raw;
+
+  const datePrefix = match[1];
+  const startHour = parseInt(match[2], 10);
+  const startMinute = parseInt(match[3], 10);
+  const startPeriod = match[4].toUpperCase();
+  const startLabel = `${startHour}:${match[3]} ${startPeriod}`;
+
+  const normalize = (text) => String(text).replace(/\s+/g, "").toUpperCase();
+
+  const label = String((request && request.preferredTimeLabel) || "");
+  const labelParts = label.split(/\s*[\u2013\u2014-]\s*/);
+  if (
+    labelParts.length === 2 &&
+    labelParts[1].trim() &&
+    normalize(labelParts[0]) === normalize(startLabel)
+  ) {
+    return `${datePrefix}${startLabel} \u2013 ${labelParts[1].trim()}`;
+  }
+
+  const startTotalMinutes =
+    ((startHour % 12) + (startPeriod === "PM" ? 12 : 0)) * 60 + startMinute;
+  const endTotalMinutes = (startTotalMinutes + CONSULTATION_SLOT_MINUTES) % (24 * 60);
+  const endHour24 = Math.floor(endTotalMinutes / 60);
+  const endMinute = endTotalMinutes % 60;
+  const endPeriod = endHour24 >= 12 ? "PM" : "AM";
+  const endHour12 = endHour24 % 12 || 12;
+  const endLabel = `${endHour12}:${String(endMinute).padStart(2, "0")} ${endPeriod}`;
+
+  return `${datePrefix}${startLabel} \u2013 ${endLabel}`;
+}
+
+function notifyRequestAnswered(request, decision) {
+}
+
+function applyNotificationViewTarget() {
+  let target = null;
+
+  try {
+    const stored = sessionStorage.getItem(NOTIFICATION_VIEW_TARGET_STORAGE_KEY);
+    if (stored) target = JSON.parse(stored);
+  } catch (error) {
+    target = null;
+  }
+
+  if (!target || !target.id) return;
+
+  try {
+    sessionStorage.removeItem(NOTIFICATION_VIEW_TARGET_STORAGE_KEY);
+  } catch (error) {
+  }
+
+  const card = document.querySelector(`.request-card[data-id="${target.id}"]`);
+  if (!card) return;
+
+  document.querySelectorAll(".request-card.is-expanded").forEach((c) => {
+    if (c !== card) {
+      c.classList.remove("is-expanded");
+      if (c.dataset.section === "completed") {
+        const btn = c.querySelector('[data-action="view-more"]');
+        if (btn) btn.textContent = "View More";
+      }
+    }
+  });
+
+  card.classList.add("is-expanded");
+  if (card.dataset.section === "completed") {
+    const btn = card.querySelector('[data-action="view-more"]');
+    if (btn) btn.textContent = "View Less";
+  }
+
+  card.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+}
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const scrollContainer = document.getElementById("requestsScrollContainer");
-  const noRequestsMessage = document.getElementById("noRequestsMessage");
+  const pendingContainer = document.getElementById("requestsScrollContainer");
+  const noPendingMessage = document.getElementById("noRequestsMessage");
   const upcomingContainer = document.getElementById("upcomingScrollContainer");
-  const completedContainer = document.getElementById("completedScrollContainer");
   const noUpcomingMessage = document.getElementById("noUpcomingMessage");
+  const completedContainer = document.getElementById("completedScrollContainer");
   const noCompletedMessage = document.getElementById("noCompletedMessage");
 
-  function escapeHtml(value) {
-    return String(value ?? "").replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;",
-    }[character]));
-  }
+  const historyToggleButton = document.getElementById("historyToggleButton");
+  const requestsSubtitle = document.getElementById("requestsSubtitle");
+  const pendingSectionCard = document.getElementById("pendingSectionCard");
+  const consultationSectionsGrid = document.getElementById("consultationSectionsGrid");
+  const historyCard = document.getElementById("historyCard");
 
-  function formatDateTime(dateValue, timeValue) {
-    if (!dateValue) return "Date not set";
+  const historySectionsGrid = document.getElementById("historySectionsGrid");
+  const historyCompletedList = document.getElementById("historyCompletedList");
+  const historyCancelledRejectedList = document.getElementById("historyCancelledRejectedList");
+  const historyIgnoredList = document.getElementById("historyIgnoredList");
+  const historyCompletedEmptyMessage = document.getElementById("historyCompletedEmptyMessage");
+  const historyCancelledRejectedEmptyMessage = document.getElementById("historyCancelledRejectedEmptyMessage");
+  const historyIgnoredEmptyMessage = document.getElementById("historyIgnoredEmptyMessage");
+  const historyEmptyMessage = document.getElementById("historyEmptyMessage");
 
-    const [hours = "00", minutes = "00"] = String(timeValue || "00:00").split(":");
-    const date = new Date(`${dateValue}T${hours}:${minutes}:00`);
-    if (Number.isNaN(date.getTime())) return `${dateValue} ${timeValue || ""}`.trim();
+  const historyClearButton = document.getElementById("historyClearButton");
+  const historyConfirmRow = document.getElementById("historyConfirmRow");
+  const historyConfirmYesButton = document.getElementById("historyConfirmYesButton");
+  const historyConfirmCancelButton = document.getElementById("historyConfirmCancelButton");
 
-    return date.toLocaleString("en-US", {
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  }
-
-  function requestDateTimeValue(request) {
-    if (!request.rawDate) return 0;
-
-    const [hours = "00", minutes = "00"] = String(request.rawTime || "00:00").split(":");
-    const date = new Date(`${request.rawDate}T${hours}:${minutes}:00`);
-    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
-  }
-
-  function consultationEndTimeValue(request) {
-    const start = requestDateTimeValue(request);
-    return start > 0 ? start + (30 * 60 * 1000) : 0;
-  }
-
-  function displayYear(value) {
-    const normalized = String(value || "").trim();
-    const labels = {
-      "1": "1st Year",
-      "2": "2nd Year",
-      "3": "3rd Year",
-      "4": "4th Year",
-      "5": "5th Year",
-    };
-
-    return labels[normalized] || normalized;
-  }
-
-  function requestFromApi(row) {
-    // Convert the database year value into the label shown on request cards.
-    const year = displayYear(row.Year_Level);
-    // Keep the section separate so blank sections do not create extra punctuation.
-    const section = row.Section || "";
-
-    return {
-      // Store the database request id so button clicks update the correct row.
-      id: String(row.Request_ID),
-      // Show the real student name from the joined users table.
-      name: row.Student_Name || "Unnamed Student",
-      // Prefer the user's student number, then fall back to the profile id.
-      studentId: row.Student_Number || row.Student_ID || "",
-      // Purpose becomes the request subject displayed on the card.
-      type: row.Purpose || "Consultation",
-      // Combine the saved request date and preferred time for display.
-      date: formatDateTime(row.Request_Date, row.Preferred_Time),
-      rawDate: row.Request_Date || "",
-      rawTime: row.Preferred_Time || "",
-      // Program, year, section, and message come from the current student's profile/request.
-      program: row.Program || "Program not set",
-      yearSet: [year, section].filter(Boolean).join(" - ") || "Year and section not set",
-      message: row.Additional_Message || "No additional message.",
-      // Status controls whether the request remains visible in the pending list.
-      status: row.Status || "pending",
-    };
-  }
-
-  function redirectToFacultyLogin() {
-    window.location.href = "faculty-login.html";
-  }
-
-  function handleAuthFailure(response, result) {
-    const message = String(result && result.message ? result.message : "").toLowerCase();
-    if (response.status === 401 || response.status === 403 || message.includes("log in")) {
-      redirectToFacultyLogin();
-      return true;
-    }
-
-    return false;
-  }
-
-  async function loadRequests() {
-    if (scrollContainer) {
-      scrollContainer.innerHTML = "";
-    }
-    if (noRequestsMessage) {
-      noRequestsMessage.textContent = "Loading consultation requests...";
-      noRequestsMessage.hidden = false;
-    }
-
-    try {
-      // Ask the API for faculty requests so the backend uses the professor session.
-      const response = await fetch("api/consultation-requests.php?role=faculty", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      // Parse the JSON reply from the API.
-      const result = await response.json();
-
-      // Stop rendering if the API reports an authentication or database problem.
-      if (!response.ok || !result.ok) {
-        if (handleAuthFailure(response, result)) return;
-        throw new Error(result.message || "Unable to load consultation requests.");
-      }
-
-      // Convert raw database rows into the card shape used by this page.
-      REQUESTS = (result.requests || []).map(requestFromApi);
-      // Rebuild the visible cards after loading fresh data.
-      renderRequests();
-    } catch (error) {
-      if (noRequestsMessage) {
-        noRequestsMessage.textContent = error.message || "Unable to load consultation requests.";
-        noRequestsMessage.hidden = false;
-      }
-    }
-  }
-
-  async function updateRequestStatus(requestId, status) {
-    // Include role=faculty so Accept/Reschedule/Decline uses the professor session.
-    const response = await fetch("api/consultation-requests.php?role=faculty", {
-      method: "POST",
-      credentials: "same-origin",
-      // Tell PHP that the request body is JSON.
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      // Send the selected request id and the new status to the backend.
-      body: JSON.stringify({ request_id: requestId, status }),
-    });
-    // Read the backend response so errors can be shown to the professor.
-    const result = await response.json();
-
-    // Turn API failures into an error message the click handler can alert.
-    if (!response.ok || !result.ok) {
-      if (handleAuthFailure(response, result)) {
-        throw new Error("AUTH_REQUIRED");
-      }
-      throw new Error(result.message || "Unable to update consultation request.");
-    }
-  }
-
-  // ---------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------
-  function buildRequestCard(request) {
+  function buildConsultationCard(request, section) {
     const card = document.createElement("article");
     card.className = "request-card";
     card.dataset.id = request.id;
+    card.dataset.section = section;
+
+    const primaryButtonHtml = section === "pending"
+      ? `<button type="button" class="request-accept-button" data-action="accept">Accept</button>`
+      : section === "upcoming"
+        ? `<button type="button" class="request-accept-button" data-action="complete">Complete</button>`
+        : "";
+
+    const secondaryActionLabel = section === "upcoming" ? "Cancel" : "Decline";
+
+    const expandedInfoHtml = `
+      <div class="request-expanded-info">
+        <div class="request-info-col">
+          <p class="request-info-label">Program:</p>
+          <p class="request-info-value">${request.program}</p>
+          <p class="request-info-label">Year and Set:</p>
+          <p class="request-info-value">${request.yearSet}</p>
+        </div>
+        <div class="request-info-col">
+          <p class="request-info-label">Additional Message:</p>
+          <p class="request-message">${request.message}</p>
+          ${section === "completed" ? '<p class="request-complete-text">Consultation Complete!</p>' : ""}
+        </div>
+      </div>
+    `;
+
+    const actionsHtml = section === "completed"
+      ? `<button type="button" class="request-view-more-button request-view-more-button--full" data-action="view-more">View More</button>`
+      : `
+        <div class="request-actions">
+          <button type="button" class="request-view-more-button" data-action="view-more">View More</button>
+          <button type="button" class="request-reschedule-button" data-action="reschedule">Reschedule</button>
+          <button type="button" class="request-decline-button" data-action="decline">${secondaryActionLabel}</button>
+        </div>
+      `;
 
     card.innerHTML = `
       <div class="request-card-header">
-        <p class="request-name">${escapeHtml(request.name)}</p>
+        <p class="request-name">${studentNameLinkHtml(request)}</p>
         <span class="request-avatar" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
             <circle cx="12" cy="8" r="4"></circle>
             <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8v1H4v-1z"></path>
           </svg>
         </span>
-        <button type="button" class="request-accept-button" data-action="accept">Accept</button>
+        ${primaryButtonHtml}
       </div>
 
-      <p class="request-type">${escapeHtml(request.type)}</p>
-      <p class="request-date">Preferred Date: ${escapeHtml(request.date)}</p>
+      <p class="request-type">${request.type}</p>
+      <p class="request-date">Preferred Date: ${formatPreferredDateTime(request)}</p>
 
-      <div class="request-expanded-info">
-        <div class="request-info-col">
-          <p class="request-info-label">Student ID:</p>
-          <p class="request-info-value">${escapeHtml(request.studentId)}</p>
-          <p class="request-info-label">Program:</p>
-          <p class="request-info-value">${escapeHtml(request.program)}</p>
-          <p class="request-info-label">Year and Set:</p>
-          <p class="request-info-value">${escapeHtml(request.yearSet)}</p>
-        </div>
-        <div class="request-info-col">
-          <p class="request-info-label">Additional Message:</p>
-          <p class="request-message">${escapeHtml(request.message)}</p>
-        </div>
-      </div>
+      ${expandedInfoHtml}
 
-      <div class="request-actions">
-        <button type="button" class="request-view-more-button" data-action="view-more">View More</button>
-        <button type="button" class="request-reschedule-button" data-action="reschedule">Reschedule</button>
-        <button type="button" class="request-decline-button" data-action="decline">Decline</button>
-      </div>
-
-      <p class="request-toast" aria-live="polite"></p>
+      ${actionsHtml}
     `;
 
     return card;
   }
 
-  function buildHistoryCard(request, type) {
-    const card = document.createElement("article");
-    card.className = "request-card";
-    card.dataset.id = request.id;
+  function renderSection(containerEl, emptyMessageEl, status, section) {
+    if (!containerEl) return;
+    containerEl.innerHTML = "";
 
-    const statusLine = type === "completed"
-      ? '<p class="request-complete-text">Consultation completed</p>'
-      : `<p class="request-complete-text">${escapeHtml(request.status === "rescheduled" ? "Rescheduled consultation" : "Approved consultation")}</p>`;
-
-    card.innerHTML = `
-      <div class="request-card-header">
-        <p class="request-name">${escapeHtml(request.name)}</p>
-        <span class="request-avatar" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="8" r="4"></circle>
-            <path d="M4 20c0-4.418 3.582-8 8-8s8 3.582 8 8v1H4v-1z"></path>
-          </svg>
-        </span>
-      </div>
-
-      <p class="request-type">${escapeHtml(request.type)}</p>
-      <p class="request-date">Preferred Date: ${escapeHtml(request.date)}</p>
-
-      <div class="request-expanded-info">
-        <div class="request-info-col">
-          <p class="request-info-label">Student ID:</p>
-          <p class="request-info-value">${escapeHtml(request.studentId)}</p>
-          <p class="request-info-label">Program:</p>
-          <p class="request-info-value">${escapeHtml(request.program)}</p>
-          <p class="request-info-label">Year and Set:</p>
-          <p class="request-info-value">${escapeHtml(request.yearSet)}</p>
-        </div>
-        <div class="request-info-col">
-          <p class="request-info-label">Additional Message:</p>
-          <p class="request-message">${escapeHtml(request.message)}</p>
-          ${statusLine}
-        </div>
-      </div>
-
-      <button type="button" class="request-view-more-button request-view-more-button--full" data-action="history-toggle">
-        View More
-      </button>
-    `;
-
-    return card;
-  }
-
-  function isUpcomingRequest(request) {
-    const status = String(request.status || "").toLowerCase();
-    const endTime = consultationEndTimeValue(request);
-    return ["approved", "rescheduled"].includes(status) &&
-      (endTime === 0 || endTime > Date.now());
-  }
-
-  function isCompletedRequest(request) {
-    const status = String(request.status || "").toLowerCase();
-    const endTime = consultationEndTimeValue(request);
-    return status === "completed" ||
-      (["approved", "rescheduled"].includes(status) && endTime > 0 && endTime <= Date.now());
-  }
-
-  function renderRequests() {
-    if (!scrollContainer) return;
-    scrollContainer.innerHTML = "";
-    if (upcomingContainer) upcomingContainer.innerHTML = "";
-    if (completedContainer) completedContainer.innerHTML = "";
-
-    const pending = REQUESTS.filter((request) => request.status === "pending");
-    const upcoming = REQUESTS
-      .filter(isUpcomingRequest)
-      .sort((a, b) => requestDateTimeValue(a) - requestDateTimeValue(b));
-    const completed = REQUESTS
-      .filter(isCompletedRequest)
-      .sort((a, b) => requestDateTimeValue(b) - requestDateTimeValue(a));
-
-    pending.forEach((request) => {
-      scrollContainer.appendChild(buildRequestCard(request));
+    const items = REQUESTS.filter((request) => request.status === status);
+    items.forEach((request) => {
+      containerEl.appendChild(buildConsultationCard(request, section));
     });
 
-    if (upcomingContainer) {
-      upcoming.forEach((request) => {
-        upcomingContainer.appendChild(buildHistoryCard(request, "upcoming"));
-      });
-    }
-
-    if (completedContainer) {
-      completed.forEach((request) => {
-        completedContainer.appendChild(buildHistoryCard(request, "completed"));
-      });
-    }
-
-    if (noRequestsMessage) {
-      noRequestsMessage.textContent = "No pending consultation requests right now.";
-      noRequestsMessage.hidden = pending.length > 0;
-    }
-
-    if (noUpcomingMessage) {
-      noUpcomingMessage.textContent = "No upcoming consultations right now.";
-      noUpcomingMessage.hidden = upcoming.length > 0;
-    }
-
-    if (noCompletedMessage) {
-      noCompletedMessage.textContent = "No completed consultations yet.";
-      noCompletedMessage.hidden = completed.length > 0;
+    if (emptyMessageEl) {
+      emptyMessageEl.hidden = items.length > 0;
     }
   }
 
-  loadRequests();
+  function buildHistoryEntry(request) {
+    const entry = document.createElement("article");
+    entry.className = "history-entry";
+    entry.dataset.id = request.id;
 
-  // ---------------------------------------------------------
-  // Card interactions -- delegated to the scroll container so
-  // re-rendering never loses event bindings.
-  // ---------------------------------------------------------
-  if (scrollContainer) {
-    scrollContainer.addEventListener("click", async (event) => {
-      const actionButton = event.target.closest("[data-action]");
-      if (!actionButton) return;
+    const info = HISTORY_STATUS_INFO[request.status];
+    const statusLabel = info ? info.label : "";
+    const statusModifierClass = `history-entry-status--${request.status}`;
 
-      const card = actionButton.closest(".request-card");
-      if (!card) return;
+    entry.innerHTML = `
+      <p class="history-entry-name">${studentNameLinkHtml(request)}</p>
+      <p class="history-entry-type">${request.type}</p>
+      <p class="history-entry-date">Preferred Date: ${formatPreferredDateTime(request)}</p>
+      <p class="history-entry-status ${statusModifierClass}">${statusLabel}</p>
+    `;
 
-      const requestId = card.dataset.id;
-      const request = REQUESTS.find((r) => r.id === requestId);
-      if (!request) return;
+    return entry;
+  }
 
-      const action = actionButton.dataset.action;
+  function renderHistory() {
+    if (!historyCompletedList || !historyCancelledRejectedList || !historyIgnoredList) return;
 
-      if (action === "view-more") {
-        // Only one card expanded at a time.
-        Array.from(scrollContainer.querySelectorAll(".request-card")).forEach((c) => {
-          if (c !== card) c.classList.remove("is-expanded");
+    historyCompletedList.innerHTML = "";
+    historyCancelledRejectedList.innerHTML = "";
+    historyIgnoredList.innerHTML = "";
+
+    const groupCounts = { completed: 0, "cancelled-rejected": 0, ignored: 0 };
+
+    REQUESTS.forEach((request) => {
+      const info = HISTORY_STATUS_INFO[request.status];
+      if (!info) return;
+
+      const entry = buildHistoryEntry(request);
+
+      if (info.group === "completed") {
+        historyCompletedList.appendChild(entry);
+      } else if (info.group === "cancelled-rejected") {
+        historyCancelledRejectedList.appendChild(entry);
+      } else if (info.group === "ignored") {
+        historyIgnoredList.appendChild(entry);
+      }
+
+      groupCounts[info.group] += 1;
+    });
+
+    if (historyCompletedEmptyMessage) {
+      historyCompletedEmptyMessage.hidden = groupCounts.completed > 0;
+    }
+    if (historyCancelledRejectedEmptyMessage) {
+      historyCancelledRejectedEmptyMessage.hidden = groupCounts["cancelled-rejected"] > 0;
+    }
+    if (historyIgnoredEmptyMessage) {
+      historyIgnoredEmptyMessage.hidden = groupCounts.ignored > 0;
+    }
+
+    const totalHistoryItems =
+      groupCounts.completed + groupCounts["cancelled-rejected"] + groupCounts.ignored;
+
+    if (historySectionsGrid) {
+      historySectionsGrid.hidden = totalHistoryItems === 0;
+    }
+    if (historyEmptyMessage) {
+      historyEmptyMessage.hidden = totalHistoryItems > 0;
+    }
+
+    if (historyClearButton) {
+      historyClearButton.hidden = totalHistoryItems === 0;
+    }
+    if (historyConfirmRow) {
+      historyConfirmRow.hidden = true;
+    }
+  }
+
+  function renderAll() {
+    renderSection(pendingContainer, noPendingMessage, "pending", "pending");
+    renderSection(upcomingContainer, noUpcomingMessage, "upcoming", "upcoming");
+    renderSection(completedContainer, noCompletedMessage, "completed", "completed");
+  }
+
+  renderAll();
+
+  applyNotificationViewTarget();
+
+  let isHistoryOpen = false;
+
+  function showHistoryView() {
+    isHistoryOpen = true;
+
+    if (requestsSubtitle) requestsSubtitle.hidden = true;
+    if (pendingSectionCard) pendingSectionCard.hidden = true;
+    if (consultationSectionsGrid) consultationSectionsGrid.hidden = true;
+
+    if (historyCard) historyCard.hidden = false;
+    if (historyToggleButton) historyToggleButton.textContent = "Back";
+
+    renderHistory();
+  }
+
+  function showPendingView() {
+    isHistoryOpen = false;
+
+    if (historyCard) historyCard.hidden = true;
+    if (historyToggleButton) historyToggleButton.textContent = "History";
+
+    if (requestsSubtitle) requestsSubtitle.hidden = false;
+    if (pendingSectionCard) pendingSectionCard.hidden = false;
+    if (consultationSectionsGrid) consultationSectionsGrid.hidden = false;
+  }
+
+  if (historyToggleButton) {
+    historyToggleButton.addEventListener("click", () => {
+      if (isHistoryOpen) {
+        showPendingView();
+      } else {
+        showHistoryView();
+      }
+    });
+  }
+
+  if (historyClearButton) {
+    historyClearButton.addEventListener("click", () => {
+      historyClearButton.hidden = true;
+      if (historyConfirmRow) historyConfirmRow.hidden = false;
+    });
+  }
+
+  if (historyConfirmCancelButton) {
+    historyConfirmCancelButton.addEventListener("click", () => {
+      if (historyConfirmRow) historyConfirmRow.hidden = true;
+      if (historyClearButton) historyClearButton.hidden = false;
+    });
+  }
+
+  if (historyConfirmYesButton) {
+    historyConfirmYesButton.addEventListener("click", () => {
+      REQUESTS = REQUESTS.filter(
+        (request) => !Object.prototype.hasOwnProperty.call(HISTORY_STATUS_INFO, request.status)
+      );
+
+      saveConsultations(REQUESTS);
+
+      renderHistory();
+      renderAll();
+    });
+  }
+
+  function handleAction(event, section) {
+    const actionButton = event.target.closest("[data-action]");
+    if (!actionButton) return;
+
+    const card = actionButton.closest(".request-card");
+    if (!card) return;
+
+    const requestId = card.dataset.id;
+    const request = REQUESTS.find((r) => r.id === requestId);
+    if (!request) return;
+
+    const action = actionButton.dataset.action;
+
+    if (action === "view-more") {
+      if (section === "completed") {
+        const isExpanded = card.classList.toggle("is-expanded");
+        actionButton.textContent = isExpanded ? "View Less" : "View More";
+      } else {
+        document.querySelectorAll(".request-card.is-expanded").forEach((c) => {
+          if (c !== card) {
+            c.classList.remove("is-expanded");
+            if (c.dataset.section === "completed") {
+              const btn = c.querySelector('[data-action="view-more"]');
+              if (btn) btn.textContent = "View More";
+            }
+          }
         });
         card.classList.add("is-expanded");
       }
+      return;
+    }
 
-      if (action === "reschedule") {
-        window.location.href = `reschedule-consultation.html?request_id=${encodeURIComponent(request.id)}`;
+    if (action === "reschedule") {
+      try {
+        sessionStorage.setItem(RESCHEDULE_TARGET_STORAGE_KEY, request.id);
+      } catch (error) {
       }
+      window.location.href = "reschedule-consultation.html";
+      return;
+    }
 
-      if (action === "accept") {
-        actionButton.textContent = "Accepted";
-        actionButton.disabled = true;
-        actionButton.classList.add("is-accepted");
-        const declineButton = card.querySelector(".request-decline-button");
-        if (declineButton) declineButton.disabled = true;
-        const viewMoreButton = card.querySelector(".request-view-more-button");
-        if (viewMoreButton) viewMoreButton.disabled = true;
+    if (action === "accept" || action === "complete") {
+      const isComplete = action === "complete";
 
-        try {
-          await updateRequestStatus(request.id, "approved");
-          request.status = "approved";
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          actionButton.textContent = "Accept";
-          actionButton.disabled = false;
-          actionButton.classList.remove("is-accepted");
-          if (declineButton) declineButton.disabled = false;
-          if (viewMoreButton) viewMoreButton.disabled = false;
-          return;
-        }
+      actionButton.textContent = isComplete ? "Completed" : "Accepted";
+      actionButton.disabled = true;
+      actionButton.classList.add("is-accepted");
 
-        // Give the person a moment to see "Accepted" before the
-        // card leaves the pending queue and the next one shifts up.
-        window.setTimeout(renderRequests, 900);
-      }
+      const declineButton = card.querySelector(".request-decline-button");
+      if (declineButton) declineButton.disabled = true;
+      const viewMoreButton = card.querySelector(".request-view-more-button");
+      if (viewMoreButton) viewMoreButton.disabled = true;
+      const rescheduleButton = card.querySelector(".request-reschedule-button");
+      if (rescheduleButton) rescheduleButton.disabled = true;
 
-      if (action === "decline") {
-        actionButton.textContent = "Declined";
-        actionButton.disabled = true;
-        actionButton.classList.add("is-declined");
-        const acceptButton = card.querySelector(".request-accept-button");
-        if (acceptButton) acceptButton.disabled = true;
-        const viewMoreButton = card.querySelector(".request-view-more-button");
-        if (viewMoreButton) viewMoreButton.disabled = true;
+      request.status = isComplete ? "completed" : "upcoming";
+      saveConsultations(REQUESTS);
+      notifyRequestAnswered(request, isComplete ? "completed" : "accepted");
 
-        try {
-          await updateRequestStatus(request.id, "declined");
-          request.status = "declined";
-        } catch (error) {
-          if (error.message === "AUTH_REQUIRED") return;
-          alert(error.message);
-          actionButton.textContent = "Decline";
-          actionButton.disabled = false;
-          actionButton.classList.remove("is-declined");
-          if (acceptButton) acceptButton.disabled = false;
-          if (viewMoreButton) viewMoreButton.disabled = false;
-          return;
-        }
+      window.setTimeout(renderAll, 900);
+      return;
+    }
 
-        window.setTimeout(renderRequests, 900);
-      }
-    });
+    if (action === "decline") {
+      const isCancel = section === "upcoming";
+
+      actionButton.textContent = isCancel ? "Cancelled" : "Declined";
+      actionButton.disabled = true;
+      actionButton.classList.add("is-declined");
+
+      const acceptButton = card.querySelector(".request-accept-button");
+      if (acceptButton) acceptButton.disabled = true;
+      const viewMoreButton = card.querySelector(".request-view-more-button");
+      if (viewMoreButton) viewMoreButton.disabled = true;
+      const rescheduleButton = card.querySelector(".request-reschedule-button");
+      if (rescheduleButton) rescheduleButton.disabled = true;
+
+      request.status = isCancel ? "cancelled" : "declined";
+      saveConsultations(REQUESTS);
+      notifyRequestAnswered(request, isCancel ? "cancelled" : "declined");
+
+      window.setTimeout(renderAll, 900);
+      return;
+    }
   }
 
-  [upcomingContainer, completedContainer].forEach((container) => {
-    if (!container) return;
+  if (pendingContainer) {
+    pendingContainer.addEventListener("click", (event) => handleAction(event, "pending"));
+  }
+  if (upcomingContainer) {
+    upcomingContainer.addEventListener("click", (event) => handleAction(event, "upcoming"));
+  }
+  if (completedContainer) {
+    completedContainer.addEventListener("click", (event) => handleAction(event, "completed"));
+  }
 
-    container.addEventListener("click", (event) => {
-      const toggleButton = event.target.closest('[data-action="history-toggle"]');
-      if (!toggleButton) return;
-
-      const card = toggleButton.closest(".request-card");
-      if (!card) return;
-
-      const isExpanded = card.classList.toggle("is-expanded");
-      toggleButton.textContent = isExpanded ? "View Less" : "View More";
-    });
-  });
-
-  // ---------------------------------------------------------
-  // Click outside any expanded card collapses it back.
-  // ---------------------------------------------------------
   document.addEventListener("click", (event) => {
-    if (!scrollContainer) return;
-    const expandedCards = Array.from(scrollContainer.querySelectorAll(".request-card.is-expanded"));
+    const expandedCards = Array.from(document.querySelectorAll(".request-card.is-expanded"));
     if (expandedCards.length === 0) return;
 
     const clickedInsideAnExpandedCard = expandedCards.some((card) => card.contains(event.target));
-    if (!clickedInsideAnExpandedCard) {
-      expandedCards.forEach((card) => card.classList.remove("is-expanded"));
-    }
+    if (clickedInsideAnExpandedCard) return;
+
+    expandedCards.forEach((card) => {
+      card.classList.remove("is-expanded");
+      if (card.dataset.section === "completed") {
+        const btn = card.querySelector('[data-action="view-more"]');
+        if (btn) btn.textContent = "View More";
+      }
+    });
   });
 
 });

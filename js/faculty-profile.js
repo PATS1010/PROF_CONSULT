@@ -1,106 +1,146 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty profile page, including UI events and API calls.
 // =========================================================
 // FACULTY PROFILE -- PAGE-SPECIFIC INTERACTIONS
-// - View/Edit mode toggle
+// - View/Edit mode toggle (ONE button: "Edit Profile" <-> "Save Changes")
+// - Name: shown as one full name in view mode; edited as four
+//   separate fields (First Name / Middle Initial / Last Name / Suffix)
 // - Custom Program dropdown (data-driven, not a native <select>)
+// - Custom Suffix dropdown (ADDED) -- same component pattern as
+//   Program, with its own "None" option (Sr., Jr., I, II, III, or
+//   None) so an accidental pick can always be cleared.
 // - Name / Email / Phone validation on Save
 // - Faculty ID always read-only, never editable
-// - Profile photo upload and persistent saved image rendering
 //
-// Represents the currently logged-in faculty account. It is loaded
-// from api/session.php so this page shows the signed-in faculty
-// member instead of prototype profile data.
+// Represents the currently logged-in faculty account. Prototype
+// data for now -- once the backend exists, FACULTY_ACCOUNT should
+// be populated from the logged-in session instead, and this same
+// object should feed the Faculty Directory and other faculty
+// pages so there's a single source of truth per account.
+//
+// UPDATED: FACULTY_ACCOUNT is now persisted to localStorage so
+// Save Changes survives a page refresh instead of resetting
+// back to the hardcoded prototype values below.
 //
 // Shared shell behavior (navbar, sidebar, quick action,
 // notification bell) lives in faculty-shared.js.
 // =========================================================
 
 // ---------------------------------------------------------
+// Prototype logged-in faculty account -- replace with real
+// session data once backend authentication exists.
+//
+// Name is stored as four separate parts (firstName,
+// middleInitial, lastName, suffix) -- the same fields Create
+// Account now produces. `name` is the combined full name, kept
+// in sync so anything else reading FACULTY_ACCOUNT.name keeps
+// working. suffix defaults to "" (None).
+// ---------------------------------------------------------
 const FACULTY_ACCOUNT = {
-  firstName: "",
+  firstName: "Juan",
   middleInitial: "",
-  lastName: "",
-  name: "",
-  facultyId: "",
-  program: "",
-  email: "",
-  phone: "", // local part only; +63 prefix is fixed in the UI
-  profilePhoto: "",
+  lastName: "Dela Cruz",
+  suffix: "",
+  name: "", // combined below from the four parts
+  facultyId: "24-00001",
+  program: "Computer Engineering",
+  email: "juan.delacruz@cvsu.edu.ph",
+  phone: "912-345-6789", // local part only; +63 prefix is fixed in the UI
 };
+
+// ---------------------------------------------------------
+// Persistence -- same reasoning as the Student Profile page's
+// localStorage use: without this, Save Changes only updates the
+// in-memory object above, so a refresh silently discards it.
+// ---------------------------------------------------------
+const FACULTY_ACCOUNT_STORAGE_KEY = "profconsult_faculty_account";
+
+function loadStoredFacultyAccount() {
+  try {
+    const stored = localStorage.getItem(FACULTY_ACCOUNT_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed === "object") {
+        return parsed;
+      }
+    }
+  } catch (error) {
+    // fall through -- keep the prototype defaults above
+  }
+  return null;
+}
+
+function saveFacultyAccount() {
+  try {
+    localStorage.setItem(FACULTY_ACCOUNT_STORAGE_KEY, JSON.stringify(FACULTY_ACCOUNT));
+  } catch (error) {
+    // Storage unavailable -- the change just won't persist/sync
+  }
+}
+
+// Apply any previously-saved account data over the defaults above.
+// (A stored account saved before Suffix existed simply has no
+// "suffix" key, so Object.assign leaves the "" default above in
+// place -- no extra fallback needed.)
+const storedFacultyAccount = loadStoredFacultyAccount();
+if (storedFacultyAccount) {
+  Object.assign(FACULTY_ACCOUNT, storedFacultyAccount);
+}
 
 // Structured so more programs can be added later without
 // touching any markup or logic -- just extend this array.
 const PROGRAM_OPTIONS = ["Computer Engineering"];
-const PROGRAM_LABELS = {
-  "computer-engineering": "Computer Engineering",
-};
 
-function displayProgramName(value) {
-  return PROGRAM_LABELS[value] || value || "";
-}
+// ---------------------------------------------------------
+// Name helpers
+// ---------------------------------------------------------
 
-function formatPhoneInput(rawValue) {
-  const digits = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
-  const part1 = digits.slice(0, 3);
-  const part2 = digits.slice(3, 6);
-  const part3 = digits.slice(6, 10);
-  return [part1, part2, part3].filter(Boolean).join("-");
-}
-
+// Trims the ends and collapses repeated spaces to one.
+// Internal single spaces (e.g. "Mary Jane") are preserved.
 function normalizeName(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
-function combineName(firstName, middleInitial, lastName) {
-  return [firstName, middleInitial, lastName]
+// First Name + Middle Initial + Last Name + Suffix, joined with
+// normal spaces only. Empty parts are skipped; no commas,
+// periods or dashes are added beyond whatever Suffix itself
+// already contains (e.g. "Sr.").
+function combineName(firstName, middleInitial, lastName, suffix) {
+  return [firstName, middleInitial, lastName, suffix]
     .map(normalizeName)
     .filter(Boolean)
     .join(" ");
 }
 
+// Only used when an account has a stored full name but no
+// separate parts (e.g. older data). It never treats the first
+// word as "the" first name: the LAST word becomes the last name,
+// a single-letter word before it becomes the middle initial, and
+// EVERYTHING else stays together as First Name (multi-word safe).
+// Does not attempt to detect a trailing Suffix -- legacy data has
+// no way to distinguish "Jr." as a suffix from part of the name,
+// so it's left for the person to set via the new dropdown.
 function splitLegacyName(fullName) {
   const words = normalizeName(fullName).split(" ").filter(Boolean);
   if (words.length <= 1) {
     return { firstName: words[0] || "", middleInitial: "", lastName: "" };
   }
-
   const lastName = words.pop();
   let middleInitial = "";
   if (words.length > 1 && words[words.length - 1].length === 1) {
     middleInitial = words.pop();
   }
-
-  return {
-    firstName: words.join(" "),
-    middleInitial,
-    lastName,
-  };
+  return { firstName: words.join(" "), middleInitial, lastName };
 }
 
-function applySessionProfile(sessionData) {
-  const user = sessionData && sessionData.user ? sessionData.user : {};
-  const profile = sessionData && sessionData.profile ? sessionData.profile : {};
-  const department = displayProgramName(profile.Department || profile.department || "");
-  const nameParts = splitLegacyName(user.name || "");
-
-  FACULTY_ACCOUNT.firstName = nameParts.firstName;
-  FACULTY_ACCOUNT.middleInitial = nameParts.middleInitial;
-  FACULTY_ACCOUNT.lastName = nameParts.lastName;
-  FACULTY_ACCOUNT.name = combineName(
-    FACULTY_ACCOUNT.firstName,
-    FACULTY_ACCOUNT.middleInitial,
-    FACULTY_ACCOUNT.lastName
-  );
-  FACULTY_ACCOUNT.facultyId = user.username || "";
-  FACULTY_ACCOUNT.program = department || "Computer Engineering";
-  FACULTY_ACCOUNT.email = user.email || "";
-  FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || "");
-  FACULTY_ACCOUNT.profilePhoto = user.profile_photo || "";
-
-  if (FACULTY_ACCOUNT.program && !PROGRAM_OPTIONS.includes(FACULTY_ACCOUNT.program)) {
-    PROGRAM_OPTIONS.push(FACULTY_ACCOUNT.program);
-  }
+// Make sure the account has the three parts, then keep `name` in sync
+if (FACULTY_ACCOUNT.firstName === undefined && FACULTY_ACCOUNT.lastName === undefined) {
+  Object.assign(FACULTY_ACCOUNT, splitLegacyName(FACULTY_ACCOUNT.name));
 }
+FACULTY_ACCOUNT.name = combineName(
+  FACULTY_ACCOUNT.firstName,
+  FACULTY_ACCOUNT.middleInitial,
+  FACULTY_ACCOUNT.lastName,
+  FACULTY_ACCOUNT.suffix
+);
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -108,7 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Element references
   // ---------------------------------------------------------
   const editProfileButton = document.getElementById("editProfileButton");
-  const cancelProfileButton = document.getElementById("cancelProfileButton");
 
   const viewSection = document.getElementById("facultyProfileView");
   const editForm = document.getElementById("facultyProfileEdit");
@@ -129,14 +168,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const phoneInput = document.getElementById("editFacultyPhone");
   const phoneError = document.getElementById("phoneError");
   const phoneWrap = phoneInput ? phoneInput.closest(".faculty-phone-input-wrap") : null;
-  const facultyProfilePhoto = document.getElementById("facultyProfilePhoto");
-  const facultyProfilePhotoEdit = document.getElementById("facultyProfilePhotoEdit");
-  const facultyProfilePhotoInput = document.getElementById("facultyProfilePhotoInput");
 
   const programDropdown = document.getElementById("programDropdown");
   const programTrigger = document.getElementById("programDropdownTrigger");
   const programValueEl = document.getElementById("programDropdownValue");
   const programList = document.getElementById("programDropdownList");
+
+  // CHANGED: Suffix is now a plain <select>, matching Student
+  // Profile exactly -- no custom dropdown open/close logic needed.
+  const suffixSelect = document.getElementById("editFacultySuffix");
 
   const saveSuccessMessage = document.getElementById("saveSuccessMessage");
 
@@ -147,70 +187,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Render the account's current data into view mode
   // ---------------------------------------------------------
   function renderViewMode() {
-    if (viewName) viewName.textContent = FACULTY_ACCOUNT.name;
-    if (viewId) viewId.textContent = FACULTY_ACCOUNT.facultyId;
-    if (viewProgram) viewProgram.textContent = FACULTY_ACCOUNT.program;
-    if (viewEmail) viewEmail.textContent = FACULTY_ACCOUNT.email;
-    if (viewPhone) viewPhone.textContent = FACULTY_ACCOUNT.phone ? `+63 ${FACULTY_ACCOUNT.phone}` : "";
-
-    if (firstNameInput) firstNameInput.value = FACULTY_ACCOUNT.firstName;
-    if (middleInitialInput) middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
-    if (lastNameInput) lastNameInput.value = FACULTY_ACCOUNT.lastName;
-    if (idInput) idInput.value = FACULTY_ACCOUNT.facultyId;
-    selectedProgram = FACULTY_ACCOUNT.program;
-    if (programValueEl) programValueEl.textContent = selectedProgram;
-    if (emailInput) emailInput.value = FACULTY_ACCOUNT.email;
-    if (phoneInput) phoneInput.value = FACULTY_ACCOUNT.phone;
-
-    if (facultyProfilePhoto && FACULTY_ACCOUNT.profilePhoto) {
-      facultyProfilePhoto.src = `${FACULTY_ACCOUNT.profilePhoto}?v=${Date.now()}`;
-    }
+    viewName.textContent = FACULTY_ACCOUNT.name;
+    viewId.textContent = FACULTY_ACCOUNT.facultyId;
+    viewProgram.textContent = FACULTY_ACCOUNT.program;
+    viewEmail.textContent = FACULTY_ACCOUNT.email;
+    viewPhone.textContent = `+63 ${FACULTY_ACCOUNT.phone}`;
   }
 
-  async function uploadProfilePhoto(file) {
-    const formData = new FormData();
-    formData.append("profile_photo", file);
-
-    const response = await fetch("api/profile-photo.php", {
-      method: "POST",
-      credentials: "same-origin",
-      body: formData,
-    });
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || !data.ok || !data.profile_photo) {
-      throw new Error(data.message || "Unable to save profile photo.");
-    }
-
-    return data.profile_photo;
-  }
-
-  async function loadCurrentFacultyProfile() {
-    try {
-      const response = await fetch("api/session.php?role=faculty", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Session unavailable");
-      }
-
-      const data = await response.json();
-      if (!data.ok || !data.user || data.user.role !== "faculty") {
-        throw new Error("Faculty session unavailable");
-      }
-
-      applySessionProfile(data);
-      selectedProgram = FACULTY_ACCOUNT.program;
-      renderViewMode();
-    } catch (error) {
-      window.location.href = "faculty-login.html";
-    }
-  }
-
-  loadCurrentFacultyProfile();
+  renderViewMode();
 
   // ---------------------------------------------------------
   // Program dropdown -- built from PROGRAM_OPTIONS so future
@@ -252,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (programTrigger) {
     programTrigger.addEventListener("click", (event) => {
       event.stopPropagation();
-      if (!isEditing) return;
       const isOpen = programList.classList.contains("is-open");
       if (isOpen) {
         closeProgramDropdown();
@@ -264,7 +247,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (programList) {
     programList.addEventListener("click", (event) => {
-      if (!isEditing) return;
       const option = event.target.closest(".faculty-dropdown-option");
       if (!option) return;
       selectedProgram = option.dataset.value;
@@ -284,22 +266,34 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------
-  // Phone number formatting -- digits only, auto-hyphenated
-  // as 3-3-4 (matches the Philippine mobile format used
-  // elsewhere in Prof Consult, e.g. 912-345-6789).
+  // Middle Initial: one letter only, uppercased. No period is
+  // ever added.
   // ---------------------------------------------------------
-  if (phoneInput) {
-    phoneInput.addEventListener("input", () => {
-      phoneInput.value = formatPhoneInput(phoneInput.value);
-    });
-  }
-
   if (middleInitialInput) {
     middleInitialInput.addEventListener("input", () => {
       middleInitialInput.value = middleInitialInput.value
         .replace(/[^\p{L}]/gu, "")
         .toUpperCase()
         .slice(0, 1);
+    });
+  }
+
+  // ---------------------------------------------------------
+  // Phone number formatting -- digits only, auto-hyphenated
+  // as 3-3-4 (matches the Philippine mobile format used
+  // elsewhere in Prof Consult, e.g. 912-345-6789).
+  // ---------------------------------------------------------
+  function formatPhoneInput(rawValue) {
+    const digits = rawValue.replace(/\D/g, "").slice(0, 10);
+    const part1 = digits.slice(0, 3);
+    const part2 = digits.slice(3, 6);
+    const part3 = digits.slice(6, 10);
+    return [part1, part2, part3].filter(Boolean).join("-");
+  }
+
+  if (phoneInput) {
+    phoneInput.addEventListener("input", () => {
+      phoneInput.value = formatPhoneInput(phoneInput.value);
     });
   }
 
@@ -329,6 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
     clearFieldError(lastNameInput, null);
   }
 
+  // First Name and Last Name are required; Middle Initial and
+  // Suffix are optional.
   function validateName() {
     firstNameInput.value = normalizeName(firstNameInput.value);
     lastNameInput.value = normalizeName(lastNameInput.value);
@@ -347,7 +343,6 @@ document.addEventListener("DOMContentLoaded", () => {
       if (lastMissing) lastNameInput.classList.add("has-error");
       return false;
     }
-
     return true;
   }
 
@@ -385,26 +380,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ---------------------------------------------------------
-  // Enter / exit edit mode
+  // The single action button: "Edit Profile" <-> "Save Changes"
   // ---------------------------------------------------------
-  function setInlineFieldsEditable(canEdit) {
-    [firstNameInput, middleInitialInput, lastNameInput, emailInput, phoneInput].forEach((field) => {
-      if (!field) return;
-      field.readOnly = !canEdit;
-    });
-
-    if (programTrigger) {
-      programTrigger.disabled = !canEdit;
-    }
-
-    if (editForm) {
-      editForm.classList.toggle("is-editing", canEdit);
-    }
+  function setButtonMode(editing) {
+    isEditing = editing;
+    editProfileButton.textContent = editing ? "Save Changes" : "Edit Profile";
   }
 
+  // ---------------------------------------------------------
+  // Enter / exit edit mode
+  // ---------------------------------------------------------
   function enterEditMode() {
     // Populate the edit form from the current account data
-    renderViewMode();
+    firstNameInput.value = FACULTY_ACCOUNT.firstName;
+    middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
+    lastNameInput.value = FACULTY_ACCOUNT.lastName;
+    idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
+    selectedProgram = FACULTY_ACCOUNT.program;
+    programValueEl.textContent = selectedProgram;
+    if (suffixSelect) suffixSelect.value = FACULTY_ACCOUNT.suffix || "";
+    emailInput.value = FACULTY_ACCOUNT.email;
+    phoneInput.value = FACULTY_ACCOUNT.phone;
 
     clearNameErrors();
     clearFieldError(emailInput, emailError);
@@ -417,52 +413,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     viewSection.hidden = true;
     editForm.hidden = false;
-    editProfileButton.textContent = "Save Changes";
-    if (cancelProfileButton) cancelProfileButton.hidden = false;
-    isEditing = true;
-    setInlineFieldsEditable(true);
-    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
+    setButtonMode(true);
   }
 
   function exitEditMode() {
-    editForm.hidden = false;
-    viewSection.hidden = true;
-    editProfileButton.textContent = "Edit Profile";
-    if (cancelProfileButton) cancelProfileButton.hidden = true;
-    isEditing = false;
-    setInlineFieldsEditable(false);
-    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
+    editForm.hidden = true;
+    viewSection.hidden = false;
+    setButtonMode(false);
     closeProgramDropdown();
-  }
-
-  function cancelEditMode() {
-    clearNameErrors();
-    clearFieldError(emailInput, emailError);
-    clearFieldError(phoneInput, phoneError, phoneWrap);
-    if (facultyProfilePhotoInput) facultyProfilePhotoInput.value = "";
-    renderViewMode();
-    exitEditMode();
-  }
-
-  if (editProfileButton) {
-    editProfileButton.addEventListener("click", () => {
-      if (isEditing) {
-        handleSave();
-      } else {
-        enterEditMode();
-      }
-    });
-  }
-
-  if (cancelProfileButton) {
-    cancelProfileButton.addEventListener("click", cancelEditMode);
-  }
-
-  if (editForm) {
-    editForm.addEventListener("submit", (event) => {
-      event.preventDefault();
-      handleSave();
-    });
   }
 
   // ---------------------------------------------------------
@@ -473,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function handleSave() {
     // Do nothing if not currently editing -- Save only acts on
     // the edit form's values.
-    if (!isEditing) return;
+    if (editForm.hidden) return;
 
     const isNameValid = validateName();
     const isEmailValid = validateEmail();
@@ -486,18 +444,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     FACULTY_ACCOUNT.firstName = firstNameInput.value;
-    FACULTY_ACCOUNT.middleInitial = middleInitialInput.value.trim();
+    FACULTY_ACCOUNT.middleInitial = middleInitialInput.value;
     FACULTY_ACCOUNT.lastName = lastNameInput.value;
+    FACULTY_ACCOUNT.suffix = suffixSelect ? suffixSelect.value : FACULTY_ACCOUNT.suffix;
     FACULTY_ACCOUNT.name = combineName(
       FACULTY_ACCOUNT.firstName,
       FACULTY_ACCOUNT.middleInitial,
-      FACULTY_ACCOUNT.lastName
+      FACULTY_ACCOUNT.lastName,
+      FACULTY_ACCOUNT.suffix
     );
     FACULTY_ACCOUNT.program = selectedProgram;
     FACULTY_ACCOUNT.email = emailInput.value.trim();
     FACULTY_ACCOUNT.phone = phoneInput.value.trim();
     // FACULTY_ACCOUNT.facultyId intentionally left untouched --
     // the Faculty ID field is never a source of updates.
+
+    // Persist so the change survives a refresh.
+    saveFacultyAccount();
 
     renderViewMode();
     exitEditMode();
@@ -514,30 +477,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  if (facultyProfilePhotoInput && facultyProfilePhoto) {
-    facultyProfilePhotoInput.addEventListener("change", async () => {
-      const file = facultyProfilePhotoInput.files && facultyProfilePhotoInput.files[0];
-      if (!file) return;
-
-      const previewUrl = URL.createObjectURL(file);
-      facultyProfilePhoto.src = previewUrl;
-
-      try {
-        const savedPhoto = await uploadProfilePhoto(file);
-        FACULTY_ACCOUNT.profilePhoto = savedPhoto;
-        facultyProfilePhoto.src = `${savedPhoto}?v=${Date.now()}`;
-      } catch (error) {
-        alert(error.message);
-        renderViewMode();
-      } finally {
-        URL.revokeObjectURL(previewUrl);
-        facultyProfilePhotoInput.value = "";
+  // One button, two jobs depending on the current mode
+  if (editProfileButton) {
+    editProfileButton.addEventListener("click", () => {
+      if (isEditing) {
+        handleSave();
+      } else {
+        enterEditMode();
       }
     });
   }
-
-  if (viewSection) viewSection.hidden = true;
-  if (editForm) editForm.hidden = false;
-  setInlineFieldsEditable(false);
 
 });

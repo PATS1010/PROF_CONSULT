@@ -1,121 +1,160 @@
-// SYSTEM NOTE: Controls client-side behavior for the student profile page, including UI events and API calls.
-// =========================================================
-// STUDENT PROFILE PAGE INTERACTIONS
-// - Burger menu + Quick Action: same behavior as the Dashboard
-// - Populates profile fields from api/session.php so the page
-//   shows the currently logged-in student.
-// - Edit Profile: toggles all fields except Student Number
-//   into an editable state; "Save Changes" exits edit mode.
-// - Profile photo: clicking the edit badge (visible only in
-//   edit mode) opens a file picker, uploads it, and shows the
-//   saved image returned by the backend.
-// =========================================================
-
+// Student Profile JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const DEFAULT_PROFILE_PHOTO = "images/user.png";
-
-  // ---------------------------------------------------------
-  // Current student profile state. The loader below fills this
-  // object from the PHP session response, then the renderer copies
-  // it into the visible form fields.
-  // ---------------------------------------------------------
-  const CURRENT_STUDENT = {
-    fullName: "",
-    firstName: "",
-    middleInitial: "",
-    lastName: "",
-    studentNumber: "",
-    course: "",
-    yearLevel: "",
-    section: "",
-    email: "",
-    phone: "",
-    profilePhoto: "",
+  const SAMPLE_STUDENT = {
+    studentNumber: "24-00001",
+    course: "computer-engineering",
+    yearLevel: "3",
+    section: "A",
+    email: "john.delacruz@example.com",
+    phone: "912-345-6789",
   };
 
-  const COURSE_LABELS = {
-    "computer-engineering": "BSCPE (Computer Engineering)",
+  const STUDENT_DETAILS_STORAGE_KEY = "profconsult_student_details";
+
+  function loadStudentDetails() {
+    try {
+      const stored = localStorage.getItem(STUDENT_DETAILS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          return {
+            course: parsed.course || SAMPLE_STUDENT.course,
+            yearLevel: parsed.yearLevel || SAMPLE_STUDENT.yearLevel,
+            section: parsed.section || SAMPLE_STUDENT.section,
+            email: parsed.email || SAMPLE_STUDENT.email,
+            phone: parsed.phone || SAMPLE_STUDENT.phone,
+          };
+        }
+      }
+    } catch (error) {
+    }
+    return {
+      course: SAMPLE_STUDENT.course,
+      yearLevel: SAMPLE_STUDENT.yearLevel,
+      section: SAMPLE_STUDENT.section,
+      email: SAMPLE_STUDENT.email,
+      phone: SAMPLE_STUDENT.phone,
+    };
+  }
+
+  function saveStudentDetails(details) {
+    try {
+      localStorage.setItem(STUDENT_DETAILS_STORAGE_KEY, JSON.stringify(details));
+    } catch (error) {
+    }
+  }
+
+  let studentDetails = loadStudentDetails();
+
+  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
+
+  const DEFAULT_STUDENT_NAME = {
+    firstName: "John",
+    middleInitial: "D",
+    lastName: "Cruz",
+    suffix: "",
   };
 
-  function formatPhoneInput(rawValue) {
-    const digits = String(rawValue || "").replace(/\D/g, "").slice(0, 10);
-    const part1 = digits.slice(0, 3);
-    const part2 = digits.slice(3, 6);
-    const part3 = digits.slice(6, 10);
-    return [part1, part2, part3].filter(Boolean).join("-");
+  function loadStudentName() {
+    try {
+      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          return {
+            firstName: parsed.firstName || "",
+            middleInitial: parsed.middleInitial || "",
+            lastName: parsed.lastName || "",
+            suffix: parsed.suffix || "",
+          };
+        }
+      }
+    } catch (error) {
+    }
+    return { ...DEFAULT_STUDENT_NAME };
   }
 
-  function ensureCourseOption(courseValue) {
-    if (!courseSelect || !courseValue) return;
-
-    const hasOption = Array.from(courseSelect.options).some((option) => {
-      return option.value === courseValue;
-    });
-
-    if (!hasOption) {
-      const option = document.createElement("option");
-      option.value = courseValue;
-      option.textContent = COURSE_LABELS[courseValue] || courseValue;
-      courseSelect.appendChild(option);
+  function saveStudentName(nameParts) {
+    try {
+      localStorage.setItem(STUDENT_NAME_STORAGE_KEY, JSON.stringify(nameParts));
+    } catch (error) {
     }
   }
 
-  function ensureSelectOption(select, value, label) {
-    if (!select || !value) return;
-
-    const hasOption = Array.from(select.options).some((option) => {
-      return option.value === value;
-    });
-
-    if (!hasOption) {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = label || value;
-      select.appendChild(option);
-    }
+  function sanitizeNamePart(value) {
+    return (value || "").replace(/[,.\-]/g, "");
   }
 
-  function splitFullName(fullName) {
-    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) {
-      return { firstName: "", middleInitial: "", lastName: "" };
-    }
-    if (parts.length === 1) {
-      return { firstName: parts[0], middleInitial: "", lastName: "" };
-    }
-
-    const firstName = parts[0];
-    const lastName = parts[parts.length - 1];
-    const middleInitial = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
-    return { firstName, middleInitial, lastName };
+  function buildFullName(firstName, middleInitial, lastName, suffix) {
+    return [firstName, middleInitial, lastName, suffix]
+      .map((part) => (part || "").trim())
+      .filter((part) => part.length > 0)
+      .join(" ");
   }
 
-  function combineFullName() {
-    return [
-      CURRENT_STUDENT.firstName,
-      CURRENT_STUDENT.middleInitial,
-      CURRENT_STUDENT.lastName,
-    ].map((part) => String(part || "").trim()).filter(Boolean).join(" ");
-  }
+  let studentName = loadStudentName();
 
+  const fullNameViewGroup = document.getElementById("profileFullNameView");
+  const fullNameDisplay = document.getElementById("profileFullNameDisplay");
+  const fullNameEditGroup = document.getElementById("profileFullNameEdit");
   const firstNameInput = document.getElementById("profileFirstName");
   const middleInitialInput = document.getElementById("profileMiddleInitial");
   const lastNameInput = document.getElementById("profileLastName");
+  const suffixSelect = document.getElementById("profileSuffix");
+
+  function renderFullNameDisplay() {
+    if (fullNameDisplay) {
+      fullNameDisplay.textContent = buildFullName(
+        studentName.firstName,
+        studentName.middleInitial,
+        studentName.lastName,
+        studentName.suffix
+      );
+    }
+  }
+
+  function populateNameEditInputs() {
+    if (firstNameInput) firstNameInput.value = studentName.firstName;
+    if (middleInitialInput) middleInitialInput.value = studentName.middleInitial;
+    if (lastNameInput) lastNameInput.value = studentName.lastName;
+    if (suffixSelect) suffixSelect.value = studentName.suffix || "";
+  }
+
+  renderFullNameDisplay();
+  populateNameEditInputs();
+
+  [firstNameInput, middleInitialInput, lastNameInput].forEach((input) => {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      const sanitized = sanitizeNamePart(input.value);
+      if (sanitized !== input.value) input.value = sanitized;
+    });
+  });
+
   const studentNumberInput = document.getElementById("profileStudentNumber");
   const courseSelect = document.getElementById("profileCourse");
   const yearLevelSelect = document.getElementById("profileYearLevel");
   const sectionSelect = document.getElementById("profileSection");
   const emailInput = document.getElementById("profileEmail");
+  const emailError = document.getElementById("emailError");
   const phoneInput = document.getElementById("profilePhone");
-  const profilePhoto = document.getElementById("profilePhoto");
+  const phoneError = document.getElementById("phoneError");
+  const phoneGroup = document.getElementById("profilePhoneGroup");
 
-  if (profilePhoto) {
-    profilePhoto.addEventListener("error", () => {
-      if (!profilePhoto.src.endsWith(DEFAULT_PROFILE_PHOTO)) {
-        profilePhoto.src = DEFAULT_PROFILE_PHOTO;
-      }
-    });
+  if (studentNumberInput) studentNumberInput.value = SAMPLE_STUDENT.studentNumber;
+  if (courseSelect) courseSelect.value = studentDetails.course;
+  if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
+  if (sectionSelect) sectionSelect.value = studentDetails.section;
+  if (emailInput) emailInput.value = studentDetails.email;
+  if (phoneInput) phoneInput.value = studentDetails.phone;
+
+  function formatPhoneInput(rawValue) {
+    const digits = rawValue.replace(/\D/g, "").slice(0, 10);
+    const part1 = digits.slice(0, 3);
+    const part2 = digits.slice(3, 6);
+    const part3 = digits.slice(6, 10);
+    return [part1, part2, part3].filter(Boolean).join("-");
   }
 
   if (phoneInput) {
@@ -124,121 +163,51 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function applySessionProfile(sessionData) {
-    const user = sessionData && sessionData.user ? sessionData.user : {};
-    const profile = sessionData && sessionData.profile ? sessionData.profile : {};
-
-    CURRENT_STUDENT.fullName = user.name || "";
-    const nameParts = splitFullName(CURRENT_STUDENT.fullName);
-    CURRENT_STUDENT.firstName = nameParts.firstName;
-    CURRENT_STUDENT.middleInitial = nameParts.middleInitial;
-    CURRENT_STUDENT.lastName = nameParts.lastName;
-    CURRENT_STUDENT.studentNumber = user.username || "";
-    CURRENT_STUDENT.course = profile.Program || profile.program || "";
-    CURRENT_STUDENT.yearLevel = String(profile.Year_Level || profile.year_level || "");
-    CURRENT_STUDENT.section = String(profile.Section || profile.section || "");
-    CURRENT_STUDENT.email = user.email || "";
-    CURRENT_STUDENT.phone = formatPhoneInput(user.phone || "");
-    CURRENT_STUDENT.profilePhoto = user.profile_photo || "";
-  }
-
-  function renderStudentProfile() {
-    ensureCourseOption(CURRENT_STUDENT.course);
-    ensureSelectOption(yearLevelSelect, CURRENT_STUDENT.yearLevel, CURRENT_STUDENT.yearLevel);
-    ensureSelectOption(sectionSelect, CURRENT_STUDENT.section, CURRENT_STUDENT.section);
-
-    CURRENT_STUDENT.fullName = combineFullName() || CURRENT_STUDENT.fullName;
-
-    if (firstNameInput) firstNameInput.value = CURRENT_STUDENT.firstName;
-    if (middleInitialInput) middleInitialInput.value = CURRENT_STUDENT.middleInitial;
-    if (lastNameInput) lastNameInput.value = CURRENT_STUDENT.lastName;
-    if (studentNumberInput) studentNumberInput.value = CURRENT_STUDENT.studentNumber;
-    if (courseSelect) courseSelect.value = CURRENT_STUDENT.course;
-    if (yearLevelSelect) yearLevelSelect.value = CURRENT_STUDENT.yearLevel;
-    if (sectionSelect) sectionSelect.value = CURRENT_STUDENT.section;
-    if (emailInput) emailInput.value = CURRENT_STUDENT.email;
-    if (phoneInput) phoneInput.value = CURRENT_STUDENT.phone;
-    if (profilePhoto && CURRENT_STUDENT.profilePhoto) {
-      profilePhoto.src = `${CURRENT_STUDENT.profilePhoto}?v=${Date.now()}`;
+  function showFieldError(inputEl, errorEl, message, wrapEl) {
+    if (errorEl) {
+      errorEl.textContent = message;
+      errorEl.hidden = false;
     }
+    if (inputEl) inputEl.classList.add("has-error");
+    if (wrapEl) wrapEl.classList.add("has-error");
   }
 
-  async function uploadProfilePhoto(file) {
-    const formData = new FormData();
-    formData.append("profile_photo", file);
-
-    const response = await fetch("api/profile-photo.php", {
-      method: "POST",
-      body: formData,
-    });
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok || !data.ok || !data.profile_photo) {
-      throw new Error(data.message || "Unable to save profile photo.");
+  function clearFieldError(inputEl, errorEl, wrapEl) {
+    if (errorEl) {
+      errorEl.textContent = "";
+      errorEl.hidden = true;
     }
-
-    return data.profile_photo;
+    if (inputEl) inputEl.classList.remove("has-error");
+    if (wrapEl) wrapEl.classList.remove("has-error");
   }
 
-  async function saveStudentProfile() {
-    const response = await fetch("api/student-profile.php", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        full_name: combineFullName(),
-        program: courseSelect ? courseSelect.value : CURRENT_STUDENT.course,
-        year_level: yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel,
-        section: sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section,
-        email: emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email,
-        phone: phoneInput ? phoneInput.value : CURRENT_STUDENT.phone,
-      }),
-    });
-
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok || !data.ok) {
-      throw new Error(data.message || "Unable to save profile changes.");
+  function validateEmail() {
+    const value = emailInput.value.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (value === "" || !emailPattern.test(value)) {
+      showFieldError(emailInput, emailError, "Enter a valid email address.");
+      return false;
     }
-
-    return data;
+    clearFieldError(emailInput, emailError);
+    return true;
   }
 
-  async function loadCurrentStudentProfile() {
-    try {
-      // api/session.php reads the active PHP session and returns
-      // both the shared user row and the student-specific profile row.
-      const response = await fetch("api/session.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-
-      if (!response.ok) {
-        throw new Error("Session unavailable");
-      }
-
-      const data = await response.json();
-      if (!data.ok || !data.user || data.user.role !== "student") {
-        throw new Error("Student session unavailable");
-      }
-
-      // Convert the API fields into the shape used by this page,
-      // then render the current student in every profile input.
-      applySessionProfile(data);
-      renderStudentProfile();
-    } catch (error) {
-      window.location.href = "student-login.html";
+  function validatePhone() {
+    const value = phoneInput.value.trim();
+    const phonePattern = /^9\d{2}-\d{3}-\d{4}$/;
+    if (!phonePattern.test(value)) {
+      showFieldError(
+        phoneInput,
+        phoneError,
+        "Enter a valid Philippine mobile number (e.g. 912-345-6789).",
+        phoneGroup
+      );
+      return false;
     }
+    clearFieldError(phoneInput, phoneError, phoneGroup);
+    return true;
   }
 
-  loadCurrentStudentProfile();
-
-  // ---------------------------------------------------------
-  // Burger sidebar (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -262,9 +231,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sidebarClose) sidebarClose.addEventListener("click", closeSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
-  // ---------------------------------------------------------
-  // Quick Action popup (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -305,84 +271,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // "Send Request" doesn't have a destination page yet --
-  // left wired up but intentionally not navigating anywhere
-  const requestConsultationButton = document.getElementById("requestConsultationButton");
-  if (requestConsultationButton) {
-    requestConsultationButton.addEventListener("click", (event) => {
-      event.preventDefault();
-      // Future: navigate to the consultation request page once it exists
-    });
-  }
-
-  // ---------------------------------------------------------
-  // Notification bell -- clickable placeholder, no
-  // functionality implemented yet
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
-      // Intentionally left empty -- functionality comes later
+      window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
-  // ---------------------------------------------------------
-  // Edit Profile: toggles all fields except Student Number
-  // between read-only and editable, then saves changes through
-  // api/student-profile.php.
-  // ---------------------------------------------------------
   const editProfileButton = document.getElementById("editProfileButton");
-  const cancelProfileButton = document.getElementById("cancelProfileButton");
   const profileInfoCard = document.querySelector(".profile-info-card");
   const profilePhotoEdit = document.getElementById("profilePhotoEdit");
 
-  // Every editable field except Student Number (which stays
-  // read-only/disabled at all times, per spec)
-  const editableFields = [
-    firstNameInput,
-    middleInitialInput,
-    lastNameInput,
-    courseSelect,
-    yearLevelSelect,
-    sectionSelect,
-    emailInput,
-    phoneInput,
-  ];
+  const editableFields = [courseSelect, yearLevelSelect, sectionSelect, emailInput, phoneInput];
 
   let isEditing = false;
-
-  if (middleInitialInput) {
-    middleInitialInput.addEventListener("input", () => {
-      middleInitialInput.value = middleInitialInput.value
-        .replace(/[^\p{L}]/gu, "")
-        .toUpperCase()
-        .slice(0, 1);
-    });
-  }
-
-  function lockProfileFields() {
-    editableFields.forEach((field) => {
-      if (!field) return;
-      // <select> elements use disabled to lock them (readOnly
-      // isn't meaningful on selects); text/email/tel inputs use readOnly
-      if (field.tagName === "SELECT") {
-        field.disabled = true;
-      } else {
-        field.readOnly = true;
-      }
-    });
-  }
-
-  function leaveEditMode() {
-    isEditing = false;
-    lockProfileFields();
-    profileInfoCard.classList.remove("is-editing");
-    profilePhotoEdit.hidden = true;
-    if (cancelProfileButton) cancelProfileButton.hidden = true;
-    editProfileButton.disabled = false;
-    editProfileButton.textContent = "Edit Profile";
-    renderStudentProfile();
-  }
 
   function enterEditMode() {
     isEditing = true;
@@ -391,81 +296,143 @@ document.addEventListener("DOMContentLoaded", () => {
       field.readOnly = false;
       field.disabled = false;
     });
+
+    populateNameEditInputs();
+    if (fullNameViewGroup) fullNameViewGroup.hidden = true;
+    if (fullNameEditGroup) fullNameEditGroup.hidden = false;
+
+    clearFieldError(emailInput, emailError);
+    clearFieldError(phoneInput, phoneError, phoneGroup);
+
     profileInfoCard.classList.add("is-editing");
     profilePhotoEdit.hidden = false;
-    if (cancelProfileButton) cancelProfileButton.hidden = false;
     editProfileButton.textContent = "Save Changes";
   }
 
-  async function exitEditMode() {
-    CURRENT_STUDENT.firstName = firstNameInput ? firstNameInput.value.trim() : CURRENT_STUDENT.firstName;
-    CURRENT_STUDENT.middleInitial = middleInitialInput ? middleInitialInput.value.trim() : CURRENT_STUDENT.middleInitial;
-    CURRENT_STUDENT.lastName = lastNameInput ? lastNameInput.value.trim() : CURRENT_STUDENT.lastName;
-    CURRENT_STUDENT.fullName = combineFullName();
-    CURRENT_STUDENT.course = courseSelect ? courseSelect.value : CURRENT_STUDENT.course;
-    CURRENT_STUDENT.yearLevel = yearLevelSelect ? yearLevelSelect.value : CURRENT_STUDENT.yearLevel;
-    CURRENT_STUDENT.section = sectionSelect ? sectionSelect.value : CURRENT_STUDENT.section;
-    CURRENT_STUDENT.email = emailInput ? emailInput.value.trim() : CURRENT_STUDENT.email;
-    CURRENT_STUDENT.phone = phoneInput ? formatPhoneInput(phoneInput.value) : CURRENT_STUDENT.phone;
+  function exitEditMode() {
+    isEditing = false;
+    editableFields.forEach((field) => {
+      if (!field) return;
+      if (field.tagName === "SELECT") {
+        field.disabled = true;
+      } else {
+        field.readOnly = true;
+      }
+    });
 
-    editProfileButton.disabled = true;
-    editProfileButton.textContent = "Saving...";
+    studentName = {
+      firstName: sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
+      middleInitial: sanitizeNamePart(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
+      lastName: sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
+      suffix: suffixSelect ? suffixSelect.value : studentName.suffix,
+    };
+    saveStudentName(studentName);
+    renderFullNameDisplay();
 
-    try {
-      const data = await saveStudentProfile();
-      applySessionProfile(data);
-    } catch (error) {
-      alert(error.message);
-      editProfileButton.disabled = false;
-      editProfileButton.textContent = "Save Changes";
-      return;
-    }
+    studentDetails = {
+      course: courseSelect ? courseSelect.value : studentDetails.course,
+      yearLevel: yearLevelSelect ? yearLevelSelect.value : studentDetails.yearLevel,
+      section: sectionSelect ? sectionSelect.value : studentDetails.section,
+      email: emailInput ? emailInput.value.trim() : studentDetails.email,
+      phone: phoneInput ? phoneInput.value.trim() : studentDetails.phone,
+    };
+    saveStudentDetails(studentDetails);
 
-    leaveEditMode();
+    if (fullNameEditGroup) fullNameEditGroup.hidden = true;
+    if (fullNameViewGroup) fullNameViewGroup.hidden = false;
+
+    profileInfoCard.classList.remove("is-editing");
+    profilePhotoEdit.hidden = true;
+    editProfileButton.textContent = "Edit Profile";
+
   }
 
   if (editProfileButton) {
-    editProfileButton.addEventListener("click", async () => {
+    editProfileButton.addEventListener("click", () => {
       if (isEditing) {
-        await exitEditMode();
+        const isEmailValid = validateEmail();
+        const isPhoneValid = validatePhone();
+        if (!isEmailValid || !isPhoneValid) {
+          return;
+        }
+        exitEditMode();
       } else {
         enterEditMode();
       }
     });
   }
 
-  if (cancelProfileButton) {
-    cancelProfileButton.addEventListener("click", () => {
-      leaveEditMode();
-    });
-  }
-
-  // ---------------------------------------------------------
-  // Profile photo upload preview -- only reachable while in
-  // edit mode, since the edit badge is hidden otherwise
-  // ---------------------------------------------------------
   const profilePhotoInput = document.getElementById("profilePhotoInput");
+  const profilePhoto = document.getElementById("profilePhoto");
 
   if (profilePhotoInput && profilePhoto) {
-    profilePhotoInput.addEventListener("change", async () => {
+    profilePhotoInput.addEventListener("change", () => {
       const file = profilePhotoInput.files && profilePhotoInput.files[0];
       if (!file) return;
 
       const previewUrl = URL.createObjectURL(file);
       profilePhoto.src = previewUrl;
 
-      try {
-        const savedPhoto = await uploadProfilePhoto(file);
-        CURRENT_STUDENT.profilePhoto = savedPhoto;
-        profilePhoto.src = `${savedPhoto}?v=${Date.now()}`;
-      } catch (error) {
-        alert(error.message);
-        renderStudentProfile();
-      } finally {
-        URL.revokeObjectURL(previewUrl);
-        profilePhotoInput.value = "";
-      }
     });
   }
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

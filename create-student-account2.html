@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the create student account2 page structure used by the Prof Consult web app. -->
+<!-- Create student account page (Step 2). -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -20,9 +20,7 @@
 
 <body>
 
-  <!-- =========================================================
-       BACKGROUND
-  ========================================================= -->
+ 
   <div class="page-background" aria-hidden="true">
 
     <img
@@ -36,9 +34,6 @@
   </div>
 
 
-  <!-- =========================================================
-       BACK BUTTON
-  ========================================================= -->
   <a
     href="create-student-account.html"
     class="back-button"
@@ -49,9 +44,7 @@
   </a>
 
 
-  <!-- =========================================================
-       MAIN CONTAINER
-  ========================================================= -->
+  
   <main class="registration-card">
 
     <h1 class="format-text registration-title">
@@ -65,9 +58,7 @@
       novalidate
     >
 
-      <!-- =====================================================
-           Email Address
-      ===================================================== -->
+    
       <div class="form-field">
 
         <label for="emailAddress">
@@ -95,9 +86,6 @@
       </div>
 
 
-      <!-- =====================================================
-           Mobile Number
-      ===================================================== -->
       <div class="form-field">
 
         <label for="mobileNumber">
@@ -138,9 +126,7 @@
       </div>
 
 
-      <!-- =====================================================
-           Password
-      ===================================================== -->
+    
       <div class="form-field">
 
         <label for="password">
@@ -177,20 +163,19 @@
           hidden
         ></p>
 
+      
         <ul class="password-requirements">
 
-          <li>&check; At least 8 characters</li>
-          <li>&check; One uppercase letter</li>
-          <li>&check; One number</li>
+          <li id="reqLength">&check; At least 8 characters</li>
+          <li id="reqUppercase">&check; One uppercase letter</li>
+          <li id="reqNumber">&check; One number</li>
 
         </ul>
 
       </div>
 
 
-      <!-- =====================================================
-           Confirm Password
-      ===================================================== -->
+      
       <div class="form-field">
 
         <label for="confirmPassword">
@@ -232,9 +217,7 @@
       </div>
 
 
-      <!-- =====================================================
-           TERMS AND CONDITIONS
-      ===================================================== -->
+    
       <label class="terms-checkbox">
 
         <input
@@ -253,20 +236,8 @@
 
       </label>
 
-      <p
-        class="field-message field-message-error terms-error"
-        id="termsError"
-        hidden
-      >
-        Please agree to the Privacy Policy before continuing.
-      </p>
 
-
-      <!-- =====================================================
-           VERIFY ACCOUNT BUTTON
-           Leads to shared verify-account.html
-           with student origin.
-      ===================================================== -->
+    
       <a
         href="verify-account.html?from=student"
         class="btn verify-account-button"
@@ -275,9 +246,7 @@
       </a>
 
 
-      <!-- =====================================================
-           CREATE STUDENT ACCOUNT BUTTON
-      ===================================================== -->
+      
       <button
         type="submit"
         class="btn create-account-button"
@@ -287,9 +256,7 @@
       </button>
 
 
-      <!-- =====================================================
-           SUCCESS MESSAGE
-      ===================================================== -->
+
       <p
         class="field-message field-message-success"
         id="successMessage"
@@ -299,15 +266,22 @@
       </p>
 
 
-      <!-- =====================================================
-           LOGIN
-      ===================================================== -->
+    
+      <p
+        class="field-message field-message-error"
+        id="accountMessage"
+        hidden
+        aria-live="polite"
+      ></p>
+
+
+ 
       <p class="login-text">
 
         Already have an account?
 
         <a
-          href="student-login.html"
+          href="login.html"
           class="login-link"
           data-nav="login"
         >

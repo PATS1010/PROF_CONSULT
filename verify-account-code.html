@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the shared account verification code page for the Prof Consult web app. -->
+<!-- Verify account code  -->
 <html lang="en">
 
 <head>
@@ -12,11 +12,6 @@
   >
 
   <title>Prof Consult | Verify Your Account</title>
-
-
-  <!-- =======================================================
-       GOOGLE FONT
-  ======================================================== -->
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
 
@@ -31,11 +26,6 @@
     rel="stylesheet"
   >
 
-
-  <!-- =======================================================
-       PAGE CSS
-  ======================================================== -->
-
   <link
     rel="stylesheet"
     href="css/verify-account-code.css"
@@ -45,11 +35,6 @@
 
 
 <body>
-
-
-  <!-- =========================================================
-       BACKGROUND
-  ========================================================= -->
 
   <div
     class="page-background"
@@ -66,20 +51,6 @@
 
   </div>
 
-
-
-  <!-- =========================================================
-       BACK BUTTON
-
-       JavaScript changes the destination depending on:
-
-       ?from=student
-
-       or
-
-       ?from=faculty
-  ========================================================= -->
-
   <a
     href="verify-account.html?from=student"
     class="back-button"
@@ -95,31 +66,11 @@
 
   </a>
 
-
-
-  <!-- =========================================================
-       MAIN CARD
-  ========================================================= -->
-
   <main class="registration-card">
-
-
-    <!-- =======================================================
-         PAGE TITLE
-    ======================================================== -->
 
     <h1 class="format-text registration-title">
       Verify Your Account
     </h1>
-
-
-
-    <!-- =======================================================
-         DESCRIPTION
-
-         JavaScript updates this depending on the saved
-         verification method.
-    ======================================================== -->
 
     <p
       class="verify-subtitle"
@@ -129,25 +80,13 @@
       email address.
     </p>
 
-
-
-    <!-- =======================================================
-         VERIFICATION FORM
-    ======================================================== -->
-
     <form
       class="registration-form"
       id="verificationForm"
       novalidate
     >
 
-
-      <!-- =====================================================
-           CODE FIELD
-      ====================================================== -->
-
       <div class="form-field">
-
 
         <label
           for="codeDigit1"
@@ -155,14 +94,6 @@
         >
           Enter Verification Code
         </label>
-
-
-
-        <!-- ===================================================
-             SIX DIGIT INPUTS
-
-             Each box accepts one number.
-        ==================================================== -->
 
         <div
           class="verification-code-inputs"
@@ -227,11 +158,6 @@
 
         </div>
 
-
-        <!-- ===================================================
-             VALIDATION MESSAGE
-        ==================================================== -->
-
         <p
           id="verificationError"
           class="field-message field-message-error"
@@ -240,12 +166,6 @@
         ></p>
 
       </div>
-
-
-
-      <!-- =====================================================
-           RESEND CODE
-      ====================================================== -->
 
       <p class="resend-prompt">
         Didn't receive the code?
@@ -272,12 +192,6 @@
 
       </button>
 
-
-
-      <!-- =====================================================
-           VERIFY BUTTON
-      ====================================================== -->
-
       <button
         type="submit"
         class="btn verify-button"
@@ -291,12 +205,6 @@
 
 
   </main>
-
-
-
-  <!-- =========================================================
-       JAVASCRIPT
-  ========================================================= -->
 
   <script src="js/verify-account-code.js"></script>
 

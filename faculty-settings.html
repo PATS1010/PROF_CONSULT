@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Faculty settings  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,18 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Shared Faculty layout -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
 
-  <!-- Settings page styles -->
   <link rel="stylesheet" href="css/faculty-settings.css">
 </head>
 
 <body data-active-page="settings">
 
-  <!-- ==========================
-       TOP NAVIGATION BAR
-  =========================== -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
       <button type="button" class="faculty-nav-icon-button faculty-hamburger-button" id="facultyHamburgerButton" aria-label="Open menu">
@@ -69,10 +66,6 @@
     </div>
   </header>
 
-  <!-- ==========================
-       SIDEBAR
-  =========================== -->
-
   <div class="faculty-sidebar-overlay" id="facultySidebarOverlay" hidden></div>
 
   <aside class="faculty-sidebar" id="facultySidebar">
@@ -93,34 +86,18 @@
       <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
-      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
-      <a href="faculty-login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
+      <a href="settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
 
   </aside>
-
-  <!-- ==========================
-       BACKGROUND
-  =========================== -->
 
   <div class="faculty-page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="faculty-page-background-image">
     <div class="faculty-page-background-overlay"></div>
   </div>
 
-  <!-- ==========================
-       SETTINGS CONTENT
-  =========================== -->
-
   <main class="faculty-main-content">
-
-    <!-- Build the Settings page here -->
-<!-- =========================================================
-     FACULTY ACCOUNT SETTINGS -- MAIN CONTENT
-     Paste this inside <main class="faculty-main-content">...</main>
-     on faculty-settings.html, alongside the shared navbar/
-     sidebar/background shell. Do not duplicate the shell here.
-========================================================= -->
 
 <section class="faculty-card faculty-settings-card">
 
@@ -128,19 +105,47 @@
 
   <div class="faculty-settings-inner-card">
 
-    <label class="faculty-settings-checkbox-row">
-      <input type="checkbox" id="emailNotificationsCheckbox" class="faculty-settings-checkbox">
-      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
-      <span class="faculty-settings-checkbox-label">Email Notifications</span>
-    </label>
+    <div class="faculty-settings-options">
 
-    <label class="faculty-settings-checkbox-row">
-      <input type="checkbox" id="pushNotificationsCheckbox" class="faculty-settings-checkbox">
-      <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
-      <span class="faculty-settings-checkbox-label">Push Notifications</span>
-    </label>
+      <label class="faculty-settings-checkbox-row">
+        <span class="faculty-settings-option-text">
+          <span class="faculty-settings-checkbox-label">Email Notifications</span>
+          <span class="faculty-settings-option-description">Receive future system notifications at your registered email address.</span>
+        </span>
+        <span class="faculty-settings-checkbox-control">
+          <input type="checkbox" id="emailNotificationsCheckbox" class="faculty-settings-checkbox">
+          <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+        </span>
+      </label>
 
-    <a href="change-password.html?from=faculty" class="faculty-change-password-link">Change Password</a>
+      <label class="faculty-settings-checkbox-row">
+        <span class="faculty-settings-option-text">
+          <span class="faculty-settings-checkbox-label">Push Notifications</span>
+          <span class="faculty-settings-option-description">Show desktop/browser push notifications while you're logged in.</span>
+        </span>
+        <span class="faculty-settings-checkbox-control">
+          <input type="checkbox" id="pushNotificationsCheckbox" class="faculty-settings-checkbox">
+          <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+        </span>
+      </label>
+
+      <label class="faculty-settings-checkbox-row">
+        <span class="faculty-settings-option-text">
+          <span class="faculty-settings-checkbox-label">Auto Check In Reminder</span>
+        </span>
+        <span class="faculty-settings-checkbox-control">
+          <input type="checkbox" id="autoCheckInCheckbox" class="faculty-settings-checkbox">
+          <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+        </span>
+      </label>
+
+    </div>
+
+    <a href="change-password.html?from=faculty" class="format-text faculty-change-password-link">Change Password</a>
+
+    <button type="button" class="faculty-settings-secondary-action-button" id="deleteAccountButton">
+      Delete Account
+    </button>
 
   </div>
 

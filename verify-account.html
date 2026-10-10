@@ -1,19 +1,5 @@
 <!DOCTYPE html>
-<!--
-  Prof Consult
-  Account Verification - First Page
-
-  Shared by:
-    Student
-    Faculty
-
-  URL examples:
-    verify-account.html?from=student
-    verify-account.html?from=faculty
-
-  Frontend only for now.
--->
-
+<!--= Verify account  -->
 <html lang="en">
 
 <head>
@@ -27,8 +13,6 @@
 
   <title>Prof Consult | Verify Your Account</title>
 
-
-  <!-- Montserrat -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
 
   <link
@@ -42,8 +26,6 @@
     rel="stylesheet"
   >
 
-
-  <!-- Page CSS -->
   <link
     rel="stylesheet"
     href="css/verify-account.css"
@@ -53,11 +35,6 @@
 
 
 <body>
-
-
-  <!-- =======================================================
-       BACKGROUND
-  ======================================================== -->
 
   <div
     class="page-background"
@@ -74,22 +51,6 @@
 
   </div>
 
-
-
-  <!-- =======================================================
-       BACK BUTTON
-
-       Student:
-       create-student-account2.html
-
-       Faculty:
-       create-faculty-account2.html
-
-       JavaScript changes this destination based on:
-       ?from=student
-       ?from=faculty
-  ======================================================== -->
-
   <a
     href="create-student-account2.html"
     class="back-button"
@@ -105,28 +66,11 @@
 
   </a>
 
-
-
-  <!-- =======================================================
-       MAIN CARD
-  ======================================================== -->
-
   <main class="registration-card">
-
-
-    <!-- =====================================================
-         TITLE
-    ====================================================== -->
 
     <h1 class="format-text registration-title">
       Verify Your Account
     </h1>
-
-
-
-    <!-- =====================================================
-         DESCRIPTION
-    ====================================================== -->
 
     <p
       class="verification-subtitle"
@@ -134,12 +78,6 @@
     >
       Enter your email address to receive a verification code.
     </p>
-
-
-
-    <!-- =====================================================
-         FORM
-    ====================================================== -->
 
     <form
       class="registration-form"
@@ -149,11 +87,6 @@
 
 
       <div class="form-field">
-
-
-        <!-- =================================================
-             EMAIL INPUT
-        ================================================== -->
 
         <div
           class="identifier-wrapper"
@@ -172,9 +105,28 @@
 
         </div>
 
-        <!-- =================================================
-             VALIDATION MESSAGE
-        ================================================== -->
+        <div
+          class="mobile-input-wrapper"
+          id="mobileInputWrapper"
+          hidden
+        >
+
+          <div class="country-code">
+            +63
+          </div>
+
+          <input
+            type="tel"
+            id="mobileInput"
+            name="mobile"
+            class="mobile-input"
+            placeholder="Enter Mobile Number"
+            autocomplete="tel"
+            inputmode="numeric"
+            maxlength="10"
+          >
+
+        </div>
 
         <p
           id="verificationMessage"
@@ -185,12 +137,6 @@
 
 
       </div>
-
-
-
-      <!-- =====================================================
-           SEND VERIFICATION CODE BUTTON
-      ====================================================== -->
 
       <button
         type="submit"
@@ -203,13 +149,28 @@
 
     </form>
 
+    <p class="login-text reset-method-text">
+
+      <span id="methodText">
+        Enter
+      </span>
+
+      <a
+        href="#"
+        class="login-link"
+        id="switchMethod"
+      >
+        Mobile Number
+      </a>
+
+      <span id="methodSuffix">
+        instead
+      </span>
+
+    </p>
+
+
   </main>
-
-
-
-  <!-- =======================================================
-       JAVASCRIPT
-  ======================================================== -->
 
   <script src="js/verify-account.js"></script>
 

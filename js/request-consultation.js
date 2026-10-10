@@ -1,35 +1,7 @@
-// SYSTEM NOTE: Controls client-side behavior for the request consultation page, including UI events and API calls.
-// =========================================================
-// REQUEST CONSULTATION PAGE INTERACTIONS
-// - Burger menu + Quick Action + Notification bell: same
-//   behavior as the Dashboard / Faculty Directory
-// - Faculty Member auto-fills from the professor the student
-//   selected in the Faculty Directory (handed off via
-//   sessionStorage from faculty-directory.js) -- never
-//   hardcoded to a specific professor
-// - Student Name/ID/Program & Year auto-fill from the current
-//   logged-in student session
-// - Preferred Time: custom dropdown populated with 30-minute
-//   slots from 7:00 AM through 7:00 PM
-// - Submit Request -> request-submitted.html
-// =========================================================
-
+// Request Consultation JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Selected faculty -- set by faculty-directory.js
-  // (sessionStorage) when the student clicks "Request
-  // Consultation" on a professor's profile. There is no
-  // backend yet, so sessionStorage is the frontend-only
-  // hand-off mechanism; this page never hardcodes a specific
-  // professor. Falls back to a neutral placeholder only if
-  // the student somehow lands here without selecting anyone
-  // (e.g. navigating here directly).
-  // ---------------------------------------------------------
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
-
-  const params = new URLSearchParams(window.location.search);
-  const facultyIdFromParams = params.get("facultyId");
 
   function getSelectedFaculty() {
     try {
@@ -41,85 +13,43 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const selectedFaculty = getSelectedFaculty();
-  const facultyId = (selectedFaculty && selectedFaculty.id) || facultyIdFromParams || "";
   const SELECTED_FACULTY_MEMBER = (selectedFaculty && selectedFaculty.fullName)
     ? selectedFaculty.fullName
-    : (params.get("faculty") || "Selected Faculty Member");
+    : "Selected Faculty Member";
 
   const COURSE_LABELS = {
     "computer-engineering": "BSCPE (Computer Engineering)",
   };
 
-  const YEAR_LABELS = {
-    "1": "1st Year",
-    "2": "2nd Year",
-    "3": "3rd Year",
-    "4": "4th Year",
-    "5": "5th Year",
+  const SAMPLE_STUDENT = {
+    name: "John Dela Cruz",
+    studentId: "24-00001",
+    course: "computer-engineering",
+    yearLevel: "3",
+    section: "A",
   };
+
+  function buildProgramYearDisplay(courseValue, yearLevel, section) {
+    const programLabel = COURSE_LABELS[courseValue] || courseValue;
+    return `${programLabel} - ${yearLevel}${section}`;
+  }
 
   const facultyMemberInput = document.getElementById("facultyMember");
   const studentNameInput = document.getElementById("studentName");
   const studentIdInput = document.getElementById("studentId");
   const programYearInput = document.getElementById("programYear");
-  const preferredDateInput = document.getElementById("preferredDate");
 
   if (facultyMemberInput) facultyMemberInput.textContent = SELECTED_FACULTY_MEMBER;
-
-  function todayValue() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+  if (studentNameInput) studentNameInput.textContent = SAMPLE_STUDENT.name;
+  if (studentIdInput) studentIdInput.textContent = SAMPLE_STUDENT.studentId;
+  if (programYearInput) {
+    programYearInput.textContent = buildProgramYearDisplay(
+      SAMPLE_STUDENT.course,
+      SAMPLE_STUDENT.yearLevel,
+      SAMPLE_STUDENT.section
+    );
   }
 
-  if (preferredDateInput) {
-    preferredDateInput.min = todayValue();
-  }
-
-  function displayCourse(value) {
-    return COURSE_LABELS[value] || value || "";
-  }
-
-  function displayYear(value) {
-    const normalized = String(value || "");
-    return YEAR_LABELS[normalized] || normalized;
-  }
-
-  async function loadCurrentStudent() {
-    try {
-      const response = await fetch("api/session.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.ok || !data.user || data.user.role !== "student") {
-        throw new Error("Student session unavailable");
-      }
-
-      const user = data.user || {};
-      const profile = data.profile || {};
-      const program = displayCourse(profile.Program || profile.program || "");
-      const year = displayYear(profile.Year_Level || profile.year_level || "");
-
-      if (studentNameInput) studentNameInput.textContent = user.name || "";
-      if (studentIdInput) studentIdInput.textContent = user.username || "";
-      if (programYearInput) {
-        programYearInput.textContent = [program, year].filter(Boolean).join(" - ");
-      }
-    } catch (error) {
-      window.location.href = "student-login.html";
-    }
-  }
-
-  loadCurrentStudent();
-
-  // ---------------------------------------------------------
-  // Burger sidebar (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -143,9 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sidebarClose) sidebarClose.addEventListener("click", closeSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
-  // ---------------------------------------------------------
-  // Quick Action popup (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -186,22 +113,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
-  // ---------------------------------------------------------
-  // Preferred Time: build every 30-minute slot from 7:00 AM
-  // through 7:00 PM, then populate the dropdown.
-  // ---------------------------------------------------------
+  const TIME_RANGE_START_MINUTES = 8 * 60;
+  const TIME_RANGE_END_MINUTES = 20 * 60;
+
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
     const minute = totalMinutes % 60;
@@ -212,62 +136,88 @@ document.addEventListener("DOMContentLoaded", () => {
     return `${hour12}:${minuteStr} ${period}`;
   }
 
-  function buildTimeSlots() {
-    const slots = [];
-    const firstSlotStart = 7 * 60;
-    const lastSlotStart = (19 * 60) - 30;
+  function buildTimeLabel(startMinutes, endMinutes) {
+    return `${formatHourMinute(startMinutes)} \u2013 ${formatHourMinute(endMinutes)}`;
+  }
 
-    for (let start = firstSlotStart; start <= lastSlotStart; start += 30) {
-      const end = start + 30;
-      const label = `${formatHourMinute(start)} \u2013 ${formatHourMinute(end)}`;
-      slots.push(label);
+  function buildTimeSlots(rangeStartMinutes, rangeEndMinutes) {
+    const slots = [];
+    for (let start = rangeStartMinutes; start < rangeEndMinutes; start += 30) {
+      slots.push(buildTimeLabel(start, start + 30));
     }
     return slots;
   }
 
-  function selectedTimeStartMinutes(value) {
-    const startLabel = String(value || "").split("\u2013")[0].trim();
-    const match = startLabel.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!match) return null;
+  const TEST_AVAILABLE_TIME_LABELS = [
+    buildTimeLabel(13 * 60, 13 * 60 + 30),
+    buildTimeLabel(13 * 60 + 30, 14 * 60),
+    buildTimeLabel(14 * 60, 14 * 60 + 30),
+  ];
 
-    let hour = Number(match[1]);
-    const minute = Number(match[2]);
-    const period = match[3].toUpperCase();
+  const FACULTY_AVAILABILITY_TEST = {
+    availableDaysOfWeek: [1, 3, 5],
+    availableTimeSlotsByDay: {
+      1: TEST_AVAILABLE_TIME_LABELS,
+      3: TEST_AVAILABLE_TIME_LABELS,
+      5: TEST_AVAILABLE_TIME_LABELS,
+    },
+  };
 
-    if (period === "PM" && hour < 12) hour += 12;
-    if (period === "AM" && hour === 12) hour = 0;
+  const DEFAULT_PREVIEW_DAY_OF_WEEK = 1;
 
-    return hour * 60 + minute;
+  function isDateAvailable(dayOfWeek) {
+    return FACULTY_AVAILABILITY_TEST.availableDaysOfWeek.includes(dayOfWeek);
   }
 
-  function isPastSchedule(dateValue, timeValue) {
-    if (!dateValue || !timeValue) return false;
-
-    const startMinutes = selectedTimeStartMinutes(timeValue);
-    if (startMinutes === null) return false;
-
-    const scheduledEnd = new Date(`${dateValue}T00:00:00`);
-    scheduledEnd.setMinutes(startMinutes + 30);
-
-    return scheduledEnd <= new Date();
+  function getAvailableSlotsForDayOfWeek(dayOfWeek) {
+    return FACULTY_AVAILABILITY_TEST.availableTimeSlotsByDay[dayOfWeek] || [];
   }
 
   const preferredTimeOptions = document.getElementById("preferredTimeOptions");
   if (preferredTimeOptions) {
-    buildTimeSlots().forEach((label) => {
+    buildTimeSlots(TIME_RANGE_START_MINUTES, TIME_RANGE_END_MINUTES).forEach((label) => {
       const li = document.createElement("li");
       li.setAttribute("role", "option");
       li.setAttribute("data-value", label);
+      li.setAttribute("aria-disabled", "false");
       li.textContent = label;
       preferredTimeOptions.appendChild(li);
     });
   }
 
-  // ---------------------------------------------------------
-  // Custom dropdown behavior (Preferred Time) -- same pattern
-  // used elsewhere in the project so it can never be sized or
-  // positioned by the browser/OS in a way that overflows on mobile.
-  // ---------------------------------------------------------
+  function clearSelectedTime() {
+    const timeSelectEl = document.getElementById("preferredTimeSelect");
+    if (!timeSelectEl) return;
+    const valueLabelEl = timeSelectEl.querySelector(".custom-select-value");
+    const hiddenInputEl = timeSelectEl.querySelector('input[type="hidden"]');
+    if (valueLabelEl) {
+      valueLabelEl.textContent = "Select Time";
+      valueLabelEl.setAttribute("data-is-placeholder", "true");
+    }
+    if (hiddenInputEl) hiddenInputEl.value = "";
+    timeSelectEl.querySelectorAll("li.is-active").forEach((li) => li.classList.remove("is-active"));
+  }
+
+  function updateTimeSlotAvailability(availableSlots) {
+    if (!preferredTimeOptions) return;
+    const availableSet = new Set(availableSlots);
+    const options = preferredTimeOptions.querySelectorAll("li[role='option']");
+
+    options.forEach((li) => {
+      const label = li.getAttribute("data-value");
+      const isAvailable = availableSet.has(label);
+      li.classList.toggle("is-unavailable", !isAvailable);
+      li.setAttribute("aria-disabled", isAvailable ? "false" : "true");
+    });
+
+    const hiddenInput = document.getElementById("preferredTime");
+    if (hiddenInput && hiddenInput.value && !availableSet.has(hiddenInput.value)) {
+      clearSelectedTime();
+    }
+  }
+
+  updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+
   const timeSelect = document.getElementById("preferredTimeSelect");
 
   if (timeSelect) {
@@ -294,6 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
     optionsList.addEventListener("click", (event) => {
       const option = event.target.closest("li[role='option']");
       if (!option) return;
+      if (option.classList.contains("is-unavailable")) return;
 
       optionsList.querySelectorAll("li").forEach((li) => li.classList.remove("is-active"));
       option.classList.add("is-active");
@@ -314,104 +265,62 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Submit Request -> request-submitted.html
-  // No backend yet, so this just collects and forwards the
-  // entered data structure; wire up the real API call here later.
-  // ---------------------------------------------------------
-  const form = document.getElementById("requestConsultationForm");
-  const submitRequestButton = document.getElementById("submitRequestButton");
-  let isSubmitting = false;
+  const preferredDateInput = document.getElementById("preferredDate");
+  const preferredDateHint = document.getElementById("preferredDateHint");
 
-  function setSubmitting(isBusy) {
-    isSubmitting = isBusy;
-    if (!submitRequestButton) return;
-
-    submitRequestButton.disabled = isBusy;
-    submitRequestButton.textContent = isBusy ? "Submitting..." : "Submit Request";
+  function setDateErrorState(isError) {
+    if (preferredDateInput) preferredDateInput.classList.toggle("is-date-invalid", isError);
+    if (preferredDateHint) preferredDateHint.classList.toggle("is-error", isError);
   }
 
+  if (preferredDateInput) {
+    preferredDateInput.addEventListener("change", () => {
+      const dateValue = preferredDateInput.value;
+
+      if (!dateValue) {
+        setDateErrorState(false);
+        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        return;
+      }
+
+      const dayOfWeek = new Date(`${dateValue}T00:00:00`).getDay();
+
+      if (!isDateAvailable(dayOfWeek)) {
+        preferredDateInput.value = "";
+        setDateErrorState(true);
+        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        clearSelectedTime();
+        window.setTimeout(() => setDateErrorState(false), 1200);
+        return;
+      }
+
+      setDateErrorState(false);
+      updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(dayOfWeek));
+    });
+  }
+
+  const form = document.getElementById("requestConsultationForm");
   if (form) {
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener("submit", (event) => {
       event.preventDefault();
 
-      if (isSubmitting) {
-        return;
-      }
-
-      setSubmitting(true);
-
-      if (!facultyId) {
-        alert("Please select a faculty member from the directory.");
-        setSubmitting(false);
-        return;
-      }
-
-      const purpose = document.getElementById("consultationPurpose").value.trim();
-      const message = document.getElementById("additionalMessage").value.trim();
-      const preferredDate = document.getElementById("preferredDate").value;
-      const preferredTime = document.getElementById("preferredTime").value;
-
-      if (!purpose || !preferredDate || !preferredTime) {
-        alert("Please complete the purpose, preferred date, and preferred time.");
-        setSubmitting(false);
-        return;
-      }
-
-      if (preferredDate < todayValue()) {
-        alert("Preferred date cannot be in the past.");
-        setSubmitting(false);
-        return;
-      }
-
-      if (isPastSchedule(preferredDate, preferredTime)) {
-        alert("Preferred date and time must be in the future.");
-        setSubmitting(false);
-        return;
-      }
+      const requestId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 
       const requestData = {
+        requestId,
         facultyMember: facultyMemberInput.textContent,
         studentName: studentNameInput.textContent,
         studentId: studentIdInput.textContent,
         programYear: programYearInput.textContent,
-        purpose,
-        message,
-        preferredDate,
-        preferredTime,
+        purpose: document.getElementById("consultationPurpose").value,
+        message: document.getElementById("additionalMessage").value,
+        preferredDate: document.getElementById("preferredDate").value,
+        preferredTime: document.getElementById("preferredTime").value,
         status: "Pending Approval",
       };
 
-      if (/^\d+$/.test(String(facultyId))) {
-        try {
-          const response = await fetch("api/submit-consultation.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              faculty_id: facultyId,
-              purpose: requestData.purpose,
-              message: requestData.message,
-              preferred_date: requestData.preferredDate,
-              preferred_time: requestData.preferredTime,
-            }),
-          });
-          const result = await response.json();
-          if (!response.ok) throw new Error(result.message || "Unable to submit request.");
-          requestData.requestId = `REQ-${result.id}`;
-        } catch (error) {
-          alert(error.message);
-          setSubmitting(false);
-          return;
-        }
-      } else {
-        requestData.requestId = `REQ-${Date.now()}`;
-      }
-
       sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
 
-      // Also keep the display list in sync for the static My Requests page.
-      // so it automatically shows up on my-requests.html, growing
-      // that list every time a request is submitted.
       try {
         const MY_REQUESTS_KEY = "profconsult_my_requests";
         const existing = JSON.parse(localStorage.getItem(MY_REQUESTS_KEY) || "[]");
@@ -431,12 +340,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
         localStorage.setItem(MY_REQUESTS_KEY, JSON.stringify(existing));
       } catch (error) {
-        // Storage unavailable -- the request still submits, it just
-        // won't show up on My Requests until storage works again
       }
 
       window.location.href = "request-submitted.html";
     });
   }
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

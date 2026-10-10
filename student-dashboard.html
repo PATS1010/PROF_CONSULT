@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Student dashboard  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,38 +9,32 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/student-dashboard.css">
+  <link rel="stylesheet" href="css/student-notification-toast.css">
+  <script src="js/student-notification-toast.js"></script>
 </head>
 <body>
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR
-       Dark red -> orange gradient, same style as the Landing Page
-  ========================================================= -->
   <header class="dashboard-navbar">
     <div class="navbar-left">
-      <!-- Hamburger menu -- clickable, functionality not implemented yet -->
       <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
         <span></span>
         <span></span>
         <span></span>
       </button>
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+      <a href="student-dashboard.html" class="navbar-logo-link" aria-label="Go to Dashboard">
+        <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+      </a>
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- navigates to notifications.html on click (see student-dashboard.js).
-           TEST/DEMO ONLY: no real notification data or backend yet.
-           Image is a placeholder -- swap the src below for the real icon whenever it's ready. -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="Notifications">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup -->
       <div class="quick-action-panel" id="quickActionPanel" hidden>
         <div class="quick-action-header">
           <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
@@ -62,15 +57,13 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR
-       Slides in from the left; overlay dims/blurs the dashboard
-  ========================================================= -->
   <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <a href="student-dashboard.html" class="sidebar-logo-link" aria-label="Go to Dashboard">
+        <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      </a>
       <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
     </div>
 
@@ -81,32 +74,21 @@
       <a href="notifications.html" class="sidebar-link">Notifications</a>
       <a href="student-profile.html" class="sidebar-link">Profile</a>
       <a href="settings.html" class="sidebar-link">Settings</a>
-      <a href="student-login.html" class="sidebar-link">Logout</a>
+     <a href="login.html" class="sidebar-link" id="logoutLink">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND
-       Full-viewport, slightly blurred, light white overlay so
-       the dashboard content stays readable
-  ========================================================= -->
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN DASHBOARD CONTENT
-  ========================================================= -->
   <main class="dashboard-content">
 
-    <!-- =========================================================
-         LEFT COLUMN: greeting, search, professor list
-    ========================================================= -->
     <section class="dashboard-main-column">
 
-      <h1 class="dashboard-greeting" id="dashboardGreeting" hidden>
-        Good day, <span class="format-text" id="studentFirstName"></span>!
+      <h1 class="dashboard-greeting">
+        Good day, <span class="format-text" id="studentFirstName">John</span>!
       </h1>
 
       <p class="dashboard-datetime" id="dashboardDateTime" aria-live="off"></p>
@@ -123,12 +105,10 @@
           autocomplete="off"
         >
 
-        <!-- Status filter trigger -->
         <button type="button" class="filter-button" id="filterButton" aria-haspopup="true" aria-expanded="false" aria-label="Filter by status">
           <span class="filter-icon" aria-hidden="true">&#9660;</span>
         </button>
 
-        <!-- Status filter popup -->
         <div class="filter-panel" id="filterPanel" hidden>
           <button type="button" class="filter-option" data-status="available">Available</button>
           <button type="button" class="filter-option" data-status="teaching">In Class</button>
@@ -142,10 +122,6 @@
       <div class="professor-list-container">
         <div class="professor-list" id="professorList">
 
-          <!-- data-faculty-id added on each card below: matches the
-               same id used in faculty-directory.js's FACULTY_DIRECTORY_DATA,
-               so a click can hand off which faculty was selected (see
-               student-dashboard.js). No visual/markup change otherwise. -->
           <article class="professor-card" data-status="available" data-faculty-id="maria-nina-sales">
             <img src="images/nina.png" alt="Engr. Maria Nina Sales" class="professor-photo">
             <div class="professor-info">
@@ -189,9 +165,6 @@
 
     </section>
 
-    <!-- =========================================================
-         RIGHT COLUMN: Faculty Availability + Recent Notifications
-    ========================================================= -->
     <aside class="dashboard-side-column">
 
       <div class="panel-card">
@@ -205,9 +178,10 @@
       </div>
 
       <div class="panel-card">
-        <h2 class="panel-title">Recent Notifications</h2>
+        <h2 class="panel-title">
+          <a href="notifications.html" class="panel-title-link" id="recentNotificationsLink">Recent Notifications</a>
+        </h2>
         <ul class="notifications-list" id="notificationsList">
-          <li><span class="notification-check" aria-hidden="true">&check;</span> Your consultation request was accepted.</li>
         </ul>
       </div>
 

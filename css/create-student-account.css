@@ -1,7 +1,4 @@
-/* SYSTEM NOTE: Styles the create student account page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Create Student Account */
 :root {
   --color-red-primary: #d81f26;
   --color-maroon-button: #7a1010;
@@ -18,9 +15,6 @@
   --shadow-card: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -50,11 +44,6 @@ button {
   border: none;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style. Montserrat ExtraBold + the
-   black-to-orange gradient used throughout the project.
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -74,11 +63,6 @@ button {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   BACKGROUND
-   Full-viewport blurred image with a dark-maroon-to-orange
-   gradient overlay, matching the Student Login page
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -110,10 +94,6 @@ button {
   opacity: 0.88;
 }
 
-/* =========================================================
-   BACK BUTTON
-   Same style used across the entire ProfConsult website
-========================================================= */
 .back-button {
   position: fixed;
   top: 32px;
@@ -140,9 +120,6 @@ button {
   transform: translateX(-2px);
 }
 
-/* =========================================================
-   MAIN CONTAINER: registration card
-========================================================= */
 .registration-card {
   position: relative;
   z-index: 5;
@@ -165,9 +142,6 @@ button {
   margin-bottom: 32px;
 }
 
-/* =========================================================
-   FORM
-========================================================= */
 .registration-form {
   width: 100%;
   display: flex;
@@ -212,13 +186,6 @@ button {
   outline-offset: 2px;
 }
 
-/* =========================================================
-   FORM ROW
-   Lets two fields sit side by side on the same row (used by
-   First Name + Middle Initial, and Year Level + Section on
-   the student page). Every other .form-field on the page is
-   unaffected since it isn't nested inside a .form-row.
-========================================================= */
 .form-row {
   width: 100%;
   display: flex;
@@ -233,9 +200,6 @@ button {
   margin-bottom: 0;
 }
 
-/* First Name / Middle Initial / Last Name on one row:
-   First + Last are twice as wide as Middle Initial.
-   Stacks on small screens via the 480px rule below. */
 @media (min-width: 481px) {
   .form-row-name {
     gap: 14px;
@@ -248,15 +212,21 @@ button {
   .form-row-name .form-field:nth-child(2) {
     flex: 1 1 0;
   }
+
+  .form-row-name .form-field:nth-child(3) {
+    flex: 1.6 1 0;
+  }
+
+  .form-row-name .form-field:nth-child(4) {
+    flex: 1 1 0;
+  }
+
+  .form-row-name .form-field:nth-child(2) label {
+    font-size: 0.74rem;
+    white-space: nowrap;
+  }
 }
 
-/* =========================================================
-   CUSTOM DROPDOWN (replaces native <select>)
-   Built as plain HTML/CSS/JS so its width and position are
-   fully in our control and can never be sized or placed by
-   the browser/OS in a way that overflows the viewport --
-   which is what native <select> popups can do on mobile.
-========================================================= */
 .custom-select {
   position: relative;
   width: 100%;
@@ -286,7 +256,6 @@ button {
   color: #6f6f6f;
 }
 
-/* Dropdown arrow */
 .custom-select-trigger::after {
   content: "";
   position: absolute;
@@ -305,10 +274,6 @@ button {
   transform: translateY(-50%) rotate(180deg);
 }
 
-/* Options list -- absolutely positioned relative to the
-   dropdown itself, so its width always matches the trigger
-   and it can never extend past the registration card or
-   the edge of the screen. */
 .custom-select-options {
   position: absolute;
   top: calc(100% + 8px);
@@ -352,9 +317,6 @@ button {
   background-color: rgba(242, 96, 28, 0.15);
 }
 
-/* =========================================================
-   NEXT BUTTON
-========================================================= */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -381,9 +343,6 @@ button {
   margin-top: 12px;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 768px) {
   .registration-card {
     margin: 100px 20px 40px;
@@ -421,8 +380,6 @@ button {
     padding-right: 40px;
   }
 
-  /* Rows of two fields stack instead of squeezing side by
-     side once the card gets this narrow */
   .form-row {
     flex-direction: column;
     gap: 20px;

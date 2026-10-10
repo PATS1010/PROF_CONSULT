@@ -1,22 +1,4 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty change password page, including UI events and API calls.
-// =========================================================
-// FACULTY CHANGE PASSWORD -- PAGE-SPECIFIC INTERACTIONS
-// - Show/Hide toggle for each password field (real <button>s)
-// - Validation: all three fields required, New Password and
-//   Confirm New Password must match. Does not save if
-//   validation fails.
-// - On success: shows a clear success message, clears the
-//   form, and does not navigate away or reload the page.
-//
-// Frontend only for now -- there is no backend yet to verify
-// the current password against, so submitting here simulates
-// a successful change. Wiring this to a real endpoint later
-// should only require replacing the body of handleSave().
-//
-// Shared shell behavior (navbar, sidebar, quick action,
-// notification bell) lives in faculty-shared.js.
-// =========================================================
-
+// Faculty Change Password JS
 document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("changePasswordForm");
@@ -30,11 +12,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const saveSuccessMessage = document.getElementById("passwordSaveSuccess");
 
-  // ---------------------------------------------------------
-  // Show/Hide toggles -- real <button>s, one per password
-  // field, matching the pattern already used elsewhere in
-  // Prof Consult (never a native `disabled` input attribute).
-  // ---------------------------------------------------------
   const toggleButtons = Array.from(document.querySelectorAll(".faculty-password-toggle"));
   toggleButtons.forEach((button) => {
     button.addEventListener("click", () => {
@@ -48,9 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ---------------------------------------------------------
-  // Validation
-  // ---------------------------------------------------------
   function showFieldError(inputEl, errorEl, message) {
     if (errorEl) {
       errorEl.textContent = message;
@@ -110,18 +84,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return isValid;
   }
 
-  // ---------------------------------------------------------
-  // Save
-  // ---------------------------------------------------------
   function handleSave(event) {
     event.preventDefault();
 
     if (!validateForm()) {
-      // Keep the form as-is; inline errors already show what's wrong.
       return;
     }
 
-    // No backend yet -- simulate a successful password change.
     form.reset();
     toggleButtons.forEach((button) => {
       const targetInput = document.getElementById(button.dataset.target);

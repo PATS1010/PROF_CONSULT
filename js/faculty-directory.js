@@ -1,284 +1,134 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty directory page, including UI events and API calls.
-// =========================================================
-// STUDENT-SHARED.JS
-// Shared behavior for every Student-side page:
-// - Burger menu: slide-in sidebar with dim/blur overlay
-// - Quick Action: fade/slide popup (Find Faculty / Send Request)
-// - Notification bell: navigates to notifications.html
-// - Status filter popup: fade/slide open + outside-click close
-// =========================================================
-
+// Faculty Directory JS
 document.addEventListener("DOMContentLoaded", () => {
-  const hamburgerButton = document.getElementById("hamburgerButton");
-  const sidebar = document.getElementById("sidebar");
-  const sidebarOverlay = document.getElementById("sidebarOverlay");
-  const sidebarClose = document.getElementById("sidebarClose");
 
-  function openSidebar() {
-    sidebar.classList.add("is-open");
-    sidebarOverlay.hidden = false;
-    requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
-  }
+  const DEFAULT_OFFICE = "Faculty Room";
 
-  function closeSidebar() {
-    sidebar.classList.remove("is-open");
-    sidebarOverlay.classList.remove("is-open");
-    window.setTimeout(() => {
-      sidebarOverlay.hidden = true;
-    }, 250);
-  }
+  const FACULTY_DIRECTORY_DATA = [
+    {
+      id: "maria-nina-sales",
+      lastName: "Sales",
+      fullName: "Engr. Maria Nina Sales",
+      program: "Computer Engineering",
+      office: DEFAULT_OFFICE,
+      status: "available",
+      statusLabel: "Available",
+      photo: "images/professor-maria-nina-sales.jpg",
+      hours: [
+        { day: "Monday", time: "9:00 AM - 11:00 AM" },
+        { day: "Tuesday", time: "1:00 PM - 3:00 PM" },
+        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
+        { day: "Thursday", time: "1:00 PM - 3:00 PM" },
+        { day: "Friday", time: "10:00 AM - 12:00 PM" },
+      ],
+    },
+    {
+      id: "bernard-bisuecos",
+      lastName: "Bisuecos",
+      fullName: "Engr. Bernard Bisuecos",
+      program: "Computer Engineering",
+      office: DEFAULT_OFFICE,
+      status: "onleave",
+      statusLabel: "On Leave",
+      photo: "images/professor-bernard-bisuecos.jpg",
+      hours: [
+        { day: "Monday", time: "Unavailable" },
+        { day: "Tuesday", time: "Unavailable" },
+        { day: "Wednesday", time: "10:00 AM - 12:00 PM" },
+        { day: "Thursday", time: "Unavailable" },
+        { day: "Friday", time: "Unavailable" },
+      ],
+    },
+    {
+      id: "mervin-molina",
+      lastName: "Molina",
+      fullName: "Engr. Mervin Molina",
+      program: "Computer Engineering",
+      office: DEFAULT_OFFICE,
+      status: "teaching",
+      statusLabel: "Teaching Class",
+      photo: "images/professor-mervin-molina.jpg",
+      hours: [
+        { day: "Monday", time: "2:00 PM - 4:00 PM" },
+        { day: "Tuesday", time: "9:00 AM - 10:00 AM" },
+        { day: "Wednesday", time: "2:00 PM - 4:00 PM" },
+        { day: "Thursday", time: "9:00 AM - 10:00 AM" },
+        { day: "Friday", time: "1:00 PM - 2:00 PM" },
+      ],
+    },
+    {
+      id: "rose-onate",
+      lastName: "Onate",
+      fullName: "Engr. Rose Onate",
+      program: "Computer Engineering",
+      office: DEFAULT_OFFICE,
+      status: "meeting",
+      statusLabel: "Meeting",
+      photo: "images/professor-rose-onate.jpg",
+      hours: [
+        { day: "Monday", time: "10:00 AM - 12:00 PM" },
+        { day: "Tuesday", time: "10:00 AM - 12:00 PM" },
+        { day: "Wednesday", time: "1:00 PM - 3:00 PM" },
+        { day: "Thursday", time: "10:00 AM - 12:00 PM" },
+        { day: "Friday", time: "9:00 AM - 11:00 AM" },
+      ],
+    },
+    {
+      id: "melody-paned",
+      lastName: "Paned",
+      fullName: "Engr. Melody Paned",
+      program: "Computer Engineering",
+      office: DEFAULT_OFFICE,
+      status: "offline",
+      statusLabel: "Offline",
+      photo: "images/professor-melody-paned.jpg",
+      hours: [
+        { day: "Monday", time: "9:00 AM - 11:00 AM" },
+        { day: "Tuesday", time: "Unavailable" },
+        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
+        { day: "Thursday", time: "Unavailable" },
+        { day: "Friday", time: "9:00 AM - 11:00 AM" },
+      ],
+    },
+  ];
 
-  if (hamburgerButton) hamburgerButton.addEventListener("click", openSidebar);
-  if (sidebarClose) sidebarClose.addEventListener("click", closeSidebar);
-  if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
-
-  const quickActionButton = document.getElementById("quickActionButton");
-  const quickActionPanel = document.getElementById("quickActionPanel");
-
-  function openQuickAction() {
-    quickActionPanel.hidden = false;
-    requestAnimationFrame(() => quickActionPanel.classList.add("is-open"));
-    quickActionButton.setAttribute("aria-expanded", "true");
-  }
-
-  function closeQuickAction() {
-    quickActionPanel.classList.remove("is-open");
-    quickActionButton.setAttribute("aria-expanded", "false");
-    window.setTimeout(() => {
-      quickActionPanel.hidden = true;
-    }, 200);
-  }
-
-  if (quickActionButton) {
-    quickActionButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const isOpen = quickActionPanel.classList.contains("is-open");
-      isOpen ? closeQuickAction() : openQuickAction();
-    });
-  }
-
-
-  const notificationBellButton = document.getElementById("notificationBellButton");
-  if (notificationBellButton) {
-    notificationBellButton.addEventListener("click", () => {
-      window.location.href = "notifications.html";
-    });
-  }
-
-  const filterButton = document.getElementById("filterButton");
-  const filterPanel = document.getElementById("filterPanel");
-  const filterOptions = filterPanel
-    ? Array.from(filterPanel.querySelectorAll(".filter-option"))
-    : [];
-
-  window.StudentShared = window.StudentShared || {};
-  window.StudentShared.activeStatus = null;
-
-  function openFilterPanel() {
-    filterPanel.hidden = false;
-    requestAnimationFrame(() => filterPanel.classList.add("is-open"));
-    filterButton.setAttribute("aria-expanded", "true");
-  }
-
-  function closeFilterPanel() {
-    filterPanel.classList.remove("is-open");
-    filterButton.setAttribute("aria-expanded", "false");
-    window.setTimeout(() => {
-      filterPanel.hidden = true;
-    }, 200);
-  }
-
-  if (filterButton) {
-    filterButton.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const isOpen = filterPanel.classList.contains("is-open");
-      isOpen ? closeFilterPanel() : openFilterPanel();
-    });
-  }
-
-  filterOptions.forEach((option) => {
-    option.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const status = option.dataset.status;
-
-      if (window.StudentShared.activeStatus === status) {
-        window.StudentShared.activeStatus = null;
-        option.classList.remove("is-active");
-      } else {
-        window.StudentShared.activeStatus = status;
-        filterOptions.forEach((opt) => opt.classList.remove("is-active"));
-        option.classList.add("is-active");
-      }
-
-      document.dispatchEvent(new CustomEvent("statusfilterchange", {
-        detail: { status: window.StudentShared.activeStatus },
-      }));
-    });
-  });
-
-  document.addEventListener("click", (event) => {
-    if (
-      quickActionPanel &&
-      !quickActionPanel.hidden &&
-      !quickActionPanel.contains(event.target) &&
-      event.target !== quickActionButton
-    ) {
-      closeQuickAction();
-    }
-
-    if (
-      filterPanel &&
-      !filterPanel.hidden &&
-      !filterPanel.contains(event.target) &&
-      event.target !== filterButton &&
-      !filterButton.contains(event.target)
-    ) {
-      closeFilterPanel();
-    }
-  });
-});
-
-
-// =========================================================
-// FACULTY-DIRECTORY.JS
-// Loads real faculty accounts from api/faculty-directory.php,
-// then renders searchable cards and request links for students.
-// =========================================================
-
-document.addEventListener("DOMContentLoaded", () => {
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
-  const DEFAULT_PHOTO = "images/user1.png";
-  const DEFAULT_OFFICE = "Office not set";
-  const DEFAULT_HOURS = "Consultation hours not set";
 
   const facultyListEl = document.getElementById("facultyList");
   const noResultsMessage = document.getElementById("noResultsMessage");
   const searchInput = document.getElementById("facultySearchInput");
   const directoryContainer = document.getElementById("directoryContainer");
   const profilePanel = document.getElementById("directoryProfilePanel");
-  const facultyIdFromUrl = new URLSearchParams(window.location.search).get("facultyId");
+  const backRow = document.getElementById("directoryBackRow");
+  const backButton = document.getElementById("directoryBackButton");
 
-  let facultyDirectoryData = [];
-  let selectedFacultyId = facultyIdFromUrl ? String(facultyIdFromUrl) : "";
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;",
-    }[character]));
-  }
-
-  function normalizeStatus(value) {
-    const normalized = String(value || "offline").trim().toLowerCase();
-    const map = {
-      "available": "available",
-      "in class": "teaching",
-      "teaching": "teaching",
-      "meeting": "meeting",
-      "consultation": "consultation",
-      "on leave": "onleave",
-      "onleave": "onleave",
-      "unavailable": "offline",
-      "offline": "offline",
-    };
-
-    return map[normalized] || "offline";
-  }
-
-  function statusLabel(status) {
-    const labels = {
-      available: "Available",
-      teaching: "Teaching Class",
-      meeting: "Meeting",
-      consultation: "Consultation",
-      onleave: "On Leave",
-      offline: "Offline",
-    };
-
-    return labels[status] || "Offline";
-  }
-
-  function displayName(userName) {
-    const name = String(userName || "Unnamed Faculty").trim();
-    return /^engr\./i.test(name) ? name : `Engr. ${name}`;
-  }
-
-  function lastNameFrom(fullName) {
-    const cleaned = String(fullName || "").replace(/^engr\.\s*/i, "").trim();
-    const parts = cleaned.split(/\s+/).filter(Boolean);
-    return parts.length ? parts[parts.length - 1] : cleaned || "Faculty";
-  }
-
-  function consultationHoursRows(hours) {
-    const value = String(hours || DEFAULT_HOURS).trim();
-    return value.split(/\r?\n|;/).map((entry) => {
-      const text = entry.trim();
-      if (!text) return "";
-
-      const parts = text.split(/\s*:\s*/);
-      if (parts.length > 1) {
-        return {
-          day: parts.shift(),
-          time: parts.join(":"),
-        };
-      }
-
-      return {
-        day: "Schedule",
-        time: text,
-      };
-    }).filter(Boolean);
-  }
-
-  function facultyFromApi(row) {
-    const status = normalizeStatus(row.Current_Status);
-    const fullName = displayName(row.Full_Name);
-    const profilePhoto = String(row.Profile_Photo || row.profile_photo || "").trim();
-
-    return {
-      id: String(row.Faculty_ID),
-      lastName: lastNameFrom(fullName),
-      fullName,
-      program: row.Department || "Department not set",
-      office: row.Office || DEFAULT_OFFICE,
-      status,
-      statusLabel: statusLabel(status),
-      photo: profilePhoto || DEFAULT_PHOTO,
-      hours: consultationHoursRows(row.Consultation_Hours),
-    };
-  }
-
-  function renderEmpty(message) {
-    facultyListEl.innerHTML = "";
-    if (noResultsMessage) {
-      noResultsMessage.textContent = message;
-      noResultsMessage.hidden = false;
-    }
-  }
+  let selectedFacultyId = null;
 
   function renderFacultyList() {
     facultyListEl.innerHTML = "";
 
-    facultyDirectoryData.forEach((faculty) => {
+    FACULTY_DIRECTORY_DATA.forEach((faculty) => {
       const card = document.createElement("article");
       card.className = "faculty-card";
       card.dataset.status = faculty.status;
       card.dataset.facultyId = faculty.id;
 
       card.innerHTML = `
-        <img src="${escapeHtml(faculty.photo)}" alt="${escapeHtml(faculty.fullName)}" class="faculty-photo">
+        <img src="${faculty.photo}" alt="${faculty.fullName}" class="faculty-photo">
         <div class="faculty-info">
-          <p class="faculty-name">Engr. ${escapeHtml(faculty.lastName)}</p>
+          <p class="faculty-name">Engr. ${faculty.lastName}</p>
           <p class="faculty-meta faculty-meta-row">
-            <span>${escapeHtml(faculty.program)}</span>
+            <span>${faculty.program}</span>
             <span class="faculty-meta-dot" aria-hidden="true">&middot;</span>
-            <span>${escapeHtml(faculty.office)}</span>
+            <span>${faculty.office}</span>
           </p>
         </div>
-        <button type="button" class="view-profile-button" data-faculty-id="${escapeHtml(faculty.id)}">View Profile</button>
+        <button type="button" class="view-profile-button" data-faculty-id="${faculty.id}">View Profile</button>
+        <span
+          class="status-dot faculty-status-dot status-${faculty.status}"
+          role="img"
+          aria-label="Status: ${faculty.statusLabel}"
+          title="${faculty.statusLabel}"
+        ></span>
       `;
 
       facultyListEl.appendChild(card);
@@ -299,15 +149,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let visibleCount = 0;
 
     cards.forEach((card) => {
-      const faculty = facultyDirectoryData.find((item) => item.id === card.dataset.facultyId);
-      if (!faculty) {
-        card.hidden = true;
-        return;
-      }
-
-      const searchableText = `${faculty.fullName} ${faculty.program} ${faculty.office}`.toLowerCase();
-      const matchesSearch = query === "" || searchableText.includes(query);
-      const matchesStatus = !activeStatus || faculty.status === activeStatus;
+      const faculty = FACULTY_DIRECTORY_DATA.find((f) => f.id === card.dataset.facultyId);
+      const status = card.dataset.status || (faculty ? faculty.status : "");
+      const nameMatch = faculty ? faculty.fullName.toLowerCase().includes(query) : false;
+      const programMatch = faculty ? faculty.program.toLowerCase().includes(query) : false;
+      const matchesSearch = query === "" || nameMatch || programMatch;
+      const matchesStatus = !activeStatus || status === activeStatus;
       const matches = matchesSearch && matchesStatus;
 
       card.hidden = !matches;
@@ -315,24 +162,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (noResultsMessage) {
-      noResultsMessage.textContent = "No faculty members match your search or selected status.";
       noResultsMessage.hidden = visibleCount > 0;
     }
   }
 
+  if (searchInput) {
+    searchInput.addEventListener("input", applyFilters);
+  }
+
+  document.addEventListener("statusfilterchange", applyFilters);
+
   function buildProfileMarkup(faculty) {
     const hoursRows = faculty.hours.map((entry) => `
       <li class="profile-hours-row">
-        <span class="profile-hours-day">${escapeHtml(entry.day)}</span>
-        <span class="profile-hours-time">${escapeHtml(entry.time)}</span>
+        <span class="profile-hours-day">${entry.day}</span>
+        <span class="profile-hours-time">${entry.time}</span>
       </li>
     `).join("");
 
     return `
-      <img src="${escapeHtml(faculty.photo)}" alt="${escapeHtml(faculty.fullName)}" class="profile-photo">
-      <p class="profile-name">${escapeHtml(faculty.fullName)}</p>
-      <p class="profile-program">${escapeHtml(faculty.program)}</p>
-      <p class="profile-office">${escapeHtml(faculty.office)}</p>
+      <img src="${faculty.photo}" alt="${faculty.fullName}" class="profile-photo">
+      <p class="profile-name">${faculty.fullName}</p>
+      <p class="profile-program">${faculty.program}</p>
+      <p class="profile-office">${faculty.office}</p>
+      <p class="profile-status-row">
+        <span class="status-dot status-${faculty.status}" aria-hidden="true"></span>
+        <span class="profile-status-label">Status: ${faculty.statusLabel}</span>
+      </p>
 
       <h2 class="profile-section-title">Available Hours</h2>
       <ul class="profile-hours-list">
@@ -349,8 +205,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openProfile(facultyId) {
-    const faculty = facultyDirectoryData.find((item) => item.id === facultyId);
+    const faculty = FACULTY_DIRECTORY_DATA.find((f) => f.id === facultyId);
     if (!faculty) return;
+
     selectedFacultyId = facultyId;
 
     Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
@@ -359,7 +216,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     profilePanel.innerHTML = buildProfileMarkup(faculty);
     profilePanel.hidden = false;
-    directoryContainer.classList.add("is-split");
+
+    directoryContainer.classList.add("is-profile-view");
+    if (backRow) backRow.hidden = false;
 
     const requestConsultationLink = profilePanel.querySelector(".request-consultation-button");
     if (requestConsultationLink) {
@@ -367,61 +226,102 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           sessionStorage.setItem(SELECTED_FACULTY_STORAGE_KEY, JSON.stringify(faculty));
         } catch (error) {
-          // The query string still carries the numeric Faculty_ID as fallback.
         }
       });
     }
 
+    window.scrollTo(0, 0);
+
     requestAnimationFrame(() => profilePanel.classList.add("is-visible"));
   }
 
-  async function loadFacultyDirectory(showLoading = false) {
-    if (showLoading) {
-      renderEmpty("Loading faculty...");
-    }
+  function closeProfile() {
+    selectedFacultyId = null;
 
-    try {
-      const response = await fetch("api/faculty-directory.php", { cache: "no-store" });
-      const result = await response.json();
+    profilePanel.classList.remove("is-visible");
+    profilePanel.hidden = true;
+    profilePanel.innerHTML = "";
 
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load faculty directory.");
-      }
+    Array.from(facultyListEl.querySelectorAll(".faculty-card")).forEach((card) => {
+      card.classList.remove("is-selected");
+    });
 
-      facultyDirectoryData = (result.faculty || []).map(facultyFromApi);
+    directoryContainer.classList.remove("is-profile-view");
+    if (backRow) backRow.hidden = true;
 
-      if (facultyDirectoryData.length === 0) {
-        renderEmpty("No faculty accounts have been created yet.");
-        return;
-      }
-
-      renderFacultyList();
-      applyFilters();
-      if (selectedFacultyId) {
-        openProfile(selectedFacultyId);
-      }
-    } catch (error) {
-      if (showLoading || facultyDirectoryData.length === 0) {
-        renderEmpty(error.message || "Unable to load faculty directory.");
-      }
-    }
+    window.scrollTo(0, 0);
   }
 
-  if (searchInput) {
-    searchInput.addEventListener("input", applyFilters);
+  if (backButton) {
+    backButton.addEventListener("click", closeProfile);
   }
 
-  document.addEventListener("statusfilterchange", applyFilters);
+  renderFacultyList();
+  applyFilters();
 
-  loadFacultyDirectory(true);
+  const initialParams = new URLSearchParams(window.location.search);
+  const initialFacultyId = initialParams.get("facultyId");
+  if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
+    openProfile(initialFacultyId);
+  }
 
-  window.setInterval(() => {
-    loadFacultyDirectory(false);
-  }, 5000);
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
 
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      loadFacultyDirectory(false);
-    }
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
   });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
+
 });

@@ -1,12 +1,5 @@
-// =========================================================
-// CREATE FACULTY ACCOUNT - PAGE 2
-// =========================================================
-
+// Create Faculty Account 2 JS
 document.addEventListener("DOMContentLoaded", () => {
-
-  // =========================================================
-  // ELEMENTS
-  // =========================================================
 
   const form =
     document.getElementById("createFacultyAccountStep2Form");
@@ -50,21 +43,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const accountMessage =
     document.getElementById("accountMessage");
 
+  const reqLengthItem =
+    document.getElementById("reqLength");
 
-  // =========================================================
-  // STORAGE KEYS
-  // =========================================================
+  const reqUppercaseItem =
+    document.getElementById("reqUppercase");
+
+  const reqNumberItem =
+    document.getElementById("reqNumber");
 
   const FACULTY_STEP2_KEY =
     "findprof_faculty_registration_step2";
 
   const VERIFICATION_KEY =
     "findprof_faculty_account_verified";
-
-
-  // =========================================================
-  // LOAD SAVED DATA
-  // =========================================================
 
   let savedData = {};
 
@@ -76,43 +68,23 @@ document.addEventListener("DOMContentLoaded", () => {
     savedData = {};
   }
 
-
-  // =========================================================
-  // RESTORE EMAIL
-  // =========================================================
-
   if (savedData.email && emailInput) {
     emailInput.value = savedData.email;
   }
-
-
-  // =========================================================
-  // RESTORE CONTACT NUMBER
-  // =========================================================
 
   if (savedData.contactNumber && contactNumberInput) {
     contactNumberInput.value =
       savedData.contactNumber;
   }
 
-
-  // =========================================================
-  // VERIFICATION STATUS
-  // =========================================================
-
   let accountVerified =
     sessionStorage.getItem(VERIFICATION_KEY) === "true";
-
-
-  // =========================================================
-  // SAVE DATA
-  // =========================================================
 
   function saveStep2Data() {
 
     const data = {
       email:
-        normalizeEmail(emailInput.value),
+        emailInput.value.trim(),
 
       contactNumber:
         contactNumberInput.value.trim()
@@ -124,38 +96,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-
-  // =========================================================
-  // EMAIL VALIDATION
-  // =========================================================
-
   function isValidEmail(value) {
 
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(
-      normalizeEmail(value)
+    return /^[^\s@]+@[^\s@]+\.com$/i.test(
+      value.trim()
     );
   }
-
-  function normalizeEmail(value) {
-    const cleaned = String(value || "").trim().replace(/\s+/g, "");
-    const parts = cleaned.split("@");
-    if (parts.length !== 2) return cleaned.toLowerCase();
-
-    const domain = parts[1].replace(/,/g, ".").replace(/\.+/g, ".");
-    return `${parts[0]}@${domain}`.toLowerCase();
-  }
-
-  function syncEmailInput() {
-    const normalized = normalizeEmail(emailInput.value);
-    if (emailInput.value !== normalized) {
-      emailInput.value = normalized;
-    }
-  }
-
-
-  // =========================================================
-  // PHILIPPINE MOBILE VALIDATION
-  // =========================================================
 
   function isValidPhilippineMobile(value) {
 
@@ -197,11 +143,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-
-  // =========================================================
-  // FORMAT MOBILE NUMBER
-  // =========================================================
-
   function formatMobileNumber(value) {
 
     const digitsOnly =
@@ -228,10 +169,35 @@ document.addEventListener("DOMContentLoaded", () => {
     return formatted;
   }
 
+  function updatePasswordRequirements() {
 
-  // =========================================================
-  // UPDATE VERIFY BUTTON
-  // =========================================================
+    const value =
+      passwordInput.value;
+
+    if (reqLengthItem) {
+
+      reqLengthItem.classList.toggle(
+        "requirement-met",
+        value.length >= 8
+      );
+    }
+
+    if (reqUppercaseItem) {
+
+      reqUppercaseItem.classList.toggle(
+        "requirement-met",
+        /[A-Z]/.test(value)
+      );
+    }
+
+    if (reqNumberItem) {
+
+      reqNumberItem.classList.toggle(
+        "requirement-met",
+        /[0-9]/.test(value)
+      );
+    }
+  }
 
   function updateVerifyButton() {
 
@@ -245,11 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const canVerify =
       emailOk && mobileOk;
-
-
-    // ---------------------------------------------------------
-    // ALREADY VERIFIED
-    // ---------------------------------------------------------
 
     if (accountVerified) {
 
@@ -271,16 +232,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       verifyAccountButton.setAttribute(
         "tabindex",
-        "0"
+        "-1"
       );
 
       return;
     }
-
-
-    // ---------------------------------------------------------
-    // NOT VERIFIED
-    // ---------------------------------------------------------
 
     verifyAccountButton.textContent =
       "Verify Account";
@@ -288,11 +244,6 @@ document.addEventListener("DOMContentLoaded", () => {
     verifyAccountButton.classList.remove(
       "verified"
     );
-
-
-    // ---------------------------------------------------------
-    // VALID
-    // ---------------------------------------------------------
 
     if (canVerify) {
 
@@ -311,11 +262,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
-    // ---------------------------------------------------------
-    // EMPTY / INVALID
-    // ---------------------------------------------------------
-
     else {
 
       verifyAccountButton.classList.add(
@@ -327,21 +273,16 @@ document.addEventListener("DOMContentLoaded", () => {
         "true"
       );
 
-      verifyAccountButton.removeAttribute(
-        "tabindex"
+      verifyAccountButton.setAttribute(
+        "tabindex",
+        "-1"
       );
     }
   }
 
-
-  // =========================================================
-  // UPDATE CREATE BUTTON
-  // =========================================================
-
   function updateCreateButton() {
 
-    createAccountButton.disabled =
-      !accountVerified;
+    createAccountButton.disabled = false;
 
     if (accountVerified) {
 
@@ -357,11 +298,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
-  // =========================================================
-  // RESET VERIFICATION
-  // =========================================================
-
   function resetVerification() {
 
     accountVerified = false;
@@ -370,38 +306,13 @@ document.addEventListener("DOMContentLoaded", () => {
       VERIFICATION_KEY
     );
 
-    sessionStorage.removeItem(
-      "accountVerified"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationToken"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationEmail"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationRole"
-    );
-
     updateVerifyButton();
     updateCreateButton();
   }
 
-
-  // =========================================================
-  // VERIFY ACCOUNT BUTTON
-  // =========================================================
-
   verifyAccountButton.addEventListener(
     "click",
     (event) => {
-
-      // -------------------------------------------------------
-      // ALREADY VERIFIED
-      // -------------------------------------------------------
 
       if (accountVerified) {
 
@@ -409,7 +320,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return;
       }
-
 
       const emailOk =
         isValidEmail(
@@ -420,12 +330,6 @@ document.addEventListener("DOMContentLoaded", () => {
         isValidPhilippineMobile(
           contactNumberInput.value
         );
-
-
-      // -------------------------------------------------------
-      // IMPORTANT:
-      // STOP THE LINK FROM OPENING IF INVALID
-      // -------------------------------------------------------
 
       if (!emailOk || !mobileOk) {
 
@@ -454,37 +358,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-
-      // -------------------------------------------------------
-      // SAVE INFORMATION
-      // -------------------------------------------------------
-
       saveStep2Data();
-
-
-      // -------------------------------------------------------
-      // TELL VERIFY PAGE THIS IS FACULTY
-      // -------------------------------------------------------
 
       sessionStorage.setItem(
         "findprof_verification_origin",
         "faculty"
       );
 
-      // Valid input = allow normal navigation.
     }
   );
-
-
-  // =========================================================
-  // EMAIL INPUT
-  // =========================================================
 
   emailInput.addEventListener(
     "input",
     () => {
 
-      syncEmailInput();
       saveStep2Data();
 
       if (accountVerified) {
@@ -499,11 +386,6 @@ document.addEventListener("DOMContentLoaded", () => {
       updateVerifyButton();
     }
   );
-
-
-  // =========================================================
-  // CONTACT NUMBER INPUT
-  // =========================================================
 
   contactNumberInput.addEventListener(
     "input",
@@ -529,10 +411,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   );
 
+  passwordInput.addEventListener(
+    "input",
+    () => {
 
-  // =========================================================
-  // PASSWORD SHOW / HIDE
-  // =========================================================
+      updatePasswordRequirements();
+    }
+  );
 
   document
     .querySelectorAll(".password-toggle")
@@ -579,11 +464,6 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     });
 
-
-  // =========================================================
-  // FORM SUBMISSION
-  // =========================================================
-
   if (form) {
 
     form.addEventListener(
@@ -592,17 +472,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         event.preventDefault();
 
-
-        // -----------------------------------------------------
-        // VERIFICATION MUST HAPPEN FIRST
-        // -----------------------------------------------------
-
         if (!accountVerified) {
 
           if (accountMessage) {
 
             accountMessage.textContent =
-              "Please verify your account before creating your faculty account.";
+              "Please verify your account before creating your account.";
 
             accountMessage.hidden = false;
           }
@@ -610,13 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-
         let isValid = true;
-
-
-        // -----------------------------------------------------
-        // EMAIL
-        // -----------------------------------------------------
 
         const emailOk =
           isValidEmail(
@@ -629,11 +498,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!emailOk) {
           isValid = false;
         }
-
-
-        // -----------------------------------------------------
-        // CONTACT NUMBER
-        // -----------------------------------------------------
 
         const contactNumberOk =
           isValidPhilippineMobile(
@@ -650,11 +514,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           isValid = false;
         }
-
-
-        // -----------------------------------------------------
-        // PASSWORD
-        // -----------------------------------------------------
 
         let passwordFieldOk = true;
 
@@ -698,15 +557,9 @@ document.addEventListener("DOMContentLoaded", () => {
           passwordFieldError.hidden = true;
         }
 
-
         if (!passwordFieldOk) {
           isValid = false;
         }
-
-
-        // -----------------------------------------------------
-        // CONFIRM PASSWORD
-        // -----------------------------------------------------
 
         if (passwordFieldOk) {
 
@@ -726,15 +579,9 @@ document.addEventListener("DOMContentLoaded", () => {
           passwordError.hidden = true;
         }
 
-
-        // -----------------------------------------------------
-        // TERMS
-        // -----------------------------------------------------
-
         if (!agreeTermsInput.checked) {
           isValid = false;
         }
-
 
         if (!isValid) {
 
@@ -742,11 +589,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           return;
         }
-
-
-        // -----------------------------------------------------
-        // GET STEP ONE DATA
-        // -----------------------------------------------------
 
         let stepOne = {};
 
@@ -764,7 +606,6 @@ document.addEventListener("DOMContentLoaded", () => {
           stepOne = {};
         }
 
-
         if (stepOne.role !== "faculty") {
 
           passwordFieldError.textContent =
@@ -775,16 +616,11 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-
-        // -----------------------------------------------------
-        // CREATE ACCOUNT API
-        // -----------------------------------------------------
-
         try {
 
           const response =
             await fetch(
-              "api/register.php",
+              "/api/register.php",
               {
                 method: "POST",
 
@@ -797,26 +633,19 @@ document.addEventListener("DOMContentLoaded", () => {
                   ...stepOne,
 
                   email:
-                    normalizeEmail(emailInput.value),
+                    emailInput.value.trim(),
 
                   phone:
                     contactNumberInput.value,
 
                   password:
-                    passwordInput.value,
-
-                  account_verification_token:
-                    sessionStorage.getItem(
-                      "accountVerificationToken"
-                    ) || ""
+                    passwordInput.value
                 })
               }
             );
 
-
           const rawResponse =
             await response.text();
-
 
           let result = {
             ok: false,
@@ -824,7 +653,6 @@ document.addEventListener("DOMContentLoaded", () => {
             message:
               "The server returned an empty response."
           };
-
 
           if (rawResponse) {
 
@@ -842,7 +670,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
           }
 
-
           if (!response.ok) {
 
             throw new Error(
@@ -850,11 +677,6 @@ document.addEventListener("DOMContentLoaded", () => {
               "Unable to create account."
             );
           }
-
-
-          // ---------------------------------------------------
-          // ACCOUNT CREATED
-          // ---------------------------------------------------
 
           sessionStorage.removeItem(
             "findprof_registration"
@@ -869,39 +691,20 @@ document.addEventListener("DOMContentLoaded", () => {
           );
 
           sessionStorage.removeItem(
-            "accountVerified"
-          );
-
-          sessionStorage.removeItem(
-            "accountVerificationToken"
-          );
-
-          sessionStorage.removeItem(
-            "accountVerificationEmail"
-          );
-
-          sessionStorage.removeItem(
-            "accountVerificationRole"
-          );
-
-          sessionStorage.removeItem(
             "findprof_verification_origin"
           );
 
-
           successMessage.hidden = false;
-
 
           window.setTimeout(
             () => {
 
               window.location.href =
-                "faculty-login.html";
+                "login.html";
 
             },
             1200
           );
-
 
         } catch (error) {
 
@@ -915,13 +718,10 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-
-  // =========================================================
-  // INITIAL PAGE STATE
-  // =========================================================
-
   updateVerifyButton();
 
   updateCreateButton();
+
+  updatePasswordRequirements();
 
 });

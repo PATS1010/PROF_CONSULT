@@ -1,6 +1,5 @@
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Student Profile */
+
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -22,13 +21,11 @@
 
   --nav-height: 64px;
   --content-padding-x: 60px;
+  --navbar-padding-x: 32px;
 
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -57,10 +54,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style used throughout the Prof Consult site
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -79,9 +72,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -90,7 +80,7 @@ input {
   align-items: center;
   justify-content: space-between;
   height: var(--nav-height);
-  padding: 0 var(--content-padding-x);
+  padding: 0 var(--navbar-padding-x);
   background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
 }
 
@@ -103,6 +93,27 @@ input {
 .navbar-logo {
   height: 38px;
   width: auto;
+}
+
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
 }
 
 .nav-icon-button {
@@ -160,9 +171,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -214,9 +222,6 @@ input {
   color: var(--color-text-muted);
 }
 
-/* Each action is its own row: text on the left, button pinned
-   to the right -- flex row prevents the button from overlapping
-   the item below it. */
 .quick-action-item {
   display: flex;
   align-items: center;
@@ -266,9 +271,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -351,10 +353,6 @@ input {
   color: var(--color-text-light);
 }
 
-/* =========================================================
-   BACKGROUND
-   Slightly blurred, light white overlay for readability
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -385,9 +383,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   PROFILE PAGE LAYOUT
-========================================================= */
 .profile-page {
   display: flex;
   justify-content: center;
@@ -412,9 +407,6 @@ input {
   margin-bottom: 32px;
 }
 
-/* =========================================================
-   STUDENT INFORMATION CARD
-========================================================= */
 .profile-info-card {
   width: 100%;
   background-color: #f7f4ee;
@@ -495,6 +487,12 @@ input {
   border-bottom: 1px solid transparent;
 }
 
+.profile-field-highlight {
+  color: var(--color-red-primary);
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
 .profile-select {
   appearance: none;
   -webkit-appearance: none;
@@ -518,27 +516,65 @@ input {
   flex: 1;
 }
 
-.profile-name-row {
+.profile-field-error {
+  width: 100%;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-status-onleave);
+  margin-top: 4px;
+}
+
+.profile-field-error[hidden] {
+  display: none;
+}
+
+.profile-field.has-error {
+  border-bottom-color: var(--color-status-onleave);
+}
+
+.profile-phone-group.has-error {
+  border-bottom: 1px solid var(--color-status-onleave);
+  border-radius: 4px;
+}
+
+.profile-fullname-view label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.profile-fullname-edit {
   display: flex;
-  align-items: flex-end;
   gap: 14px;
 }
 
-.profile-name-field {
-  flex: 2 1 0;
+.profile-fullname-edit[hidden] {
+  display: none;
+}
+
+.profile-fullname-part {
+  flex: 1;
   min-width: 0;
 }
 
-.profile-name-field:nth-child(2) {
-  flex: 0 0 124px;
+.profile-fullname-part label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
 }
 
-.profile-name-field label {
+.profile-fullname-edit .profile-fullname-part:nth-child(2) label {
   white-space: nowrap;
 }
 
-/* Editing state -- applied to the whole info card via JS when
-   Edit Profile is active */
 .profile-info-card.is-editing .profile-field:not(:disabled) {
   background-color: #ffffff;
   border-bottom-color: var(--color-gradient-end);
@@ -555,66 +591,26 @@ input {
   outline-offset: 1px;
 }
 
-/* =========================================================
-   PROFILE ACTION BUTTONS
-========================================================= */
-.profile-actions {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
 .btn {
   display: inline-block;
-  padding: 12px 32px;
+  padding: 14px 40px;
   border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: var(--color-text-light);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.edit-profile-button {
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
-  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
-}
-
-.btn:hover,
-.cancel-profile-button:hover {
+.btn:hover {
   transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
   opacity: 0.95;
 }
 
-.edit-profile-button:hover {
-  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
-}
-
-.btn:disabled {
-  cursor: wait;
-  opacity: 0.72;
-  transform: none;
-}
-
-.cancel-profile-button {
-  background: #6b6b6b;
-  box-shadow: 0 8px 18px rgba(72, 72, 72, 0.25);
-}
-
-.cancel-profile-button:hover {
-  box-shadow: 0 12px 24px rgba(72, 72, 72, 0.35);
-}
-
-.edit-profile-button[hidden],
-.cancel-profile-button[hidden] {
-  display: none;
-}
-
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -674,42 +670,163 @@ input {
     height: 88px;
   }
 
-  .profile-actions,
   .btn {
     width: 100%;
-  }
-
-  .profile-actions {
-    gap: 10px;
-  }
-
-  .btn {
     text-align: center;
     padding: 13px 20px;
   }
 
-  /* Sidebar: 75-85% of viewport width on mobile, matching the dashboard */
   .sidebar {
     width: 80vw;
     max-width: 80vw;
   }
 
-  /* Quick Action stays fully visible and doesn't overflow the screen */
   .quick-action-panel {
     width: min(400px, 90vw);
     right: -8px;
   }
+
+  .profile-fullname-edit {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
 }
 
-@media (max-width: 600px) {
-  .profile-name-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 18px;
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
   }
 
-  .profile-name-field,
-  .profile-name-field:nth-child(2) {
-    flex: none;
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

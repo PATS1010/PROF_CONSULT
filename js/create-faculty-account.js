@@ -1,29 +1,18 @@
-// SYSTEM NOTE: Controls client-side behavior for the create faculty account page, including UI events and API calls.
-// =========================================================
-// CREATE FACULTY ACCOUNT (PAGE 1) INTERACTIONS
-// - Back -> faculty-login.html
-// - Faculty ID Number field: auto-formats to 00-00000
-// - Form submit -> create-faculty-account2.html
-// =========================================================
-
+// Create Faculty Account JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Back -> faculty-login.html
-  // ---------------------------------------------------------
+  const urlParams = new URLSearchParams(window.location.search);
+  const cameFromChooseAccount = urlParams.get("from") === "choose-account";
+  const backDestination = cameFromChooseAccount ? "choose-account.html" : "login.html";
+
   document.querySelectorAll('[data-nav="back"]').forEach((link) => {
+    link.href = backDestination;
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      window.location.href = "faculty-login.html";
+      window.location.href = backDestination;
     });
   });
 
-  // ---------------------------------------------------------
-  // Faculty ID Number: auto-formats to 00-00000 as the user types.
-  // - Strips any non-numeric character.
-  // - Caps input at 7 digits total (excluding the dash).
-  // - Automatically inserts the dash after the first 2 digits.
-  // ---------------------------------------------------------
   const facultyIdInput = document.getElementById("facultyIdNumber");
   if (facultyIdInput) {
     facultyIdInput.addEventListener("input", () => {
@@ -37,13 +26,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Custom dropdown (Department)
-  // Replaces native <select> so the options list is a normal
-  // HTML element we fully control -- it can never be sized or
-  // positioned by the browser/OS in a way that overflows the
-  // screen, which native <select> popups can do on mobile.
-  // ---------------------------------------------------------
+  const firstNameInput = document.getElementById("firstName");
+  const middleInitialInput = document.getElementById("middleInitial");
+  const lastNameInput = document.getElementById("lastName");
+
+  function normalizeName(value) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = middleInitialInput.value
+        .replace(/[^\p{L}]/gu, "")
+        .toUpperCase()
+        .slice(0, 1);
+    });
+  }
+
   const customSelects = document.querySelectorAll(".custom-select");
 
   function closeAllDropdowns(except) {
@@ -94,39 +93,92 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Close any open dropdown when clicking/tapping outside of it
   document.addEventListener("click", () => closeAllDropdowns());
 
-  // ---------------------------------------------------------
-  // Form submit -> create-faculty-account2.html
-  // (page not built yet -- this link will 404 until it exists)
-  // ---------------------------------------------------------
+  function setCustomSelectValue(selectId, value) {
+    if (!value) return;
+
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const valueLabel = select.querySelector(".custom-select-value");
+    const hiddenInput = select.querySelector('input[type="hidden"]');
+    const options = select.querySelectorAll("li[role='option']");
+
+    const matchingOption = Array.from(options).find(
+      (option) => option.getAttribute("data-value") === value
+    );
+
+    if (!matchingOption) return;
+
+    options.forEach((option) => option.classList.remove("is-active"));
+    matchingOption.classList.add("is-active");
+
+    valueLabel.textContent = matchingOption.textContent;
+    valueLabel.removeAttribute("data-is-placeholder");
+    hiddenInput.value = value;
+  }
+
+  function restoreSavedInformation() {
+    let saved = {};
+
+    try {
+      saved = JSON.parse(sessionStorage.getItem("findprof_registration") || "{}");
+    } catch (error) {
+      saved = {};
+    }
+
+    if (saved.role !== "faculty") return;
+
+    if (saved.id_number) {
+      facultyIdInput.value = saved.id_number;
+    }
+
+    if (saved.firstName) {
+      firstNameInput.value = saved.firstName;
+    }
+
+    if (saved.middleInitial) {
+      middleInitialInput.value = saved.middleInitial;
+    }
+
+    if (saved.lastName) {
+      lastNameInput.value = saved.lastName;
+    }
+
+    setCustomSelectValue("suffixSelect", saved.suffix);
+    setCustomSelectValue("departmentSelect", saved.department);
+  }
+
+  restoreSavedInformation();
+
   const form = document.getElementById("createFacultyAccountForm");
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const firstName = document.getElementById("firstName").value.trim();
-      const middleInitial = document.getElementById("middleInitial").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const department = document.getElementById("department").value;
 
-      if (!form.checkValidity()) {
+      firstNameInput.value = normalizeName(firstNameInput.value);
+      lastNameInput.value = normalizeName(lastNameInput.value);
+
+      if (!form.checkValidity() || !document.getElementById("department").value) {
         form.reportValidity();
         return;
       }
 
-      if (!department) {
-        alert("Please select your department.");
-        document.getElementById("departmentTrigger").focus();
-        return;
-      }
+      const firstName = firstNameInput.value;
+      const middleInitial = middleInitialInput.value;
+      const lastName = lastNameInput.value;
+      const suffix = document.getElementById("suffix").value;
 
-      const fullName = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
       sessionStorage.setItem("findprof_registration", JSON.stringify({
         role: "faculty",
         id_number: document.getElementById("facultyIdNumber").value.trim(),
-        full_name: fullName,
-        department: department
+        firstName: firstName,
+        middleInitial: middleInitial,
+        lastName: lastName,
+        suffix: suffix,
+        full_name: [firstName, middleInitial, lastName, suffix].filter(Boolean).join(" "),
+        department: document.getElementById("department").value
       }));
       window.location.href = "create-faculty-account2.html";
     });

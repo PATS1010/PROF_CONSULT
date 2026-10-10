@@ -1,28 +1,5 @@
-/* SYSTEM NOTE: Styles the faculty profile page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   FACULTY PROFILE -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+/* Faculty Profile */
 
-   UPDATED: visual design (spacing, card proportions, shadows,
-   typography) now matches the Student Profile reference.
-   No HTML structure or JS-facing classes were changed --
-   only property values inside existing selectors.
-
-   UPDATED (name fields): added .faculty-name-row /
-   .faculty-name-field for the three-across First Name /
-   Middle Initial / Last Name inputs in edit mode. Nothing else
-   was changed.
-========================================================= */
-
-/* =========================================================
-   OUTER CARD
-   One large white rounded card holding everything: title,
-   photo + Edit Profile, faculty info, and the Save button.
-   Sizing/shape now matches Student Profile's .profile-card.
-========================================================= */
 .faculty-profile-card {
   max-width: 760px;
   margin: 0 auto;
@@ -45,14 +22,6 @@
   width: 100%;
   text-align: center;
 
-  /* Page-local black -> orange fade, fully self-contained (no
-     dependency on faculty-shared.css variables, and no
-     dependency on .format-text). Fade holds mostly black
-     through the first half, then eases into orange toward the
-     end. !important guards the properties that actually make
-     the gradient text render -- if anything else on the page
-     sets color/background on headings, it cannot silently
-     cancel this effect. */
   background: linear-gradient(
     90deg,
     #000000 0%,
@@ -66,11 +35,6 @@
   -webkit-text-fill-color: transparent !important;
 }
 
-/* =========================================================
-   BODY: photo/Edit Profile on the left, info card on the right
-   Now styled as the single light "inner card" (matches Student
-   Profile's beige .profile-info-card) that wraps both columns.
-========================================================= */
 .faculty-profile-body {
   width: 100%;
   display: flex;
@@ -84,7 +48,6 @@
   margin-bottom: 32px;
 }
 
-/* ---- LEFT: photo + Edit Profile ---- */
 .faculty-profile-left {
   flex: 0 0 auto;
   display: flex;
@@ -138,65 +101,34 @@
   clip: rect(0 0 0 0);
 }
 
-.faculty-profile-actions {
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.faculty-edit-profile-button,
-.faculty-cancel-profile-button {
+.faculty-edit-profile-button {
   display: inline-block;
   padding: 12px 32px;
   border-radius: 999px;
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
   color: var(--color-text-light);
   font-size: 0.9rem;
   font-weight: 600;
   letter-spacing: 0.3px;
+  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
   transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
 }
 
-.faculty-edit-profile-button {
-  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
-  box-shadow: 0 8px 18px rgba(122, 16, 16, 0.35);
-}
-
-.faculty-cancel-profile-button {
-  background: #6b6b6b;
-  box-shadow: 0 8px 18px rgba(72, 72, 72, 0.25);
-}
-
-.faculty-edit-profile-button:hover,
-.faculty-cancel-profile-button:hover {
+.faculty-edit-profile-button:hover {
   transform: translateY(-3px);
+  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
   opacity: 0.95;
 }
 
-.faculty-edit-profile-button:hover {
-  box-shadow: 0 12px 24px rgba(122, 16, 16, 0.45);
-}
-
-.faculty-cancel-profile-button:hover {
-  box-shadow: 0 12px 24px rgba(72, 72, 72, 0.35);
-}
-
-.faculty-edit-profile-button[hidden],
-.faculty-cancel-profile-button[hidden] {
+.faculty-edit-profile-button[hidden] {
   display: none;
 }
 
-/* ---- RIGHT: faculty info card ---- */
 .faculty-profile-right {
   flex: 1 1 320px;
   min-width: 260px;
 }
 
-/* Flattened: this now sits directly inside the beige
-   .faculty-profile-body wrapper, so it no longer needs its
-   own white background/shadow/padding (avoids a double-card
-   look and matches the Student Profile reference, where
-   fields sit directly in the single inner card). */
 .faculty-profile-info-card {
   background-color: transparent;
   border-radius: 0;
@@ -208,7 +140,6 @@
   display: none;
 }
 
-/* View mode */
 .faculty-profile-name {
   font-size: 1.1rem;
   font-weight: 700;
@@ -250,36 +181,27 @@
   font-weight: 500;
 }
 
-/* =========================================================
-   EDIT MODE FORM
-========================================================= */
 .faculty-profile-edit {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
 }
 
 .faculty-form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .faculty-form-group label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 0.8rem;
+  font-weight: 700;
   color: var(--color-text-muted);
 }
 
-/* ---- Name row: First Name / Middle Initial / Last Name ----
-   Middle Initial is a fixed narrow column; First + Last split
-   the remaining width equally. Each field is a label + input
-   stacked, matching .faculty-form-group. */
 .faculty-name-row {
   display: flex;
-  align-items: flex-end; /* inputs share one bottom edge, so they line up even if a label ever wraps */
+  align-items: flex-end;
   gap: 14px;
 }
 
@@ -288,13 +210,15 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-/* Middle Initial: fixed narrow column, wide enough that its
-   label stays on one line so all three inputs line up. */
 .faculty-name-field:nth-child(2) {
-  flex: 0 0 124px;
+  flex: 0 0 76px;
+}
+
+.faculty-name-field:nth-child(4) {
+  flex: 0 0 130px;
 }
 
 .faculty-name-field label {
@@ -303,40 +227,30 @@
 
 .faculty-form-input {
   width: 100%;
-  padding: 6px 0;
-  border: none;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
-  background-color: transparent;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
   font-family: var(--font-main);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9rem;
   color: var(--color-text-dark);
-  transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .faculty-form-input:focus {
-  outline: 2px solid var(--color-gradient-end);
-  outline-offset: 1px;
-  box-shadow: none;
+  outline: none;
+  border-color: var(--color-gradient-end);
+  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
 }
 
 .faculty-form-input.has-error {
-  border-bottom-color: var(--color-status-onleave);
+  border-color: var(--color-status-onleave);
 }
 
 .faculty-form-input-readonly {
-  background-color: transparent;
-  border-bottom-color: transparent;
+  background-color: #eeece7;
   color: var(--color-text-muted);
   cursor: not-allowed;
-}
-
-.faculty-profile-edit.is-editing .faculty-form-input:not(.faculty-form-input-readonly) {
-  padding: 6px 10px;
-  border-bottom-color: var(--color-gradient-end);
-  border-radius: 6px;
-  background-color: #ffffff;
 }
 
 .faculty-form-error {
@@ -349,16 +263,24 @@
   display: none;
 }
 
-/* Phone: fixed +63 prefix beside the editable local number */
 .faculty-phone-input-wrap {
   display: flex;
   align-items: center;
   gap: 8px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.faculty-phone-input-wrap:focus-within {
+  border-color: var(--color-gradient-end);
+  box-shadow: 0 0 0 3px rgba(232, 86, 15, 0.15);
 }
 
 .faculty-phone-input-wrap.has-error {
-  outline: 2px solid var(--color-status-onleave);
-  outline-offset: 1px;
+  border-color: var(--color-status-onleave);
 }
 
 .faculty-phone-prefix {
@@ -369,21 +291,16 @@
 }
 
 .faculty-phone-input {
-  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 12px 0;
 }
 
 .faculty-phone-input:focus {
-  outline: 2px solid var(--color-gradient-end);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: none;
 }
 
-/* =========================================================
-   PROGRAM DROPDOWN
-   Custom component (not a native <select>) so the options
-   list never gets invisibly clipped by an overflow:hidden
-   ancestor -- matches the dropdown pattern used elsewhere
-   in Prof Consult.
-========================================================= */
 .faculty-dropdown {
   position: relative;
 }
@@ -394,37 +311,20 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 6px 0;
-  border: none;
-  border-bottom: 1px solid transparent;
-  border-radius: 0;
-  background-color: transparent;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  background-color: #f9f8f5;
   font-family: var(--font-main);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-dark);
-  transition: outline-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .faculty-dropdown-trigger:hover,
 .faculty-dropdown-trigger[aria-expanded="true"] {
-  outline: 2px solid var(--color-gradient-end);
-  outline-offset: 1px;
-}
-
-.faculty-dropdown-trigger:disabled {
-  cursor: default;
-}
-
-.faculty-dropdown-trigger:disabled:hover {
-  outline: none;
-}
-
-.faculty-profile-edit.is-editing .faculty-dropdown-trigger {
-  padding: 6px 10px;
-  border-bottom-color: var(--color-gradient-end);
-  border-radius: 6px;
-  background-color: #ffffff;
+  border-color: var(--color-gradient-end);
 }
 
 .faculty-dropdown-caret {
@@ -463,9 +363,6 @@
   pointer-events: auto;
 }
 
-/* [hidden] only controls presence in the DOM flow; is-open
-   (toggled a frame later by JS) drives the actual fade/slide
-   animation -- same pattern as the Quick Action popup. */
 .faculty-dropdown-list[hidden] {
   display: none;
 }
@@ -490,9 +387,16 @@
   font-weight: 700;
 }
 
-/* =========================================================
-   FOOTER: Save button + success message
-========================================================= */
+.faculty-dropdown-list {
+  overflow-x: hidden;
+}
+
+.faculty-select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: default;
+}
+
 .faculty-profile-footer {
   margin-top: 8px;
   display: flex;
@@ -533,9 +437,6 @@
   display: none;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 720px) {
   .faculty-profile-card {
     padding: 36px 28px;
@@ -563,8 +464,6 @@
   }
 }
 
-/* Name inputs stack on narrow screens instead of squeezing
-   three across */
 @media (max-width: 600px) {
   .faculty-name-row {
     flex-direction: column;
@@ -573,7 +472,8 @@
   }
 
   .faculty-name-field,
-  .faculty-name-field:nth-child(2) {
+  .faculty-name-field:nth-child(2),
+  .faculty-name-field:nth-child(4) {
     flex: none;
   }
 }
@@ -593,9 +493,7 @@
     height: 88px;
   }
 
-  .faculty-profile-actions,
-  .faculty-edit-profile-button,
-  .faculty-cancel-profile-button {
+  .faculty-edit-profile-button {
     width: 100%;
     text-align: center;
   }

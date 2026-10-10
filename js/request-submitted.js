@@ -1,23 +1,6 @@
-// SYSTEM NOTE: Controls client-side behavior for the request submitted page, including UI events and API calls.
-// =========================================================
-// REQUEST SUBMITTED PAGE INTERACTIONS
-// - Burger menu + Quick Action + Notification bell: same
-//   behavior as the Dashboard / Faculty Directory
-// - Reads the request data saved by request-consultation.js
-//   (sessionStorage is a frontend-only stand-in; once a backend
-//   exists, this should instead fetch the just-created request
-//   by its ID, e.g. from the URL, rather than sessionStorage).
-//   That request data already carries whichever professor the
-//   student selected in the Faculty Directory, so this page
-//   never hardcodes a specific faculty name.
-// - Back to Dashboard -> student-dashboard.html
-// =========================================================
-
+// Request Submitted JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Populate the summary from the last submitted request
-  // ---------------------------------------------------------
   const storedRequest = sessionStorage.getItem("profconsult_last_request");
   const requestData = storedRequest ? JSON.parse(storedRequest) : null;
 
@@ -30,7 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function extractStartTime(timeRangeLabel) {
     if (!timeRangeLabel) return "";
-    // "2:00 PM \u2013 2:30 PM" -> "2:00 PM"
     return timeRangeLabel.split("\u2013")[0].trim();
   }
 
@@ -56,9 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (statusEl) statusEl.textContent = requestData.status || "Pending Approval";
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -82,9 +61,6 @@ document.addEventListener("DOMContentLoaded", () => {
   if (sidebarClose) sidebarClose.addEventListener("click", closeSidebar);
   if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
-  // ---------------------------------------------------------
-  // Quick Action popup (same behavior as the Student Dashboard)
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -125,21 +101,73 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
-  // ---------------------------------------------------------
-  // Back to Dashboard -> student-dashboard.html
-  // (plain <a href>, so this just lets the default navigation
-  // happen -- no JS interception needed)
-  // ---------------------------------------------------------
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

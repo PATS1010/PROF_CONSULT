@@ -1,35 +1,5 @@
 <!DOCTYPE html>
-<!--
-  VERIFY ACCOUNT SUCCESSFUL PAGE
-  Prof Consult
-
-  FRONTEND ONLY
-
-  Flow:
-
-  Student:
-    create-student-account2.html
-          ↓
-    verify-account.html?from=student
-          ↓
-    verify-account-successful.html?from=student
-          ↓
-    Proceed
-          ↓
-    verify-account.html?from=student
-
-  Faculty:
-    create-faculty-account2.html
-          ↓
-    verify-account.html?from=faculty
-          ↓
-    verify-account-successful.html?from=faculty
-          ↓
-    Proceed
-          ↓
-    verify-account.html?from=faculty
--->
-
+<!-- Account verification successful  -->
 <html lang="en">
 
 <head>
@@ -71,11 +41,6 @@
 
 <body>
 
-
-  <!-- =========================================================
-       BACKGROUND
-  ========================================================= -->
-
   <div
     class="page-background"
     aria-hidden="true"
@@ -90,18 +55,6 @@
     <div class="page-background-overlay"></div>
 
   </div>
-
-
-
-  <!-- =========================================================
-       BACK BUTTON
-
-       Student:
-       create-student-account2.html
-
-       Faculty:
-       create-faculty-account2.html
-  ========================================================= -->
 
   <a
     href="create-student-account2.html"
@@ -118,18 +71,7 @@
 
   </a>
 
-
-
-  <!-- =========================================================
-       MAIN CARD
-  ========================================================= -->
-
   <main class="registration-card">
-
-
-    <!-- =======================================================
-         TITLE
-    ======================================================= -->
 
     <h1
       class="format-text registration-title"
@@ -139,12 +81,6 @@
 
     </h1>
 
-
-
-    <!-- =======================================================
-         MESSAGE
-    ======================================================= -->
-
     <p class="verification-successful-message">
 
       Your account has been verified successfully.<br>
@@ -152,24 +88,6 @@
       You can now proceed to complete your account.
 
     </p>
-
-
-
-    <!-- =======================================================
-         PROCEED BUTTON
-
-         Goes back to:
-
-         verify-account.html?from=student
-
-         OR
-
-         verify-account.html?from=faculty
-
-         The Verify Account page can then display:
-
-         "Account Verified"
-    ======================================================= -->
 
     <a
       href="verify-account.html?from=student"
@@ -184,12 +102,6 @@
 
 
   </main>
-
-
-
-  <!-- =========================================================
-       JAVASCRIPT
-  ========================================================= -->
 
   <script src="js/verify-account-successful.js"></script>
 

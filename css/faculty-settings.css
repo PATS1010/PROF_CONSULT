@@ -1,18 +1,5 @@
-/* =========================================================
-   FACULTY ACCOUNT SETTINGS -- PAGE-SPECIFIC STYLES
-   Only the main content area (inside .faculty-main-content)
-   is defined here. Navbar/sidebar/quick action/background
-   styling lives in faculty-shared.css and is not duplicated
-   or overridden here.
+/* Faculty Account Settings */
 
-   NOTE: .format-text (the black -> orange heading gradient)
-   is NOT redefined anywhere in this file -- it is reused
-   exactly as-is from faculty-shared.css.
-========================================================= */
-
-/* =========================================================
-   OUTER CARD
-========================================================= */
 .faculty-settings-card {
   max-width: 620px;
   margin: 0 auto;
@@ -25,9 +12,6 @@
   margin-bottom: 28px;
 }
 
-/* =========================================================
-   INNER CARD
-========================================================= */
 .faculty-settings-inner-card {
   background-color: #f5f1ea;
   border-radius: 22px;
@@ -39,17 +23,49 @@
   gap: 22px;
 }
 
-/* =========================================================
-   CHECKBOX ROWS
-   Custom-styled checkbox: a real, focusable <input
-   type="checkbox"> visually hidden but still keyboard/
-   screen-reader accessible, paired with a styled box span.
-========================================================= */
+.faculty-settings-options {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
 .faculty-settings-checkbox-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 20px;
   cursor: pointer;
+}
+
+.faculty-settings-checkbox-row + .faculty-settings-checkbox-row {
+  padding-top: 20px;
+  border-top: 1px solid #e6e3dc;
+}
+
+.faculty-settings-option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.faculty-settings-checkbox-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.faculty-settings-option-description {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  max-width: 380px;
+}
+
+.faculty-settings-checkbox-control {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
 }
 
 .faculty-settings-checkbox {
@@ -66,13 +82,13 @@
 
 .faculty-settings-checkbox-box {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 5px;
-  border: 2px solid var(--color-text-dark);
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  border: 2px solid #c8c8c8;
   background-color: #ffffff;
   position: relative;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 .faculty-settings-checkbox-box::after {
@@ -80,22 +96,21 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 5px;
-  height: 10px;
-  border: solid #ffffff;
-  border-width: 0 2px 2px 0;
-  transform: translate(-50%, -60%) rotate(45deg);
-  opacity: 0;
-  transition: opacity 0.15s ease;
+  width: 12px;
+  height: 8px;
+  border-left: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: translate(-50%, -60%) rotate(-45deg) scale(0);
+  transition: transform 0.15s ease;
 }
 
 .faculty-settings-checkbox:checked + .faculty-settings-checkbox-box {
-  background-color: var(--color-red-primary);
-  border-color: var(--color-red-primary);
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+  border-color: transparent;
 }
 
 .faculty-settings-checkbox:checked + .faculty-settings-checkbox-box::after {
-  opacity: 1;
+  transform: translate(-50%, -60%) rotate(-45deg) scale(1);
 }
 
 .faculty-settings-checkbox:focus-visible + .faculty-settings-checkbox-box {
@@ -103,34 +118,36 @@
   outline-offset: 2px;
 }
 
-.faculty-settings-checkbox-label {
-  font-size: 0.92rem;
-  font-weight: 500;
-  color: var(--color-text-dark);
+.faculty-change-password-link {
+  align-self: center;
+  font-size: 1.05rem;
+  text-decoration: underline;
+  text-decoration-color: var(--color-gradient-end);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  cursor: pointer;
 }
 
-/* =========================================================
-   CHANGE PASSWORD LINK
-========================================================= */
-.faculty-change-password-link {
-  align-self: flex-start;
+.faculty-settings-secondary-action-button {
+  align-self: center;
+  padding: 10px 28px;
+  border: 2px solid var(--color-red-primary);
+  border-radius: 999px;
+  background: none;
+  font-family: inherit;
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--color-red-primary);
-  text-decoration: underline;
-  transition: color 0.2s ease;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
-.faculty-change-password-link:hover {
-  color: var(--color-gradient-end);
+.faculty-settings-secondary-action-button:hover {
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+  transform: translateY(-2px);
 }
 
-/* =========================================================
-   FOOTER: Save button + success message
-   Save button = RED -> ORANGE background gradient. This is
-   separate from format-text (which is a BLACK -> ORANGE text
-   gradient used only for the heading).
-========================================================= */
 .faculty-settings-footer {
   margin-top: 30px;
   display: flex;
@@ -171,9 +188,6 @@
   display: none;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 720px) {
   .faculty-settings-card {
     padding: 36px 28px 34px;
@@ -181,6 +195,10 @@
 
   .faculty-settings-inner-card {
     padding: 26px 22px;
+  }
+
+  .faculty-settings-checkbox-row {
+    align-items: flex-start;
   }
 }
 
@@ -199,11 +217,259 @@
     gap: 18px;
   }
 
+  .faculty-settings-checkbox-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
   .faculty-settings-checkbox-label {
     font-size: 0.85rem;
   }
 
   .faculty-settings-save-button {
     width: 100%;
+  }
+}
+.pc-delete-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 420;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-delete-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-delete-modal {
+  width: 100%;
+  max-width: 440px;
+  background-color: #ffffff;
+  border: 1px solid #141414;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-delete-overlay.is-open .pc-delete-modal {
+  transform: translateY(0);
+}
+
+.pc-delete-modal-body {
+  padding: 30px 30px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.pc-delete-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  line-height: 1.35;
+  color: var(--color-red-primary);
+  text-align: left;
+  align-self: stretch;
+}
+
+.pc-delete-warning {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-delete-warning-icon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  color: var(--color-text-light);
+}
+
+.pc-delete-warning-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pc-delete-warning-text {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-text-light);
+}
+
+.pc-delete-password-label {
+  align-self: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.pc-delete-password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.pc-delete-password-input {
+  width: 100%;
+  padding: 13px 44px;
+  border: none;
+  border-radius: 999px;
+  background-color: #d9d9d9;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.pc-delete-password-input::placeholder {
+  color: #6f6f6f;
+}
+
+.pc-delete-password-input:focus {
+  outline: 2px solid var(--color-gradient-end);
+  outline-offset: 2px;
+}
+
+.pc-delete-password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #6f6f6f;
+  padding: 0;
+}
+
+.pc-delete-password-toggle svg {
+  width: 100%;
+  height: 100%;
+}
+
+.pc-delete-password-input.has-error {
+  outline: 2px solid var(--color-red-primary);
+  outline-offset: 2px;
+}
+
+.pc-delete-password-error {
+  width: 100%;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-red-primary);
+}
+
+.pc-delete-password-error[hidden] {
+  display: none;
+}
+
+.pc-delete-forgot-password-link {
+  align-self: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-red-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pc-delete-modal-actions {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 6px;
+}
+
+.pc-delete-cancel-button,
+.pc-delete-yes-button {
+  flex: 1 1 0;
+  padding: 11px 18px;
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-align: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-delete-cancel-button {
+  background-color: #e4e0d8;
+  color: var(--color-text-dark);
+}
+
+.pc-delete-yes-button {
+  background-color: var(--color-red-primary);
+  color: var(--color-text-light);
+}
+
+.pc-delete-cancel-button:hover,
+.pc-delete-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.pc-delete-loading {
+  padding: 60px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pc-delete-loading[hidden] {
+  display: none;
+}
+
+.pc-delete-spinner {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 4px solid #e4e0d8;
+  border-top-color: var(--color-red-primary);
+  animation: pc-delete-spin 0.8s linear infinite;
+}
+
+@keyframes pc-delete-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .pc-delete-modal {
+    max-width: 320px;
+  }
+
+  .pc-delete-modal-body {
+    padding: 24px 20px 22px;
+    gap: 14px;
+  }
+
+  .pc-delete-modal-title {
+    font-size: 1.1rem;
+  }
+
+  .pc-delete-modal-actions {
+    flex-direction: column;
   }
 }

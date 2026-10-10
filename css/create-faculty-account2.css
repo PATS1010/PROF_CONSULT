@@ -1,8 +1,4 @@
-/* SYSTEM NOTE: Styles the create faculty account2 page so its layout, spacing, and visual states match the system design. */
-
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Create Faculty Account 2 */
 
 :root {
   --color-red-primary: #d81f26;
@@ -22,10 +18,6 @@
   --shadow-card: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
-
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 
 * {
   margin: 0;
@@ -60,10 +52,6 @@ button {
 }
 
 
-/* =========================================================
-   FORMATTEXT
-========================================================= */
-
 .format-text {
   font-family: 'Montserrat', sans-serif;
 
@@ -88,10 +76,6 @@ button {
   -webkit-text-fill-color: transparent;
 }
 
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
 
 .page-background {
   position: fixed;
@@ -143,10 +127,6 @@ button {
 }
 
 
-/* =========================================================
-   BACK BUTTON
-========================================================= */
-
 .back-button {
   position: fixed;
 
@@ -194,10 +174,6 @@ button {
 }
 
 
-/* =========================================================
-   MAIN CONTAINER: REGISTRATION CARD
-========================================================= */
-
 .registration-card {
   position: relative;
 
@@ -237,10 +213,6 @@ button {
   margin-bottom: 32px;
 }
 
-
-/* =========================================================
-   FORM
-========================================================= */
 
 .registration-form {
   width: 100%;
@@ -313,10 +285,6 @@ button {
 }
 
 
-/* =========================================================
-   CUSTOM DROPDOWN
-========================================================= */
-
 .select-wrapper {
   position: relative;
 
@@ -361,10 +329,6 @@ button {
   pointer-events: none;
 }
 
-
-/* =========================================================
-   BUTTON
-========================================================= */
 
 .btn {
   display: inline-flex;
@@ -413,10 +377,6 @@ button {
 }
 
 
-/* =========================================================
-   VERIFY ACCOUNT BUTTON
-========================================================= */
-
 .verify-account-button {
   min-width: 190px;
 
@@ -426,15 +386,12 @@ button {
 }
 
 
-/* =========================================================
-   VERIFY ACCOUNT - DISABLED
-   Only the Verify Account button uses this state.
-========================================================= */
-
 .verify-account-button.disabled {
   opacity: 0.5;
 
-  cursor: pointer;
+  cursor: not-allowed;
+
+  pointer-events: none;
 
   transform: none;
 
@@ -443,10 +400,6 @@ button {
     rgba(122, 16, 16, 0.2);
 }
 
-
-/* =========================================================
-   VERIFY ACCOUNT - VERIFIED
-========================================================= */
 
 .verify-account-button.verified {
   background-color: #1e8a4c;
@@ -464,10 +417,6 @@ button {
   opacity: 1;
 }
 
-
-/* =========================================================
-   FIELD VALIDATION / SUCCESS MESSAGES
-========================================================= */
 
 .field-message {
   width: 100%;
@@ -493,10 +442,6 @@ button {
   margin-bottom: 8px;
 }
 
-
-/* =========================================================
-   MOBILE NUMBER FIELD
-========================================================= */
 
 .mobile-input-group {
   position: relative;
@@ -605,10 +550,6 @@ button {
 }
 
 
-/* =========================================================
-   PASSWORD FIELDS
-========================================================= */
-
 .password-input-group {
   position: relative;
 
@@ -648,10 +589,6 @@ button {
 }
 
 
-/* =========================================================
-   PASSWORD REQUIREMENTS HINT
-========================================================= */
-
 .password-requirements {
   width: 100%;
 
@@ -668,12 +605,15 @@ button {
   color: var(--color-text-muted);
 
   line-height: 1.6;
+
+  transition: color 0.2s ease;
 }
 
+.password-requirements li.requirement-met {
+  color: #1e8a4c;
+  font-weight: 600;
+}
 
-/* =========================================================
-   TERMS AND CONDITIONS CHECKBOX
-========================================================= */
 
 .terms-checkbox {
   display: inline-flex;
@@ -766,10 +706,6 @@ button {
 }
 
 
-/* =========================================================
-   LOGIN LINK
-========================================================= */
-
 .login-text {
   width: 100%;
 
@@ -796,10 +732,6 @@ button {
   color: var(--color-red-primary);
 }
 
-
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 
 @media (max-width: 768px) {
 

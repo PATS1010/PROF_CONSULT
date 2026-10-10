@@ -1,11 +1,4 @@
-// SYSTEM NOTE: Create student account page 2 interactions.
-// Handles:
-// - Remembering all entered information
-// - Philippine mobile number validation
-// - Verification flow
-// - Preventing account creation before verification
-// - Restoring "Account Verified" after returning from verification
-
+// Create Student Account 2 JS
 document.addEventListener("DOMContentLoaded", () => {
 
   const STORAGE_KEY = "findprof_registration_step2_student";
@@ -20,44 +13,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const mobileError = document.getElementById("mobileError");
   const passwordFieldError = document.getElementById("passwordFieldError");
   const passwordError = document.getElementById("passwordError");
-  const termsError = document.getElementById("termsError");
   const successMessage = document.getElementById("successMessage");
+
+  const accountMessage = document.getElementById("accountMessage");
 
   const verifyButton = document.querySelector(".verify-account-button");
   const createAccountButton = document.getElementById("createAccountButton");
 
+  const reqLengthItem = document.getElementById("reqLength");
+  const reqUppercaseItem = document.getElementById("reqUppercase");
+  const reqNumberItem = document.getElementById("reqNumber");
+
   let isAccountVerified =
     sessionStorage.getItem("student_account_verified") === "true";
-
-  function clearAccountVerification() {
-
-    isAccountVerified = false;
-
-    sessionStorage.removeItem(
-      "student_account_verified"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerified"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationToken"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationEmail"
-    );
-
-    sessionStorage.removeItem(
-      "accountVerificationRole"
-    );
-  }
-
-
-  // =========================================================
-  // LOAD SAVED INFORMATION
-  // =========================================================
 
   function loadSavedInformation() {
 
@@ -86,15 +54,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-
-  // =========================================================
-  // SAVE INFORMATION
-  // =========================================================
-
   function saveInformation() {
 
     const data = {
-      email: normalizeEmail(emailInput.value),
+      email: emailInput.value.trim(),
       mobile: mobileInput.value,
       password: passwordInput.value,
       confirmPassword: confirmPasswordInput.value,
@@ -107,63 +70,26 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-
-  // =========================================================
-  // EMAIL VALIDATION
-  // =========================================================
-
   function isValidEmail(value) {
 
-    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(
-      normalizeEmail(value)
+    return /^[^\s@]+@[^\s@]+\.com$/i.test(
+      value.trim()
     );
   }
-
-  function normalizeEmail(value) {
-    const cleaned = String(value || "").trim().replace(/\s+/g, "");
-    const parts = cleaned.split("@");
-    if (parts.length !== 2) return cleaned.toLowerCase();
-
-    const domain = parts[1].replace(/,/g, ".").replace(/\.+/g, ".");
-    return `${parts[0]}@${domain}`.toLowerCase();
-  }
-
-  function syncEmailInput() {
-    const normalized = normalizeEmail(emailInput.value);
-    if (emailInput.value !== normalized) {
-      emailInput.value = normalized;
-    }
-  }
-
-
-  // =========================================================
-  // PHILIPPINE MOBILE NUMBER VALIDATION
-  //
-  // Accepts:
-  // 9171234567
-  // 917-123-4567
-  //
-  // Since +63 is already displayed separately,
-  // the input contains the 10-digit number.
-  // =========================================================
 
   function isValidPhilippineMobile(value) {
 
     const digits =
       value.replace(/\D/g, "");
 
-    // Must contain exactly 10 digits.
     if (digits.length !== 10) {
       return false;
     }
 
-    // Philippine mobile numbers begin with 9
-    // when written without the leading 0/+63.
     if (!digits.startsWith("9")) {
       return false;
     }
 
-    // Common Philippine mobile prefixes.
     const validPrefixes = [
       "905", "906", "907", "908", "909",
       "910", "912", "913", "914", "915",
@@ -190,11 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
       digits.substring(0, 3)
     );
   }
-
-
-  // =========================================================
-  // FORMAT MOBILE NUMBER
-  // =========================================================
 
   function formatMobileNumber(value) {
 
@@ -225,16 +146,37 @@ document.addEventListener("DOMContentLoaded", () => {
     return digits;
   }
 
+  function updatePasswordRequirements() {
 
-  // =========================================================
-  // MOBILE INPUT
-  // =========================================================
+    const value =
+      passwordInput.value;
+
+    if (reqLengthItem) {
+
+      reqLengthItem.classList.toggle(
+        "requirement-met",
+        value.length >= 8
+      );
+    }
+
+    if (reqUppercaseItem) {
+
+      reqUppercaseItem.classList.toggle(
+        "requirement-met",
+        /[A-Z]/.test(value)
+      );
+    }
+
+    if (reqNumberItem) {
+
+      reqNumberItem.classList.toggle(
+        "requirement-met",
+        /[0-9]/.test(value)
+      );
+    }
+  }
 
   mobileInput.addEventListener("input", () => {
-
-    if (isAccountVerified) {
-      clearAccountVerification();
-    }
 
     mobileInput.value =
       formatMobileNumber(
@@ -246,11 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateVerificationButton();
   });
 
-
-  // =========================================================
-  // SAVE INPUTS WHENEVER THEY CHANGE
-  // =========================================================
-
   [
     emailInput,
     passwordInput,
@@ -258,14 +195,6 @@ document.addEventListener("DOMContentLoaded", () => {
   ].forEach((input) => {
 
     input.addEventListener("input", () => {
-
-      if (input === emailInput && isAccountVerified) {
-        clearAccountVerification();
-      }
-
-      if (input === emailInput) {
-        syncEmailInput();
-      }
 
       saveInformation();
 
@@ -277,21 +206,17 @@ document.addEventListener("DOMContentLoaded", () => {
         updateVerificationButton();
       }
 
+      if (input === passwordInput) {
+        updatePasswordRequirements();
+      }
+
     });
 
   });
 
-
   agreeTermsInput.addEventListener("change", () => {
-    termsError.hidden = agreeTermsInput.checked;
     saveInformation();
-    updateVerificationButton();
   });
-
-
-  // =========================================================
-  // VERIFY BUTTON STATE
-  // =========================================================
 
   function updateVerificationButton() {
 
@@ -316,7 +241,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
     const emailValid =
       isValidEmail(
         emailInput.value
@@ -327,21 +251,11 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileInput.value
       );
 
-
     const canVerify =
       emailValid &&
-      mobileValid &&
-      agreeTermsInput.checked;
-
+      mobileValid;
 
     if (canVerify) {
-
-      verifyButton.textContent =
-        "Verify Account";
-
-      verifyButton.classList.remove(
-        "account-verified"
-      );
 
       verifyButton.classList.remove(
         "disabled"
@@ -358,13 +272,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } else {
 
-      verifyButton.textContent =
-        "Verify Account";
-
-      verifyButton.classList.remove(
-        "account-verified"
-      );
-
       verifyButton.classList.add(
         "disabled"
       );
@@ -374,17 +281,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "true"
       );
 
-      verifyButton.setAttribute(
-        "href",
-        "verify-account.html?from=student"
+      verifyButton.removeAttribute(
+        "href"
       );
     }
   }
-
-
-  // =========================================================
-  // VERIFY ACCOUNT BUTTON
-  // =========================================================
 
   verifyButton.addEventListener("click", (event) => {
 
@@ -394,7 +295,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return;
     }
-
 
     const emailValid =
       isValidEmail(
@@ -406,11 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileInput.value
       );
 
-
-    if (!emailValid || !mobileValid || !agreeTermsInput.checked) {
+    if (!emailValid || !mobileValid) {
 
       event.preventDefault();
-
 
       if (!emailValid) {
 
@@ -420,7 +318,6 @@ document.addEventListener("DOMContentLoaded", () => {
         emailError.hidden = false;
       }
 
-
       if (!mobileValid) {
 
         mobileError.textContent =
@@ -429,28 +326,11 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileError.hidden = false;
       }
 
-
-      if (!agreeTermsInput.checked) {
-
-        termsError.textContent =
-          "Please agree to the Privacy Policy before verifying your account.";
-
-        termsError.hidden = false;
-
-        agreeTermsInput.focus();
-      }
-
       return;
     }
 
-
     saveInformation();
   });
-
-
-  // =========================================================
-  // PASSWORD SHOW / HIDE
-  // =========================================================
 
   document
     .querySelectorAll(".password-toggle")
@@ -472,22 +352,18 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-
         const isHidden =
           targetInput.type === "password";
-
 
         targetInput.type =
           isHidden
             ? "text"
             : "password";
 
-
         toggleButton.textContent =
           isHidden
             ? "Hide"
             : "Show";
-
 
         toggleButton.setAttribute(
           "aria-label",
@@ -500,16 +376,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-
-  // =========================================================
-  // CREATE ACCOUNT
-  // =========================================================
-
   const form =
     document.getElementById(
       "createStudentAccountStep2Form"
     );
-
 
   form.addEventListener("submit", async (event) => {
 
@@ -517,30 +387,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveInformation();
 
-
-    // -------------------------------------------------------
-    // MUST VERIFY FIRST
-    // -------------------------------------------------------
-
     if (!isAccountVerified) {
 
       successMessage.hidden = true;
 
-      passwordFieldError.textContent =
-        "Please verify your account before creating your account.";
+      if (accountMessage) {
 
-      passwordFieldError.hidden = false;
+        accountMessage.textContent =
+          "Please verify your account before creating your account.";
+
+        accountMessage.hidden = false;
+      }
 
       return;
     }
 
+    if (accountMessage) {
+      accountMessage.hidden = true;
+    }
 
     let isValid = true;
-
-
-    // -------------------------------------------------------
-    // EMAIL
-    // -------------------------------------------------------
 
     const emailOk =
       isValidEmail(
@@ -553,11 +419,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!emailOk) {
       isValid = false;
     }
-
-
-    // -------------------------------------------------------
-    // MOBILE
-    // -------------------------------------------------------
 
     const mobileOk =
       isValidPhilippineMobile(
@@ -576,13 +437,7 @@ document.addEventListener("DOMContentLoaded", () => {
       isValid = false;
     }
 
-
-    // -------------------------------------------------------
-    // PASSWORD
-    // -------------------------------------------------------
-
     let passwordFieldOk = true;
-
 
     if (passwordInput.value.length < 8) {
 
@@ -624,15 +479,9 @@ document.addEventListener("DOMContentLoaded", () => {
       passwordFieldError.hidden = true;
     }
 
-
     if (!passwordFieldOk) {
       isValid = false;
     }
-
-
-    // -------------------------------------------------------
-    // CONFIRM PASSWORD
-    // -------------------------------------------------------
 
     if (passwordFieldOk) {
 
@@ -640,10 +489,8 @@ document.addEventListener("DOMContentLoaded", () => {
         passwordInput.value ===
         confirmPasswordInput.value;
 
-
       passwordError.hidden =
         passwordsMatch;
-
 
       if (!passwordsMatch) {
         isValid = false;
@@ -654,24 +501,15 @@ document.addEventListener("DOMContentLoaded", () => {
       passwordError.hidden = true;
     }
 
-
-    // -------------------------------------------------------
-    // TERMS
-    // -------------------------------------------------------
-
     if (!agreeTermsInput.checked) {
 
-      termsError.textContent =
-        "Please agree to the Privacy Policy before creating your account.";
+      passwordFieldError.textContent =
+        "Please agree to the Privacy Policy.";
 
-      termsError.hidden = false;
+      passwordFieldError.hidden = false;
 
       isValid = false;
-    } else {
-
-      termsError.hidden = true;
     }
-
 
     if (!isValid) {
 
@@ -680,18 +518,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
-    // -------------------------------------------------------
-    // EXISTING STEP ONE DATA
-    // -------------------------------------------------------
-
     const stepOne =
       JSON.parse(
         sessionStorage.getItem(
           "findprof_registration"
         ) || "{}"
       );
-
 
     if (stepOne.role !== "student") {
 
@@ -703,16 +535,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-
-    // -------------------------------------------------------
-    // CREATE ACCOUNT
-    // -------------------------------------------------------
-
     try {
 
       const response =
         await fetch(
-          "api/register.php",
+          "/api/register.php",
           {
             method: "POST",
 
@@ -725,33 +552,25 @@ document.addEventListener("DOMContentLoaded", () => {
               ...stepOne,
 
               email:
-                normalizeEmail(emailInput.value),
+                emailInput.value.trim(),
 
               phone:
                 mobileInput.value,
 
               password:
-                passwordInput.value,
-
-              account_verification_token:
-                sessionStorage.getItem(
-                  "accountVerificationToken"
-                ) || ""
+                passwordInput.value
             })
           }
         );
 
-
       const rawResponse =
         await response.text();
-
 
       let result = {
         ok: false,
         message:
           "The server returned an empty response."
       };
-
 
       if (rawResponse) {
 
@@ -769,7 +588,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-
       if (!response.ok) {
 
         throw new Error(
@@ -777,7 +595,6 @@ document.addEventListener("DOMContentLoaded", () => {
           "Unable to create account."
         );
       }
-
 
       sessionStorage.removeItem(
         "findprof_registration"
@@ -791,33 +608,14 @@ document.addEventListener("DOMContentLoaded", () => {
         "student_account_verified"
       );
 
-      sessionStorage.removeItem(
-        "accountVerified"
-      );
-
-      sessionStorage.removeItem(
-        "accountVerificationToken"
-      );
-
-      sessionStorage.removeItem(
-        "accountVerificationEmail"
-      );
-
-      sessionStorage.removeItem(
-        "accountVerificationRole"
-      );
-
-
       successMessage.hidden = false;
-
 
       window.setTimeout(() => {
 
         window.location.href =
-          "student-login.html";
+          "login.html";
 
       }, 1200);
-
 
     } catch (error) {
 
@@ -828,11 +626,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
   });
-
-
-  // =========================================================
-  // BACK BUTTON
-  // =========================================================
 
   document
     .querySelectorAll('[data-nav="back"]')
@@ -853,11 +646,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     });
 
-
-  // =========================================================
-  // LOGIN LINK
-  // =========================================================
-
   document
     .querySelectorAll('[data-nav="login"]')
     .forEach((link) => {
@@ -871,19 +659,16 @@ document.addEventListener("DOMContentLoaded", () => {
           saveInformation();
 
           window.location.href =
-            "student-login.html";
+            "login.html";
         }
       );
 
     });
 
-
-  // =========================================================
-  // INITIALIZE
-  // =========================================================
-
   loadSavedInformation();
 
   updateVerificationButton();
+
+  updatePasswordRequirements();
 
 });

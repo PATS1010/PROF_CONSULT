@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--= Login  -->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prof Consult | Login</title>
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+  <div class="page-background" aria-hidden="true">
+    <img src="images/coea.jpg" alt="" class="page-background-image">
+    <div class="page-background-overlay"></div>
+  </div>
+
+  <a href="landingpage.html" class="back-button" id="backButton" data-nav="back">
+    <span aria-hidden="true">&larr;</span> Back
+  </a>
+
+  <main class="login-page">
+
+    <section class="branding-section">
+      <p class="welcome-text">Welcome to</p>
+      <img src="images/prof-consult-logo.png" alt="Prof Consult Logo" class="branding-logo">
+    </section>
+
+    <section class="login-card">
+
+      <h1 class="format-text login-title">Login</h1>
+
+      <form class="login-form" id="loginForm">
+
+        <label for="loginIdentifier" class="visually-hidden">Email or ID Number</label>
+        <input
+          type="text"
+          id="loginIdentifier"
+          name="identifier"
+          class="login-input"
+          placeholder="Email or ID Number"
+          autocomplete="username"
+          required
+        >
+
+        <p class="field-message field-message-error" id="identifierFormatError" hidden>
+          ID Number must be in the format 00-00000.
+        </p>
+
+        <label for="loginPassword" class="visually-hidden">Password</label>
+        <div class="password-input-group">
+          <input
+            type="password"
+            id="loginPassword"
+            name="password"
+            class="login-input password-input"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+          >
+          <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password" data-target="loginPassword">
+            Show
+          </button>
+        </div>
+
+        <p class="field-message field-message-error" id="loginError" hidden>
+          Incorrect email/ID number or password.
+        </p>
+
+        <div class="login-actions-row">
+          <button type="submit" class="login-button" id="loginButton">Login</button>
+          <a href="forgot-password.html" class="forgot-password-link" data-nav="forgot-password">
+            Forgot Password?
+          </a>
+        </div>
+
+        <label class="remember-me">
+          <input type="checkbox" id="rememberMe" name="rememberMe" class="remember-me-checkbox">
+          <span class="remember-me-circle" aria-hidden="true"></span>
+          Remember Me
+        </label>
+
+      </form>
+
+      <p class="create-account-text">
+        Don't have an account?
+      </p>
+
+      <p class="create-account-links">
+        <a href="create-student-account.html" class="create-account-link" data-nav="create-student-account">
+          Create Student Account
+        </a>
+        <a href="create-faculty-account.html" class="create-account-link" data-nav="create-faculty-account">
+          Create Faculty Account
+        </a>
+      </p>
+
+    </section>
+
+  </main>
+
+  <script src="js/login.js"></script>
+</body>
+</html>

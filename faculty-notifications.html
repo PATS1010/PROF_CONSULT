@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Faculty notifications  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,18 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Shared Faculty layout -->
+  <!-- Shared Faculty layout  -->
   <link rel="stylesheet" href="css/faculty-shared.css">
 
-  <!-- Notifications page styles -->
   <link rel="stylesheet" href="css/faculty-notifications.css">
 </head>
 
 <body data-active-page="notifications">
 
-  <!-- ==========================
-       TOP NAVIGATION BAR
-  =========================== -->
   <header class="faculty-navbar">
     <div class="faculty-navbar-left">
 
@@ -108,10 +105,6 @@
   </header>
 
 
-  <!-- ==========================
-       SIDEBAR
-  =========================== -->
-
   <div
     class="faculty-sidebar-overlay"
     id="facultySidebarOverlay"
@@ -193,7 +186,7 @@
       </a>
 
       <a
-        href="faculty-login.html"
+        href="login.html"
         class="faculty-sidebar-link"
         data-page="logout"
       >
@@ -204,10 +197,6 @@
 
   </aside>
 
-
-  <!-- ==========================
-       BACKGROUND
-  =========================== -->
 
   <div
     class="faculty-page-background"
@@ -224,10 +213,6 @@
 
   </div>
 
-
-  <!-- ==========================
-       NOTIFICATIONS CONTENT
-  =========================== -->
 
   <main class="faculty-main-content">
 
@@ -247,12 +232,6 @@
           class="notifications-list"
           id="notificationsList"
         >
-          <!--
-            Notifications are rendered by faculty-notifications.js.
-
-            Test-account notifications are displayed only when
-            the TEST_FACULTY_ACCOUNT flag is enabled.
-          -->
         </ul>
 
         <p
@@ -270,10 +249,8 @@
   </main>
 
 
-  <!-- Shared Faculty layout behavior -->
   <script src="js/faculty-shared.js"></script>
 
-  <!-- Page-specific behavior -->
   <script src="js/faculty-notifications.js"></script>
 
 </body>

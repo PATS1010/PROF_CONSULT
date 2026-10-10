@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- SYSTEM NOTE: Defines the landingpage page structure used by the Prof Consult web app. -->
+<!-- Landing page  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -12,20 +12,10 @@
 </head>
 <body>
 
-  <!-- =========================================================
-       NAVIGATION BAR
-       Fixed, logo on the left, menu on the right.
-       Home -> index.html (splash screen)
-       About -> smooth-scroll to Rectangle 2 (#why-choose)
-       Contact -> smooth-scroll to Rectangle 5 (#contact), which
-                  doesn't exist yet -- left wired up on purpose,
-                  the JS safely no-ops until that section is added
-       Login -> choose-account.html
-  ========================================================= -->
   <header class="navbar">
-    <div class="navbar-logo">
+    <a href="index.html" class="navbar-logo" data-nav="home" aria-label="Go to home">
       <img src="images/prof-consult-logo.png" alt="Prof Consult Logo">
-    </div>
+    </a>
 
     <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false">
       <span></span>
@@ -37,17 +27,12 @@
       <a href="index.html" data-nav="home">Home</a>
       <a href="#why-choose" data-nav="scroll">About</a>
       <a href="#contact" data-nav="scroll">Contact</a>
-      <a href="choose-account.html" data-nav="login">Login</a>
+      <a href="login.html" data-nav="login">Login</a>
     </nav>
   </header>
 
   <main class="landing-main">
 
-    <!-- =========================================================
-         RECTANGLE 1: HERO
-         Same background treatment as the splash screen: blurred
-         image + orange (top-left) / yellow (bottom-right) glow
-    ========================================================= -->
     <section class="hero" id="hero">
 
       <img src="images/coea.jpg" alt="" class="hero-background" aria-hidden="true">
@@ -64,18 +49,13 @@
         </p>
 
         <div class="hero-buttons">
-          <a href="choose-account.html" class="btn btn-login" data-nav="login">Login</a>
+          <a href="choose-account.html" class="btn btn-login" data-nav="register">Register</a>
           <a href="#why-choose" class="btn btn-learn-more" data-nav="scroll">Learn More</a>
         </div>
       </div>
 
     </section>
 
-    <!-- =========================================================
-         RECTANGLE 2: WHY CHOOSE PROFCONSULT?
-         Deep maroon/red gradient with a faint background image
-         placeholder visible underneath; three feature cards
-    ========================================================= -->
     <section class="why-choose" id="why-choose">
 
       <img src="images/coea.jpg" alt="" class="why-choose-background" aria-hidden="true">
@@ -123,11 +103,6 @@
 
     </section>
 
-    <!-- =========================================================
-         RECTANGLE 3: HOW PROFCONSULT WORKS
-         Same background treatment as Rectangle 1; white rounded
-         container with the 5-step workflow diagram inside
-    ========================================================= -->
     <section class="how-it-works" id="how-it-works">
 
       <img src="images/coea.jpg" alt="" class="how-it-works-background" aria-hidden="true">
@@ -139,8 +114,6 @@
 
         <div class="diagram-card">
 
-          <!-- Uploadable placeholder -- replace images/how-it-works-diagram.png
-               with the real workflow diagram image later -->
           <img
             src="images/flow2.png"
             alt="How PROFCONSULT works diagram"
@@ -153,9 +126,29 @@
 
     </section>
 
-    <!-- =========================================================
-     RECTANGLE 4: WHO CAN USE THE SYSTEM?
-========================================================= -->
+    <section class="how-it-works" id="about-us">
+
+      <img src="images/coea.jpg" alt="" class="how-it-works-background" aria-hidden="true">
+      <div class="how-it-works-overlay" aria-hidden="true"></div>
+
+      <div class="how-it-works-content">
+
+        <h2 class="format-text how-it-works-title">About Us</h2>
+
+        <div class="diagram-card">
+
+          <img
+            src="images/members.png"
+            alt="About Us team"
+            class="diagram-placeholder-image"
+          >
+
+        </div>
+
+      </div>
+
+    </section>
+
 <section class="who-can-use" id="who-can-use">
 
   <img
@@ -171,7 +164,6 @@
 
     <div class="role-cards">
 
-      <!-- Replace images/coea.jpg with your Student image later -->
       <article class="role-card">
         <div class="role-card-image">
           <img src="images/coea.jpg" alt="Students">
@@ -186,7 +178,6 @@
         </ul>
       </article>
 
-      <!-- Replace images/gym.png with your Faculty image later -->
       <article class="role-card">
         <div class="role-card-image">
           <img src="images/gym.png" alt="Faculty">
@@ -205,11 +196,6 @@
   </div>
 </section>
 
-    <!-- =========================================================
-         RECTANGLE 5: READY TO GET STARTED? + CONTACT US + FOOTER
-         Same background treatment as Rectangle 1. Footer is
-         integrated into this same section (no separate 6th section).
-    ========================================================= -->
     <section class="get-started" id="contact">
 
       <img src="images/coea.jpg" alt="" class="get-started-background" aria-hidden="true">

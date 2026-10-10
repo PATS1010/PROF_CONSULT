@@ -1,9 +1,5 @@
-/* SYSTEM NOTE: Styles the create student account2 page so its layout, spacing, and visual states match the system design. */
+/* Create Student Account 2 */
 
-
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
 
 :root {
   --color-red-primary: #d81f26;
@@ -25,10 +21,6 @@
   --shadow-card: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
-
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 
 * {
   margin: 0;
@@ -63,10 +55,6 @@ button {
 }
 
 
-/* =========================================================
-   FORMATTEXT
-========================================================= */
-
 .format-text {
   font-family: 'Montserrat', sans-serif;
 
@@ -91,10 +79,6 @@ button {
   -webkit-text-fill-color: transparent;
 }
 
-
-/* =========================================================
-   BACKGROUND
-========================================================= */
 
 .page-background {
   position: fixed;
@@ -146,10 +130,6 @@ button {
 }
 
 
-/* =========================================================
-   BACK BUTTON
-========================================================= */
-
 .back-button {
   position: fixed;
 
@@ -197,10 +177,6 @@ button {
 }
 
 
-/* =========================================================
-   MAIN CONTAINER: REGISTRATION CARD
-========================================================= */
-
 .registration-card {
   position: relative;
 
@@ -240,10 +216,6 @@ button {
   margin-bottom: 32px;
 }
 
-
-/* =========================================================
-   FORM
-========================================================= */
 
 .registration-form {
   width: 100%;
@@ -316,10 +288,6 @@ button {
 }
 
 
-/* =========================================================
-   CUSTOM DROPDOWN
-========================================================= */
-
 .select-wrapper {
   position: relative;
 
@@ -364,10 +332,6 @@ button {
   pointer-events: none;
 }
 
-
-/* =========================================================
-   BUTTON
-========================================================= */
 
 .btn {
   display: inline-flex;
@@ -417,10 +381,6 @@ button {
 }
 
 
-/* =========================================================
-   VERIFY ACCOUNT BUTTON
-========================================================= */
-
 .verify-account-button {
   width: auto;
 
@@ -432,14 +392,10 @@ button {
 }
 
 
-/* =========================================================
-   DISABLED VERIFY ACCOUNT BUTTON
-========================================================= */
-
 .verify-account-button.disabled {
   opacity: 0.55;
 
-  cursor: pointer;
+  cursor: not-allowed;
 
   transform: none;
 
@@ -458,19 +414,6 @@ button {
     rgba(122, 16, 16, 0.25);
 }
 
-
-/* =========================================================
-   ACCOUNT VERIFIED BUTTON
-========================================================= */
-
-/*
-   JavaScript adds the "account-verified" class
-   after the verification page succeeds.
-
-   This selector is intentionally more specific than
-   ".btn" so the green background overrides the
-   default maroon button background.
-*/
 
 .verify-account-button.account-verified {
   background-color: var(--color-green-verified) !important;
@@ -505,10 +448,6 @@ button {
 }
 
 
-/* =========================================================
-   FIELD VALIDATION / SUCCESS MESSAGES
-========================================================= */
-
 .field-message {
   width: 100%;
 
@@ -534,10 +473,6 @@ button {
 }
 
 
-/* =========================================================
-   MOBILE NUMBER FIELD
-========================================================= */
-
 .mobile-input-group {
   position: relative;
 
@@ -553,8 +488,6 @@ button {
 }
 
 
-/* Focus ring around entire mobile field */
-
 .mobile-input-group:focus-within {
   outline:
     2px solid
@@ -563,8 +496,6 @@ button {
   outline-offset: 2px;
 }
 
-
-/* +63 PREFIX */
 
 .mobile-prefix {
   position: absolute;
@@ -599,8 +530,6 @@ button {
 }
 
 
-/* Divider */
-
 .mobile-prefix::after {
   content: "";
 
@@ -620,8 +549,6 @@ button {
     translateY(-50%);
 }
 
-
-/* Mobile input */
 
 .mobile-input {
   position: relative;
@@ -657,10 +584,6 @@ button {
   outline: none;
 }
 
-
-/* =========================================================
-   PASSWORD FIELDS
-========================================================= */
 
 .password-input-group {
   position: relative;
@@ -705,10 +628,6 @@ button {
 }
 
 
-/* =========================================================
-   PASSWORD REQUIREMENTS
-========================================================= */
-
 .password-requirements {
   width: 100%;
 
@@ -725,12 +644,15 @@ button {
   color: var(--color-text-muted);
 
   line-height: 1.6;
+
+  transition: color 0.2s ease;
 }
 
+.password-requirements li.requirement-met {
+  color: #1e8a4c;
+  font-weight: 600;
+}
 
-/* =========================================================
-   TERMS AND CONDITIONS CHECKBOX
-========================================================= */
 
 .terms-checkbox {
   display: inline-flex;
@@ -753,15 +675,7 @@ button {
 
   margin:
     6px 0
-    8px;
-}
-
-.terms-error {
-  width: 100%;
-
-  text-align: center;
-
-  margin-bottom: 18px;
+    24px;
 }
 
 .terms-checkbox-input {
@@ -836,10 +750,6 @@ button {
 }
 
 
-/* =========================================================
-   LOGIN LINK
-========================================================= */
-
 .login-text {
   width: 100%;
 
@@ -866,10 +776,6 @@ button {
   color: var(--color-red-primary);
 }
 
-
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 
 @media (max-width: 768px) {
 

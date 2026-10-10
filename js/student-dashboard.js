@@ -1,93 +1,45 @@
-// SYSTEM NOTE: Controls client-side behavior for the student dashboard page, including UI events and API calls.
-// =========================================================
-// STUDENT DASHBOARD INTERACTIONS
-// - Populates the greeting from the logged-in student session
-// - Live Philippine date and time, updated every second
-// - Burger menu: slide-in sidebar with dim/blur overlay
-// - Quick Action: fade/slide popup with Find Faculty and
-//   Request Consultation actions
-// - Notification bell: navigates to notifications.html
-// - Search Professor: real-time, case-insensitive, partial-match
-//   filtering, combined with an optional status filter, with a
-//   shared empty state when nothing matches
-// =========================================================
-
+// Student Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const dashboardGreetingEl = document.getElementById("dashboardGreeting");
-  const studentGreetingEl = document.getElementById("studentFirstName");
+  const SAMPLE_STUDENT = {
+    studentId: "24-00001",
+    program: "BSCPE (Computer Engineering)",
+    yearLevel: "3rd Year",
+  };
 
-  function cachedStudentNotificationSettings() {
+  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
+
+  const DEFAULT_STUDENT_NAME = {
+    firstName: "John",
+    middleInitial: "D",
+    lastName: "Cruz",
+  };
+
+  function loadStudentName() {
     try {
-      const parsed = JSON.parse(localStorage.getItem("profconsult_student_settings") || "{}");
-      return {
-        pushNotifications: typeof parsed.pushNotifications === "boolean" ? parsed.pushNotifications : true,
-      };
-    } catch (error) {
-      return { pushNotifications: true };
-    }
-  }
-
-  async function studentNotificationSettings() {
-    try {
-      const response = await fetch("api/notification-settings.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-      if (!response.ok || !result.ok) {
-        throw new Error();
-      }
-
-      const settings = {
-        emailNotifications: !!result.settings.email_notifications,
-        pushNotifications: !!result.settings.push_notifications,
-      };
-      localStorage.setItem("profconsult_student_settings", JSON.stringify(settings));
-      return settings;
-    } catch (error) {
-      return cachedStudentNotificationSettings();
-    }
-  }
-
-  function firstNameFromFullName(fullName) {
-    return String(fullName || "").trim().split(/\s+/)[0] || "Student";
-  }
-
-  async function loadCurrentStudent() {
-    try {
-      const response = await fetch("api/session.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const data = await response.json();
-
-      if (!response.ok || !data.ok || !data.user || data.user.role !== "student") {
-        throw new Error("Student session unavailable");
-      }
-
-      if (studentGreetingEl) {
-        studentGreetingEl.textContent = firstNameFromFullName(data.user.name);
-      }
-      if (dashboardGreetingEl) {
-        dashboardGreetingEl.hidden = false;
+      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === "object") {
+          return {
+            firstName: parsed.firstName || "",
+            middleInitial: parsed.middleInitial || "",
+            lastName: parsed.lastName || "",
+          };
+        }
       }
     } catch (error) {
-      window.location.href = "student-login.html";
     }
+    return { ...DEFAULT_STUDENT_NAME };
   }
 
-  loadCurrentStudent();
+  const studentName = loadStudentName();
 
-  // ---------------------------------------------------------
-  // Live Philippine date and time, directly below the greeting.
-  // Uses Intl.DateTimeFormat with the Asia/Manila timezone so
-  // it always reflects Philippine time regardless of the
-  // visitor's own device timezone, and re-renders every second
-  // via setInterval so it stays live without a page refresh.
-  // ---------------------------------------------------------
+  const firstNameEl = document.getElementById("studentFirstName");
+  if (firstNameEl) {
+    firstNameEl.textContent = studentName.firstName;
+  }
+
   const dashboardDateTimeEl = document.getElementById("dashboardDateTime");
 
   if (dashboardDateTimeEl) {
@@ -104,9 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     function renderPhilippineDateTime() {
-      // Intl.DateTimeFormat.formatToParts lets us control spacing/
-      // punctuation exactly (e.g. "June 22, 2026 9:56:03 PM")
-      // instead of depending on the locale's default separators.
       const parts = philippineDateTimeFormatter.formatToParts(new Date());
       const get = (type) => {
         const part = parts.find((p) => p.type === type);
@@ -130,11 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(renderPhilippineDateTime, 1000);
   }
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // dashboard behind it. Closes via the X button or clicking
-  // the overlay outside the sidebar.
-  // ---------------------------------------------------------
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -143,8 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     sidebar.classList.add("is-open");
     sidebarOverlay.hidden = false;
-    // Let the browser paint `hidden` removal first so the
-    // opacity transition on the overlay actually animates in
     requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
   }
 
@@ -153,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.classList.remove("is-open");
     window.setTimeout(() => {
       sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
+    }, 250);
   }
 
   if (hamburgerButton) {
@@ -166,10 +108,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // Closes when clicking its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -184,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quickActionButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (quickActionButton) {
@@ -199,41 +137,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function openQuickActionAfterLoginWhenEnabled() {
-    if (sessionStorage.getItem("profConsultStudentJustLoggedIn") !== "1") return;
-
-    sessionStorage.removeItem("profConsultStudentJustLoggedIn");
-
-    window.setTimeout(async () => {
-      const settings = await studentNotificationSettings();
-      if (settings.pushNotifications && quickActionPanel && quickActionButton) {
-        openQuickAction();
-      }
-    }, 3000);
-  }
-
-  openQuickActionAfterLoginWhenEnabled();
-
-  
-
-  // ---------------------------------------------------------
-  // Notification bell -- navigates to notifications.html.
-  // TEST/DEMO ONLY: no real notification data or backend yet,
-  // this just routes the whole button (not only the image) to
-  // the Notifications page.
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
       window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
-  // ---------------------------------------------------------
-  // Status Filter popup: fades/slides in below the filter icon
-  // at the right edge of the search bar. Closes when clicking
-  // its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const filterButton = document.getElementById("filterButton");
   const filterPanel = document.getElementById("filterPanel");
   const filterOptions = filterPanel
@@ -251,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     filterButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       filterPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (filterButton) {
@@ -266,8 +179,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Close the Quick Action popup and/or the Filter popup when
-  // clicking anywhere outside of them
   document.addEventListener("click", (event) => {
     if (
       quickActionPanel &&
@@ -289,186 +200,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // ---------------------------------------------------------
-  // Search Professor + Status Filter: the cards are loaded from
-  // the real faculty accounts returned by api/faculty-directory.php.
-  // ---------------------------------------------------------
   const searchInput = document.getElementById("professorSearchInput");
-  const professorList = document.getElementById("professorList");
-  const availabilityList = document.getElementById("availabilityList");
-  const notificationsList = document.getElementById("notificationsList");
+  const professorCards = Array.from(document.querySelectorAll(".professor-card"));
   const noResultsMessage = document.getElementById("noResultsMessage");
-  const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
   let activeStatus = null;
-  let facultyDirectoryData = [];
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      "\"": "&quot;",
-      "'": "&#039;",
-    }[character]));
-  }
-
-  function normalizeStatus(value) {
-    const normalized = String(value || "offline").trim().toLowerCase();
-    const map = {
-      "available": "available",
-      "in class": "teaching",
-      "teaching": "teaching",
-      "meeting": "meeting",
-      "consultation": "consultation",
-      "on leave": "onleave",
-      "onleave": "onleave",
-      "unavailable": "offline",
-      "offline": "offline",
-    };
-
-    return map[normalized] || "offline";
-  }
-
-  function statusLabel(status) {
-    const labels = {
-      available: "Available",
-      teaching: "Teaching Class",
-      meeting: "Meeting",
-      consultation: "Consultation",
-      onleave: "On Leave",
-      offline: "Offline",
-    };
-
-    return labels[status] || "Offline";
-  }
-
-  function displayName(userName) {
-    const name = String(userName || "Unnamed Faculty").trim();
-    return /^engr\./i.test(name) ? name : `Engr. ${name}`;
-  }
-
-  function facultyFromApi(row) {
-    const status = normalizeStatus(row.Current_Status);
-    const profilePhoto = String(row.Profile_Photo || row.profile_photo || "").trim();
-
-    return {
-      id: String(row.Faculty_ID),
-      fullName: displayName(row.Full_Name),
-      department: row.Department || "Department not set",
-      office: row.Office || "Office not set",
-      status,
-      statusLabel: statusLabel(status),
-      photo: profilePhoto || "images/user1.png",
-    };
-  }
-
-  function renderEmpty(message) {
-    if (professorList) professorList.innerHTML = "";
-    if (availabilityList) availabilityList.innerHTML = `<li>${message}</li>`;
-    if (noResultsMessage) {
-      noResultsMessage.textContent = message;
-      noResultsMessage.hidden = false;
-    }
-  }
-
-  function renderFacultyCards() {
-    if (!professorList) return;
-
-    professorList.innerHTML = facultyDirectoryData.map((faculty) => `
-      <article class="professor-card" data-status="${escapeHtml(faculty.status)}" data-faculty-id="${escapeHtml(faculty.id)}">
-        <img src="${escapeHtml(faculty.photo)}" alt="${escapeHtml(faculty.fullName)}" class="professor-photo">
-        <div class="professor-info">
-          <p class="professor-name">${escapeHtml(faculty.fullName)}</p>
-          <p class="professor-meta">${escapeHtml(faculty.department)} | ${escapeHtml(faculty.statusLabel)}</p>
-        </div>
-        <span class="status-dot status-${escapeHtml(faculty.status)}" aria-hidden="true"></span>
-      </article>
-    `).join("");
-  }
-
-  function openFacultyFromDashboard(facultyId) {
-    const faculty = facultyDirectoryData.find((item) => item.id === facultyId);
-    if (!faculty) return;
-
-    try {
-      sessionStorage.setItem(SELECTED_FACULTY_STORAGE_KEY, JSON.stringify({
-        ...faculty,
-        program: faculty.department,
-      }));
-    } catch (error) {
-      // The query string still carries the numeric Faculty_ID as fallback.
-    }
-
-    window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(faculty.id)}`;
-  }
-
-  function renderAvailability() {
-    if (!availabilityList) return;
-
-    availabilityList.innerHTML = facultyDirectoryData.map((faculty) => `
-      <li>
-        <span class="status-dot status-${escapeHtml(faculty.status)}" aria-hidden="true"></span>
-        ${escapeHtml(faculty.fullName)} | ${escapeHtml(faculty.statusLabel)}
-      </li>
-    `).join("");
-  }
-
-  function renderNotifications(notifications) {
-    if (!notificationsList) return;
-
-    notificationsList.innerHTML = "";
-
-    if (notifications.length === 0) {
-      notificationsList.innerHTML = "<li>No notifications yet.</li>";
-      return;
-    }
-
-    notifications.slice(0, 3).forEach((notification) => {
-      notificationsList.innerHTML += `
-        <li>
-          <span class="notification-check" aria-hidden="true">&check;</span>
-          ${escapeHtml(notification.Message || "")}
-        </li>
-      `;
-    });
-  }
-
-  async function loadNotifications() {
-    if (!notificationsList) return;
-
-    notificationsList.innerHTML = "<li>Loading notifications...</li>";
-
-    try {
-      const response = await fetch("api/notifications.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
-
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load notifications.");
-      }
-
-      renderNotifications(result.notifications || []);
-    } catch (error) {
-      notificationsList.innerHTML = `<li>${escapeHtml(error.message || "Unable to load notifications.")}</li>`;
-    }
-  }
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
-    const professorCards = professorList
-      ? Array.from(professorList.querySelectorAll(".professor-card"))
-      : [];
     let visibleCount = 0;
 
     professorCards.forEach((card) => {
       const name = card.querySelector(".professor-name").textContent.toLowerCase();
-      const meta = card.querySelector(".professor-meta").textContent.toLowerCase();
       const status = card.dataset.status || "";
-      const matchesSearch = query === "" || name.includes(query) || meta.includes(query);
+      const matchesSearch = query === "" || name.includes(query);
       const matchesStatus = !activeStatus || status === activeStatus;
       const matches = matchesSearch && matchesStatus;
 
@@ -477,52 +222,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (noResultsMessage) {
-      noResultsMessage.textContent = "No faculty members match your search or selected status.";
       noResultsMessage.hidden = visibleCount > 0;
-    }
-  }
-
-  async function loadFacultyDirectory(showLoading = false) {
-    if (showLoading) {
-      renderEmpty("Loading faculty...");
-    }
-
-    try {
-      const response = await fetch("api/faculty-directory.php", { cache: "no-store" });
-      const result = await response.json();
-
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load faculty directory.");
-      }
-
-      facultyDirectoryData = (result.faculty || []).map(facultyFromApi);
-
-      if (facultyDirectoryData.length === 0) {
-        renderEmpty("No faculty accounts have been created yet.");
-        return;
-      }
-
-      renderFacultyCards();
-      renderAvailability();
-      applyFilters();
-    } catch (error) {
-      if (showLoading || facultyDirectoryData.length === 0) {
-        renderEmpty(error.message || "Unable to load faculty directory.");
-      }
     }
   }
 
   if (searchInput) {
     searchInput.addEventListener("input", applyFilters);
-  }
-
-  if (professorList) {
-    professorList.addEventListener("click", (event) => {
-      const card = event.target.closest(".professor-card");
-      if (!card || card.hidden) return;
-
-      openFacultyFromDashboard(card.dataset.facultyId);
-    });
   }
 
   filterOptions.forEach((option) => {
@@ -531,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const status = option.dataset.status;
 
       if (activeStatus === status) {
-        // Clicking the already-active filter clears it
         activeStatus = null;
         option.classList.remove("is-active");
       } else {
@@ -544,17 +248,252 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  loadFacultyDirectory(true);
-  loadNotifications();
+  professorCards.forEach((card) => {
+    const facultyId = card.dataset.facultyId;
+    if (!facultyId) return;
 
-  window.setInterval(() => {
-    loadFacultyDirectory(false);
-  }, 5000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      loadFacultyDirectory(false);
-      loadNotifications();
-    }
+    card.addEventListener("click", () => {
+      window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
+    });
   });
+
+  const RECENT_NOTIFICATIONS_LIMIT = 3;
+
+  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
+  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
+
+  function isSupportedNotificationRecord(record) {
+    return (
+      record &&
+      typeof record === "object" &&
+      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
+    );
+  }
+
+  function loadStoredNotificationRecords() {
+    try {
+      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (error) {
+    }
+    return [];
+  }
+
+  function getSampleNotificationRecords() {
+    const now = Date.now();
+    const MINUTE = 60 * 1000;
+    const DAY = 24 * 60 * MINUTE;
+
+    return [
+      {
+        id: "sample-1",
+        type: "accepted",
+        facultyName: "Engr. Sales",
+        createdAt: now - 2 * MINUTE,
+      },
+      {
+        id: "sample-2",
+        type: "rescheduled",
+        accepted: true,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - 90 * MINUTE,
+      },
+      {
+        id: "sample-3",
+        type: "rescheduled",
+        accepted: false,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - DAY,
+      },
+      {
+        id: "sample-4",
+        type: "declined",
+        facultyName: "Engr. Sales",
+        createdAt: now - 3 * DAY,
+      },
+    ];
+  }
+
+  const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function formatNotificationTimeAgo(createdAt) {
+    const created = Number(createdAt);
+    if (!Number.isFinite(created)) return "";
+
+    const now = Date.now();
+    const diffMinutes = Math.floor((now - created) / 60000);
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) {
+      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+    }
+
+    const createdDay = PH_DAY_KEY_FORMATTER.format(new Date(created));
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now))) {
+      return "Today";
+    }
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
+      return "Yesterday";
+    }
+    return PH_DATE_LABEL_FORMATTER.format(new Date(created));
+  }
+
+  function buildRecentNotificationRows(records) {
+    return records.filter(isSupportedNotificationRecord).map((record) => {
+      const message =
+        typeof window.formatStudentNotificationMessage === "function"
+          ? window.formatStudentNotificationMessage(record)
+          : (record.message || "");
+
+      const hasProfessorMessage =
+        record.type === "rescheduled" &&
+        typeof record.message === "string" &&
+        record.message.trim() !== "";
+
+      return {
+        message,
+        professorMessage: hasProfessorMessage ? record.message.trim() : "",
+        timestamp: formatNotificationTimeAgo(record.createdAt),
+      };
+    });
+  }
+
+  function renderRecentNotifications(notifications) {
+    const listEl = document.getElementById("notificationsList");
+    if (!listEl) return;
+
+    listEl.innerHTML = "";
+
+    if (notifications.length === 0) {
+      const emptyItem = document.createElement("li");
+      emptyItem.className = "no-notifications-message";
+      emptyItem.textContent = "You have no notifications yet.";
+      listEl.appendChild(emptyItem);
+      return;
+    }
+
+    notifications.forEach((notification) => {
+      const li = document.createElement("li");
+
+      const check = document.createElement("span");
+      check.className = "notification-check";
+      check.setAttribute("aria-hidden", "true");
+      check.innerHTML = "&check;";
+
+      const content = document.createElement("div");
+      content.className = "notification-content";
+
+      const message = document.createElement("p");
+      message.className = "notification-message";
+      message.textContent = notification.message;
+      content.appendChild(message);
+
+      if (notification.professorMessage) {
+        const professorMessage = document.createElement("p");
+        professorMessage.className = "notification-professor-message";
+        professorMessage.textContent = `Professor's message: ${notification.professorMessage}`;
+        content.appendChild(professorMessage);
+      }
+
+      if (notification.timestamp) {
+        const timestamp = document.createElement("p");
+        timestamp.className = "notification-timestamp";
+        timestamp.textContent = notification.timestamp;
+        content.appendChild(timestamp);
+      }
+
+      li.appendChild(check);
+      li.appendChild(content);
+      listEl.appendChild(li);
+    });
+  }
+
+  const storedNotificationRecords = loadStoredNotificationRecords()
+    .filter(isSupportedNotificationRecord)
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+
+  const allNotificationsInPageOrder = storedNotificationRecords.concat(getSampleNotificationRecords());
+
+  renderRecentNotifications(
+    buildRecentNotificationRows(allNotificationsInPageOrder.slice(0, RECENT_NOTIFICATIONS_LIMIT))
+  );
+
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
+
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
+  }
+
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
+
 });

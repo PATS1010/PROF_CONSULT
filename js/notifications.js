@@ -1,19 +1,10 @@
-// SYSTEM NOTE: Controls client-side behavior for the notifications page, including UI events and API calls.
-// =========================================================
-// NOTIFICATIONS PAGE INTERACTIONS
-// - Burger menu + Quick Action: copied verbatim from the
-//   proven-working Student Dashboard implementation
-// - Notification bell: keeps the user on notifications.html
-// - Renders database-backed notifications, newest first.
-// =========================================================
-
+// Notifications JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Burger sidebar: slides in from the left, dims/blurs the
-  // dashboard behind it. Closes via the X button or clicking
-  // the overlay outside the sidebar.
-  // ---------------------------------------------------------
+  if (window.ProfConsultNotifications) {
+    window.ProfConsultNotifications.markRead();
+  }
+
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
@@ -22,8 +13,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSidebar() {
     sidebar.classList.add("is-open");
     sidebarOverlay.hidden = false;
-    // Let the browser paint `hidden` removal first so the
-    // opacity transition on the overlay actually animates in
     requestAnimationFrame(() => sidebarOverlay.classList.add("is-open"));
   }
 
@@ -32,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.classList.remove("is-open");
     window.setTimeout(() => {
       sidebarOverlay.hidden = true;
-    }, 250); // matches the overlay's CSS transition duration
+    }, 250);
   }
 
   if (hamburgerButton) {
@@ -45,10 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  // ---------------------------------------------------------
-  // Quick Action popup: fades/slides in below its trigger icon.
-  // Closes when clicking its trigger again or anywhere outside.
-  // ---------------------------------------------------------
   const quickActionButton = document.getElementById("quickActionButton");
   const quickActionPanel = document.getElementById("quickActionPanel");
 
@@ -63,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
     quickActionButton.setAttribute("aria-expanded", "false");
     window.setTimeout(() => {
       quickActionPanel.hidden = true;
-    }, 200); // matches the panel's CSS transition duration
+    }, 200);
   }
 
   if (quickActionButton) {
@@ -89,38 +74,131 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
-
-  // ---------------------------------------------------------
-  // Notification bell
-  // ---------------------------------------------------------
   const notificationBellButton = document.getElementById("notificationBellButton");
   if (notificationBellButton) {
     notificationBellButton.addEventListener("click", () => {
-      window.location.href = "notifications.html";
     });
+    if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications.renderBellIndicator(notificationBellButton);
+    }
   }
 
-  // ---------------------------------------------------------
-  // Notifications list
-  // ---------------------------------------------------------
-  function formatTimestamp(value) {
-    if (!value) return "";
-    const timestamp = String(value).trim();
-    const normalized = timestamp
-      .replace(" ", "T")
-      .replace(/(\.\d{3})\d+/, "$1");
-    const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
-    const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
-    if (Number.isNaN(date.getTime())) return value;
+  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
 
-    return date.toLocaleString("en-US", {
-      timeZone: "Asia/Manila",
-      month: "long",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
+  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
+
+  function isSupportedRecord(record) {
+    return (
+      record &&
+      typeof record === "object" &&
+      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
+    );
+  }
+
+  function loadStoredRecords() {
+    try {
+      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch (error) {
+    }
+    return [];
+  }
+
+  function getSampleRecords() {
+    const now = Date.now();
+    const MINUTE = 60 * 1000;
+    const DAY = 24 * 60 * MINUTE;
+
+    return [
+      {
+        id: "sample-1",
+        type: "accepted",
+        facultyName: "Engr. Sales",
+        createdAt: now - 2 * MINUTE,
+      },
+      {
+        id: "sample-2",
+        type: "rescheduled",
+        accepted: true,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - 90 * MINUTE,
+      },
+      {
+        id: "sample-3",
+        type: "rescheduled",
+        accepted: false,
+        facultyName: "Engr. Sales",
+        dateISO: "2026-09-19",
+        timeLabel: "3:00 PM - 3:30 PM",
+        createdAt: now - DAY,
+      },
+      {
+        id: "sample-4",
+        type: "declined",
+        facultyName: "Engr. Sales",
+        createdAt: now - 3 * DAY,
+      },
+    ];
+  }
+
+  const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function formatTimeAgo(createdAt) {
+    const created = Number(createdAt);
+    if (!Number.isFinite(created)) return "";
+
+    const now = Date.now();
+    const diffMinutes = Math.floor((now - created) / 60000);
+
+    if (diffMinutes < 1) return "Just now";
+    if (diffMinutes < 60) {
+      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
+    }
+
+    const createdDay = PH_DAY_KEY_FORMATTER.format(new Date(created));
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now))) {
+      return "Today";
+    }
+    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
+      return "Yesterday";
+    }
+    return PH_DATE_LABEL_FORMATTER.format(new Date(created));
+  }
+
+  function buildNotificationRows(records) {
+    return records.filter(isSupportedRecord).map((record) => {
+      const message =
+        typeof window.formatStudentNotificationMessage === "function"
+          ? window.formatStudentNotificationMessage(record)
+          : (record.message || "");
+
+      const hasProfessorMessage =
+        record.type === "rescheduled" &&
+        typeof record.message === "string" &&
+        record.message.trim() !== "";
+
+      return {
+        message,
+        professorMessage: hasProfessorMessage ? record.message.trim() : "",
+        timestamp: formatTimeAgo(record.createdAt),
+      };
     });
   }
 
@@ -129,14 +207,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!listEl) return;
 
     listEl.innerHTML = "";
-
-    if (notifications.length === 0) {
-      const li = document.createElement("li");
-      li.className = "notification-item";
-      li.textContent = "No notifications yet.";
-      listEl.appendChild(li);
-      return;
-    }
 
     notifications.forEach((notification) => {
       const li = document.createElement("li");
@@ -155,6 +225,13 @@ document.addEventListener("DOMContentLoaded", () => {
       message.textContent = notification.message;
       content.appendChild(message);
 
+      if (notification.professorMessage) {
+        const professorMessage = document.createElement("p");
+        professorMessage.className = "notification-professor-message";
+        professorMessage.textContent = `Professor's message: ${notification.professorMessage}`;
+        content.appendChild(professorMessage);
+      }
+
       if (notification.timestamp) {
         const timestamp = document.createElement("p");
         timestamp.className = "notification-timestamp";
@@ -168,50 +245,71 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function loadNotifications() {
-    try {
-      const response = await fetch("api/notifications.php?role=student", {
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: { "Accept": "application/json" },
-      });
-      const result = await response.json();
+  const storedRecords = loadStoredRecords()
+    .filter(isSupportedRecord)
+    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
 
-      if (!response.ok || !result.ok) {
-        throw new Error(result.message || "Unable to load notifications.");
-      }
+  renderNotifications(
+    buildNotificationRows(storedRecords.concat(getSampleRecords()))
+  );
 
-      renderNotifications((result.notifications || []).map((notification) => ({
-        id: Number(notification.Notification_ID || 0),
-        message: notification.Message || "",
-        timestamp: formatTimestamp(notification.Date_Time),
-        readStatus: notification.Read_Status || "read",
-      })));
+});
+// Logout confirmation modal
+document.addEventListener("DOMContentLoaded", () => {
 
-      const hasUnread = (result.notifications || []).some((notification) => {
-        return notification.Read_Status === "unread";
-      });
-      if (hasUnread) {
-        const markReadResponse = await fetch("api/notifications.php", {
-          method: "POST",
-          cache: "no-store",
-          credentials: "same-origin",
-          headers: {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ role: "student", mark_all: true }),
-        });
-        if (markReadResponse.ok && typeof window.setNotificationBellUnread === "function") {
-          window.setNotificationBellUnread(false);
-        }
-        window.dispatchEvent(new CustomEvent("notifications:changed"));
-      }
-    } catch (error) {
-      renderNotifications([{ message: error.message || "Unable to load notifications.", timestamp: "" }]);
-    }
+  const logoutLink = document.getElementById("logoutLink");
+  if (!logoutLink) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "pc-logout-overlay";
+  overlay.hidden = true;
+
+  overlay.innerHTML = `
+    <div class="pc-logout-modal" role="dialog" aria-modal="true" aria-label="Log out of your account?">
+      <div class="pc-logout-modal-header">
+        <button type="button" class="pc-logout-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="pc-logout-modal-body">
+        <p class="pc-logout-modal-title">Log out of your account?</p>
+        <div class="pc-logout-modal-actions">
+          <button type="button" class="pc-logout-cancel-button">Cancel</button>
+          <button type="button" class="pc-logout-yes-button">Yes</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  const closeButton = overlay.querySelector(".pc-logout-modal-close");
+  const cancelButton = overlay.querySelector(".pc-logout-cancel-button");
+  const yesButton = overlay.querySelector(".pc-logout-yes-button");
+
+  function openModal() {
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add("is-open"));
   }
 
-  loadNotifications();
+  function closeModal() {
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => {
+      overlay.hidden = true;
+    }, 200);
+  }
+
+  closeButton.addEventListener("click", closeModal);
+  cancelButton.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) closeModal();
+  });
+
+  yesButton.addEventListener("click", () => {
+    window.location.href = logoutLink.getAttribute("href") || "login.html";
+  });
+
+  logoutLink.addEventListener("click", (event) => {
+    event.preventDefault();
+    openModal();
+  });
 
 });

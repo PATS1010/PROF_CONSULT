@@ -1,7 +1,5 @@
-/* SYSTEM NOTE: Styles the verification code page so its layout, spacing, and visual states match the system design. */
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
+/* Verification Code */
+
 :root {
   --color-red-primary: #d81f26;
   --color-maroon-button: #7a1010;
@@ -18,9 +16,6 @@
   --shadow-card: 0 25px 60px rgba(0, 0, 0, 0.25);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -50,11 +45,6 @@ button {
   border: none;
 }
 
-/* =========================================================
-   FORMATTEXT
-   Reusable heading style. Montserrat ExtraBold + the
-   black-to-orange gradient used throughout the project.
-========================================================= */
 .format-text {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -74,11 +64,6 @@ button {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   BACKGROUND
-   Full-viewport blurred image with a dark-maroon-to-orange
-   gradient overlay, matching the Student Login page
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -110,10 +95,6 @@ button {
   opacity: 0.88;
 }
 
-/* =========================================================
-   BACK BUTTON
-   Same style used across the entire ProfConsult website
-========================================================= */
 .back-button {
   position: fixed;
   top: 32px;
@@ -140,9 +121,6 @@ button {
   transform: translateX(-2px);
 }
 
-/* =========================================================
-   MAIN CONTAINER: registration card
-========================================================= */
 .registration-card {
   position: relative;
   z-index: 5;
@@ -175,9 +153,6 @@ button {
   margin-bottom: 32px;
 }
 
-/* =========================================================
-   FORM
-========================================================= */
 .registration-form {
   width: 100%;
   display: flex;
@@ -222,9 +197,6 @@ button {
   outline-offset: 2px;
 }
 
-/* =========================================================
-   VERIFICATION CODE INPUTS
-========================================================= */
 .verification-label {
   font-size: 0.85rem;
   font-weight: 600;
@@ -261,9 +233,6 @@ button {
   background-color: #eeeeee;
 }
 
-/* =========================================================
-   RESEND CODE
-========================================================= */
 .resend-prompt {
   font-size: 0.8rem;
   color: var(--color-text-dark);
@@ -306,9 +275,6 @@ button {
   opacity: 0.85;
 }
 
-/* =========================================================
-   FIELD VALIDATION MESSAGE
-========================================================= */
 .field-message {
   width: 100%;
   font-size: 0.8rem;
@@ -320,9 +286,6 @@ button {
   color: #c0392b;
 }
 
-/* =========================================================
-   NEXT / VERIFY BUTTON
-========================================================= */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -349,9 +312,6 @@ button {
   margin-top: 4px;
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 768px) {
   .registration-card {
     margin: 100px 20px 40px;

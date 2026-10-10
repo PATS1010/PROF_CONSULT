@@ -1,17 +1,5 @@
-/* =========================================================
-   STUDENT-SHARED.CSS
-   Shared styles for every Student-side page: top navbar,
-   burger sidebar, background, Quick Action popup, search bar
-   + status filter popup, and status-dot colors.
+/* Faculty Directory */
 
-   Page-specific files (e.g. faculty-directory.css) should NOT
-   redefine any of the selectors below -- they should only add
-   new, page-specific classes.
-========================================================= */
-
-/* =========================================================
-   CSS VARIABLES
-========================================================= */
 :root {
   --color-red-primary: #d81f26;
   --color-red-dark: #7a1414;
@@ -38,9 +26,6 @@
   --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* =========================================================
-   RESET / BASE STYLES
-========================================================= */
 * {
   margin: 0;
   padding: 0;
@@ -73,11 +58,6 @@ input {
   font-family: inherit;
 }
 
-/* =========================================================
-   FORMAT-TEXT
-   Reusable heading style: solid black fading into the brand
-   orange, used on every major page heading site-wide.
-========================================================= */
 .format-text {
   display: inline-block;
   max-width: 100%;
@@ -98,9 +78,6 @@ input {
   -webkit-text-fill-color: transparent;
 }
 
-/* =========================================================
-   TOP NAVIGATION BAR
-========================================================= */
 .dashboard-navbar {
   position: sticky;
   top: 0;
@@ -122,6 +99,27 @@ input {
 .navbar-logo {
   height: 38px;
   width: auto;
+}
+
+.navbar-logo-link,
+.sidebar-logo-link {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.navbar-logo-link:hover,
+.sidebar-logo-link:hover {
+  opacity: 0.85;
+  transform: scale(1.04);
+}
+
+.navbar-logo-link:focus-visible,
+.sidebar-logo-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
 }
 
 .nav-icon-button {
@@ -151,7 +149,6 @@ input {
   gap: 12px;
 }
 
-/* Notification bell + Quick Action sit side by side, same pill style */
 .notification-bell-button,
 .notification-button {
   width: 40px;
@@ -179,9 +176,6 @@ input {
   object-fit: contain;
 }
 
-/* =========================================================
-   QUICK ACTION POPUP
-========================================================= */
 .quick-action-panel {
   position: absolute;
   top: calc(100% + 14px);
@@ -282,9 +276,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   BURGER SIDEBAR
-========================================================= */
 .sidebar-overlay {
   position: fixed;
   inset: 0;
@@ -367,9 +358,6 @@ input {
   color: #ffffff;
 }
 
-/* =========================================================
-   BACKGROUND
-========================================================= */
 .page-background {
   position: fixed;
   top: 0;
@@ -400,11 +388,6 @@ input {
   background-color: rgba(255, 255, 255, 0.86);
 }
 
-/* =========================================================
-   SEARCH BAR + STATUS FILTER POPUP
-   Reused on Student Dashboard, Faculty Directory, and any
-   future page that needs a search + status filter.
-========================================================= */
 .search-bar {
   position: relative;
   width: 100%;
@@ -515,9 +498,6 @@ input {
   color: #ffffff;
 }
 
-/* =========================================================
-   STATUS DOTS
-========================================================= */
 .status-dot {
   flex-shrink: 0;
   width: 10px;
@@ -532,9 +512,6 @@ input {
 .status-onleave { background-color: #e0405a; }
 .status-consultation { background-color: #8b3fd6; }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS -- shared elements only
-========================================================= */
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
@@ -577,25 +554,12 @@ input {
 }
 
 
-/* =========================================================
-   FACULTY-DIRECTORY.CSS
-   Page-specific styles only. Navbar, sidebar, background,
-   Quick Action, search bar, and filter popup all live above
-   in this same file -- do not redefine them elsewhere.
-========================================================= */
-
 .directory-content {
   padding: 48px 60px 60px;
   max-width: 1400px;
   margin: 0 auto;
 }
 
-/* =========================================================
-   CONTAINER
-   Centered single column by default. When a profile is open,
-   .is-split shifts the list panel left and reveals the
-   profile panel on the right.
-========================================================= */
 .directory-container {
   display: flex;
   align-items: flex-start;
@@ -629,9 +593,6 @@ input {
   align-self: flex-start;
 }
 
-/* =========================================================
-   HEADING
-========================================================= */
 .directory-heading {
   font-family: 'Montserrat', sans-serif;
   font-weight: 800;
@@ -646,14 +607,58 @@ input {
   max-width: 460px;
 }
 
-/* Center the search bar under the heading in the initial state */
 .directory-list-panel .search-bar {
   margin-bottom: 28px;
 }
 
-/* =========================================================
-   FACULTY LIST
-========================================================= */
+.directory-container.is-profile-view {
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.directory-container.is-profile-view .directory-list-panel,
+.directory-container.is-profile-view .directory-profile-panel {
+  flex: 0 0 auto;
+}
+
+.directory-container.is-profile-view .directory-list-panel .search-bar,
+.directory-container.is-profile-view .faculty-list-container {
+  display: none;
+}
+
+.directory-back-row {
+  width: 100%;
+  max-width: 460px;
+  margin-bottom: 14px;
+}
+
+.directory-back-row[hidden] {
+  display: none;
+}
+
+.directory-back-button {
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #7a0f0f 0%, #e8560f 100%);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(122, 15, 15, 0.25);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.directory-back-button:hover {
+  opacity: 0.92;
+  transform: translateY(-2px);
+}
+
+.directory-back-button:focus-visible {
+  outline: 2px solid #e8560f;
+  outline-offset: 2px;
+}
+
 .faculty-list-container {
   width: 100%;
   max-width: 460px;
@@ -683,9 +688,6 @@ input {
   color: #6b6b6b;
 }
 
-/* =========================================================
-   FACULTY CARD
-========================================================= */
 .faculty-card {
   position: relative;
   display: flex;
@@ -766,8 +768,6 @@ input {
   flex-shrink: 0;
 }
 
-/* "View Profile" button -- revealed on hover/focus, and always
-   shown (highlighted) on the currently selected card */
 .view-profile-button {
   flex-shrink: 0;
   display: inline-block;
@@ -793,8 +793,6 @@ input {
   pointer-events: auto;
 }
 
-/* On touch devices there's no hover -- keep the button visible
-   but smaller so cards stay usable without a pointer */
 @media (hover: none) {
   .view-profile-button {
     opacity: 1;
@@ -804,11 +802,6 @@ input {
   }
 }
 
-/* =========================================================
-   PROFILE PANEL
-   Hidden/off-canvas by default; slides + fades in from the
-   right when a faculty card's "View Profile" is clicked.
-========================================================= */
 .directory-profile-panel {
   flex: 1 1 460px;
   max-width: 460px;
@@ -848,7 +841,7 @@ input {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 4px;
+  margin-bottom: 24px;
 }
 
 .profile-status-label {
@@ -866,7 +859,7 @@ input {
 .profile-office {
   font-size: 0.82rem;
   color: #6b6b6b;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
 }
 
 .profile-section-title {
@@ -925,9 +918,6 @@ input {
   transform: translateY(-2px);
 }
 
-/* =========================================================
-   RESPONSIVE ADJUSTMENTS
-========================================================= */
 @media (max-width: 1024px) {
   .directory-container,
   .directory-container.is-split {
@@ -960,6 +950,10 @@ input {
   .directory-profile-panel.is-visible {
     transform: translateY(0);
   }
+
+  .directory-back-row {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -982,5 +976,144 @@ input {
 
   .directory-profile-panel {
     padding: 24px 20px;
+  }
+}
+/* Logout confirmation modal */
+.pc-logout-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: rgba(20, 10, 10, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.pc-logout-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pc-logout-modal {
+  width: 100%;
+  max-width: 400px;
+  background-color: #ffffff;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  transform: translateY(-12px);
+  transition: transform 0.2s ease;
+}
+
+.pc-logout-overlay.is-open .pc-logout-modal {
+  transform: translateY(0);
+}
+
+.pc-logout-modal-header {
+  position: relative;
+  height: 40px;
+  background-color: var(--color-red-primary);
+}
+
+.pc-logout-modal-close {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--color-text-light);
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+}
+
+.pc-logout-modal-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.pc-logout-modal-body {
+  padding: 34px 28px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 26px;
+}
+
+.pc-logout-modal-title {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  letter-spacing: 0.3px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--color-red-primary);
+}
+
+.pc-logout-modal-actions {
+  display: flex;
+  gap: 16px;
+}
+
+.pc-logout-cancel-button,
+.pc-logout-yes-button {
+  padding: 11px 32px;
+  border-radius: 999px;
+  color: var(--color-text-light);
+  font-size: 0.88rem;
+  font-weight: 700;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.pc-logout-cancel-button {
+  background-color: var(--color-gradient-end);
+}
+
+.pc-logout-yes-button {
+  background: linear-gradient(90deg, var(--color-gradient-start) 0%, var(--color-gradient-end) 100%);
+}
+
+.pc-logout-cancel-button:hover,
+.pc-logout-yes-button:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+@media (max-width: 480px) {
+  .pc-logout-modal {
+    max-width: 320px;
+  }
+
+  .pc-logout-modal-body {
+    padding: 28px 20px 26px;
+    gap: 22px;
+  }
+
+  .pc-logout-modal-title {
+    font-size: 1.05rem;
+  }
+
+  .pc-logout-modal-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .pc-logout-cancel-button,
+  .pc-logout-yes-button {
+    flex: 1 1 0;
+    padding: 11px 16px;
+    text-align: center;
   }
 }

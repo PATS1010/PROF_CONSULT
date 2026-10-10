@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Request submitted  -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -8,12 +9,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/request-submitted.css">
+  <link rel="stylesheet" href="css/student-notification-toast.css">
+  <script src="js/student-notification-toast.js"></script>
 </head>
 <body>
 
-  <!-- =========================================================
-       TOP NAVIGATION BAR -- identical to the Student Dashboard
-  ========================================================= -->
   <header class="dashboard-navbar">
     <div class="navbar-left">
       <button type="button" class="nav-icon-button hamburger-button" id="hamburgerButton" aria-label="Open menu">
@@ -21,21 +21,20 @@
         <span></span>
         <span></span>
       </button>
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+     <a href="student-dashboard.html" class="navbar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="navbar-logo">
+</a>
     </div>
 
     <div class="navbar-right">
-      <!-- Notification bell -- navigates to notifications.html -->
       <button type="button" class="nav-icon-button notification-bell-button" id="notificationBellButton" aria-label="Notifications">
         <img src="images/bell.png" alt="">
       </button>
 
-      <!-- Quick Action trigger -->
       <button type="button" class="nav-icon-button notification-button" id="quickActionButton" aria-haspopup="true" aria-expanded="false" aria-label="Quick actions">
         <img src="images/actionbutton.png" alt="">
       </button>
 
-      <!-- Quick Action popup: two actions, one shared "View Directory" button -->
       <div class="quick-action-panel" id="quickActionPanel" hidden>
         <div class="quick-action-header">
           <img src="images/redactionbutton.png" alt="" class="quick-action-icon">
@@ -58,14 +57,13 @@
     </div>
   </header>
 
-  <!-- =========================================================
-       BURGER SIDEBAR -- identical to the Student Dashboard
-  ========================================================= -->
   <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
 
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
-      <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+      <a href="student-dashboard.html" class="sidebar-logo-link" aria-label="Go to Dashboard">
+  <img src="images/whitepf.png" alt="Prof Consult Logo" class="sidebar-logo">
+</a>
       <button type="button" class="sidebar-close" id="sidebarClose" aria-label="Close menu">&times;</button>
     </div>
 
@@ -76,21 +74,15 @@
       <a href="notifications.html" class="sidebar-link">Notifications</a>
       <a href="student-profile.html" class="sidebar-link">Profile</a>
       <a href="settings.html" class="sidebar-link">Settings</a>
-      <a href="student-login.html" class="sidebar-link">Logout</a>
+      <a href="login.html" class="sidebar-link" id="logoutLink">Logout</a>
     </nav>
   </aside>
 
-  <!-- =========================================================
-       BACKGROUND -- identical to the Student Dashboard
-  ========================================================= -->
   <div class="page-background" aria-hidden="true">
     <img src="images/coea.jpg" alt="" class="page-background-image">
     <div class="page-background-overlay"></div>
   </div>
 
-  <!-- =========================================================
-       MAIN CONTENT
-  ========================================================= -->
   <main class="submitted-page">
 
     <img src="images/success-check-icon.png" alt="" class="success-icon">

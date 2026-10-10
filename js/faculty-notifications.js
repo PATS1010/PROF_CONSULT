@@ -1,166 +1,337 @@
-// SYSTEM NOTE: Controls client-side behavior for the faculty notifications page, using database-backed notifications.
+// Faculty Notifications JS
+const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
 
-function buildNotificationRow(notification) {
-  const li = document.createElement("li");
-  li.className = "notification-item";
-  li.dataset.id = String(notification.id || "");
-  li.dataset.href = notificationHref(notification.message);
-  li.tabIndex = 0;
-  li.setAttribute("role", "link");
+const NOTIFICATION_VIEW_TARGET_STORAGE_KEY = "profconsult_notification_view_target";
 
-  const icon = document.createElement("span");
-  icon.className = "notification-consultation-icon";
-  icon.setAttribute("aria-hidden", "true");
-  const gradientId = `facultyNotificationIconGradient-${String(notification.id || "item").replace(/\W/g, "")}`;
-  icon.innerHTML = `
-    <svg viewBox="0 0 32 32" focusable="false">
-      <defs>
-        <linearGradient id="${gradientId}" x1="4" y1="4" x2="28" y2="28" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stop-color="#e71d2b"></stop>
-          <stop offset="100%" stop-color="#f97316"></stop>
-        </linearGradient>
-      </defs>
-      <path d="M9 5.5 5.5 9M23 5.5 26.5 9" stroke="url(#${gradientId})" />
-      <circle cx="16" cy="17" r="9.5" stroke="url(#${gradientId})" />
-      <path d="M16 11v6l4.5 3.2M10.2 26.2 7 29M21.8 26.2 25 29" stroke="url(#${gradientId})" />
-    </svg>
-  `;
+const STUDENT_PROFILE_PAGE_URL = "faculty-student-profile.html";
 
-  const content = document.createElement("div");
-  content.className = "notification-content";
+const STUDENT_PROFILE_ORIGIN = "notifications";
 
-  const message = document.createElement("p");
-  message.className = "notification-message";
-  message.textContent = notification.message;
-  content.appendChild(message);
+function getStudentProfileUrl(studentId) {
+  const params = new URLSearchParams({
+    studentId: studentId,
+    from: STUDENT_PROFILE_ORIGIN,
+  });
+  return `${STUDENT_PROFILE_PAGE_URL}?${params.toString()}`;
+}
 
-  if (notification.timestamp) {
-    const timestamp = document.createElement("p");
-    timestamp.className = "notification-timestamp";
-    timestamp.textContent = notification.timestamp;
-    content.appendChild(timestamp);
+const DEFAULT_CONSULTATIONS = [
+  {
+    id: "req-1",
+    name: "Juan Dela Cruz",
+    studentId: "22-00145",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
+    status: "pending",
+  },
+  {
+    id: "req-2",
+    name: "Joselita Rizal",
+    studentId: "22-00098",
+    type: "Research Proposal",
+    date: "July 20, 10:00 AM",
+    preferredDateISO: "2026-07-20",
+    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
+    program: "BS Computer Engineering",
+    yearSet: "3B",
+    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
+    status: "pending",
+  },
+  {
+    id: "req-3",
+    name: "Mark Santos",
+    studentId: "21-00567",
+    type: "Thesis Defense Prep",
+    date: "July 21, 1:00 PM",
+    preferredDateISO: "2026-07-21",
+    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
+    program: "BS Computer Engineering",
+    yearSet: "4A",
+    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
+    status: "pending",
+  },
+  {
+    id: "req-4",
+    name: "Angela Cruz",
+    studentId: "23-00212",
+    type: "Grade Concern",
+    date: "July 22, 9:30 AM",
+    preferredDateISO: "2026-07-22",
+    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
+    program: "BS Computer Engineering",
+    yearSet: "2A",
+    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
+    status: "pending",
+  },
+];
+
+function loadConsultationsReadOnly() {
+
+  try {
+
+    const stored =
+      localStorage.getItem(
+        CONSULTATIONS_STORAGE_KEY
+      );
+
+    if (stored) {
+
+      const parsed =
+        JSON.parse(stored);
+
+      if (Array.isArray(parsed)) {
+
+        return parsed;
+      }
+    }
+
+  } catch (error) {
+
   }
 
+  return DEFAULT_CONSULTATIONS.slice();
+}
+
+const PH_TODAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Manila",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function getTodayISO() {
+
+  return PH_TODAY_KEY_FORMATTER.format(new Date());
+}
+
+function buildFacultyNotifications() {
+
+  const consultations =
+    loadConsultationsReadOnly();
+
+  const todayISO =
+    getTodayISO();
+
+  const notifications = [];
+
+  consultations
+    .filter((request) => request.status === "pending")
+    .forEach((request) => {
+
+      notifications.push({
+        id: `pending-${request.id}`,
+        studentName: request.name,
+        studentId: request.studentId,
+        messageBefore: "",
+        messageAfter: " sent a request for consultation.",
+        linkText: "View",
+        targetId: request.id,
+        targetSection: "pending",
+      });
+    });
+
+  consultations
+    .filter(
+      (request) =>
+        request.status === "upcoming" &&
+        request.preferredDateISO === todayISO
+    )
+    .forEach((request) => {
+
+      const timeLabel =
+        request.preferredTimeLabel || "";
+
+      notifications.push({
+        id: `today-${request.id}`,
+        studentName: request.name,
+        studentId: request.studentId,
+        messageBefore: "Your consultation with ",
+        messageAfter: ` is today at ${timeLabel}.`,
+        linkText: "View",
+        targetId: request.id,
+        targetSection: "upcoming",
+      });
+    });
+
+  return notifications;
+}
+
+function buildNotificationRow(notification) {
+
+  const li =
+    document.createElement("li");
+
+  li.className =
+    "notification-row";
+
+  li.dataset.id =
+    notification.id;
+
+  const icon =
+    document.createElement("span");
+
+  icon.className =
+    "notification-icon";
+
+  icon.setAttribute(
+    "aria-hidden",
+    "true"
+  );
+
+  icon.textContent =
+    "\u2714";
+
+  const message =
+    document.createElement("p");
+
+  message.className =
+    "notification-message";
+
+  if (notification.messageBefore) {
+
+    message.appendChild(
+      document.createTextNode(
+        notification.messageBefore
+      )
+    );
+  }
+
+  if (notification.studentId) {
+
+    const nameLink =
+      document.createElement("a");
+
+    nameLink.className =
+      "notification-student-link";
+
+    nameLink.href =
+      getStudentProfileUrl(
+        notification.studentId
+      );
+
+    nameLink.textContent =
+      notification.studentName;
+
+    message.appendChild(nameLink);
+
+  } else {
+
+    message.appendChild(
+      document.createTextNode(
+        notification.studentName
+      )
+    );
+  }
+
+  message.appendChild(
+    document.createTextNode(
+      `${notification.messageAfter} `
+    )
+  );
+
+  const link =
+    document.createElement("a");
+
+  link.className =
+    "notification-view-link";
+
+  link.href =
+    "faculty-consultation-requests.html";
+
+  link.textContent =
+    notification.linkText;
+
+  link.addEventListener(
+    "click",
+    () => {
+
+      try {
+
+        sessionStorage.setItem(
+          NOTIFICATION_VIEW_TARGET_STORAGE_KEY,
+          JSON.stringify({
+            id: notification.targetId,
+            section: notification.targetSection,
+          })
+        );
+
+      } catch (error) {
+
+      }
+    }
+  );
+
+  message.appendChild(link);
+
   li.appendChild(icon);
-  li.appendChild(content);
+
+  li.appendChild(message);
+
   return li;
 }
 
-function notificationHref(message) {
-  if (/consultation request/i.test(message)) {
-    return "faculty-consultation-requests.html";
+function renderFacultyNotifications() {
+
+  const listEl =
+    document.getElementById(
+      "notificationsList"
+    );
+
+  const emptyMessageEl =
+    document.getElementById(
+      "noNotificationsMessage"
+    );
+
+  if (!listEl) {
+
+    return;
   }
 
-  if (/completed|finished/i.test(message)) {
-    return "faculty-dashboard.html";
-  }
+  listEl.innerHTML =
+    "";
 
-  return "faculty-dashboard.html";
-}
+  const isTestAccount =
+    window.TEST_FACULTY_ACCOUNT === true;
 
-function formatTimestamp(value) {
-  if (!value) return "";
-  const timestamp = String(value).trim();
-  const normalized = timestamp
-    .replace(" ", "T")
-    .replace(/(\.\d{3})\d+/, "$1");
-  const hasTimezone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(normalized);
-  const date = new Date(hasTimezone ? normalized : `${normalized}Z`);
-  if (Number.isNaN(date.getTime())) return value;
+  const notifications =
+    isTestAccount
+      ? buildFacultyNotifications()
+      : [];
 
-  return date.toLocaleString("en-US", {
-    timeZone: "Asia/Manila",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  });
-}
+  notifications.forEach(
+    (notification) => {
 
-function renderFacultyNotifications(notifications) {
-  const listEl = document.getElementById("notificationsList");
-  const emptyMessageEl = document.getElementById("noNotificationsMessage");
-  if (!listEl) return;
-
-  listEl.innerHTML = "";
-
-  notifications.forEach((notification) => {
-    listEl.appendChild(buildNotificationRow(notification));
-  });
+      listEl.appendChild(
+        buildNotificationRow(
+          notification
+        )
+      );
+    }
+  );
 
   if (emptyMessageEl) {
-    emptyMessageEl.hidden = notifications.length > 0;
+
+    emptyMessageEl.hidden =
+      notifications.length > 0;
+  }
+
+  if (
+    typeof window.setFacultyNotificationCount ===
+    "function"
+  ) {
+
+    window.setFacultyNotificationCount(
+      0
+    );
   }
 }
 
-async function markNotificationsSeen() {
-  const response = await fetch("api/notifications.php", {
-    method: "POST",
-    cache: "no-store",
-    credentials: "same-origin",
-    headers: {
-      "Accept": "application/json",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ role: "faculty", mark_all: true }),
-  });
-
-  if (response.ok && typeof window.setNotificationBellUnread === "function") {
-    window.setNotificationBellUnread(false);
-  }
-  window.dispatchEvent(new CustomEvent("notifications:changed"));
-}
-
-async function loadFacultyNotifications() {
-  try {
-    const response = await fetch("api/notifications.php?role=faculty", {
-      cache: "no-store",
-      credentials: "same-origin",
-      headers: { "Accept": "application/json" },
-    });
-    const result = await response.json();
-
-    if (!response.ok || !result.ok) {
-      throw new Error(result.message || "Unable to load notifications.");
-    }
-
-    const notifications = (result.notifications || []).map((notification) => ({
-      id: Number(notification.Notification_ID || 0),
-      message: notification.Message || "",
-      timestamp: formatTimestamp(notification.Date_Time),
-      readStatus: notification.Read_Status || "read",
-    }));
-
-    renderFacultyNotifications(notifications);
-
-    if (notifications.some((notification) => notification.readStatus === "unread")) {
-      await markNotificationsSeen();
-    }
-  } catch (error) {
-    renderFacultyNotifications([{
-      id: 0,
-      message: error.message || "Unable to load notifications.",
-      readStatus: "read",
-    }]);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", loadFacultyNotifications);
-
-document.addEventListener("click", (event) => {
-  const row = event.target.closest(".notification-item[data-href]");
-  if (!row) return;
-
-  window.location.href = row.dataset.href;
-});
-
-document.addEventListener("keydown", (event) => {
-  if (event.key !== "Enter" && event.key !== " ") return;
-
-  const row = event.target.closest(".notification-item[data-href]");
-  if (!row) return;
-
-  event.preventDefault();
-  window.location.href = row.dataset.href;
-});
+document.addEventListener(
+  "DOMContentLoaded",
+  renderFacultyNotifications
+);

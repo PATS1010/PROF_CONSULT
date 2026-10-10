@@ -1,29 +1,18 @@
-// SYSTEM NOTE: Controls client-side behavior for the create student account page, including UI events and API calls.
-// =========================================================
-// CREATE STUDENT ACCOUNT (PAGE 1) INTERACTIONS
-// - Back -> student-login.html
-// - Student Number field: numbers only
-// - Form submit -> create-student-account2.html
-// =========================================================
-
+// Create Student Account JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  // ---------------------------------------------------------
-  // Back -> student-login.html
-  // ---------------------------------------------------------
+  const urlParams = new URLSearchParams(window.location.search);
+  const cameFromChooseAccount = urlParams.get("from") === "choose-account";
+  const backDestination = cameFromChooseAccount ? "choose-account.html" : "login.html";
+
   document.querySelectorAll('[data-nav="back"]').forEach((link) => {
+    link.href = backDestination;
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      window.location.href = "student-login.html";
+      window.location.href = backDestination;
     });
   });
 
-  // ---------------------------------------------------------
-  // Student Number: auto-formats to 00-00000 as the user types.
-  // - Strips any non-numeric character.
-  // - Caps input at 7 digits total (excluding the dash).
-  // - Automatically inserts the dash after the first 2 digits.
-  // ---------------------------------------------------------
   const studentNumberInput = document.getElementById("studentNumber");
   if (studentNumberInput) {
     studentNumberInput.addEventListener("input", () => {
@@ -37,13 +26,23 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ---------------------------------------------------------
-  // Custom dropdowns (Course/Program, Year Level)
-  // Replaces native <select> so the options list is a normal
-  // HTML element we fully control -- it can never be sized or
-  // positioned by the browser/OS in a way that overflows the
-  // screen, which native <select> popups can do on mobile.
-  // ---------------------------------------------------------
+  const firstNameInput = document.getElementById("firstName");
+  const middleInitialInput = document.getElementById("middleInitial");
+  const lastNameInput = document.getElementById("lastName");
+
+  function normalizeName(value) {
+    return value.replace(/\s+/g, " ").trim();
+  }
+
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = middleInitialInput.value
+        .replace(/[^\p{L}]/gu, "")
+        .toUpperCase()
+        .slice(0, 1);
+    });
+  }
+
   const customSelects = document.querySelectorAll(".custom-select");
 
   function closeAllDropdowns(except) {
@@ -94,51 +93,96 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Close any open dropdown when clicking/tapping outside of it
   document.addEventListener("click", () => closeAllDropdowns());
 
-  // ---------------------------------------------------------
-  // Form submit -> create-student-account2.html
-  // (page not built yet -- this link will 404 until it exists)
-  // ---------------------------------------------------------
+  function setCustomSelectValue(selectId, value) {
+    if (!value) return;
+
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    const valueLabel = select.querySelector(".custom-select-value");
+    const hiddenInput = select.querySelector('input[type="hidden"]');
+    const options = select.querySelectorAll("li[role='option']");
+
+    const matchingOption = Array.from(options).find(
+      (option) => option.getAttribute("data-value") === value
+    );
+
+    if (!matchingOption) return;
+
+    options.forEach((option) => option.classList.remove("is-active"));
+    matchingOption.classList.add("is-active");
+
+    valueLabel.textContent = matchingOption.textContent;
+    valueLabel.removeAttribute("data-is-placeholder");
+    hiddenInput.value = value;
+  }
+
+  function restoreSavedInformation() {
+    let saved = {};
+
+    try {
+      saved = JSON.parse(sessionStorage.getItem("findprof_registration") || "{}");
+    } catch (error) {
+      saved = {};
+    }
+
+    if (saved.role !== "student") return;
+
+    if (saved.id_number) {
+      studentNumberInput.value = saved.id_number;
+    }
+
+    if (saved.firstName) {
+      firstNameInput.value = saved.firstName;
+    }
+
+    if (saved.middleInitial) {
+      middleInitialInput.value = saved.middleInitial;
+    }
+
+    if (saved.lastName) {
+      lastNameInput.value = saved.lastName;
+    }
+
+    setCustomSelectValue("suffixSelect", saved.suffix);
+    setCustomSelectValue("courseProgramSelect", saved.program);
+    setCustomSelectValue("yearLevelSelect", saved.year_level);
+    setCustomSelectValue("sectionSelect", saved.section);
+  }
+
+  restoreSavedInformation();
+
   const form = document.getElementById("createStudentAccountForm");
   if (form) {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
-      const firstName = document.getElementById("firstName").value.trim();
-      const middleInitial = document.getElementById("middleInitial").value.trim();
-      const lastName = document.getElementById("lastName").value.trim();
-      const program = document.getElementById("courseProgram").value;
-      const yearLevel = document.getElementById("yearLevel").value;
-      const section = document.getElementById("section").value;
 
-      if (!form.checkValidity()) {
+      firstNameInput.value = normalizeName(firstNameInput.value);
+      lastNameInput.value = normalizeName(lastNameInput.value);
+
+      if (!form.checkValidity() || !document.getElementById("courseProgram").value || !document.getElementById("yearLevel").value) {
         form.reportValidity();
         return;
       }
 
-      if (!program || !yearLevel || !section) {
-        if (!program) {
-          alert("Please select your course or program.");
-          document.getElementById("courseProgramTrigger").focus();
-        } else if (!yearLevel) {
-          alert("Please select your year level.");
-          document.getElementById("yearLevelTrigger").focus();
-        } else if (!section) {
-          alert("Please select your section.");
-          document.getElementById("sectionTrigger").focus();
-        }
-        return;
-      }
+      const firstName = firstNameInput.value;
+      const middleInitial = middleInitialInput.value;
+      const lastName = lastNameInput.value;
+      const suffix = document.getElementById("suffix").value;
 
-      const fullName = [firstName, middleInitial, lastName].filter(Boolean).join(" ");
       sessionStorage.setItem("findprof_registration", JSON.stringify({
         role: "student",
         id_number: studentNumberInput.value.trim(),
-        full_name: fullName,
-        program: program,
-        year_level: yearLevel,
-        section: section
+        firstName: firstName,
+        middleInitial: middleInitial,
+        lastName: lastName,
+        suffix: suffix,
+        full_name: [firstName, middleInitial, lastName, suffix].filter(Boolean).join(" "),
+        program: document.getElementById("courseProgram").value,
+        year_level: document.getElementById("yearLevel").value,
+        section: document.getElementById("section").value
       }));
       window.location.href = "create-student-account2.html";
     });
