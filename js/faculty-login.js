@@ -40,24 +40,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("facultyPassword");
   const loginError = document.getElementById("loginError");
 
-  const TEST_FACULTY_EMAIL = "faculty@test.com";
-  const TEST_FACULTY_PASSWORD = "Faculty123";
-
   if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const enteredEmail = emailInput.value.trim();
-      const enteredPassword = passwordInput.value;
-
-      const isValid =
-        enteredEmail === TEST_FACULTY_EMAIL &&
-        enteredPassword === TEST_FACULTY_PASSWORD;
-
-      if (isValid) {
+      try {
+        const response = await fetch("api/login.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "faculty",
+            identifier: emailInput.value.trim(),
+            password: passwordInput.value,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
         loginError.hidden = true;
+        sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
         window.location.href = "faculty-dashboard.html";
-      } else {
+      } catch (error) {
         loginError.hidden = false;
       }
     });

@@ -208,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const origin = "student";
   const REOPEN_FLAG_KEY = "profconsult_reopen_delete_account_modal";
-  const TEST_PASSWORD = "Student123";
 
   const EYE_OPEN_ICON = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>';
   const EYE_OFF_ICON = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.6 10.6a3 3 0 004.24 4.24" stroke="currentColor" stroke-width="2"/><path d="M9.17 5.17A10.94 10.94 0 0112 5c7 0 11 7 11 7a13.3 13.3 0 01-3.17 3.83M6.1 6.1A13.26 13.26 0 001 12s4 7 11 7a10.9 10.9 0 005.9-1.73" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
@@ -286,6 +285,34 @@ document.addEventListener("DOMContentLoaded", () => {
     passwordToggle.setAttribute("aria-label", visible ? "Hide password" : "Show password");
   }
 
+  async function verifyCurrentPassword(password) {
+    const sessionResponse = await fetch(`api/session.php?role=${origin}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const sessionResult = await sessionResponse.json().catch(() => ({}));
+    if (!sessionResponse.ok || !sessionResult.ok || !sessionResult.user) {
+      throw new Error("Please log in again before deleting your account.");
+    }
+
+    const identifier = sessionResult.user.email || sessionResult.user.username;
+    if (!identifier) {
+      throw new Error("Unable to verify this account.");
+    }
+
+    const loginResponse = await fetch("api/login.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ role: origin, identifier, password }),
+    });
+    const loginResult = await loginResponse.json().catch(() => ({}));
+    if (!loginResponse.ok || !loginResult.ok) {
+      throw new Error(loginResult.message || "Incorrect password.");
+    }
+  }
+
   function openModal() {
     passwordInput.value = "";
     clearPasswordError();
@@ -323,7 +350,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  yesButton.addEventListener("click", () => {
+  yesButton.addEventListener("click", async () => {
     const enteredPassword = passwordInput.value.trim();
 
     if (!enteredPassword) {
@@ -332,8 +359,12 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (enteredPassword !== TEST_PASSWORD) {
-      showPasswordError("Incorrect password.");
+    yesButton.disabled = true;
+    try {
+      await verifyCurrentPassword(enteredPassword);
+    } catch (error) {
+      yesButton.disabled = false;
+      showPasswordError(error.message || "Incorrect password.");
       passwordInput.focus();
       return;
     }

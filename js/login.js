@@ -118,30 +118,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   passwordInput.addEventListener("input", clearMessages);
 
-  const TEST_STUDENT_ACCOUNT = {
-    email: "student@test.com",
-    idNumber: "24-00000",
-    password: "Student123",
-    redirect: "student-dashboard.html",
-  };
-
-  const TEST_FACULTY_ACCOUNT = {
-    email: "faculty@test.com",
-    idNumber: "24-11111",
-    password: "Faculty123",
-    redirect: "faculty-dashboard.html",
-  };
-
-  function matchesAccount(account, identifier, password) {
-    const identifierMatches =
-      identifier.toLowerCase() === account.email.toLowerCase() ||
-      identifier === account.idNumber;
-
-    return identifierMatches && password === account.password;
+  async function logInAs(role, identifier, password) {
+    const response = await fetch("api/login.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({ role, identifier, password }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || MESSAGES.invalidCredentials);
+    }
+    return result;
   }
 
   if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const enteredIdentifier = identifierInput.value.trim();
@@ -162,14 +154,20 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (matchesAccount(TEST_STUDENT_ACCOUNT, enteredIdentifier, enteredPassword)) {
-        window.location.href = TEST_STUDENT_ACCOUNT.redirect;
+      try {
+        await logInAs("student", enteredIdentifier, enteredPassword);
+        sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
+        window.location.href = "student-dashboard.html";
         return;
+      } catch (error) {
       }
 
-      if (matchesAccount(TEST_FACULTY_ACCOUNT, enteredIdentifier, enteredPassword)) {
-        window.location.href = TEST_FACULTY_ACCOUNT.redirect;
+      try {
+        await logInAs("faculty", enteredIdentifier, enteredPassword);
+        sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
+        window.location.href = "faculty-dashboard.html";
         return;
+      } catch (error) {
       }
 
       showLoginError(MESSAGES.invalidCredentials);

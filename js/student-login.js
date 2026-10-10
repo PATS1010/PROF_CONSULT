@@ -40,24 +40,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const passwordInput = document.getElementById("studentPassword");
   const loginError = document.getElementById("loginError");
 
-  const TEST_STUDENT_EMAIL = "student@test.com";
-  const TEST_STUDENT_PASSWORD = "Student123";
-
   if (loginForm) {
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const enteredEmail = emailInput.value.trim();
-      const enteredPassword = passwordInput.value;
-
-      const isValid =
-        enteredEmail === TEST_STUDENT_EMAIL &&
-        enteredPassword === TEST_STUDENT_PASSWORD;
-
-      if (isValid) {
+      try {
+        const response = await fetch("api/login.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "student",
+            identifier: emailInput.value.trim(),
+            password: passwordInput.value,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
         loginError.hidden = true;
+        sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
         window.location.href = "student-dashboard.html";
-      } else {
+      } catch (error) {
         loginError.hidden = false;
       }
     });

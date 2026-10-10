@@ -8,7 +8,7 @@ const FACULTY_NOTIFICATION_STORAGE_KEY =
 const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
   "facultyTestIncomingNotification";
 
-window.TEST_FACULTY_ACCOUNT = true;
+window.TEST_FACULTY_ACCOUNT = false;
 
 const FACULTY_STATUS_LABELS = {
   available: "Available",
@@ -1298,7 +1298,7 @@ document.addEventListener(
       setFacultyNotificationCount(0);
     }
 
-    const FACULTY_TOAST_TEST_DEMO = true;
+    const FACULTY_TOAST_TEST_DEMO = false;
 
     if (
       FACULTY_TOAST_TEST_DEMO &&

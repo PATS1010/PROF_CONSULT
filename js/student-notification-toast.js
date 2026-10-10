@@ -400,7 +400,7 @@
     }
   );
 
-  const STUDENT_TOAST_TEST_DEMO = true;
+  const STUDENT_TOAST_TEST_DEMO = false;
 
   if (STUDENT_TOAST_TEST_DEMO) {
 
@@ -442,7 +442,7 @@
     }
   }
 
-  const STUDENT_BADGE_TEST_DEMO = true;
+  const STUDENT_BADGE_TEST_DEMO = false;
 
   function isOnStudentNotificationsPage() {
 
