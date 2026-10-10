@@ -71,10 +71,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const response = await fetch("api/login.php", {
           method: "POST",
           credentials: "same-origin",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ role: "faculty", identifier: emailInput.value.trim(), password: passwordInput.value })
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "faculty",
+            identifier: emailInput.value.trim(),
+            password: passwordInput.value,
+          }),
         });
-        if (!response.ok) throw new Error();
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
         loginError.hidden = true;
         sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
         window.location.href = "faculty-dashboard.html";

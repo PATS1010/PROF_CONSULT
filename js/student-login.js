@@ -68,8 +68,18 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
 
       try {
-        const response = await fetch("api/login.php", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role: "student", identifier: emailInput.value.trim(), password: passwordInput.value }) });
-        if (!response.ok) throw new Error();
+        const response = await fetch("api/login.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "student",
+            identifier: emailInput.value.trim(),
+            password: passwordInput.value,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
         loginError.hidden = true;
         sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
         window.location.href = "student-dashboard.html";
