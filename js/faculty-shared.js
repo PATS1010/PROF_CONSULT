@@ -628,9 +628,23 @@ function buildFacultyLogoutModal(logoutLink) {
 
       }
 
-      window.location.href =
+      const redirectPage =
         logoutLink.getAttribute("href") ||
         "faculty-login.html";
+
+      if (
+        window.ProfConsultAuth &&
+        window.ProfConsultAuth.logout
+      ) {
+
+        window.ProfConsultAuth.logout(
+          redirectPage
+        );
+        return;
+      }
+
+      window.location.href =
+        redirectPage;
     }
   );
 

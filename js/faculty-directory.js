@@ -383,7 +383,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   yesButton.addEventListener("click", () => {
-    window.location.href = logoutLink.getAttribute("href") || "login.html";
+    const redirectPage = logoutLink.getAttribute("href") || "login.html";
+    if (window.ProfConsultAuth && window.ProfConsultAuth.logout) {
+      window.ProfConsultAuth.logout(redirectPage);
+      return;
+    }
+    window.location.href = redirectPage;
   });
 
   logoutLink.addEventListener("click", (event) => {
