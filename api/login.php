@@ -43,11 +43,15 @@ try {
     session_regenerate_id(true);
     $_SESSION['user'] = rememberUserSession(publicUser($record));
     if ($role === 'faculty') {
-        saveFacultyAvailabilityForUser(
-            $db,
-            (int) $record['User_ID'],
-            isFacultyClassHours() ? 'available' : 'offline'
-        );
+        try {
+            saveFacultyAvailabilityForUser(
+                $db,
+                (int) $record['User_ID'],
+                isFacultyClassHours() ? 'available' : 'offline'
+            );
+        } catch (PDOException $exception) {
+            error_log('Faculty login availability update failed: ' . $exception->getMessage());
+        }
     }
     reply(['ok' => true, 'user' => $_SESSION['user']]);
 } catch (PDOException $exception) {
