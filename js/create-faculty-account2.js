@@ -616,6 +616,27 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
+        const verificationToken =
+          sessionStorage.getItem("verificationToken") || "";
+
+        if (!verificationToken) {
+
+          passwordFieldError.textContent =
+            "Please verify your account again before creating your account.";
+
+          passwordFieldError.hidden = false;
+
+          sessionStorage.removeItem(
+            VERIFICATION_KEY
+          );
+
+          accountVerified = false;
+          updateVerifyButton();
+          updateCreateButton();
+
+          return;
+        }
+
         try {
 
           const response =
@@ -637,6 +658,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                   phone:
                     contactNumberInput.value,
+
+                  account_verification_token:
+                    verificationToken,
 
                   password:
                     passwordInput.value
@@ -688,6 +712,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             VERIFICATION_KEY
+          );
+
+          sessionStorage.removeItem(
+            "verificationToken"
           );
 
           sessionStorage.removeItem(

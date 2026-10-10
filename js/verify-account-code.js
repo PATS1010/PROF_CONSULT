@@ -506,7 +506,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener(
       "submit",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
