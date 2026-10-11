@@ -173,6 +173,7 @@
     document.documentElement.setAttribute("data-theme", theme);
 
     syncToggle();
+    syncSwitch();
     syncAutoSurfaces();
   }
 
