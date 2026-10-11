@@ -145,6 +145,18 @@ CREATE TABLE IF NOT EXISTS password_reset_codes (
   Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS account_verification_codes (
+  Verification_ID SERIAL PRIMARY KEY,
+  Email VARCHAR(190) NOT NULL,
+  Role VARCHAR(20) NOT NULL CHECK (Role IN ('student', 'faculty')),
+  Token CHAR(64) NOT NULL UNIQUE,
+  Code_Hash VARCHAR(255) NOT NULL,
+  Expires_At TIMESTAMP NOT NULL,
+  Verified_At TIMESTAMP NULL,
+  Consumed_At TIMESTAMP NULL,
+  Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS consultation_requests (
   Request_ID SERIAL PRIMARY KEY,
   Student_ID INTEGER NOT NULL,
@@ -210,6 +222,16 @@ ALTER TABLE password_reset_codes ADD COLUMN IF NOT EXISTS Verified_At TIMESTAMP 
 ALTER TABLE password_reset_codes ADD COLUMN IF NOT EXISTS Consumed_At TIMESTAMP NULL;
 ALTER TABLE password_reset_codes ADD COLUMN IF NOT EXISTS Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
 
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Verification_ID SERIAL;
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Email VARCHAR(190);
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Role VARCHAR(20);
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Token CHAR(64);
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Code_Hash VARCHAR(255);
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Expires_At TIMESTAMP;
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Verified_At TIMESTAMP NULL;
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Consumed_At TIMESTAMP NULL;
+ALTER TABLE account_verification_codes ADD COLUMN IF NOT EXISTS Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
 ALTER TABLE consultation_requests ADD COLUMN IF NOT EXISTS Request_ID SERIAL;
 ALTER TABLE consultation_requests ADD COLUMN IF NOT EXISTS Student_ID INTEGER;
 ALTER TABLE consultation_requests ADD COLUMN IF NOT EXISTS Faculty_ID INTEGER;
@@ -237,6 +259,8 @@ CREATE INDEX IF NOT EXISTS idx_students_program_year ON students (Program, Year_
 CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications (User_ID, Read_Status);
 CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_codes (Token);
 CREATE INDEX IF NOT EXISTS idx_password_reset_user_active ON password_reset_codes (User_ID, Consumed_At);
+CREATE INDEX IF NOT EXISTS idx_account_verification_token ON account_verification_codes (Token);
+CREATE INDEX IF NOT EXISTS idx_account_verification_email_role ON account_verification_codes (Email, Role, Consumed_At);
 CREATE INDEX IF NOT EXISTS idx_consultation_requests_student ON consultation_requests (Student_ID, Status);
 CREATE INDEX IF NOT EXISTS idx_consultation_requests_faculty ON consultation_requests (Faculty_ID, Status);
 CREATE INDEX IF NOT EXISTS idx_availability_faculty_date ON availability (Faculty_ID, Date);

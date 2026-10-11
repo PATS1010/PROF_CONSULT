@@ -80,6 +80,26 @@ document.addEventListener("DOMContentLoaded", () => {
   let accountVerified =
     sessionStorage.getItem(VERIFICATION_KEY) === "true";
 
+  if (
+    accountVerified &&
+    (
+      !sessionStorage.getItem(
+        "verificationToken"
+      ) ||
+      sessionStorage.getItem(
+        "verificationEmail"
+      ) !== emailInput.value.trim()
+    )
+  ) {
+
+    accountVerified = false;
+
+    sessionStorage.removeItem(
+      VERIFICATION_KEY
+    );
+
+  }
+
   function saveStep2Data() {
 
     const data = {
@@ -349,6 +369,18 @@ document.addEventListener("DOMContentLoaded", () => {
       VERIFICATION_KEY
     );
 
+    sessionStorage.removeItem(
+      "accountVerified"
+    );
+
+    sessionStorage.removeItem(
+      "verificationToken"
+    );
+
+    sessionStorage.removeItem(
+      "verificationEmail"
+    );
+
     updateVerifyButton();
     updateCreateButton();
   }
@@ -438,6 +470,11 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem(
         "findprof_verification_origin",
         "faculty"
+      );
+
+      sessionStorage.setItem(
+        "verificationEmail",
+        emailInput.value.trim()
       );
 
     }
@@ -724,7 +761,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     contactNumberInput.value,
 
                   password:
-                    passwordInput.value
+                    passwordInput.value,
+
+                  account_verification_token:
+                    sessionStorage.getItem(
+                      "verificationToken"
+                    ) || ""
                 })
               }
             );
@@ -777,6 +819,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             "findprof_verification_origin"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerified"
+          );
+
+          sessionStorage.removeItem(
+            "verificationToken"
+          );
+
+          sessionStorage.removeItem(
+            "verificationEmail"
+          );
+
+          sessionStorage.removeItem(
+            "verificationIdentifier"
+          );
+
+          sessionStorage.removeItem(
+            "verificationMethod"
           );
 
           successMessage.hidden = false;

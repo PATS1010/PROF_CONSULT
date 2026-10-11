@@ -13,7 +13,7 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
 {
     if (SMTP_USERNAME === '' || SMTP_PASSWORD === '' || SMTP_FROM_EMAIL === '') {
-        throw new RuntimeException('SMTP environment variables are not configured.');
+        throw new RuntimeException('SMTP is not configured. Set SMTP_USERNAME, SMTP_PASSWORD, and SMTP_FROM_EMAIL.');
     }
 
     $mail = new PHPMailer(true);

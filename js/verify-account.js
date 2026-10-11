@@ -93,6 +93,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentMode = "email";
 
+  const savedEmail =
+    sessionStorage.getItem(
+      "verificationEmail"
+    ) || "";
+
+  if (savedEmail && emailInput) {
+    emailInput.value = savedEmail;
+  }
+
   function showMessage(text) {
 
     if (!message) {
@@ -226,7 +235,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (currentMode === "email") {
 
-          setMobileMode();
+          showMessage(
+            "Email verification is available right now. Please use your email address."
+          );
+
+          return;
 
         } else {
 
@@ -385,7 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener(
       "submit",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
@@ -396,23 +409,90 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        sessionStorage.setItem(
-          "verificationIdentifier",
-          identifier
-        );
+        if (currentMode !== "email") {
+          showMessage(
+            "Email verification is available right now. Please use your email address."
+          );
 
-        sessionStorage.setItem(
-          "verificationMethod",
-          currentMode
-        );
+          return;
+        }
 
-        sessionStorage.setItem(
-          "verificationOrigin",
-          origin
-        );
+        try {
 
-        window.location.href =
-          verificationCodePage;
+          const response =
+            await fetch(
+              "api/request-account-verification-code.php",
+              {
+                method: "POST",
+
+                credentials:
+                  "same-origin",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "Accept":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  role: origin,
+                  method: "email",
+                  identifier,
+                  email: identifier
+                })
+              }
+            );
+
+          const result =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Unable to request a verification code."
+            );
+          }
+
+          sessionStorage.setItem(
+            "verificationIdentifier",
+            identifier
+          );
+
+          sessionStorage.setItem(
+            "verificationEmail",
+            identifier
+          );
+
+          sessionStorage.setItem(
+            "verificationMethod",
+            "email"
+          );
+
+          sessionStorage.setItem(
+            "verificationOrigin",
+            origin
+          );
+
+          sessionStorage.setItem(
+            "verificationToken",
+            result.token || ""
+          );
+
+          window.location.href =
+            verificationCodePage;
+
+        } catch (error) {
+
+          showMessage(
+            error.message ||
+            "Unable to request a verification code."
+          );
+
+        }
 
       }
     );

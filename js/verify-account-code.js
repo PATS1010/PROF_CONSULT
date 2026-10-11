@@ -12,12 +12,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const originQuery =
     `?from=${origin}`;
 
-  const TEST_VERIFICATION_CODE =
-    "123456";
-
   const identifier =
     sessionStorage.getItem(
       "verificationIdentifier"
+    ) || "";
+
+  let verificationToken =
+    sessionStorage.getItem(
+      "verificationToken"
     ) || "";
 
   const verificationMethod =
@@ -429,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resendButton.addEventListener(
       "click",
-      () => {
+      async () => {
 
         if (
           resendButton.classList.contains(
@@ -451,18 +453,75 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clearCodeErrors();
 
-        sessionStorage.setItem(
-          "verificationResent",
-          "true"
-        );
+        try {
 
-        hideError();
+          const response =
+            await fetch(
+              "api/request-account-verification-code.php",
+              {
+                method: "POST",
 
-        startCountdown();
+                credentials:
+                  "same-origin",
 
-        showError(
-          "A new verification code has been requested. For testing, use 123456."
-        );
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "Accept":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  role: origin,
+                  method: "email",
+                  identifier,
+                  email: identifier
+                })
+              }
+            );
+
+          const result =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Unable to request a new verification code."
+            );
+          }
+
+          sessionStorage.setItem(
+            "verificationResent",
+            "true"
+          );
+
+          sessionStorage.setItem(
+            "verificationToken",
+            result.token || ""
+          );
+
+          verificationToken =
+            result.token || "";
+
+          hideError();
+
+          startCountdown();
+
+          showError(
+            "A new verification code has been requested."
+          );
+
+        } catch (error) {
+
+          showError(
+            error.message ||
+            "Unable to request a new verification code."
+          );
+
+        }
 
         if (codeDigits[0]) {
 
@@ -479,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     form.addEventListener(
       "submit",
-      (event) => {
+      async (event) => {
 
         event.preventDefault();
 
@@ -514,12 +573,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
-        if (
-          enteredCode !==
-          TEST_VERIFICATION_CODE
-        ) {
+        try {
+
+          const response =
+            await fetch(
+              "api/verify-account-code.php",
+              {
+                method: "POST",
+
+                credentials:
+                  "same-origin",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  "Accept":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  role: origin,
+                  token: verificationToken,
+                  code: enteredCode
+                })
+              }
+            );
+
+          const result =
+            await response
+              .json()
+              .catch(() => ({}));
+
+          if (!response.ok || !result.ok) {
+            throw new Error(
+              result.message ||
+              "Incorrect verification code. Please try again."
+            );
+          }
+
+        } catch (error) {
 
           showError(
+            error.message ||
             "Incorrect verification code. Please try again."
           );
 
