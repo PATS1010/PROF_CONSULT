@@ -2,8 +2,8 @@
 const FACULTY_SETTINGS_STORAGE_KEY = "profconsult_faculty_settings";
 
 const DEFAULT_FACULTY_SETTINGS = {
-  emailNotifications: false,
-  pushNotifications: false,
+  emailNotifications: true,
+  pushNotifications: true,
   autoCheckInReminder: false,
 };
 
@@ -23,6 +23,47 @@ function saveFacultySettings(settings) {
     window.localStorage.setItem(FACULTY_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
   } catch (error) {
   }
+}
+
+function applyNotificationSettings(settings, emailCheckbox, pushCheckbox) {
+  if (!settings) return;
+  if (emailCheckbox && typeof settings.email_notifications === "boolean") {
+    emailCheckbox.checked = settings.email_notifications;
+  }
+  if (pushCheckbox && typeof settings.push_notifications === "boolean") {
+    pushCheckbox.checked = settings.push_notifications;
+  }
+}
+
+async function loadBackendNotificationSettings(emailCheckbox, pushCheckbox) {
+  const response = await fetch("api/notification-settings.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to load notification settings.");
+  }
+  applyNotificationSettings(result.settings, emailCheckbox, pushCheckbox);
+}
+
+async function saveBackendNotificationSettings(settings, emailCheckbox, pushCheckbox) {
+  const response = await fetch("api/notification-settings.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      role: "faculty",
+      email_notifications: settings.emailNotifications,
+      push_notifications: settings.pushNotifications,
+    }),
+  });
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result.ok) {
+    throw new Error(result.message || "Unable to save notification settings.");
+  }
+  applyNotificationSettings(result.settings, emailCheckbox, pushCheckbox);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -45,7 +86,10 @@ document.addEventListener("DOMContentLoaded", () => {
     autoCheckInCheckbox.checked = currentSettings.autoCheckInReminder;
   }
 
-  function handleSaveSettings() {
+  loadBackendNotificationSettings(emailNotificationsCheckbox, pushNotificationsCheckbox).catch(() => {
+  });
+
+  async function handleSaveSettings() {
     const updatedSettings = {
       emailNotifications: !!(emailNotificationsCheckbox && emailNotificationsCheckbox.checked),
       pushNotifications: !!(pushNotificationsCheckbox && pushNotificationsCheckbox.checked),
@@ -53,6 +97,20 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     saveFacultySettings(updatedSettings);
+    if (saveButton) saveButton.disabled = true;
+
+    try {
+      await saveBackendNotificationSettings(
+        updatedSettings,
+        emailNotificationsCheckbox,
+        pushNotificationsCheckbox
+      );
+    } catch (error) {
+      if (saveButton) saveButton.disabled = false;
+      window.alert(error.message || "Unable to save notification settings.");
+      return;
+    }
+    if (saveButton) saveButton.disabled = false;
 
     if (saveSuccessMessage) {
       saveSuccessMessage.hidden = false;

@@ -88,6 +88,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const emailNotificationsCheckbox = document.getElementById("emailNotificationsCheckbox");
   const pushNotificationsCheckbox = document.getElementById("pushNotificationsCheckbox");
 
+  function applySettings(settings) {
+    if (!settings) return;
+    if (typeof settings.email_notifications === "boolean") {
+      emailNotificationsCheckbox.checked = settings.email_notifications;
+    }
+    if (typeof settings.push_notifications === "boolean") {
+      pushNotificationsCheckbox.checked = settings.push_notifications;
+    }
+  }
+
   function loadSettings() {
     try {
       const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -105,7 +115,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function saveSettings() {
+  async function loadBackendSettings() {
+    const response = await fetch("api/notification-settings.php?role=student", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to load notification settings.");
+    }
+    applySettings(result.settings);
+  }
+
+  async function saveSettings() {
     const settings = {
       emailNotifications: emailNotificationsCheckbox.checked,
       pushNotifications: pushNotificationsCheckbox.checked,
@@ -116,9 +139,27 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
 
     }
+
+    const response = await fetch("api/notification-settings.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        role: "student",
+        email_notifications: settings.emailNotifications,
+        push_notifications: settings.pushNotifications,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to save notification settings.");
+    }
+    applySettings(result.settings);
   }
 
   loadSettings();
+  loadBackendSettings().catch(() => {
+  });
 
 
   const saveSettingsButton = document.getElementById("saveSettingsButton");
@@ -126,8 +167,16 @@ document.addEventListener("DOMContentLoaded", () => {
   let successPopupTimeout = null;
 
   if (saveSettingsButton) {
-    saveSettingsButton.addEventListener("click", () => {
-      saveSettings();
+    saveSettingsButton.addEventListener("click", async () => {
+      saveSettingsButton.disabled = true;
+      try {
+        await saveSettings();
+      } catch (error) {
+        window.alert(error.message || "Unable to save notification settings.");
+        saveSettingsButton.disabled = false;
+        return;
+      }
+      saveSettingsButton.disabled = false;
 
       saveSuccessPopup.hidden = false;
       requestAnimationFrame(() => saveSuccessPopup.classList.add("is-visible"));
