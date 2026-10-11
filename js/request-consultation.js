@@ -12,10 +12,26 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const selectedFaculty = getSelectedFaculty();
-  const SELECTED_FACULTY_MEMBER = (selectedFaculty && selectedFaculty.fullName)
-    ? selectedFaculty.fullName
-    : "Selected Faculty Member";
+  let selectedFaculty = getSelectedFaculty();
+
+  function requestedFacultyId() {
+    return new URLSearchParams(window.location.search).get("facultyId");
+  }
+
+  function setSelectedFaculty(faculty) {
+    selectedFaculty = faculty;
+    if (facultyMemberInput) {
+      facultyMemberInput.textContent = faculty && faculty.fullName
+        ? faculty.fullName
+        : "Selected Faculty Member";
+    }
+    try {
+      if (faculty) {
+        sessionStorage.setItem(SELECTED_FACULTY_STORAGE_KEY, JSON.stringify(faculty));
+      }
+    } catch (error) {
+    }
+  }
 
   const COURSE_LABELS = {
     "computer-engineering": "BSCPE (Computer Engineering)",
@@ -31,7 +47,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const studentIdInput = document.getElementById("studentId");
   const programYearInput = document.getElementById("programYear");
 
-  if (facultyMemberInput) facultyMemberInput.textContent = SELECTED_FACULTY_MEMBER;
+  setSelectedFaculty(selectedFaculty);
+
+  async function loadSelectedFacultyFromUrl() {
+    const facultyId = requestedFacultyId();
+    if (!facultyId) {
+      return selectedFaculty;
+    }
+
+    const response = await fetch("api/faculty-directory.php", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok || !Array.isArray(result.faculty)) {
+      throw new Error(result.message || "Unable to load the selected professor.");
+    }
+
+    const record = result.faculty.find((faculty) => String(faculty.Faculty_ID) === String(facultyId));
+    if (!record) {
+      throw new Error("Selected professor was not found.");
+    }
+
+    setSelectedFaculty({
+      id: String(record.Faculty_ID),
+      fullName: record.Full_Name || "Selected Faculty Member",
+      program: record.Department || "Faculty",
+      office: record.Office || "",
+      photo: record.Profile_Photo || "images/user.png",
+    });
+    return selectedFaculty;
+  }
 
   function normalizeProgramValue(value) {
     const raw = String(value || "").toLowerCase();
@@ -276,7 +323,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const preferredDateHint = document.getElementById("preferredDateHint");
 
   renderTimeOptions([]);
-  loadFacultySchedule("").catch((error) => setHint(error.message, true));
+  loadSelectedFacultyFromUrl()
+    .then(() => loadFacultySchedule(""))
+    .catch((error) => {
+      renderTimeOptions([]);
+      setHint(error.message || "Unable to load this professor's schedule.", true);
+    });
 
   function setDateErrorState(isError) {
     if (preferredDateInput) preferredDateInput.classList.toggle("is-date-invalid", isError);
