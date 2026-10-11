@@ -26,11 +26,10 @@ try {
         fail('Faculty member was not found.', 404);
     }
 
-    $weeklyHours = parseWeeklyHours((string) ($record['Consultation_Hours'] ?? ''));
     $response = [
         'ok' => true,
-        'days' => availableDayNumbers($weeklyHours),
-        'day_names' => availableDayNames($weeklyHours),
+        'days' => [1, 2, 3, 4, 5, 6],
+        'day_names' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     ];
 
     if ($date !== '') {
@@ -50,8 +49,7 @@ try {
             reply($response);
         }
 
-        $dayName = $dateTime->format('l');
-        $availableStarts = $weeklyHours[$dayName] ?? [];
+        $availableStarts = dailySlotStarts();
         $takenStarts = bookedStarts($db, $facultyId, $date);
 
         $response['slots'] = array_map(
@@ -137,6 +135,15 @@ function slotStartsFromLabels(array $labels): array
         }
     }
     sort($starts);
+    return $starts;
+}
+
+function dailySlotStarts(): array
+{
+    $starts = [];
+    for ($minutes = 8 * 60; $minutes < 20 * 60; $minutes += 30) {
+        $starts[] = minutesToTime($minutes);
+    }
     return $starts;
 }
 
