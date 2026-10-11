@@ -190,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((response) => response.ok ? response.json() : Promise.reject())
     .then(applySessionProfile)
     .catch(() => {
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     });
 
   // ---------------------------------------------------------

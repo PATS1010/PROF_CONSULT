@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.ProfConsultAuth.logout(redirectPage);
       return;
     }
-    window.location.href = redirectPage;
+    window.location.replace(redirectPage);
   });
 
   logoutLink.addEventListener("click", (event) => {

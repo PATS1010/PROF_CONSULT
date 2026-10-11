@@ -106,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
     .catch(() => {
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     });
 
   const hamburgerButton = document.getElementById("hamburgerButton");
@@ -486,7 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.ProfConsultAuth.logout(redirectPage);
       return;
     }
-    window.location.href = redirectPage;
+    window.location.replace(redirectPage);
   });
 
   logoutLink.addEventListener("click", (event) => {

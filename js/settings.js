@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.ProfConsultAuth.logout(redirectPage);
       return;
     }
-    window.location.href = redirectPage;
+    window.location.replace(redirectPage);
   });
 
   logoutLink.addEventListener("click", (event) => {
@@ -441,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadingEl.hidden = false;
     try {
       await deleteCurrentAccount(enteredPassword);
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     } catch (error) {
       yesButton.disabled = false;
       modalBody.hidden = false;

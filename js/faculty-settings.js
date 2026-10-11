@@ -315,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadingEl.hidden = false;
     try {
       await deleteCurrentAccount(enteredPassword);
-      window.location.href = "faculty-login.html";
+      window.location.replace("faculty-login.html");
     } catch (error) {
       yesButton.disabled = false;
       modalBody.hidden = false;

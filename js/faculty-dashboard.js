@@ -109,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })
     .catch(() => {
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     });
 
   const facultyPageDateTimeEl =

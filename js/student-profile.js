@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((response) => response.ok ? response.json() : Promise.reject())
     .then(applySessionProfile)
     .catch(() => {
-      window.location.href = "login.html";
+      window.location.replace("login.html");
     });
 
   function formatPhoneInput(rawValue) {
@@ -479,7 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.ProfConsultAuth.logout(redirectPage);
       return;
     }
-    window.location.href = redirectPage;
+    window.location.replace(redirectPage);
   });
 
   logoutLink.addEventListener("click", (event) => {

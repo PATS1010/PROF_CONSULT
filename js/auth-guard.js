@@ -4,12 +4,23 @@
   const role = script ? String(script.dataset.authRole || "").trim() : "";
   const loginPage = script ? String(script.dataset.loginPage || "login.html").trim() : "login.html";
   const sessionUrl = role ? `api/session.php?role=${encodeURIComponent(role)}` : "api/session.php";
+  let sessionCheckPromise = null;
 
   function redirectToLogin() {
     window.location.replace(loginPage || "login.html");
   }
 
   async function checkSession() {
+    if (sessionCheckPromise) return sessionCheckPromise;
+
+    sessionCheckPromise = runSessionCheck().finally(() => {
+      sessionCheckPromise = null;
+    });
+
+    return sessionCheckPromise;
+  }
+
+  async function runSessionCheck() {
     try {
       const response = await fetch(sessionUrl, {
         cache: "no-store",
@@ -44,7 +55,7 @@
       });
     } catch (error) {
     } finally {
-      window.location.href = redirectPage || loginPage || "login.html";
+      window.location.replace(redirectPage || loginPage || "login.html");
     }
   }
 
@@ -56,4 +67,20 @@
   });
 
   checkSession();
+
+  window.addEventListener("pageshow", (event) => {
+    const navigationEntries = performance.getEntriesByType
+      ? performance.getEntriesByType("navigation")
+      : [];
+    const restoredFromHistory =
+      event.persisted ||
+      (
+        navigationEntries.length > 0 &&
+        navigationEntries[0].type === "back_forward"
+      );
+
+    if (restoredFromHistory) {
+      checkSession();
+    }
+  });
 })();
