@@ -1,7 +1,7 @@
 (function () {
-  var THEME_STORAGE_KEY = "profconsult_theme";
+  var THEME_STORAGE_BASE_KEY = "profconsult_theme";
 
-  var BUTTON_STORAGE_KEY = "profconsult_theme_button";
+  var BUTTON_STORAGE_BASE_KEY = "profconsult_theme_button";
   var BUTTON_DEFAULT_VISIBLE = true;
 
   var SURFACE = "pc-dark-surface";
@@ -31,6 +31,7 @@
 
   var currentScript = document.currentScript;
   var IS_PUBLIC = !!(currentScript && currentScript.getAttribute("data-scope") === "public");
+  var themeScope = IS_PUBLIC ? "public" : "browser";
 
   var MOON_SVG =
     '<svg class="pc-icon-moon" viewBox="0 0 24 24" aria-hidden="true">' +
@@ -125,13 +126,54 @@
     (document.head || document.documentElement).appendChild(style);
   }
 
-  function getButtonVisible() {
+  function storagePart(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-") || "unknown";
+  }
+
+  function scopedStorageKey(baseKey) {
+    return baseKey + ":" + themeScope;
+  }
+
+  function userScope(user) {
+    if (!user) return "";
+    var role = storagePart(user.role || "user");
+    if (user.id) return role + ":" + storagePart(user.id);
+    if (user.username) return role + ":" + storagePart(user.username);
+    if (user.email) return role + ":" + storagePart(user.email);
+    return "";
+  }
+
+  function setThemeScope(user) {
+    var nextScope = userScope(user);
+    if (!nextScope || nextScope === themeScope) return;
+    themeScope = nextScope;
+    applyButtonVisibility();
+    applyTheme(getTheme());
+  }
+
+  function storedValue(baseKey) {
     try {
-      var saved = window.localStorage.getItem(BUTTON_STORAGE_KEY);
-      if (saved === "on") return true;
-      if (saved === "off") return false;
+      var scoped = window.localStorage.getItem(scopedStorageKey(baseKey));
+      if (scoped !== null) return scoped;
     } catch (error) {
     }
+    return null;
+  }
+
+  function storeValue(baseKey, value) {
+    try {
+      window.localStorage.setItem(scopedStorageKey(baseKey), value);
+    } catch (error) {
+    }
+  }
+
+  function getButtonVisible() {
+    var saved = storedValue(BUTTON_STORAGE_BASE_KEY);
+    if (saved === "on") return true;
+    if (saved === "off") return false;
     return BUTTON_DEFAULT_VISIBLE;
   }
 
@@ -140,10 +182,7 @@
   }
 
   function setButtonVisible(visible) {
-    try {
-      window.localStorage.setItem(BUTTON_STORAGE_KEY, visible ? "on" : "off");
-    } catch (error) {
-    }
+    storeValue(BUTTON_STORAGE_BASE_KEY, visible ? "on" : "off");
     applyButtonVisibility();
     syncSwitch();
     if (!visible) setTheme("light");
@@ -158,11 +197,7 @@
 
   function getTheme() {
     if (!getButtonVisible()) return "light";
-    try {
-      return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
-    } catch (error) {
-      return "light";
-    }
+    return storedValue(THEME_STORAGE_BASE_KEY) === "dark" ? "dark" : "light";
   }
 
   function isDark() {
@@ -224,10 +259,7 @@
 
   function setTheme(theme) {
     var normalized = theme === "dark" ? "dark" : "light";
-    try {
-      window.localStorage.setItem(THEME_STORAGE_KEY, normalized);
-    } catch (error) {
-    }
+    storeValue(THEME_STORAGE_BASE_KEY, normalized);
     applyTheme(normalized);
   }
 
@@ -448,18 +480,15 @@
     setButton: setButtonVisible
   };
 
-  window.addEventListener("storage", function (event) {
-    if (event.key === THEME_STORAGE_KEY) {
-      applyTheme(getTheme());
-    }
-    if (event.key === BUTTON_STORAGE_KEY) {
-      applyButtonVisibility();
-      applyTheme(getTheme());
-      syncSwitch();
-    }
+  document.addEventListener("profconsult:session", function (event) {
+    setThemeScope(event.detail && event.detail.user);
   });
 
   document.addEventListener("DOMContentLoaded", function () {
+    if (window.ProfConsultAuth && window.ProfConsultAuth.currentSession) {
+      setThemeScope(window.ProfConsultAuth.currentSession.user);
+    }
+
     if (IS_PUBLIC) buildPublicToggle();
     else buildNavToggle();
     syncAutoSurfaces();
