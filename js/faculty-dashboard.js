@@ -19,6 +19,13 @@ function studentNameLinkHtml(request) {
   return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
 }
 
+function capitalizeName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+}
+
 const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
@@ -98,7 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const fullName = result && result.user ? String(result.user.name || "").trim() : "";
       if (nameEl && fullName) {
         const parts = fullName.split(/\s+/);
-        nameEl.textContent = parts[parts.length - 1] || fullName;
+        nameEl.textContent = `Prof. ${capitalizeName(parts[parts.length - 1] || fullName)}`;
       }
     })
     .catch(() => {
