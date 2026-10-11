@@ -5,11 +5,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prof Consult | Account Settings</title>
+
+  <!-- Shared theme: no defer, so the saved theme applies before first paint -->
+  <script src="js/dark-theme.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/settings.css">
   <link rel="stylesheet" href="css/student-notification-toast.css">
+
+  <!-- Shared dark theme (must come after the page CSS) -->
+  <link rel="stylesheet" href="css/dark-theme.css">
+
   <script src="js/student-notification-toast.js"></script>
 </head>
 <body>
@@ -111,6 +119,17 @@
             </span>
             <span class="settings-checkbox">
               <input type="checkbox" id="pushNotificationsCheckbox" checked>
+              <span class="settings-checkbox-box" aria-hidden="true"></span>
+            </span>
+          </label>
+
+          <label class="settings-option">
+            <span class="settings-option-text">
+              <span class="settings-option-title">Dark Mode</span>
+              <span class="settings-option-description">Use a dark maroon theme across Prof Consult.</span>
+            </span>
+            <span class="settings-checkbox">
+              <input type="checkbox" id="darkModeCheckbox">
               <span class="settings-checkbox-box" aria-hidden="true"></span>
             </span>
           </label>

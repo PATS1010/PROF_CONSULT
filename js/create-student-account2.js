@@ -117,6 +117,39 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function getPasswordIssue() {
+
+    const value =
+      passwordInput.value;
+
+    if (value.length < 8) {
+      return "Password must contain at least 8 characters.";
+    }
+
+    if (!/[A-Z]/.test(value)) {
+      return "Password must contain at least one uppercase letter.";
+    }
+
+    if (!/[0-9]/.test(value)) {
+      return "Password must contain at least one number.";
+    }
+
+    return "";
+  }
+
+  function isPasswordValid() {
+
+    return getPasswordIssue() === "";
+  }
+
+  function doPasswordsMatch() {
+
+    return (
+      passwordInput.value ===
+      confirmPasswordInput.value
+    );
+  }
+
   function formatMobileNumber(value) {
 
     const digits =
@@ -251,9 +284,18 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileInput.value
       );
 
+    const passwordValid =
+      isPasswordValid();
+
+    const confirmValid =
+      passwordValid &&
+      doPasswordsMatch();
+
     const canVerify =
       emailValid &&
-      mobileValid;
+      mobileValid &&
+      passwordValid &&
+      confirmValid;
 
     if (canVerify) {
 
@@ -306,7 +348,22 @@ document.addEventListener("DOMContentLoaded", () => {
         mobileInput.value
       );
 
-    if (!emailValid || !mobileValid) {
+    const passwordIssue =
+      getPasswordIssue();
+
+    const passwordValid =
+      passwordIssue === "";
+
+    const confirmValid =
+      passwordValid &&
+      doPasswordsMatch();
+
+    if (
+      !emailValid ||
+      !mobileValid ||
+      !passwordValid ||
+      !confirmValid
+    ) {
 
       event.preventDefault();
 
@@ -324,6 +381,23 @@ document.addEventListener("DOMContentLoaded", () => {
           "Please enter a valid Philippine mobile number.";
 
         mobileError.hidden = false;
+      }
+
+      if (!passwordValid) {
+
+        passwordFieldError.textContent =
+          passwordIssue;
+
+        passwordFieldError.hidden = false;
+
+        passwordError.hidden = true;
+
+      } else {
+
+        passwordFieldError.hidden = true;
+
+        passwordError.hidden =
+          confirmValid;
       }
 
       return;

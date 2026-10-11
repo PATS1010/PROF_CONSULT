@@ -6,6 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prof Consult | Faculty Settings</title>
 
+  <script src="js/dark-theme.js"></script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,6 +16,8 @@
   <link rel="stylesheet" href="css/faculty-shared.css">
 
   <link rel="stylesheet" href="css/faculty-settings.css">
+
+  <link rel="stylesheet" href="css/dark-theme.css">
 </head>
 
 <body data-active-page="settings">
@@ -43,7 +47,7 @@
 
         <div class="faculty-quick-action-header">
           <span class="faculty-quick-action-icon-wrap">
-            <img src="images/redactionbutton.png" alt="">
+            <img src="images/actionbutton.png" alt="">
           </span>
 
           <p class="format-text faculty-quick-action-title">
@@ -86,7 +90,7 @@
       <a href="faculty-availability.html" class="faculty-sidebar-link" data-page="availability">Availability</a>
       <a href="faculty-notifications.html" class="faculty-sidebar-link" data-page="notifications">Notifications</a>
       <a href="faculty-profile.html" class="faculty-sidebar-link" data-page="profile">Profile</a>
-      <a href="settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
+      <a href="faculty-settings.html" class="faculty-sidebar-link" data-page="settings">Settings</a>
       <a href="login.html" class="faculty-sidebar-link" data-page="logout">Logout</a>
     </nav>
 
@@ -135,6 +139,17 @@
         </span>
         <span class="faculty-settings-checkbox-control">
           <input type="checkbox" id="autoCheckInCheckbox" class="faculty-settings-checkbox">
+          <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
+        </span>
+      </label>
+
+      <label class="faculty-settings-checkbox-row">
+        <span class="faculty-settings-option-text">
+          <span class="faculty-settings-checkbox-label">Dark Mode</span>
+          <span class="faculty-settings-option-description">Use a dark maroon theme across Prof Consult.</span>
+        </span>
+        <span class="faculty-settings-checkbox-control">
+          <input type="checkbox" id="darkModeCheckbox" class="faculty-settings-checkbox">
           <span class="faculty-settings-checkbox-box" aria-hidden="true"></span>
         </span>
       </label>
