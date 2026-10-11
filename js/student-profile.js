@@ -282,6 +282,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let isEditing = false;
   if (profilePhotoEdit) profilePhotoEdit.hidden = true;
+  [emailInput, phoneInput].forEach((field) => {
+    if (!field) return;
+    field.readOnly = true;
+    field.disabled = true;
+  });
 
   function enterEditMode() {
     isEditing = true;
@@ -335,11 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
     isEditing = false;
     editableFields.forEach((field) => {
       if (!field) return;
-      if (field.tagName === "SELECT") {
-        field.disabled = true;
-      } else {
-        field.readOnly = true;
-      }
+      field.disabled = true;
+      if (field.tagName !== "SELECT") field.readOnly = true;
     });
 
     studentName = {
