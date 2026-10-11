@@ -22,10 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "verificationToken"
     ) || "";
 
-  const verificationMethod =
-    sessionStorage.getItem(
-      "verificationMethod"
-    ) || "email";
+  const verificationMethod = "email";
 
   const backButton =
     document.getElementById("backButton");
@@ -107,21 +104,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
   if (subtitle) {
-
-    if (
-      verificationMethod === "mobile"
-    ) {
-
-      subtitle.textContent =
-        "A 6-digit verification code has been sent to your mobile number.";
-
-    } else {
-
-      subtitle.textContent =
-        "A 6-digit verification code has been sent to your email address.";
-
-    }
-
+    subtitle.textContent =
+      "A 6-digit verification code has been sent to your email address.";
   }
 
   function showError(text) {
@@ -462,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
               role: origin,
               method: verificationMethod,
               identifier,
-              email: verificationMethod === "email" ? identifier : "",
+              email: identifier,
             }),
           });
           const result = await response.json().catch(() => ({}));

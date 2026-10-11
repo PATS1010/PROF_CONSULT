@@ -1,8 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// SYSTEM NOTE: Sends an email OTP before account creation.
-
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/mailer.php';
 requirePost();
@@ -13,20 +11,13 @@ $data = input();
 $role = clean((string) ($data['role'] ?? ''));
 $email = strtolower(clean((string) ($data['email'] ?? $data['identifier'] ?? '')));
 $method = clean((string) ($data['method'] ?? 'email'));
-$identifier = clean((string) ($data['identifier'] ?? ''));
-$mobile = philippineMobileLocalNumber($identifier);
 
 if (!in_array($role, ['student', 'faculty'], true) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     fail('Please enter a valid email address.');
 }
 
-if ($method === 'mobile') {
-    if ($mobile === '') {
-        fail('Please enter a valid Philippine mobile number.');
-    }
-} else {
-    $method = 'email';
-    $mobile = '';
+if ($method !== '' && $method !== 'email') {
+    fail('Mobile number verification is no longer available. Please verify using your email address.', 400);
 }
 
 try {
@@ -37,14 +28,6 @@ try {
     $existing->execute([$email]);
     if ($existing->fetchColumn()) {
         fail('An account with that email already exists.', 409);
-    }
-
-    if ($mobile !== '') {
-        $existingMobile = $db->prepare('SELECT 1 FROM users WHERE Mobile_Number = ? LIMIT 1');
-        $existingMobile->execute([$mobile]);
-        if ($existingMobile->fetchColumn()) {
-            fail('An account with that mobile number already exists.', 409);
-        }
     }
 
     $otpCode = (string) random_int(100000, 999999);
@@ -68,19 +51,13 @@ try {
         password_hash($otpCode, PASSWORD_DEFAULT),
     ]);
 
-    if ($mobile !== '') {
-        sendOtpSms($mobile, $otpCode);
-        $sentTo = 'mobile';
-    } else {
-        sendOtpEmail($email, 'Prof Consult User', $otpCode);
-        $sentTo = 'email';
-    }
+    sendOtpEmail($email, 'Prof Consult User', $otpCode);
 
     reply([
         'ok' => true,
         'message' => 'Verification code sent.',
         'token' => $token,
-        'sent_to' => $sentTo,
+        'sent_to' => 'email',
     ]);
 } catch (RuntimeException $exception) {
     fail($exception->getMessage(), 500);
