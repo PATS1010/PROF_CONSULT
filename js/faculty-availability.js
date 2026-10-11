@@ -247,6 +247,25 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveHoursButton = document.getElementById("saveHoursButton");
 
   let isEditingHours = false;
+  let savedFeedbackTimer = null;
+
+  function setSaveButtonSaved() {
+    if (!saveHoursButton) return;
+    window.clearTimeout(savedFeedbackTimer);
+    saveHoursButton.classList.add("is-saved");
+    saveHoursButton.textContent = "Saved";
+    savedFeedbackTimer = window.setTimeout(() => {
+      saveHoursButton.classList.remove("is-saved");
+      saveHoursButton.textContent = "Save";
+    }, 2200);
+  }
+
+  function resetSaveButton() {
+    if (!saveHoursButton) return;
+    window.clearTimeout(savedFeedbackTimer);
+    saveHoursButton.classList.remove("is-saved");
+    saveHoursButton.textContent = "Save";
+  }
 
   // Not editing: the earliest slot only. Editing: the earliest slot plus how many more are picked.
   function getDisplayText(entry, editing) {
@@ -498,6 +517,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (saveHoursButton) {
     saveHoursButton.addEventListener("click", async () => {
+      let didSaveHours = false;
+
       if (isEditingHours) {
         AVAILABLE_HOURS = cloneHours(draftHours);
 
@@ -529,12 +550,14 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           setCurrentStatus("available", "Available");
         }
+        didSaveHours = true;
       }
 
       isEditingHours = false;
       if (editButton) editButton.textContent = "Edit";
       closeAllTimeDropdowns();
       renderAvailableHours();
+      if (didSaveHours) setSaveButtonSaved();
     });
   }
 
@@ -549,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isEditingHours = true;
         draftHours = cloneHours(AVAILABLE_HOURS);
         editButton.textContent = "Cancel";
+        resetSaveButton();
         renderAvailableHours();
       }
     });

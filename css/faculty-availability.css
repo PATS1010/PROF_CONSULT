@@ -405,6 +405,11 @@
   transform: translateY(-2px);
 }
 
+.availability-save-button.is-saved {
+  background: #2fae4e;
+  box-shadow: 0 8px 18px rgba(47, 174, 78, 0.32);
+}
+
 @media (max-width: 1024px) {
   .availability-grid {
     flex-direction: column;
