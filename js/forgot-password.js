@@ -1,40 +1,5 @@
-// =========================================================
-// FORGOT PASSWORD PAGE INTERACTIONS
-// Shared by the Login page, Faculty/Student settings, and Change Password.
-//
-// URL params:
-//   from=student | from=faculty
-//     -> which role this page belongs to
-//   context=change-password (optional)
-//     -> if present, this page was reached from Change Password,
-//        not from a Login page's "Forgot Password?" link, so
-//        Back must return to Change Password instead of Login.
-//   context=delete-account (optional)
-//     -> if present, this page was reached from the Delete
-//        Account confirmation modal on the Settings page, so
-//        Back must return to Settings instead of Login.
-//
-// Examples:
-//   forgot-password.html
-//     -> came from the shared Login page, Back -> login.html
-//   forgot-password.html?from=faculty&context=change-password
-//     -> came from Faculty Change Password,
-//        Back -> change-password.html?from=faculty
-//   forgot-password.html?from=student&context=delete-account
-//     -> came from the Delete Account modal on Settings,
-//        Back -> settings.html
-//
-// Supports Email or Mobile Number as the reset identifier.
-// Sends a backend reset code, then carries the returned token into
-// verification-code.html.
-//
-// IMPORTANT: visibility of the email vs mobile input is controlled
-// ONLY by setting element.style.display directly in this file.
-// Do not reintroduce [hidden] or a CSS class for this.
-// =========================================================
-
+// Forgot Password page interactions.
 document.addEventListener("DOMContentLoaded", () => {
-
   const params = new URLSearchParams(window.location.search);
   const requestedOrigin = params.get("from");
   const origin = requestedOrigin === "faculty" || requestedOrigin === "student"
@@ -45,9 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const originLoginPage = "login.html";
   const originChangePasswordPage = `change-password.html?from=${origin || "student"}`;
   const originSettingsPage = origin === "faculty" ? "faculty-settings.html" : "settings.html";
-
-  // Where the Back button (and any [data-nav="back"] element) should go,
-  // based on which flow sent the person here.
   const backDestination =
     context === "change-password" ? originChangePasswordPage :
     context === "delete-account" ? originSettingsPage :
@@ -55,11 +17,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const backButton = document.getElementById("backButton");
   const loginLink = document.getElementById("loginLink");
+  const form = document.getElementById("forgotPasswordForm");
+  const emailInput = document.getElementById("emailInput");
+  const message = document.getElementById("forgotPasswordMessage");
 
   if (backButton) backButton.setAttribute("href", backDestination);
-
-  // "Remember your password? Login" always goes to the role's Login page,
-  // regardless of where Forgot Password was opened from.
   if (loginLink) loginLink.setAttribute("href", originLoginPage);
 
   document.querySelectorAll('[data-nav="back"]').forEach((link) => {
@@ -76,33 +38,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  const form = document.getElementById("forgotPasswordForm");
-  const emailInput = document.getElementById("emailInput");
-  const mobileInput = document.getElementById("mobileInput");
-  const emailInputWrapper = document.getElementById("emailInputWrapper");
-  const mobileInputWrapper = document.getElementById("mobileInputWrapper");
-  const switchMethod = document.getElementById("switchMethod");
-  const methodText = document.getElementById("methodText");
-  const methodSuffix = document.getElementById("methodSuffix");
-  const subtitle = document.getElementById("forgotPasswordSubtitle");
-  const message = document.getElementById("forgotPasswordMessage");
-
-  const requiredElements = {
-    form, emailInput, mobileInput, emailInputWrapper,
-    mobileInputWrapper, switchMethod, methodText, methodSuffix, message
-  };
-  for (const [name, el] of Object.entries(requiredElements)) {
-    if (!el) {
-      console.error(`Forgot Password page: missing element "${name}". Check that its id in the HTML matches exactly.`);
-    }
-  }
-
-  let currentMode = "email";
-
   function showMessage(text) {
     if (!message) return;
     message.textContent = text;
-    message.style.display = "block";
+    message.hidden = false;
+  }
+
+  function hideMessage() {
+    if (!message) return;
+    message.textContent = "";
+    message.hidden = true;
   }
 
   function setSubmitLoading(isLoading) {
@@ -114,135 +59,55 @@ document.addEventListener("DOMContentLoaded", () => {
       submitButton.textContent = "Sending...";
       submitButton.disabled = true;
     } else {
-      submitButton.textContent = submitButton.dataset.originalText || "Continue";
+      submitButton.textContent = submitButton.dataset.originalText || "Send Verification Code";
       submitButton.disabled = false;
     }
-  }
-
-  function hideMessage() {
-    if (!message) return;
-    message.textContent = "";
-    message.style.display = "none";
   }
 
   function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email);
   }
 
-  function isValidMobile(mobile) {
-    return /^9\d{9}$/.test(mobile);
+  function validateEmail() {
+    const email = emailInput ? emailInput.value.trim() : "";
+
+    if (!email) {
+      if (emailInput) {
+        emailInput.classList.add("input-error");
+        emailInput.focus();
+      }
+      showMessage("Please enter your email address.");
+      return "";
+    }
+
+    if (!isValidEmail(email)) {
+      if (emailInput) {
+        emailInput.classList.add("input-error");
+        emailInput.focus();
+      }
+      showMessage("Please enter a valid email address.");
+      return "";
+    }
+
+    if (emailInput) emailInput.classList.remove("input-error");
+    return email;
   }
 
-  function normalizeMobile(mobile) {
-    return `+63${mobile}`;
-  }
-
-  function setEmailMode() {
-    currentMode = "email";
-
-    emailInputWrapper.style.display = "block";
-    mobileInputWrapper.style.display = "none";
-
+  if (emailInput) {
     emailInput.required = true;
-    mobileInput.required = false;
-
-    emailInput.classList.remove("input-error");
-    mobileInput.classList.remove("input-error");
-
-    if (subtitle) {
-      subtitle.textContent = "Don't worry! Enter your Email Address to receive a verification code.";
-    }
-
-    methodText.textContent = "Enter";
-    switchMethod.textContent = "Mobile Number";
-    methodSuffix.textContent = "instead";
-
-    hideMessage();
-    setTimeout(() => emailInput.focus(), 0);
-  }
-
-  function setMobileMode() {
-    currentMode = "mobile";
-
-    emailInputWrapper.style.display = "none";
-    mobileInputWrapper.style.display = "flex";
-
-    emailInput.required = false;
-    mobileInput.required = true;
-
-    emailInput.classList.remove("input-error");
-    mobileInput.classList.remove("input-error");
-
-    if (subtitle) {
-      subtitle.textContent = "Don't worry! Enter your Mobile Number to receive a verification code.";
-    }
-
-    methodText.textContent = "Enter";
-    switchMethod.textContent = "Email Address";
-    methodSuffix.textContent = "instead";
-
-    hideMessage();
-    setTimeout(() => mobileInput.focus(), 0);
-  }
-
-  switchMethod.addEventListener("click", (event) => {
-    event.preventDefault();
-    currentMode === "email" ? setMobileMode() : setEmailMode();
-  });
-
-  mobileInput.addEventListener("input", () => {
-    mobileInput.value = mobileInput.value.replace(/\D/g, "").substring(0, 10);
-    mobileInput.classList.remove("input-error");
-    hideMessage();
-  });
-
-  emailInput.addEventListener("input", () => {
-    emailInput.classList.remove("input-error");
-    hideMessage();
-  });
-
-  function validateInput() {
-    if (currentMode === "email") {
-      const email = emailInput.value.trim();
-      if (!email) {
-        emailInput.classList.add("input-error");
-        showMessage("Please enter your email address.");
-        emailInput.focus();
-        return null;
-      }
-      if (!isValidEmail(email)) {
-        emailInput.classList.add("input-error");
-        showMessage("Please enter a valid email address.");
-        emailInput.focus();
-        return null;
-      }
+    emailInput.addEventListener("input", () => {
       emailInput.classList.remove("input-error");
-      return email;
-    }
-
-    const mobile = mobileInput.value.trim();
-    if (!mobile) {
-      mobileInput.classList.add("input-error");
-      showMessage("Please enter your mobile number.");
-      mobileInput.focus();
-      return null;
-    }
-    if (!isValidMobile(mobile)) {
-      mobileInput.classList.add("input-error");
-      showMessage("Please enter a valid 10-digit Philippine mobile number starting with 9.");
-      mobileInput.focus();
-      return null;
-    }
-    mobileInput.classList.remove("input-error");
-    return normalizeMobile(mobile);
+      hideMessage();
+    });
+    emailInput.focus();
   }
 
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const identifier = validateInput();
-      if (!identifier) return;
+      const email = validateEmail();
+      if (!email) return;
 
       hideMessage();
       setSubmitLoading(true);
@@ -257,20 +122,20 @@ document.addEventListener("DOMContentLoaded", () => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            identifier,
+            identifier: email,
             role: origin,
-            method: currentMode,
+            method: "email",
           }),
         });
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok || !result.ok || !result.token) {
           showMessage(result.message || "Unable to send the verification code. Please try again.");
           return;
         }
 
-        sessionStorage.setItem("resetIdentifier", identifier);
-        sessionStorage.setItem("resetMethod", currentMode);
+        sessionStorage.setItem("resetIdentifier", email);
+        sessionStorage.setItem("resetMethod", "email");
 
         window.location.href =
           `verification-code.html?from=${encodeURIComponent(result.role || origin || "student")}&token=${encodeURIComponent(result.token)}`;
@@ -281,6 +146,4 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
-
-  setEmailMode();
 });

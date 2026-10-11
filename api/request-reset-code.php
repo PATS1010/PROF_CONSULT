@@ -1,47 +1,38 @@
 <?php
 declare(strict_types=1);
 
-// SYSTEM NOTE: Creates a reset code and emails it to the user.
-
 require __DIR__ . '/bootstrap.php';
 require __DIR__ . '/mailer.php';
 requirePost();
 
 set_time_limit(20);
 
-// Receives an email/mobile number, creates a 6-digit OTP, stores only its hash, then emails the code.
-
 $data = input();
 $identifier = strtolower(clean((string) ($data['identifier'] ?? '')));
 $role = clean((string) ($data['role'] ?? ''));
 $method = clean((string) ($data['method'] ?? ''));
 
-if ($identifier === '' || ($role !== '' && !in_array($role, ['student', 'faculty'], true))) {
-    fail('Please enter your registered email address or mobile number.');
+if (!filter_var($identifier, FILTER_VALIDATE_EMAIL) || ($role !== '' && !in_array($role, ['student', 'faculty'], true))) {
+    fail('Please enter your registered email address.');
 }
 
-$emailCandidate = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? $identifier : '';
-$phoneCandidate = philippineMobileLocalNumber($identifier);
-$sendBySms = $method === 'mobile' || ($emailCandidate === '' && $phoneCandidate !== '');
+if ($method !== '' && $method !== 'email') {
+    fail('Please use your registered email address.', 400);
+}
 
 try {
     $db = database();
     ensurePasswordResetTable($db);
     $roleFilter = $role !== '' ? 'Role = ? AND' : "Role IN ('student', 'faculty') AND";
     $parameters = $role !== ''
-        ? [$role, $emailCandidate, $phoneCandidate, '0' . $phoneCandidate, '63' . $phoneCandidate, 'active']
-        : [$emailCandidate, $phoneCandidate, '0' . $phoneCandidate, '63' . $phoneCandidate, 'active'];
+        ? [$role, $identifier, 'active']
+        : [$identifier, 'active'];
 
     $lookup = $db->prepare(
-        "SELECT User_ID AS \"User_ID\", Full_Name AS \"Full_Name\", Email AS \"Email\", Mobile_Number AS \"Mobile_Number\", Role AS \"Role\"
+        "SELECT User_ID AS \"User_ID\", Full_Name AS \"Full_Name\", Email AS \"Email\", Role AS \"Role\"
          FROM users
          WHERE {$roleFilter}
-           (
-             LOWER(Email) = ?
-             OR Mobile_Number = ?
-             OR REGEXP_REPLACE(Mobile_Number, '\\D', '', 'g') = ?
-             OR REGEXP_REPLACE(Mobile_Number, '\\D', '', 'g') = ?
-           )
+           LOWER(Email) = ?
            AND Account_Status = ?
          LIMIT 1"
     );
@@ -49,7 +40,7 @@ try {
     $user = $lookup->fetch();
 
     if (!$user) {
-        fail('No active account was found for that email or mobile number.', 404);
+        fail('No active account was found for that email address.', 404);
     }
 
     $otpCode = (string) random_int(100000, 999999);
@@ -69,20 +60,14 @@ try {
         password_hash($otpCode, PASSWORD_DEFAULT),
     ]);
 
-    if ($sendBySms) {
-        sendOtpSms((string) $user['Mobile_Number'], $otpCode);
-        $sentTo = 'mobile';
-    } else {
-        sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
-        $sentTo = 'email';
-    }
+    sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
 
     reply([
         'ok' => true,
         'message' => 'Verification code sent.',
         'token' => $token,
         'role' => $user['Role'],
-        'sent_to' => $sentTo,
+        'sent_to' => 'email',
     ]);
 } catch (RuntimeException $exception) {
     fail($exception->getMessage(), 500);

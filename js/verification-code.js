@@ -82,8 +82,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const response = await fetch("api/request-reset-code.php", {
           method: "POST",
+          credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ identifier, role: origin })
+          body: JSON.stringify({ identifier, role: origin, method: "email" })
         });
         const result = await response.json();
 
@@ -94,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         token = result.token;
+        sessionStorage.setItem("resetMethod", "email");
         window.history.replaceState(null, "", `verification-code.html?from=${origin}&token=${encodeURIComponent(result.token)}`);
         if (tokenInput) tokenInput.value = result.token;
         startCountdown();
