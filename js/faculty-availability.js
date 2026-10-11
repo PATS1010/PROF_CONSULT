@@ -123,18 +123,6 @@ function saveAvailableHours(hours) {
 }
 
 let AVAILABLE_HOURS = loadAvailableHours();
-let draftHours = cloneHours(AVAILABLE_HOURS);
-
-function applySavedHours(rawHours) {
-  try {
-    const saved = JSON.parse(rawHours || "[]");
-    if (!Array.isArray(saved)) return;
-    localStorage.setItem(AVAILABLE_HOURS_STORAGE_KEY, JSON.stringify(saved));
-    AVAILABLE_HOURS = loadAvailableHours();
-    draftHours = cloneHours(AVAILABLE_HOURS);
-  } catch (error) {
-  }
-}
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -146,21 +134,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveStatusButton = document.getElementById("saveStatusButton");
   const currentStatusDot = document.getElementById("availabilityStatusDot");
   const currentStatusLabel = document.getElementById("availabilityStatusLabel");
-
-  fetch("api/faculty-hours.php", {
-    cache: "no-store",
-    credentials: "same-origin",
-    headers: { "Accept": "application/json" },
-  })
-    .then((response) => response.ok ? response.json() : Promise.reject())
-    .then((result) => {
-      if (result && result.consultation_hours) {
-        applySavedHours(result.consultation_hours);
-        renderAvailableHours();
-      }
-    })
-    .catch(() => {
-    });
 
   function openStatusPanel() {
     statusPanel.hidden = false;
@@ -247,6 +220,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveHoursButton = document.getElementById("saveHoursButton");
 
   let isEditingHours = false;
+  let draftHours = cloneHours(AVAILABLE_HOURS);
 
   // Not editing: the earliest slot only. Editing: the earliest slot plus how many more are picked.
   function getDisplayText(entry, editing) {
@@ -497,26 +471,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (saveHoursButton) {
-    saveHoursButton.addEventListener("click", async () => {
+    saveHoursButton.addEventListener("click", () => {
       if (isEditingHours) {
         AVAILABLE_HOURS = cloneHours(draftHours);
 
         saveAvailableHours(AVAILABLE_HOURS);
-
-        try {
-          await fetch("api/faculty-hours.php", {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-            },
-            body: JSON.stringify({
-              consultation_hours: JSON.stringify(AVAILABLE_HOURS),
-            }),
-          });
-        } catch (error) {
-        }
 
         if (typeof window.setFacultyOnlineStatus === "function") {
           window.setFacultyOnlineStatus("available");

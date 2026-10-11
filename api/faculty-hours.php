@@ -29,7 +29,7 @@ try {
     $data = input();
     $hours = trim((string) ($data['consultation_hours'] ?? ''));
 
-    if (strlen($hours) > 10000) {
+    if (strlen($hours) > 2000) {
         fail('Consultation hours are too long.');
     }
 
