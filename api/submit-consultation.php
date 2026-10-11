@@ -71,6 +71,11 @@ try {
         fail('That time is not available for the selected professor. Please choose an available slot.', 422);
     }
 
+    $db->beginTransaction();
+
+    $lock = $db->prepare('SELECT pg_advisory_xact_lock(hashtext(?))');
+    $lock->execute(['consultation-slot:' . $facultyId . ':' . $date . ':' . $preferredTimeStart]);
+
     $conflict = $db->prepare(
         "SELECT 1
          FROM consultation_requests
@@ -82,10 +87,9 @@ try {
     );
     $conflict->execute([$facultyId, $date, $preferredTimeStart]);
     if ($conflict->fetchColumn()) {
+        $db->rollBack();
         fail('This time slot has already been taken. Please choose another available time.', 409);
     }
-
-    $db->beginTransaction();
 
     $statement = $db->prepare(
         'INSERT INTO consultation_requests
