@@ -11,42 +11,33 @@ const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
 window.TEST_FACULTY_ACCOUNT = false;
 
 const FACULTY_STATUS_LABELS = {
-  available: "Available",
-  teaching: "In Class",
   meeting: "Meeting",
   consultation: "Consultation",
   onleave: "On Leave",
-  offline: "Offline",
 };
 
 const FACULTY_STATUS_COLOR_VARS = {
-  available: "--color-status-available",
-  teaching: "--color-status-teaching",
   meeting: "--color-status-meeting",
   consultation: "--color-status-consultation",
   onleave: "--color-status-onleave",
-  offline: "--color-status-offline",
 };
 
-const FACULTY_STATUS_DEFAULT = "available";
+const FACULTY_STATUS_DEFAULT = "consultation";
 
 const FACULTY_STATUS_API_VALUES = {
-  available: "available",
-  teaching: "in class",
   meeting: "meeting",
   consultation: "consultation",
   onleave: "on leave",
-  offline: "offline",
 };
 
 const FACULTY_STATUS_FROM_API = {
-  available: "available",
-  unavailable: "offline",
-  "in class": "teaching",
+  available: "consultation",
+  unavailable: "onleave",
+  "in class": "meeting",
   meeting: "meeting",
   consultation: "consultation",
   "on leave": "onleave",
-  offline: "offline",
+  offline: "onleave",
 };
 
 function isValidFacultyStatus(value) {
@@ -1126,15 +1117,17 @@ document.addEventListener(
 
     function updateQuickActionUI() {
 
-      const isOffline =
+      const isOnLeave =
         facultyOnlineStatus ===
-        "offline";
+        "onleave";
 
       const colorVar =
         FACULTY_STATUS_COLOR_VARS[
           facultyOnlineStatus
         ] ||
-        FACULTY_STATUS_COLOR_VARS.offline;
+        FACULTY_STATUS_COLOR_VARS[
+          FACULTY_STATUS_DEFAULT
+        ];
 
       if (quickActionStatusDot) {
 
@@ -1148,19 +1141,21 @@ document.addEventListener(
           FACULTY_STATUS_LABELS[
             facultyOnlineStatus
           ] ||
-          FACULTY_STATUS_LABELS.offline;
+          FACULTY_STATUS_LABELS[
+            FACULTY_STATUS_DEFAULT
+          ];
       }
 
       if (checkInButton) {
 
         checkInButton.hidden =
-          !isOffline;
+          !isOnLeave;
       }
 
       if (checkOutButton) {
 
         checkOutButton.hidden =
-          isOffline;
+          isOnLeave;
       }
     }
 
@@ -1191,7 +1186,9 @@ document.addEventListener(
         FACULTY_STATUS_LABELS[
           facultyOnlineStatus
         ] ||
-        FACULTY_STATUS_LABELS.offline;
+        FACULTY_STATUS_LABELS[
+          FACULTY_STATUS_DEFAULT
+        ];
     }
 
     function updateAvailabilityStatusUI() {
@@ -1221,7 +1218,9 @@ document.addEventListener(
         FACULTY_STATUS_LABELS[
           facultyOnlineStatus
         ] ||
-        FACULTY_STATUS_LABELS.offline;
+        FACULTY_STATUS_LABELS[
+          FACULTY_STATUS_DEFAULT
+        ];
     }
 
     function syncStatusPanelSelection() {
@@ -1365,7 +1364,7 @@ document.addEventListener(
       event.preventDefault();
 
       setFacultyOnlineStatus(
-        "available"
+        "consultation"
       );
 
       if (checkInTimeoutId) {
@@ -1380,7 +1379,7 @@ document.addEventListener(
           () => {
 
             setFacultyOnlineStatus(
-              "offline"
+              "onleave"
             );
 
             checkInTimeoutId =
@@ -1398,7 +1397,7 @@ document.addEventListener(
       event.preventDefault();
 
       setFacultyOnlineStatus(
-        "offline"
+        "onleave"
       );
 
       if (checkInTimeoutId) {

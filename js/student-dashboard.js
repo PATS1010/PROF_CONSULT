@@ -198,23 +198,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function normalizeStatus(value) {
-    const raw = String(value || "offline").toLowerCase();
-    if (raw === "in class") return "teaching";
+    const raw = String(value || "consultation").toLowerCase();
+    if (raw === "available") return "consultation";
+    if (raw === "in class") return "meeting";
     if (raw === "on leave") return "onleave";
-    if (raw === "unavailable") return "offline";
-    return raw;
+    if (raw === "unavailable" || raw === "offline") return "onleave";
+    return ["meeting", "consultation", "onleave"].includes(raw)
+      ? raw
+      : "consultation";
   }
 
   function statusLabel(status) {
     const labels = {
-      available: "Available",
-      teaching: "In Class",
       meeting: "Meeting",
       consultation: "Consultation",
       onleave: "On Leave",
-      offline: "Offline",
     };
-    return labels[status] || "Offline";
+    return labels[status] || "Consultation";
   }
 
   function mapFacultyRecord(record) {

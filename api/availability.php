@@ -46,7 +46,7 @@ try {
         $status = clean((string) ($data['status'] ?? ''));
         $date = clean((string) ($data['date'] ?? date('Y-m-d')));
         $time = clean((string) ($data['time'] ?? date('H:i:s')));
-        $allowedStatuses = ['available', 'unavailable', 'in class', 'meeting', 'on leave', 'consultation', 'offline'];
+        $allowedStatuses = ['meeting', 'on leave', 'consultation'];
 
         if (!in_array($status, $allowedStatuses, true)
             || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {

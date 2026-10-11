@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", () => {
       typeof window.getFacultyOnlineStatus ===
         "function"
         ? window.getFacultyOnlineStatus()
-        : "available";
+        : "consultation";
 
     statusOptions.forEach((opt) => {
       opt.classList.remove("is-selected");

@@ -10,8 +10,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fullName: "Engr. Maria Nina Sales",
       program: "Computer Engineering",
       office: DEFAULT_OFFICE,
-      status: "available",
-      statusLabel: "Available",
+      status: "consultation",
+      statusLabel: "Consultation",
       photo: "images/professor-maria-nina-sales.jpg",
       hours: [
         { day: "Monday", time: "9:00 AM - 11:00 AM" },
@@ -44,8 +44,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fullName: "Engr. Mervin Molina",
       program: "Computer Engineering",
       office: DEFAULT_OFFICE,
-      status: "teaching",
-      statusLabel: "Teaching Class",
+      status: "meeting",
+      statusLabel: "Meeting",
       photo: "images/professor-mervin-molina.jpg",
       hours: [
         { day: "Monday", time: "2:00 PM - 4:00 PM" },
@@ -78,8 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
       fullName: "Engr. Melody Paned",
       program: "Computer Engineering",
       office: DEFAULT_OFFICE,
-      status: "offline",
-      statusLabel: "Offline",
+      status: "onleave",
+      statusLabel: "On Leave",
       photo: "images/professor-melody-paned.jpg",
       hours: [
         { day: "Monday", time: "9:00 AM - 11:00 AM" },
@@ -116,23 +116,23 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function normalizeStatus(value) {
-    const raw = String(value || "offline").toLowerCase();
-    if (raw === "in class") return "teaching";
+    const raw = String(value || "consultation").toLowerCase();
+    if (raw === "available") return "consultation";
+    if (raw === "in class") return "meeting";
     if (raw === "on leave") return "onleave";
-    if (raw === "unavailable") return "offline";
-    return raw;
+    if (raw === "unavailable" || raw === "offline") return "onleave";
+    return ["meeting", "consultation", "onleave"].includes(raw)
+      ? raw
+      : "consultation";
   }
 
   function statusLabel(status) {
     const labels = {
-      available: "Available",
-      teaching: "In Class",
       meeting: "Meeting",
       consultation: "Consultation",
       onleave: "On Leave",
-      offline: "Offline",
     };
-    return labels[status] || "Offline";
+    return labels[status] || "Consultation";
   }
 
   function mapFacultyRecord(record) {
