@@ -321,6 +321,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "-1"
       );
 
+      verifyAccountButton.removeAttribute(
+        "href"
+      );
+
       return;
     }
 
@@ -346,6 +350,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "tabindex"
       );
 
+      verifyAccountButton.setAttribute(
+        "href",
+        "verify-account.html?from=faculty"
+      );
+
     }
 
     else {
@@ -362,6 +371,10 @@ document.addEventListener("DOMContentLoaded", () => {
       verifyAccountButton.setAttribute(
         "tabindex",
         "-1"
+      );
+
+      verifyAccountButton.removeAttribute(
+        "href"
       );
     }
   }
