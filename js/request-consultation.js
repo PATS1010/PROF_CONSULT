@@ -135,64 +135,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const TIME_RANGE_START_MINUTES = 8 * 60;
-  const TIME_RANGE_END_MINUTES = 20 * 60;
-
-  function formatHourMinute(totalMinutes) {
-    const hour24 = Math.floor(totalMinutes / 60) % 24;
-    const minute = totalMinutes % 60;
-    const period = hour24 < 12 ? "AM" : "PM";
-    let hour12 = hour24 % 12;
-    if (hour12 === 0) hour12 = 12;
-    const minuteStr = minute.toString().padStart(2, "0");
-    return `${hour12}:${minuteStr} ${period}`;
-  }
-
-  function buildTimeLabel(startMinutes, endMinutes) {
-    return `${formatHourMinute(startMinutes)} \u2013 ${formatHourMinute(endMinutes)}`;
-  }
-
-  function buildTimeSlots(rangeStartMinutes, rangeEndMinutes) {
-    const slots = [];
-    for (let start = rangeStartMinutes; start < rangeEndMinutes; start += 30) {
-      slots.push(buildTimeLabel(start, start + 30));
-    }
-    return slots;
-  }
-
-  const TEST_AVAILABLE_TIME_LABELS = [
-    buildTimeLabel(13 * 60, 13 * 60 + 30),
-    buildTimeLabel(13 * 60 + 30, 14 * 60),
-    buildTimeLabel(14 * 60, 14 * 60 + 30),
-  ];
-
-  const FACULTY_AVAILABILITY_TEST = {
-    availableDaysOfWeek: [1, 3, 5],
-    availableTimeSlotsByDay: {
-      1: TEST_AVAILABLE_TIME_LABELS,
-      3: TEST_AVAILABLE_TIME_LABELS,
-      5: TEST_AVAILABLE_TIME_LABELS,
-    },
-  };
-
-  const DEFAULT_PREVIEW_DAY_OF_WEEK = 1;
-
-  function isDateAvailable(dayOfWeek) {
-    return FACULTY_AVAILABILITY_TEST.availableDaysOfWeek.includes(dayOfWeek);
-  }
-
-  function getAvailableSlotsForDayOfWeek(dayOfWeek) {
-    return FACULTY_AVAILABILITY_TEST.availableTimeSlotsByDay[dayOfWeek] || [];
-  }
+  const MONDAY_TO_SATURDAY = [1, 2, 3, 4, 5, 6];
+  let availableDayNumbers = MONDAY_TO_SATURDAY.slice();
 
   const preferredTimeOptions = document.getElementById("preferredTimeOptions");
-  if (preferredTimeOptions) {
-    buildTimeSlots(TIME_RANGE_START_MINUTES, TIME_RANGE_END_MINUTES).forEach((label) => {
+  function renderTimeOptions(slots) {
+    if (!preferredTimeOptions) return;
+    preferredTimeOptions.innerHTML = "";
+
+    if (!slots.length) {
       const li = document.createElement("li");
       li.setAttribute("role", "option");
-      li.setAttribute("data-value", label);
-      li.setAttribute("aria-disabled", "false");
-      li.textContent = label;
+      li.setAttribute("aria-disabled", "true");
+      li.className = "is-unavailable";
+      li.textContent = "No available slots";
+      preferredTimeOptions.appendChild(li);
+      return;
+    }
+
+    slots.forEach((slot) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      li.setAttribute("data-value", slot.value || slot.label);
+      li.setAttribute("aria-disabled", slot.taken ? "true" : "false");
+      li.textContent = slot.taken ? `${slot.label} (Taken)` : slot.label;
+      li.classList.toggle("is-unavailable", !!slot.taken);
       preferredTimeOptions.appendChild(li);
     });
   }
@@ -210,25 +177,53 @@ document.addEventListener("DOMContentLoaded", () => {
     timeSelectEl.querySelectorAll("li.is-active").forEach((li) => li.classList.remove("is-active"));
   }
 
-  function updateTimeSlotAvailability(availableSlots) {
-    if (!preferredTimeOptions) return;
-    const availableSet = new Set(availableSlots);
-    const options = preferredTimeOptions.querySelectorAll("li[role='option']");
-
-    options.forEach((li) => {
-      const label = li.getAttribute("data-value");
-      const isAvailable = availableSet.has(label);
-      li.classList.toggle("is-unavailable", !isAvailable);
-      li.setAttribute("aria-disabled", isAvailable ? "false" : "true");
-    });
-
-    const hiddenInput = document.getElementById("preferredTime");
-    if (hiddenInput && hiddenInput.value && !availableSet.has(hiddenInput.value)) {
-      clearSelectedTime();
-    }
+  function setHint(text, isError) {
+    const preferredDateInput = document.getElementById("preferredDate");
+    const preferredDateHint = document.getElementById("preferredDateHint");
+    if (preferredDateHint) preferredDateHint.textContent = text;
+    if (preferredDateInput) preferredDateInput.classList.toggle("is-date-invalid", !!isError);
+    if (preferredDateHint) preferredDateHint.classList.toggle("is-error", !!isError);
   }
 
-  updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+  function formatDayHint(dayNames) {
+    return dayNames.length
+      ? `Available days: ${dayNames.join(", ")}`
+      : "No available days set by this professor yet.";
+  }
+
+  async function loadFacultySchedule(dateValue) {
+    if (!selectedFaculty || !selectedFaculty.id) {
+      renderTimeOptions([]);
+      setHint("Please choose a professor first.", true);
+      return null;
+    }
+
+    const params = new URLSearchParams({ faculty_id: String(selectedFaculty.id) });
+    if (dateValue) params.set("date", dateValue);
+
+    const response = await fetch(`api/faculty-schedule.php?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to load this professor's schedule.");
+    }
+
+    availableDayNumbers = Array.isArray(result.days) && result.days.length
+      ? result.days.map(Number)
+      : [];
+    setHint(formatDayHint(result.day_names || []), false);
+
+    if (dateValue) {
+      renderTimeOptions(result.slots || []);
+      clearSelectedTime();
+      if (result.message) setHint(result.message, true);
+    }
+
+    return result;
+  }
 
   const timeSelect = document.getElementById("preferredTimeSelect");
 
@@ -280,34 +275,57 @@ document.addEventListener("DOMContentLoaded", () => {
   const preferredDateInput = document.getElementById("preferredDate");
   const preferredDateHint = document.getElementById("preferredDateHint");
 
+  renderTimeOptions([]);
+  loadFacultySchedule("").catch((error) => setHint(error.message, true));
+
   function setDateErrorState(isError) {
     if (preferredDateInput) preferredDateInput.classList.toggle("is-date-invalid", isError);
     if (preferredDateHint) preferredDateHint.classList.toggle("is-error", isError);
   }
 
   if (preferredDateInput) {
-    preferredDateInput.addEventListener("change", () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const localYear = today.getFullYear();
+    const localMonth = String(today.getMonth() + 1).padStart(2, "0");
+    const localDay = String(today.getDate()).padStart(2, "0");
+    preferredDateInput.min = `${localYear}-${localMonth}-${localDay}`;
+
+    preferredDateInput.addEventListener("change", async () => {
       const dateValue = preferredDateInput.value;
 
       if (!dateValue) {
         setDateErrorState(false);
-        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        renderTimeOptions([]);
+        clearSelectedTime();
         return;
       }
 
       const dayOfWeek = new Date(`${dateValue}T00:00:00`).getDay();
+      const isoDay = dayOfWeek === 0 ? 7 : dayOfWeek;
 
-      if (!isDateAvailable(dayOfWeek)) {
+      if (!MONDAY_TO_SATURDAY.includes(isoDay)) {
         preferredDateInput.value = "";
-        setDateErrorState(true);
-        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        setHint("Please select a date from Monday to Saturday.", true);
         clearSelectedTime();
         window.setTimeout(() => setDateErrorState(false), 1200);
         return;
       }
 
-      setDateErrorState(false);
-      updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(dayOfWeek));
+      if (availableDayNumbers.length && !availableDayNumbers.includes(isoDay)) {
+        preferredDateInput.value = "";
+        setHint("This professor is not available on that day.", true);
+        clearSelectedTime();
+        window.setTimeout(() => setDateErrorState(false), 1200);
+        return;
+      }
+
+      try {
+        await loadFacultySchedule(dateValue);
+      } catch (error) {
+        setHint(error.message || "Unable to load available times.", true);
+        renderTimeOptions([]);
+      }
     });
   }
 

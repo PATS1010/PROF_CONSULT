@@ -154,6 +154,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseConsultationHours(value) {
+    try {
+      const saved = JSON.parse(String(value || "[]"));
+      if (Array.isArray(saved)) {
+        const rows = saved
+          .filter((entry) => entry && entry.day)
+          .map((entry) => ({
+            day: entry.day,
+            time: entry.time || (Array.isArray(entry.times) && entry.times.length ? entry.times.join(", ") : "Unavailable"),
+          }));
+        return rows.length ? rows : [{ day: "Schedule", time: "Consultation hours not set" }];
+      }
+    } catch (error) {
+    }
+
     const rows = String(value || "").split(/\r?\n|;/).map((item) => item.trim()).filter(Boolean);
     if (rows.length === 0) {
       return [{ day: "Schedule", time: "Consultation hours not set" }];
