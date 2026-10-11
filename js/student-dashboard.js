@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const professorCards = Array.from(document.querySelectorAll(".professor-card"));
   const noResultsMessage = document.getElementById("noResultsMessage");
 
-  let activeStatus = null;
+  let activeDepartment = null;
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
@@ -212,10 +212,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     professorCards.forEach((card) => {
       const name = card.querySelector(".professor-name").textContent.toLowerCase();
-      const status = card.dataset.status || "";
+      const department = card.dataset.department || "";
       const matchesSearch = query === "" || name.includes(query);
-      const matchesStatus = !activeStatus || status === activeStatus;
-      const matches = matchesSearch && matchesStatus;
+      const matchesDepartment = !activeDepartment || department === activeDepartment;
+      const matches = matchesSearch && matchesDepartment;
 
       card.hidden = !matches;
       if (matches) visibleCount += 1;
@@ -233,13 +233,13 @@ document.addEventListener("DOMContentLoaded", () => {
   filterOptions.forEach((option) => {
     option.addEventListener("click", (event) => {
       event.stopPropagation();
-      const status = option.dataset.status;
+      const department = option.dataset.department;
 
-      if (activeStatus === status) {
-        activeStatus = null;
+      if (activeDepartment === department) {
+        activeDepartment = null;
         option.classList.remove("is-active");
       } else {
-        activeStatus = status;
+        activeDepartment = department;
         filterOptions.forEach((opt) => opt.classList.remove("is-active"));
         option.classList.add("is-active");
       }
