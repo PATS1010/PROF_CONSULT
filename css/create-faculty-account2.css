@@ -766,23 +766,37 @@ button {
 @media (max-width: 480px) {
 
   .registration-card {
+    width: calc(100% - 24px);
+
+    max-width: none;
+
     margin:
-      90px
-      14px
-      32px;
+      76px
+      auto
+      24px;
 
     padding:
-      32px
-      22px
-      36px;
+      24px
+      16px
+      28px;
 
     border-radius: 22px;
+  }
+
+  .back-button {
+    top: 14px;
+    left: 14px;
+    padding: 9px 14px;
   }
 
   .registration-title {
     font-size: 1.4rem;
 
-    margin-bottom: 24px;
+    margin-bottom: 20px;
+  }
+
+  .form-field {
+    margin-bottom: 14px;
   }
 
   .form-input,
@@ -792,6 +806,24 @@ button {
       18px;
 
     font-size: 0.9rem;
+  }
+
+  .password-input {
+    padding-left: 16px;
+    padding-right: 64px;
+    text-align: left;
+    text-align-last: left;
+  }
+
+  .password-toggle {
+    right: 4px;
+    padding: 8px 10px;
+  }
+
+  .terms-checkbox {
+    align-items: flex-start;
+    justify-content: flex-start;
+    margin-bottom: 18px;
   }
 
   .btn {

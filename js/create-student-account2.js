@@ -27,6 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
   let isAccountVerified =
     sessionStorage.getItem("student_account_verified") === "true";
 
+  function resetVerification() {
+
+    isAccountVerified = false;
+
+    sessionStorage.removeItem(
+      "student_account_verified"
+    );
+
+    sessionStorage.removeItem(
+      "accountVerified"
+    );
+
+    sessionStorage.removeItem(
+      "verificationToken"
+    );
+
+    sessionStorage.removeItem(
+      "verificationEmail"
+    );
+
+    updateVerificationButton();
+  }
+
   function loadSavedInformation() {
 
     const saved = JSON.parse(
@@ -236,6 +259,17 @@ document.addEventListener("DOMContentLoaded", () => {
         input === passwordInput ||
         input === confirmPasswordInput
       ) {
+        if (
+          isAccountVerified &&
+          input === emailInput &&
+          sessionStorage.getItem(
+            "verificationEmail"
+          ) !== emailInput.value.trim()
+        ) {
+
+          resetVerification();
+        }
+
         updateVerificationButton();
       }
 
@@ -404,6 +438,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     saveInformation();
+
+    sessionStorage.setItem(
+      "verificationEmail",
+      emailInput.value.trim()
+    );
   });
 
   document
@@ -709,6 +748,22 @@ document.addEventListener("DOMContentLoaded", () => {
         "verificationToken"
       );
 
+      sessionStorage.removeItem(
+        "accountVerified"
+      );
+
+      sessionStorage.removeItem(
+        "verificationEmail"
+      );
+
+      sessionStorage.removeItem(
+        "verificationIdentifier"
+      );
+
+      sessionStorage.removeItem(
+        "verificationMethod"
+      );
+
       successMessage.hidden = false;
 
       window.setTimeout(() => {
@@ -767,6 +822,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   loadSavedInformation();
+
+  if (
+    isAccountVerified &&
+    (
+      !sessionStorage.getItem(
+        "verificationToken"
+      ) ||
+      sessionStorage.getItem(
+        "verificationEmail"
+      ) !== emailInput.value.trim()
+    )
+  ) {
+
+    resetVerification();
+  }
 
   updateVerificationButton();
 

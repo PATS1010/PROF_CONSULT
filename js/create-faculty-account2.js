@@ -77,8 +77,42 @@ document.addEventListener("DOMContentLoaded", () => {
       savedData.contactNumber;
   }
 
+  if (savedData.password && passwordInput) {
+    passwordInput.value =
+      savedData.password;
+  }
+
+  if (savedData.confirmPassword && confirmPasswordInput) {
+    confirmPasswordInput.value =
+      savedData.confirmPassword;
+  }
+
+  if (savedData.agreeTerms && agreeTermsInput) {
+    agreeTermsInput.checked = true;
+  }
+
   let accountVerified =
     sessionStorage.getItem(VERIFICATION_KEY) === "true";
+
+  if (
+    accountVerified &&
+    (
+      !sessionStorage.getItem(
+        "verificationToken"
+      ) ||
+      sessionStorage.getItem(
+        "verificationEmail"
+      ) !== emailInput.value.trim()
+    )
+  ) {
+
+    accountVerified = false;
+
+    sessionStorage.removeItem(
+      VERIFICATION_KEY
+    );
+
+  }
 
   function saveStep2Data() {
 
@@ -87,7 +121,16 @@ document.addEventListener("DOMContentLoaded", () => {
         emailInput.value.trim(),
 
       contactNumber:
-        contactNumberInput.value.trim()
+        contactNumberInput.value.trim(),
+
+      password:
+        passwordInput.value,
+
+      confirmPassword:
+        confirmPasswordInput.value,
+
+      agreeTerms:
+        agreeTermsInput.checked
     };
 
     sessionStorage.setItem(
@@ -349,6 +392,18 @@ document.addEventListener("DOMContentLoaded", () => {
       VERIFICATION_KEY
     );
 
+    sessionStorage.removeItem(
+      "accountVerified"
+    );
+
+    sessionStorage.removeItem(
+      "verificationToken"
+    );
+
+    sessionStorage.removeItem(
+      "verificationEmail"
+    );
+
     updateVerifyButton();
     updateCreateButton();
   }
@@ -440,6 +495,11 @@ document.addEventListener("DOMContentLoaded", () => {
         "faculty"
       );
 
+      sessionStorage.setItem(
+        "verificationEmail",
+        emailInput.value.trim()
+      );
+
     }
   );
 
@@ -492,6 +552,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updatePasswordRequirements();
 
+      saveStep2Data();
+
+      if (accountVerified) {
+        resetVerification();
+      }
+
       updateVerifyButton();
     }
   );
@@ -500,8 +566,19 @@ document.addEventListener("DOMContentLoaded", () => {
     "input",
     () => {
 
+      saveStep2Data();
+
+      if (accountVerified) {
+        resetVerification();
+      }
+
       updateVerifyButton();
     }
+  );
+
+  agreeTermsInput.addEventListener(
+    "change",
+    saveStep2Data
   );
 
   document
@@ -801,6 +878,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
           sessionStorage.removeItem(
             "verificationToken"
+          );
+
+          sessionStorage.removeItem(
+            "accountVerified"
+          );
+
+          sessionStorage.removeItem(
+            "verificationEmail"
+          );
+
+          sessionStorage.removeItem(
+            "verificationIdentifier"
+          );
+
+          sessionStorage.removeItem(
+            "verificationMethod"
           );
 
           sessionStorage.removeItem(

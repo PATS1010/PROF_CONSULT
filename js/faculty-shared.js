@@ -30,6 +30,25 @@ const FACULTY_STATUS_COLOR_VARS = {
 
 const FACULTY_STATUS_DEFAULT = "available";
 
+const FACULTY_STATUS_API_VALUES = {
+  available: "available",
+  teaching: "in class",
+  meeting: "meeting",
+  consultation: "consultation",
+  onleave: "on leave",
+  offline: "offline",
+};
+
+const FACULTY_STATUS_FROM_API = {
+  available: "available",
+  unavailable: "offline",
+  "in class": "teaching",
+  meeting: "meeting",
+  consultation: "consultation",
+  "on leave": "onleave",
+  offline: "offline",
+};
+
 function isValidFacultyStatus(value) {
 
   return Object.prototype.hasOwnProperty.call(
@@ -80,6 +99,53 @@ function saveFacultyOnlineStatus(
   } catch (error) {
 
   }
+}
+
+function facultyStatusForApi(status) {
+  return FACULTY_STATUS_API_VALUES[status] ||
+    FACULTY_STATUS_API_VALUES[FACULTY_STATUS_DEFAULT];
+}
+
+function facultyStatusFromApi(status) {
+  const key =
+    String(status || "")
+      .trim()
+      .toLowerCase();
+
+  return FACULTY_STATUS_FROM_API[key] ||
+    FACULTY_STATUS_DEFAULT;
+}
+
+async function persistFacultyOnlineStatus(status) {
+  const response =
+    await fetch(
+      "api/availability.php",
+      {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          status: facultyStatusForApi(status),
+        }),
+      }
+    );
+
+  const result =
+    await response
+      .json()
+      .catch(() => ({}));
+
+  if (!response.ok || !result.ok) {
+    throw new Error(
+      result.message ||
+      "Unable to save faculty availability."
+    );
+  }
+
+  return result;
 }
 
 function getFacultyNotificationCount() {
@@ -1188,7 +1254,8 @@ document.addEventListener(
     }
 
     function setFacultyOnlineStatus(
-      newStatus
+      newStatus,
+      options
     ) {
 
       facultyOnlineStatus =
@@ -1218,6 +1285,23 @@ document.addEventListener(
           }
         )
       );
+
+      const shouldPersist =
+        !options ||
+        options.persist !== false;
+
+      if (shouldPersist) {
+
+        persistFacultyOnlineStatus(
+          facultyOnlineStatus
+        ).catch((error) => {
+
+          console.error(
+            error.message ||
+            "Unable to save faculty availability."
+          );
+        });
+      }
     }
 
     window.setFacultyOnlineStatus =
@@ -1228,6 +1312,51 @@ document.addEventListener(
 
     window.FACULTY_STATUS_LABELS =
       FACULTY_STATUS_LABELS;
+
+    function loadFacultyOnlineStatusFromApi() {
+
+      fetch(
+        "api/availability.php?role=faculty&latest=1",
+        {
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            "Accept": "application/json",
+          },
+        }
+      )
+        .then((response) =>
+          response.ok
+            ? response.json()
+            : Promise.reject()
+        )
+        .then((result) => {
+
+          const rows =
+            result &&
+            Array.isArray(result.availability)
+              ? result.availability
+              : [];
+
+          if (rows.length === 0) {
+            return;
+          }
+
+          const latest =
+            rows[rows.length - 1];
+
+          setFacultyOnlineStatus(
+            facultyStatusFromApi(
+              latest.Status
+            ),
+            {
+              persist: false,
+            }
+          );
+        })
+        .catch(() => {
+        });
+    }
 
     function handleCheckIn(
       event
@@ -1306,6 +1435,8 @@ document.addEventListener(
     updateAvailabilityStatusUI();
 
     syncStatusPanelSelection();
+
+    loadFacultyOnlineStatusFromApi();
 
     if (activePage === "notifications") {
 

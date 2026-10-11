@@ -64,6 +64,7 @@ try {
 
     $facultyId = (int) ($_GET['faculty_id'] ?? 0);
     $date = clean((string) ($_GET['date'] ?? date('Y-m-d')));
+    $latestOnly = clean((string) ($_GET['latest'] ?? '')) === '1';
 
     if ($facultyId <= 0) {
         $requestedRole = clean((string) ($_GET['role'] ?? ''));
@@ -75,18 +76,34 @@ try {
         $facultyId = (int) ($profile['profile_id'] ?? 0);
     }
 
-    $statement = $db->prepare(
-        'SELECT
-            Availability_ID AS "Availability_ID",
-            Faculty_ID AS "Faculty_ID",
-            Status AS "Status",
-            Date AS "Date",
-            Time AS "Time"
-         FROM availability
-         WHERE Faculty_ID = ? AND Date = ?
-         ORDER BY Time'
-    );
-    $statement->execute([$facultyId, $date]);
+    if ($latestOnly) {
+        $statement = $db->prepare(
+            'SELECT
+                Availability_ID AS "Availability_ID",
+                Faculty_ID AS "Faculty_ID",
+                Status AS "Status",
+                Date AS "Date",
+                Time AS "Time"
+             FROM availability
+             WHERE Faculty_ID = ?
+             ORDER BY Date DESC, Time DESC, Availability_ID DESC
+             LIMIT 1'
+        );
+        $statement->execute([$facultyId]);
+    } else {
+        $statement = $db->prepare(
+            'SELECT
+                Availability_ID AS "Availability_ID",
+                Faculty_ID AS "Faculty_ID",
+                Status AS "Status",
+                Date AS "Date",
+                Time AS "Time"
+             FROM availability
+             WHERE Faculty_ID = ? AND Date = ?
+             ORDER BY Time'
+        );
+        $statement->execute([$facultyId, $date]);
+    }
     reply(['ok' => true, 'availability' => $statement->fetchAll()]);
 } catch (PDOException $exception) {
     error_log($exception->getMessage());

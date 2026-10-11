@@ -128,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const filterButton = document.getElementById("filterButton");
   const filterPanel = document.getElementById("filterPanel");
-  const filterOptions = filterPanel
+  let filterOptions = filterPanel
     ? Array.from(filterPanel.querySelectorAll(".filter-option"))
     : [];
 
@@ -184,9 +184,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const availabilityList = document.getElementById("availabilityList");
   const noResultsMessage = document.getElementById("noResultsMessage");
 
-  let activeStatus = null;
+  let activeDepartment = null;
   let facultyDashboardData = [];
   let isFacultyLoading = true;
+
+  function departmentKey(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/&/g, "and")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
 
   function normalizeStatus(value) {
     const raw = String(value || "offline").toLowerCase();
@@ -214,6 +223,7 @@ document.addEventListener("DOMContentLoaded", () => {
       id: String(record.Faculty_ID || ""),
       fullName: String(record.Full_Name || "Faculty").trim() || "Faculty",
       program: String(record.Department || "Faculty").trim() || "Faculty",
+      departmentKey: departmentKey(record.Department || "Faculty"),
       status,
       statusLabel: statusLabel(status),
       photo: String(record.Profile_Photo || "images/user.png").trim() || "images/user.png",
@@ -237,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const card = document.createElement("article");
       card.className = "professor-card";
       card.dataset.status = faculty.status;
+      card.dataset.department = faculty.departmentKey;
       card.dataset.facultyId = faculty.id;
       card.tabIndex = 0;
 
@@ -274,6 +285,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
       professorList.appendChild(card);
     });
+  }
+
+  function renderDepartmentFilters() {
+    if (!filterPanel) return;
+
+    const departments = [];
+    const seen = new Set();
+
+    facultyDashboardData.forEach((faculty) => {
+      if (!faculty.departmentKey || seen.has(faculty.departmentKey)) return;
+      seen.add(faculty.departmentKey);
+      departments.push({
+        key: faculty.departmentKey,
+        label: faculty.program,
+      });
+    });
+
+    filterPanel.innerHTML = "";
+
+    if (departments.length === 0) {
+      const emptyOption = document.createElement("button");
+      emptyOption.type = "button";
+      emptyOption.className = "filter-option";
+      emptyOption.disabled = true;
+      emptyOption.textContent = "No departments";
+      filterPanel.appendChild(emptyOption);
+    } else {
+      departments.forEach((department) => {
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "filter-option";
+        option.dataset.department = department.key;
+        option.textContent = department.label;
+        option.classList.toggle("is-active", activeDepartment === department.key);
+        filterPanel.appendChild(option);
+      });
+    }
+
+    filterOptions = Array.from(filterPanel.querySelectorAll(".filter-option"));
   }
 
   function renderAvailabilityList() {
@@ -315,10 +365,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const metaEl = card.querySelector(".professor-meta");
       const name = nameEl ? nameEl.textContent.toLowerCase() : "";
       const meta = metaEl ? metaEl.textContent.toLowerCase() : "";
-      const status = card.dataset.status || "";
+      const department = card.dataset.department || "";
       const matchesSearch = query === "" || name.includes(query) || meta.includes(query);
-      const matchesStatus = !activeStatus || status === activeStatus;
-      const matches = matchesSearch && matchesStatus;
+      const matchesDepartment = !activeDepartment || department === activeDepartment;
+      const matches = matchesSearch && matchesDepartment;
 
       card.hidden = !matches;
       if (matches) visibleCount += 1;
@@ -330,6 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderFacultyDashboard() {
+    renderDepartmentFilters();
     renderProfessorCards();
     renderAvailabilityList();
     applyFilters();
@@ -339,23 +390,27 @@ document.addEventListener("DOMContentLoaded", () => {
     searchInput.addEventListener("input", applyFilters);
   }
 
-  filterOptions.forEach((option) => {
-    option.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const status = option.dataset.status;
+  if (filterPanel) {
+    filterPanel.addEventListener("click", (event) => {
+      const option = event.target.closest(".filter-option");
+      if (!option || option.disabled) return;
 
-      if (activeStatus === status) {
-        activeStatus = null;
+      event.stopPropagation();
+      const department = option.dataset.department;
+
+      if (activeDepartment === department) {
+        activeDepartment = null;
         option.classList.remove("is-active");
       } else {
-        activeStatus = status;
+        activeDepartment = department;
         filterOptions.forEach((opt) => opt.classList.remove("is-active"));
         option.classList.add("is-active");
       }
 
       applyFilters();
+      closeFilterPanel();
     });
-  });
+  }
 
   renderFacultyDashboard();
 
