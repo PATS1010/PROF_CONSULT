@@ -152,7 +152,7 @@
   function syncSwitch() {
     var switches = document.querySelectorAll(".pc-switch");
     for (var i = 0; i < switches.length; i++) {
-      switches[i].setAttribute("aria-checked", getButtonVisible() ? "true" : "false");
+      switches[i].setAttribute("aria-checked", isDark() ? "true" : "false");
     }
   }
 
@@ -470,10 +470,10 @@
       settingsSwitch.id = "pcSettingsSwitch";
       settingsSwitch.className = "pc-switch";
       settingsSwitch.setAttribute("role", "switch");
-      settingsSwitch.setAttribute("aria-checked", getButtonVisible() ? "true" : "false");
-      settingsSwitch.setAttribute("aria-label", "Show dark mode button");
+      settingsSwitch.setAttribute("aria-checked", isDark() ? "true" : "false");
+      settingsSwitch.setAttribute("aria-label", "Dark mode");
       settingsSwitch.addEventListener("click", function () {
-        setButtonVisible(!getButtonVisible());
+        setTheme(isDark() ? "light" : "dark");
       });
       var control = darkModeCheckbox;
       while (control.parentElement && control.parentElement !== document.body &&
