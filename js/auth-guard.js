@@ -55,6 +55,10 @@
       });
     } catch (error) {
     } finally {
+      if (window.ProfConsultTheme && window.ProfConsultTheme.clearUser) {
+        window.ProfConsultTheme.clearUser();
+      }
+      document.dispatchEvent(new CustomEvent("profconsult:logout"));
       window.location.replace(redirectPage || loginPage || "login.html");
     }
   }

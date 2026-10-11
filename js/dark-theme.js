@@ -3,6 +3,7 @@
 
   var BUTTON_STORAGE_BASE_KEY = "profconsult_theme_button";
   var BUTTON_DEFAULT_VISIBLE = true;
+  var SESSION_SCOPE_STORAGE_KEY = "profconsult_theme_current_scope";
 
   var SURFACE = "pc-dark-surface";
   var INNER = "pc-dark-surface-inner";
@@ -31,7 +32,7 @@
 
   var currentScript = document.currentScript;
   var IS_PUBLIC = !!(currentScript && currentScript.getAttribute("data-scope") === "public");
-  var themeScope = IS_PUBLIC ? "public" : "browser";
+  var themeScope = IS_PUBLIC ? "public" : cachedThemeScope();
 
   var MOON_SVG =
     '<svg class="pc-icon-moon" viewBox="0 0 24 24" aria-hidden="true">' +
@@ -137,6 +138,15 @@
     return baseKey + ":" + themeScope;
   }
 
+  function cachedThemeScope() {
+    try {
+      var saved = window.sessionStorage.getItem(SESSION_SCOPE_STORAGE_KEY);
+      if (saved) return saved;
+    } catch (error) {
+    }
+    return "anonymous";
+  }
+
   function userScope(user) {
     if (!user) return "";
     var role = storagePart(user.role || "user");
@@ -150,6 +160,21 @@
     var nextScope = userScope(user);
     if (!nextScope || nextScope === themeScope) return;
     themeScope = nextScope;
+    try {
+      window.sessionStorage.setItem(SESSION_SCOPE_STORAGE_KEY, nextScope);
+    } catch (error) {
+    }
+    applyButtonVisibility();
+    applyTheme(getTheme());
+  }
+
+  function clearThemeScope() {
+    if (IS_PUBLIC) return;
+    try {
+      window.sessionStorage.removeItem(SESSION_SCOPE_STORAGE_KEY);
+    } catch (error) {
+    }
+    themeScope = "anonymous";
     applyButtonVisibility();
     applyTheme(getTheme());
   }
@@ -482,12 +507,16 @@
     get: getTheme,
     set: setTheme,
     getButton: getButtonVisible,
-    setButton: setButtonVisible
+    setButton: setButtonVisible,
+    setUser: setThemeScope,
+    clearUser: clearThemeScope
   };
 
   document.addEventListener("profconsult:session", function (event) {
     setThemeScope(event.detail && event.detail.user);
   });
+
+  document.addEventListener("profconsult:logout", clearThemeScope);
 
   document.addEventListener("DOMContentLoaded", function () {
     if (window.ProfConsultAuth && window.ProfConsultAuth.currentSession) {

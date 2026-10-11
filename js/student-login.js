@@ -58,6 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
         loginError.hidden = true;
+        if (window.ProfConsultTheme && window.ProfConsultTheme.setUser) {
+          window.ProfConsultTheme.setUser(result.user);
+        }
         sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
         window.location.href = "student-dashboard.html";
       } catch (error) {

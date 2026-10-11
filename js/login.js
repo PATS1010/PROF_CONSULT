@@ -183,6 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
           result = await logIn(correctedIdentifier, enteredPassword);
         }
         const role = result && result.user ? result.user.role : "";
+        if (window.ProfConsultTheme && window.ProfConsultTheme.setUser) {
+          window.ProfConsultTheme.setUser(result.user);
+        }
 
         if (role === "faculty") {
           sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
