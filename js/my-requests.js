@@ -125,9 +125,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (dateA === null && dateB === null) return 0;
     if (dateA === null) return 1;
     if (dateB === null) return -1;
-    if (dateA !== dateB) return dateA - dateB;
+    if (dateA !== dateB) return dateB - dateA;
 
-    return parseRequestTime(a) - parseRequestTime(b);
+    return parseRequestTime(b) - parseRequestTime(a);
   }
 
   function formatTimeLabel(timeValue) {
