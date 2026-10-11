@@ -14,6 +14,82 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const facultyIdInput = document.getElementById("facultyIdNumber");
+  const facultyIdError = document.getElementById("facultyIdError");
+  let facultyIdCheckTimer = null;
+  let lastCheckedFacultyId = "";
+  let lastFacultyIdExists = false;
+
+  function showFacultyIdError(message) {
+    if (facultyIdError) {
+      facultyIdError.textContent = message;
+      facultyIdError.hidden = false;
+    }
+    if (facultyIdInput) {
+      facultyIdInput.classList.add("input-error");
+      facultyIdInput.setCustomValidity(message);
+    }
+  }
+
+  function clearFacultyIdError() {
+    if (facultyIdError) {
+      facultyIdError.textContent = "";
+      facultyIdError.hidden = true;
+    }
+    if (facultyIdInput) {
+      facultyIdInput.classList.remove("input-error");
+      facultyIdInput.setCustomValidity("");
+    }
+  }
+
+  async function checkFacultyIdExists(facultyId) {
+    if (!facultyId || facultyId.length < 8) {
+      lastCheckedFacultyId = "";
+      lastFacultyIdExists = false;
+      clearFacultyIdError();
+      return false;
+    }
+
+    if (facultyId === lastCheckedFacultyId) {
+      if (lastFacultyIdExists) {
+        showFacultyIdError(
+          "This faculty ID already has an account. Faculty cannot create a second account."
+        );
+      }
+      return lastFacultyIdExists;
+    }
+
+    const response = await fetch("api/check-account.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        role: "faculty",
+        id_number: facultyId,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to check faculty ID right now.");
+    }
+
+    lastCheckedFacultyId = facultyId;
+    lastFacultyIdExists = !!result.username_exists;
+
+    if (lastFacultyIdExists) {
+      showFacultyIdError(
+        "This faculty ID already has an account. Faculty cannot create a second account."
+      );
+    } else {
+      clearFacultyIdError();
+    }
+
+    return lastFacultyIdExists;
+  }
+
   if (facultyIdInput) {
     facultyIdInput.addEventListener("input", () => {
       const digitsOnly = facultyIdInput.value.replace(/\D/g, "").slice(0, 7);
@@ -23,6 +99,25 @@ document.addEventListener("DOMContentLoaded", () => {
         : digitsOnly;
 
       facultyIdInput.value = formatted;
+      window.clearTimeout(facultyIdCheckTimer);
+      lastCheckedFacultyId = "";
+      lastFacultyIdExists = false;
+
+      if (formatted.length === 8) {
+        facultyIdCheckTimer = window.setTimeout(() => {
+          checkFacultyIdExists(formatted).catch((error) => {
+            showFacultyIdError(error.message || "Unable to check faculty ID right now.");
+          });
+        }, 450);
+      } else {
+        clearFacultyIdError();
+      }
+    });
+
+    facultyIdInput.addEventListener("blur", () => {
+      checkFacultyIdExists(facultyIdInput.value.trim()).catch((error) => {
+        showFacultyIdError(error.message || "Unable to check faculty ID right now.");
+      });
     });
   }
 
@@ -154,7 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("createFacultyAccountForm");
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       firstNameInput.value = normalizeName(firstNameInput.value);
@@ -162,6 +257,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!form.checkValidity() || !document.getElementById("department").value) {
         form.reportValidity();
+        return;
+      }
+
+      try {
+        const facultyIdExists = await checkFacultyIdExists(facultyIdInput.value.trim());
+        if (facultyIdExists) {
+          facultyIdInput.focus();
+          return;
+        }
+      } catch (error) {
+        showFacultyIdError(
+          error.message ||
+          "Unable to check faculty ID right now."
+        );
+        facultyIdInput.focus();
         return;
       }
 

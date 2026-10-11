@@ -186,6 +186,23 @@ button {
   outline-offset: 2px;
 }
 
+.form-input.input-error {
+  outline: 2px solid var(--color-red-primary);
+  outline-offset: 2px;
+}
+
+.field-message {
+  width: 100%;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 0.78rem;
+}
+
+.field-message-error {
+  color: var(--color-red-primary);
+  font-weight: 600;
+}
+
 .form-row {
   width: 100%;
   display: flex;

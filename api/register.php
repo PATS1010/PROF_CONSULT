@@ -30,11 +30,19 @@ try {
     ensureAccountVerificationTable($db);
     $db->beginTransaction();
 
-    $check = $db->prepare('SELECT User_ID AS "User_ID" FROM users WHERE Username = ? OR Email = ? LIMIT 1');
-    $check->execute([$username, $email]);
-    if ($check->fetch()) {
+    $checkUsername = $db->prepare('SELECT 1 FROM users WHERE Username = ? LIMIT 1');
+    $checkUsername->execute([$username]);
+    if ($checkUsername->fetchColumn()) {
         $db->rollBack();
-        fail('An account with that username or email already exists.', 409);
+        $idLabel = $role === 'faculty' ? 'faculty ID' : 'student ID';
+        fail('This ' . $idLabel . ' already has an account. You cannot create a second account.', 409);
+    }
+
+    $checkEmail = $db->prepare('SELECT 1 FROM users WHERE LOWER(Email) = ? LIMIT 1');
+    $checkEmail->execute([$email]);
+    if ($checkEmail->fetchColumn()) {
+        $db->rollBack();
+        fail('An account with that email already exists.', 409);
     }
 
     $verification = $db->prepare(
