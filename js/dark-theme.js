@@ -225,7 +225,7 @@
   function buildNavToggle() {
     if (!document.body || document.getElementById("pcThemeToggle")) return;
 
-    var navRight = document.querySelector(".navbar-right, .faculty-navbar-right");
+    var navRight = document.querySelector(".navbar-right, .faculty-navbar-right, .navbar-links");
     if (!navRight) return;
 
     var button = document.createElement("button");
@@ -237,7 +237,12 @@
       setTheme(isDark() ? "light" : "dark");
     });
 
-    navRight.insertBefore(button, navRight.firstChild);
+    var loginLink = navRight.querySelector(".navbar-login-button");
+    if (loginLink) {
+      navRight.insertBefore(button, loginLink);
+    } else {
+      navRight.insertBefore(button, navRight.firstChild);
+    }
     syncToggle();
   }
 
