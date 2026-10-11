@@ -50,12 +50,20 @@ function normalizeName(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+function sanitizeMiddleInitial(value) {
+  return String(value || "").replace(/[^\p{L}]/gu, "").toUpperCase().slice(0, 1);
+}
+
+function formatMiddleInitial(value) {
+  const letter = sanitizeMiddleInitial(value);
+  return letter ? `${letter}.` : "";
+}
+
 // First Name + Middle Initial + Last Name + Suffix, joined with
-// normal spaces only. Empty parts are skipped; no commas,
-// periods or dashes are added beyond whatever Suffix itself
-// already contains (e.g. "Sr.").
+// normal spaces only. Empty parts are skipped; the middle
+// initial is displayed with a period.
 function combineName(firstName, middleInitial, lastName, suffix) {
-  return [firstName, middleInitial, lastName, suffix]
+  return [firstName, formatMiddleInitial(middleInitial), lastName, suffix]
     .map(normalizeName)
     .filter(Boolean)
     .join(" ");
@@ -76,8 +84,8 @@ function splitLegacyName(fullName) {
   }
   const lastName = words.pop();
   let middleInitial = "";
-  if (words.length > 1 && words[words.length - 1].length === 1) {
-    middleInitial = words.pop();
+  if (words.length > 1 && /^[\p{L}]\.?$/u.test(words[words.length - 1])) {
+    middleInitial = sanitizeMiddleInitial(words.pop());
   }
   return { firstName: words.join(" "), middleInitial, lastName };
 }
@@ -249,15 +257,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ---------------------------------------------------------
-  // Middle Initial: one letter only, uppercased. No period is
-  // ever added.
+  // Middle Initial: one letter only, uppercased. The period is
+  // added only when the full name is displayed/saved.
   // ---------------------------------------------------------
   if (middleInitialInput) {
     middleInitialInput.addEventListener("input", () => {
-      middleInitialInput.value = middleInitialInput.value
-        .replace(/[^\p{L}]/gu, "")
-        .toUpperCase()
-        .slice(0, 1);
+      middleInitialInput.value = sanitizeMiddleInitial(middleInitialInput.value);
     });
   }
 
@@ -376,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function enterEditMode() {
     // Populate the edit form from the current account data
     firstNameInput.value = FACULTY_ACCOUNT.firstName;
-    middleInitialInput.value = FACULTY_ACCOUNT.middleInitial;
+    middleInitialInput.value = sanitizeMiddleInitial(FACULTY_ACCOUNT.middleInitial);
     lastNameInput.value = FACULTY_ACCOUNT.lastName;
     idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
     selectedProgram = FACULTY_ACCOUNT.program;
@@ -448,7 +453,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     FACULTY_ACCOUNT.firstName = firstNameInput.value;
-    FACULTY_ACCOUNT.middleInitial = middleInitialInput.value;
+    FACULTY_ACCOUNT.middleInitial = sanitizeMiddleInitial(middleInitialInput.value);
     FACULTY_ACCOUNT.lastName = lastNameInput.value;
     FACULTY_ACCOUNT.suffix = suffixSelect ? suffixSelect.value : FACULTY_ACCOUNT.suffix;
     FACULTY_ACCOUNT.name = combineName(

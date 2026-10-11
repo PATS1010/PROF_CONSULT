@@ -17,8 +17,17 @@ document.addEventListener("DOMContentLoaded", () => {
     return (value || "").replace(/[,.\-]/g, "");
   }
 
+  function formatMiddleInitial(value) {
+    const letter = sanitizeNamePart(value).trim().slice(0, 1).toUpperCase();
+    return letter ? `${letter}.` : "";
+  }
+
+  function editMiddleInitial(value) {
+    return sanitizeNamePart(value).trim().slice(0, 1).toUpperCase();
+  }
+
   function buildFullName(firstName, middleInitial, lastName, suffix) {
-    return [firstName, middleInitial, lastName, suffix]
+    return [firstName, formatMiddleInitial(middleInitial), lastName, suffix]
       .map((part) => (part || "").trim())
       .filter((part) => part.length > 0)
       .join(" ");
@@ -52,7 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function populateNameEditInputs() {
     if (firstNameInput) firstNameInput.value = studentName.firstName;
-    if (middleInitialInput) middleInitialInput.value = studentName.middleInitial;
+    if (middleInitialInput) middleInitialInput.value = editMiddleInitial(studentName.middleInitial);
     if (lastNameInput) lastNameInput.value = studentName.lastName;
     if (suffixSelect) suffixSelect.value = studentName.suffix || "";
   }
@@ -60,13 +69,19 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFullNameDisplay();
   populateNameEditInputs();
 
-  [firstNameInput, middleInitialInput, lastNameInput].forEach((input) => {
+  [firstNameInput, lastNameInput].forEach((input) => {
     if (!input) return;
     input.addEventListener("input", () => {
       const sanitized = sanitizeNamePart(input.value);
       if (sanitized !== input.value) input.value = sanitized;
     });
   });
+
+  if (middleInitialInput) {
+    middleInitialInput.addEventListener("input", () => {
+      middleInitialInput.value = editMiddleInitial(middleInitialInput.value);
+    });
+  }
 
   const studentNumberInput = document.getElementById("profileStudentNumber");
   const courseSelect = document.getElementById("profileCourse");
@@ -91,8 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (parts.length === 1) return { firstName: parts[0], middleInitial: "", lastName: "", suffix: "" };
     const lastName = parts.pop();
     let middleInitial = "";
-    if (parts.length > 1 && parts[parts.length - 1].length === 1) {
-      middleInitial = parts.pop();
+    if (parts.length > 1 && /^[A-Za-z]\.?$/.test(parts[parts.length - 1])) {
+      middleInitial = editMiddleInitial(parts.pop());
     }
     return { firstName: parts.join(" "), middleInitial, lastName, suffix: "" };
   }
@@ -346,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     studentName = {
       firstName: sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
-      middleInitial: sanitizeNamePart(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
+      middleInitial: editMiddleInitial(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
       lastName: sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
       suffix: suffixSelect ? suffixSelect.value : studentName.suffix,
     };
