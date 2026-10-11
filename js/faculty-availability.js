@@ -234,6 +234,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  function setCurrentStatus(status, label) {
+    if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
+    if (currentStatusLabel) currentStatusLabel.textContent = label;
+    statusOptions.forEach((opt) => {
+      opt.classList.toggle("is-selected", opt.dataset.status === status);
+    });
+  }
+
   const hoursListEl = document.getElementById("availabilityHoursList");
   const editButton = document.getElementById("editHoursButton");
   const saveHoursButton = document.getElementById("saveHoursButton");
@@ -508,6 +516,12 @@ document.addEventListener("DOMContentLoaded", () => {
             }),
           });
         } catch (error) {
+        }
+
+        if (typeof window.setFacultyOnlineStatus === "function") {
+          window.setFacultyOnlineStatus("available");
+        } else {
+          setCurrentStatus("available", "Available");
         }
       }
 
