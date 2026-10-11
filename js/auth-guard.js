@@ -5,6 +5,7 @@
   const loginPage = script ? String(script.dataset.loginPage || "login.html").trim() : "login.html";
   const sessionUrl = role ? `api/session.php?role=${encodeURIComponent(role)}` : "api/session.php";
   let sessionCheckPromise = null;
+  let isLoggingOut = false;
 
   function redirectToLogin() {
     window.location.replace(loginPage || "login.html");
@@ -46,6 +47,9 @@
   }
 
   async function logout(redirectPage) {
+    if (isLoggingOut) return;
+    isLoggingOut = true;
+
     try {
       await fetch("api/logout.php", {
         method: "POST",
@@ -71,6 +75,19 @@
   });
 
   checkSession();
+
+  try {
+    window.history.pushState(
+      { profConsultProtectedPage: true },
+      "",
+      window.location.href
+    );
+  } catch (error) {
+  }
+
+  window.addEventListener("popstate", () => {
+    logout(loginPage || "login.html");
+  });
 
   window.addEventListener("pageshow", (event) => {
     const navigationEntries = performance.getEntriesByType
