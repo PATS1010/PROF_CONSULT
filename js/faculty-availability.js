@@ -4,8 +4,8 @@ const AVAILABLE_HOURS_STORAGE_KEY = "profconsult_faculty_available_hours";
 const NOT_SET_LABEL = "No hours set";
 const UNAVAILABLE_LABEL = "Unavailable";
 
-const SLOT_START_MINUTES = 8 * 60;
-const SLOT_END_MINUTES = 20 * 60;
+const SLOT_START_MINUTES = 7 * 60;
+const SLOT_END_MINUTES = 19 * 60;
 const SLOT_LENGTH_MINUTES = 30;
 
 function formatClock(totalMinutes) {
@@ -24,7 +24,7 @@ function buildTimeOptions() {
   return options;
 }
 
-// 8:00 AM - 8:30 AM, 8:30 AM - 9:00 AM, ... 7:30 PM - 8:00 PM
+// 7:00 AM - 7:30 AM, 7:30 AM - 8:00 AM, ... 6:30 PM - 7:00 PM
 const TIME_OPTIONS = buildTimeOptions();
 
 // Joins back-to-back slots into ranges (kept in "time" so other pages still get a readable string)

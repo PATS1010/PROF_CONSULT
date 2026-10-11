@@ -635,7 +635,13 @@ input[type="date"].info-input {
   background-color: rgba(242, 96, 28, 0.15);
 }
 
+.custom-select-options li.is-available {
+  color: #1f1f1f;
+  font-weight: 600;
+}
+
 .custom-select-options li.is-unavailable {
+  background-color: #f7f7f7;
   color: #b9b9b9;
   cursor: not-allowed;
   pointer-events: none;

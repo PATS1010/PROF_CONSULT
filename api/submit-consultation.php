@@ -47,6 +47,7 @@ try {
         'SELECT
             f.Faculty_ID AS "Faculty_ID",
             f.User_ID AS "User_ID",
+            f.Consultation_Hours AS "Consultation_Hours",
             u.Full_Name AS "Full_Name",
             u.Email AS "Email"
          FROM faculty f
@@ -63,6 +64,11 @@ try {
     $scheduledDayNumber = (int) $scheduledStart->format('N');
     if ($scheduledDayNumber < 1 || $scheduledDayNumber > 6) {
         fail('Consultations are available from Monday to Saturday only.', 422);
+    }
+    $weeklyHours = parseWeeklyHours((string) ($facultyRecord['Consultation_Hours'] ?? ''));
+    $scheduledDayName = $scheduledStart->format('l');
+    if (!in_array($preferredTimeStart, $weeklyHours[$scheduledDayName] ?? [], true)) {
+        fail('That time is not available for the selected professor. Please choose an available slot.', 422);
     }
 
     $db->beginTransaction();
@@ -230,7 +236,7 @@ function slotStartsFromLabels(array $labels): array
     $starts = [];
     foreach ($labels as $label) {
         $start = preferredTimeStart((string) $label);
-        if ($start >= '08:00:00' && $start < '20:00:00' && !in_array($start, $starts, true)) {
+        if ($start >= '07:00:00' && $start < '19:00:00' && !in_array($start, $starts, true)) {
             $starts[] = $start;
         }
     }

@@ -201,12 +201,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     slots.forEach((slot) => {
+      const isAvailable = slot.available === true && !slot.taken;
       const li = document.createElement("li");
       li.setAttribute("role", "option");
       li.setAttribute("data-value", slot.value || slot.label);
-      li.setAttribute("aria-disabled", slot.taken ? "true" : "false");
-      li.textContent = slot.taken ? `${slot.label} (Taken)` : slot.label;
-      li.classList.toggle("is-unavailable", !!slot.taken);
+      li.setAttribute("aria-disabled", isAvailable ? "false" : "true");
+      li.textContent = slot.taken
+        ? `${slot.label} (Taken)`
+        : slot.available === true
+          ? slot.label
+          : `${slot.label} (Unavailable)`;
+      li.classList.toggle("is-unavailable", !isAvailable);
+      li.classList.toggle("is-available", isAvailable);
       preferredTimeOptions.appendChild(li);
     });
   }
@@ -267,6 +273,9 @@ document.addEventListener("DOMContentLoaded", () => {
       renderTimeOptions(result.slots || []);
       clearSelectedTime();
       if (result.message) setHint(result.message, true);
+      if (!result.message && !(result.slots || []).some((slot) => slot.available === true && !slot.taken)) {
+        setHint("This professor has no available slots on this date.", true);
+      }
     }
 
     return result;
@@ -358,15 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!MONDAY_TO_SATURDAY.includes(isoDay)) {
         preferredDateInput.value = "";
-        setHint("Please select a date from Monday to Saturday.", true);
-        clearSelectedTime();
-        window.setTimeout(() => setDateErrorState(false), 1200);
-        return;
-      }
-
-      if (availableDayNumbers.length && !availableDayNumbers.includes(isoDay)) {
-        preferredDateInput.value = "";
-        setHint("This professor is not available on that day.", true);
+        setHint("Consultations cannot be scheduled on Sunday. Please select Monday to Saturday.", true);
         clearSelectedTime();
         window.setTimeout(() => setDateErrorState(false), 1200);
         return;

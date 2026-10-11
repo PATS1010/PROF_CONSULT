@@ -26,10 +26,11 @@ try {
         fail('Faculty member was not found.', 404);
     }
 
+    $weeklyHours = parseWeeklyHours((string) ($record['Consultation_Hours'] ?? ''));
     $response = [
         'ok' => true,
-        'days' => [1, 2, 3, 4, 5, 6],
-        'day_names' => ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+        'days' => availableDayNumbers($weeklyHours),
+        'day_names' => availableDayNames($weeklyHours),
     ];
 
     if ($date !== '') {
@@ -49,7 +50,8 @@ try {
             reply($response);
         }
 
-        $availableStarts = dailySlotStarts();
+        $dayName = $dateTime->format('l');
+        $availableStarts = $weeklyHours[$dayName] ?? [];
         $takenStarts = bookedStarts($db, $facultyId, $date);
 
         $response['slots'] = array_map(
@@ -57,9 +59,10 @@ try {
                 'label' => slotLabel($start),
                 'value' => slotLabel($start),
                 'start' => $start,
+                'available' => in_array($start, $availableStarts, true),
                 'taken' => in_array($start, $takenStarts, true),
             ],
-            $availableStarts
+            dailySlotStarts()
         );
     }
 
@@ -130,7 +133,7 @@ function slotStartsFromLabels(array $labels): array
     $starts = [];
     foreach ($labels as $label) {
         $start = preferredTimeStart((string) $label);
-        if ($start >= '08:00:00' && $start < '20:00:00' && !in_array($start, $starts, true)) {
+        if ($start >= '07:00:00' && $start < '19:00:00' && !in_array($start, $starts, true)) {
             $starts[] = $start;
         }
     }
@@ -141,7 +144,7 @@ function slotStartsFromLabels(array $labels): array
 function dailySlotStarts(): array
 {
     $starts = [];
-    for ($minutes = 8 * 60; $minutes < 20 * 60; $minutes += 30) {
+    for ($minutes = 7 * 60; $minutes < 19 * 60; $minutes += 30) {
         $starts[] = minutesToTime($minutes);
     }
     return $starts;
