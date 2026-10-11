@@ -27,60 +27,7 @@ const HISTORY_STATUS_INFO = {
   ignored: { group: "ignored", label: "Ignored" },
 };
 
-const DEFAULT_CONSULTATIONS = [
-  {
-    id: "req-1",
-    name: "Juan Dela Cruz",
-    studentId: "22-00145",
-    type: "Research Proposal",
-    date: "October 15, 10:00 AM",
-    preferredDateISO: "2026-10-15",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-    status: "pending",
-  },
-  {
-    id: "req-2",
-    name: "Joselita Rizal",
-    studentId: "22-00098",
-    type: "Research Proposal",
-    date: "October 16, 1:00 PM",
-    preferredDateISO: "2026-10-16",
-    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-    status: "pending",
-  },
-  {
-    id: "req-3",
-    name: "Mark Santos",
-    studentId: "21-00567",
-    type: "Thesis Defense Prep",
-    date: "September 22, 9:30 AM",
-    preferredDateISO: "2026-09-22",
-    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
-    program: "BS Computer Engineering",
-    yearSet: "4A",
-    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-    status: "pending",
-  },
-  {
-    id: "req-4",
-    name: "Angela Cruz",
-    studentId: "23-00212",
-    type: "Grade Concern",
-    date: "October 18, 2:00 PM",
-    preferredDateISO: "2026-10-18",
-    preferredTimeLabel: "2:00 PM \u2013 2:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "2A",
-    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-    status: "pending",
-  },
-];
+const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
   try {
@@ -121,27 +68,7 @@ function applyIgnoredStatusToPastPending(list) {
 }
 
 function loadConsultations() {
-  try {
-    if (isPageReload()) {
-      const defaults = DEFAULT_CONSULTATIONS.slice();
-      applyIgnoredStatusToPastPending(defaults);
-      saveConsultations(defaults);
-      return defaults;
-    }
-    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) {
-        if (applyIgnoredStatusToPastPending(parsed)) saveConsultations(parsed);
-        return parsed;
-      }
-    }
-  } catch (error) {
-  }
-  const defaults = DEFAULT_CONSULTATIONS.slice();
-  applyIgnoredStatusToPastPending(defaults);
-  saveConsultations(defaults);
-  return defaults;
+  return DEFAULT_CONSULTATIONS.slice();
 }
 
 function saveConsultations(list) {
@@ -152,6 +79,48 @@ function saveConsultations(list) {
 }
 
 let REQUESTS = loadConsultations();
+
+function formatTimeLabel(value) {
+  const match = String(value || "").match(/^(\d{2}):(\d{2})/);
+  if (!match) return String(value || "");
+  let hour = Number(match[1]);
+  const minute = match[2];
+  const period = hour >= 12 ? "PM" : "AM";
+  hour = hour % 12 || 12;
+  return `${hour}:${minute} ${period}`;
+}
+
+function formatDateLabel(value, timeValue) {
+  const date = new Date(`${value}T00:00:00`);
+  const dateLabel = Number.isNaN(date.getTime())
+    ? String(value || "")
+    : date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  return [dateLabel, formatTimeLabel(timeValue)].filter(Boolean).join(", ");
+}
+
+function mapBackendRequest(record) {
+  const statusMap = {
+    pending: "pending",
+    approved: "upcoming",
+    rescheduled: "upcoming",
+    completed: "completed",
+    declined: "declined",
+    cancelled: "cancelled",
+  };
+  return {
+    id: String(record.Request_ID || ""),
+    name: record.Student_Name || "Student",
+    studentId: record.Student_Number || String(record.Student_ID || ""),
+    type: record.Purpose || "Consultation",
+    date: formatDateLabel(record.Request_Date, record.Preferred_Time),
+    preferredDateISO: record.Request_Date || "",
+    preferredTimeLabel: formatTimeLabel(record.Preferred_Time),
+    program: record.Program || "",
+    yearSet: [record.Year_Level, record.Section].filter(Boolean).join(" "),
+    message: record.Additional_Message || "",
+    status: statusMap[String(record.Status || "pending").toLowerCase()] || "pending",
+  };
+}
 
 const CONSULTATION_SLOT_MINUTES = 30;
 
@@ -194,6 +163,19 @@ function formatPreferredDateTime(request) {
 }
 
 function notifyRequestAnswered(request, decision) {
+}
+
+function persistRequestStatus(request, status) {
+  return fetch("api/consultation-requests.php", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+    body: JSON.stringify({
+      role: "faculty",
+      request_id: Number(request.id),
+      status,
+    }),
+  }).then((response) => response.ok ? response.json() : Promise.reject());
 }
 
 function applyNotificationViewTarget() {
@@ -424,6 +406,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   applyNotificationViewTarget();
 
+  fetch("api/consultation-requests.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      REQUESTS = result && Array.isArray(result.requests)
+        ? result.requests.map(mapBackendRequest)
+        : [];
+      applyIgnoredStatusToPastPending(REQUESTS);
+      renderAll();
+      applyNotificationViewTarget();
+    })
+    .catch(() => {
+      REQUESTS = [];
+      renderAll();
+    });
+
   let isHistoryOpen = false;
 
   function showHistoryView() {
@@ -522,6 +523,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (action === "reschedule") {
       try {
         sessionStorage.setItem(RESCHEDULE_TARGET_STORAGE_KEY, request.id);
+        sessionStorage.setItem("profconsult_reschedule_request", JSON.stringify(request));
       } catch (error) {
       }
       window.location.href = "reschedule-consultation.html";
@@ -544,6 +546,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       request.status = isComplete ? "completed" : "upcoming";
       saveConsultations(REQUESTS);
+      persistRequestStatus(request, isComplete ? "completed" : "approved").catch(() => {});
       notifyRequestAnswered(request, isComplete ? "completed" : "accepted");
 
       window.setTimeout(renderAll, 900);
@@ -566,6 +569,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       request.status = isCancel ? "cancelled" : "declined";
       saveConsultations(REQUESTS);
+      persistRequestStatus(request, isCancel ? "cancelled" : "declined").catch(() => {});
       notifyRequestAnswered(request, isCancel ? "cancelled" : "declined");
 
       window.setTimeout(renderAll, 900);

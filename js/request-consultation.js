@@ -17,21 +17,8 @@ document.addEventListener("DOMContentLoaded", () => {
     ? selectedFaculty.fullName
     : "Selected Faculty Member";
 
-  const COURSE_LABELS = {
-    "computer-engineering": "BSCPE (Computer Engineering)",
-  };
-
-  const SAMPLE_STUDENT = {
-    name: "John Dela Cruz",
-    studentId: "24-00001",
-    course: "computer-engineering",
-    yearLevel: "3",
-    section: "A",
-  };
-
-  function buildProgramYearDisplay(courseValue, yearLevel, section) {
-    const programLabel = COURSE_LABELS[courseValue] || courseValue;
-    return `${programLabel} - ${yearLevel}${section}`;
+  function buildProgramYearDisplay(program, yearLevel, section) {
+    return [program, yearLevel, section].filter(Boolean).join(" - ");
   }
 
   const facultyMemberInput = document.getElementById("facultyMember");
@@ -40,15 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const programYearInput = document.getElementById("programYear");
 
   if (facultyMemberInput) facultyMemberInput.textContent = SELECTED_FACULTY_MEMBER;
-  if (studentNameInput) studentNameInput.textContent = SAMPLE_STUDENT.name;
-  if (studentIdInput) studentIdInput.textContent = SAMPLE_STUDENT.studentId;
-  if (programYearInput) {
-    programYearInput.textContent = buildProgramYearDisplay(
-      SAMPLE_STUDENT.course,
-      SAMPLE_STUDENT.yearLevel,
-      SAMPLE_STUDENT.section
-    );
-  }
+
+  fetch("api/session.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const user = result.user || {};
+      const profile = result.profile || {};
+      if (studentNameInput) studentNameInput.textContent = user.name || "";
+      if (studentIdInput) studentIdInput.textContent = user.username || "";
+      if (programYearInput) {
+        programYearInput.textContent = buildProgramYearDisplay(
+          profile.Program || profile.program || "",
+          profile.Year_Level || profile.year_level || "",
+          profile.Section || profile.section || ""
+        );
+      }
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
@@ -301,13 +302,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("requestConsultationForm");
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
-      const requestId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+      const facultyId = selectedFaculty && selectedFaculty.id
+        ? Number(selectedFaculty.id)
+        : 0;
 
       const requestData = {
-        requestId,
+        facultyId,
         facultyMember: facultyMemberInput.textContent,
         studentName: studentNameInput.textContent,
         studentId: studentIdInput.textContent,
@@ -319,30 +322,30 @@ document.addEventListener("DOMContentLoaded", () => {
         status: "Pending Approval",
       };
 
-      sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
-
       try {
-        const MY_REQUESTS_KEY = "profconsult_my_requests";
-        const existing = JSON.parse(localStorage.getItem(MY_REQUESTS_KEY) || "[]");
-
-        const dateLabel = requestData.preferredDate
-          ? new Date(`${requestData.preferredDate}T00:00:00`).toLocaleDateString("en-US", { month: "long", day: "numeric" })
-          : "";
-        const timeLabel = requestData.preferredTime ? requestData.preferredTime.split("\u2013")[0].trim() : "";
-
-        existing.unshift({
-          title: requestData.purpose || "Consultation",
-          date: dateLabel,
-          time: timeLabel,
-          status: "waiting",
-          statusLabel: "Waiting",
+        const response = await fetch("api/submit-consultation.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            faculty_id: requestData.facultyId,
+            purpose: requestData.purpose,
+            message: requestData.message,
+            preferred_date: requestData.preferredDate,
+            preferred_time: requestData.preferredTime,
+          }),
         });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to submit consultation request.");
+        }
 
-        localStorage.setItem(MY_REQUESTS_KEY, JSON.stringify(existing));
+        requestData.requestId = result.id;
+        sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
+        window.location.href = "request-submitted.html";
       } catch (error) {
+        window.alert(error.message || "Unable to submit consultation request.");
       }
-
-      window.location.href = "request-submitted.html";
     });
   }
 

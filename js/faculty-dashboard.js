@@ -19,60 +19,7 @@ function studentNameLinkHtml(request) {
   return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
 }
 
-const DEFAULT_CONSULTATIONS = [
-  {
-    id: "req-1",
-    name: "Juan Dela Cruz",
-    studentId: "22-00145",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Good day po! I'd like to consult about my capstone research proposal title and methodology before I submit it for approval.",
-    status: "pending",
-  },
-  {
-    id: "req-2",
-    name: "Joselita Rizal",
-    studentId: "22-00098",
-    type: "Research Proposal",
-    date: "July 20, 10:00 AM",
-    preferredDateISO: "2026-07-20",
-    preferredTimeLabel: "10:00 AM \u2013 10:30 AM",
-    program: "BS Computer Engineering",
-    yearSet: "3B",
-    message: "Hi sir/ma'am, may I request a consultation regarding the scope and limitations section of our group's proposal?",
-    status: "pending",
-  },
-  {
-    id: "req-3",
-    name: "Mark Santos",
-    studentId: "21-00567",
-    type: "Thesis Defense Prep",
-    date: "July 21, 1:00 PM",
-    preferredDateISO: "2026-07-21",
-    preferredTimeLabel: "1:00 PM \u2013 1:30 PM",
-    program: "BS Computer Engineering",
-    yearSet: "4A",
-    message: "Requesting a short consultation to go over my defense slides and anticipated panel questions.",
-    status: "pending",
-  },
-  {
-    id: "req-4",
-    name: "Angela Cruz",
-    studentId: "23-00212",
-    type: "Grade Concern",
-    date: "July 22, 9:30 AM",
-    preferredDateISO: "2026-07-22",
-    preferredTimeLabel: "9:30 AM \u2013 10:00 AM",
-    program: "BS Computer Engineering",
-    yearSet: "2A",
-    message: "I'd like to clarify some items on my midterm exam whenever you have a free slot this week.",
-    status: "pending",
-  },
-];
+const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
   try {
@@ -87,19 +34,6 @@ function isPageReload() {
 }
 
 function loadConsultations() {
-  try {
-    if (isPageReload()) {
-      saveConsultations(DEFAULT_CONSULTATIONS);
-      return DEFAULT_CONSULTATIONS.slice();
-    }
-    const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-    if (stored) {
-      const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch (error) {
-  }
-  saveConsultations(DEFAULT_CONSULTATIONS);
   return DEFAULT_CONSULTATIONS.slice();
 }
 
@@ -152,16 +86,23 @@ function formatPreferredDateTime(request) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_FACULTY = {
-    fullName: "Engr. Maria Nina Sales",
-    lastName: "Professor",
-  };
-
   const nameEl = document.getElementById("facultyLastName");
-
-  if (nameEl) {
-    nameEl.textContent = SAMPLE_FACULTY.lastName;
-  }
+  fetch("api/session.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
+      const parts = fullName.split(/\s+/).filter(Boolean);
+      if (nameEl && parts.length > 0) {
+        nameEl.textContent = parts[parts.length - 1];
+      }
+    })
+    .catch(() => {
+      window.location.href = "faculty-login.html";
+    });
 
   const facultyPageDateTimeEl =
     document.getElementById("facultyPageDateTime");
@@ -405,10 +346,65 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let requests = loadConsultations();
 
+  function formatTimeLabel(value) {
+    const match = String(value || "").match(/^(\d{2}):(\d{2})/);
+    if (!match) return String(value || "");
+    let hour = Number(match[1]);
+    const minute = match[2];
+    const period = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour}:${minute} ${period}`;
+  }
+
+  function formatDateLabel(value, timeValue) {
+    const date = new Date(`${value}T00:00:00`);
+    const dateLabel = Number.isNaN(date.getTime())
+      ? String(value || "")
+      : date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+    return [dateLabel, formatTimeLabel(timeValue)].filter(Boolean).join(", ");
+  }
+
+  function mapBackendRequest(record) {
+    const statusMap = {
+      pending: "pending",
+      approved: "upcoming",
+      rescheduled: "upcoming",
+      completed: "completed",
+      declined: "declined",
+      cancelled: "cancelled",
+    };
+    return {
+      id: String(record.Request_ID || ""),
+      name: record.Student_Name || "Student",
+      studentId: record.Student_Number || String(record.Student_ID || ""),
+      type: record.Purpose || "Consultation",
+      date: formatDateLabel(record.Request_Date, record.Preferred_Time),
+      preferredDateISO: record.Request_Date || "",
+      preferredTimeLabel: formatTimeLabel(record.Preferred_Time),
+      program: record.Program || "",
+      yearSet: [record.Year_Level, record.Section].filter(Boolean).join(" "),
+      message: record.Additional_Message || "",
+      status: statusMap[String(record.Status || "pending").toLowerCase()] || "pending",
+    };
+  }
+
   function notifyRequestAnswered(
     request,
     decision
   ) {
+  }
+
+  function persistRequestStatus(request, status) {
+    return fetch("api/consultation-requests.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        role: "faculty",
+        request_id: Number(request.id),
+        status,
+      }),
+    }).then((response) => response.ok ? response.json() : Promise.reject());
   }
 
   const requestNameEl =
@@ -723,6 +719,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderTodaysSchedule();
 
+  fetch("api/consultation-requests.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      requests = result && Array.isArray(result.requests)
+        ? result.requests.map(mapBackendRequest)
+        : [];
+      renderDashboardRequest();
+      renderTodaysSchedule();
+    })
+    .catch(() => {
+      requests = [];
+      renderDashboardRequest();
+      renderTodaysSchedule();
+    });
+
   if (acceptButton) {
 
     acceptButton.addEventListener(
@@ -753,6 +768,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "upcoming";
 
         saveConsultations(requests);
+        persistRequestStatus(request, "approved").catch(() => {});
 
         notifyRequestAnswered(
           request,
@@ -802,6 +818,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "declined";
 
         saveConsultations(requests);
+        persistRequestStatus(request, "declined").catch(() => {});
 
         notifyRequestAnswered(
           request,

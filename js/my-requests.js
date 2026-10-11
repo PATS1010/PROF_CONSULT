@@ -81,14 +81,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const MY_REQUESTS_STORAGE_KEY = "profconsult_my_requests";
-
-  const SAMPLE_REQUESTS = [
-    { title: "Research Consultation", date: "July 15", time: "10:00 AM", status: "waiting", statusLabel: "Waiting" },
-    { title: "Capstone Consultation", date: "July 18", time: "2:00 PM", status: "approved", statusLabel: "Approved" },
-    { title: "OJT Consultation", date: "July 8", time: "", status: "completed", statusLabel: "Completed" },
-  ];
-
   const MONTH_INDEX = {
     jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
     jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
@@ -136,21 +128,51 @@ document.addEventListener("DOMContentLoaded", () => {
     return parseRequestTime(a) - parseRequestTime(b);
   }
 
-  function getSubmittedRequests() {
-    try {
-      const raw = localStorage.getItem(MY_REQUESTS_STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (error) {
-      return [];
-    }
+  function formatDateLabel(value) {
+    if (!value) return "";
+    const date = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
   }
 
-  function renderRequests() {
+  function formatTimeLabel(value) {
+    if (!value) return "";
+    const match = String(value).match(/^(\d{2}):(\d{2})/);
+    if (!match) return value;
+    let hour = Number(match[1]);
+    const minute = match[2];
+    const period = hour >= 12 ? "PM" : "AM";
+    hour = hour % 12 || 12;
+    return `${hour}:${minute} ${period}`;
+  }
+
+  function normalizeRequest(record) {
+    const status = String(record.Status || "pending").toLowerCase();
+    const statusMap = {
+      pending: ["waiting", "Waiting"],
+      approved: ["approved", "Approved"],
+      rescheduled: ["approved", "Rescheduled"],
+      completed: ["completed", "Completed"],
+      declined: ["declined", "Declined"],
+      cancelled: ["declined", "Cancelled"],
+    };
+    const mapped = statusMap[status] || ["waiting", status || "Waiting"];
+    return {
+      title: record.Purpose || "Consultation",
+      date: formatDateLabel(record.Request_Date),
+      dateISO: record.Request_Date,
+      time: formatTimeLabel(record.Preferred_Time),
+      status: mapped[0],
+      statusLabel: mapped[1],
+    };
+  }
+
+  function renderRequests(requests) {
     const listEl = document.getElementById("requestsList");
     const noResultsEl = document.getElementById("noRequestsMessage");
     if (!listEl) return;
 
-    const requests = [...getSubmittedRequests(), ...SAMPLE_REQUESTS].sort(compareByDateTime);
+    requests.sort(compareByDateTime);
 
     listEl.innerHTML = "";
 
@@ -210,11 +232,20 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  renderRequests();
-
-  window.addEventListener("storage", (event) => {
-    if (event.key === MY_REQUESTS_STORAGE_KEY) renderRequests();
-  });
+  fetch("api/consultation-requests.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      renderRequests(
+        result && Array.isArray(result.requests)
+          ? result.requests.map(normalizeRequest)
+          : []
+      );
+    })
+    .catch(() => renderRequests([]));
 
 });
 // Logout confirmation modal

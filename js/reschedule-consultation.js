@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
   const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
+  const RESCHEDULE_REQUEST_STORAGE_KEY = "profconsult_reschedule_request";
 
   function loadConsultations() {
     try {
@@ -33,34 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const consultations = loadConsultations();
   const targetId = getRescheduleTargetId();
-  const request = targetId ? consultations.find((item) => item.id === targetId) : null;
+  function getStoredRequest() {
+    try {
+      const stored = sessionStorage.getItem(RESCHEDULE_REQUEST_STORAGE_KEY);
+      return stored ? JSON.parse(stored) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  const storedRequest = getStoredRequest();
+  const request = storedRequest || (targetId ? consultations.find((item) => item.id === targetId) : null);
 
   if (!request) {
     window.location.href = "faculty-consultation-requests.html";
     return;
-  }
-
-  const STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
-
-  const RESCHEDULE_NOTIFICATION_FACULTY_NAME = "Engr. Sales";
-
-  function loadStudentNotificationRecords() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (error) {
-    }
-    return [];
-  }
-
-  function saveStudentNotificationRecords(list) {
-    try {
-      localStorage.setItem(STUDENT_NOTIFICATION_RECORDS_STORAGE_KEY, JSON.stringify(list));
-    } catch (error) {
-    }
   }
 
   const purposeEl = document.getElementById("reschedulePurpose");
@@ -280,7 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const countdownEl = document.getElementById("rescheduleCountdown");
 
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       const newDateISO = dateInput ? dateInput.value : "";
@@ -292,30 +280,31 @@ document.addEventListener("DOMContentLoaded", () => {
       request.preferredTimeLabel = newTimeLabel;
       request.date = formatDisplayDate(newDateISO, newTimeLabel);
 
-      saveConsultations(consultations);
-
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
-
-      const notificationRecord = {
-        id: `reschedule-${request.id}-${Date.now()}`,
-        type: "rescheduled",
-        accepted: false,
-        facultyName: RESCHEDULE_NOTIFICATION_FACULTY_NAME,
-        dateISO: newDateISO,
-        timeLabel: newTimeLabel,
-        createdAt: Date.now(),
-      };
-
-      if (messageForStudentRaw) {
-        notificationRecord.message = messageForStudentRaw;
+      try {
+        const response = await fetch("api/consultation-requests.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+          body: JSON.stringify({
+            role: "faculty",
+            request_id: Number(request.id),
+            status: "rescheduled",
+            response: messageForStudentRaw || `Please reschedule to ${newDateISO} ${newTimeLabel}.`,
+          }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to submit the new schedule.");
+        }
+      } catch (error) {
+        window.alert(error.message || "Unable to submit the new schedule.");
+        return;
       }
-
-      const studentNotificationRecords = loadStudentNotificationRecords();
-      studentNotificationRecords.unshift(notificationRecord);
-      saveStudentNotificationRecords(studentNotificationRecords);
 
       try {
         sessionStorage.removeItem(RESCHEDULE_TARGET_STORAGE_KEY);
+        sessionStorage.removeItem(RESCHEDULE_REQUEST_STORAGE_KEY);
       } catch (error) {
       }
 

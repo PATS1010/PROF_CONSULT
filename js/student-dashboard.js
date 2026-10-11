@@ -1,44 +1,22 @@
 // Student Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_STUDENT = {
-    studentId: "24-00001",
-    program: "BSCPE (Computer Engineering)",
-    yearLevel: "3rd Year",
-  };
-
-  const STUDENT_NAME_STORAGE_KEY = "profconsult_student_name";
-
-  const DEFAULT_STUDENT_NAME = {
-    firstName: "John",
-    middleInitial: "D",
-    lastName: "Cruz",
-  };
-
-  function loadStudentName() {
-    try {
-      const stored = localStorage.getItem(STUDENT_NAME_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && typeof parsed === "object") {
-          return {
-            firstName: parsed.firstName || "",
-            middleInitial: parsed.middleInitial || "",
-            lastName: parsed.lastName || "",
-          };
-        }
-      }
-    } catch (error) {
-    }
-    return { ...DEFAULT_STUDENT_NAME };
-  }
-
-  const studentName = loadStudentName();
-
   const firstNameEl = document.getElementById("studentFirstName");
-  if (firstNameEl) {
-    firstNameEl.textContent = studentName.firstName;
-  }
+  fetch("api/session.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
+      if (firstNameEl && fullName) {
+        firstNameEl.textContent = fullName.split(/\s+/)[0];
+      }
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   const dashboardDateTimeEl = document.getElementById("dashboardDateTime");
 
@@ -201,19 +179,153 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const searchInput = document.getElementById("professorSearchInput");
-  const professorCards = Array.from(document.querySelectorAll(".professor-card"));
+  const professorList = document.getElementById("professorList");
+  const availabilityList = document.getElementById("availabilityList");
   const noResultsMessage = document.getElementById("noResultsMessage");
 
   let activeDepartment = null;
+  let facultyDashboardData = [];
+  let isFacultyLoading = true;
+
+  function normalizeStatus(value) {
+    const raw = String(value || "offline").toLowerCase();
+    if (raw === "in class") return "teaching";
+    if (raw === "on leave") return "onleave";
+    if (raw === "unavailable") return "offline";
+    return raw;
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      available: "Available",
+      teaching: "In Class",
+      meeting: "Meeting",
+      consultation: "Consultation",
+      onleave: "On Leave",
+      offline: "Offline",
+    };
+    return labels[status] || "Offline";
+  }
+
+  function departmentSlug(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+  }
+
+  function mapFacultyRecord(record) {
+    const status = normalizeStatus(record.Current_Status);
+    return {
+      id: String(record.Faculty_ID || ""),
+      fullName: String(record.Full_Name || "Faculty").trim() || "Faculty",
+      department: String(record.Department || "Faculty").trim() || "Faculty",
+      departmentSlug: departmentSlug(record.Department || "Faculty"),
+      status,
+      statusLabel: statusLabel(status),
+      photo: String(record.Profile_Photo || "images/user.png").trim() || "images/user.png",
+    };
+  }
+
+  function createStatusDot(faculty) {
+    const dot = document.createElement("span");
+    dot.className = `status-dot status-${faculty.status}`;
+    dot.setAttribute("aria-hidden", "true");
+    dot.title = faculty.statusLabel;
+    return dot;
+  }
+
+  function renderProfessorCards() {
+    if (!professorList) return;
+
+    professorList.innerHTML = "";
+
+    facultyDashboardData.forEach((faculty) => {
+      const card = document.createElement("article");
+      card.className = "professor-card";
+      card.dataset.status = faculty.status;
+      card.dataset.department = faculty.departmentSlug;
+      card.dataset.facultyId = faculty.id;
+      card.tabIndex = 0;
+
+      const photo = document.createElement("img");
+      photo.src = faculty.photo;
+      photo.alt = faculty.fullName;
+      photo.className = "professor-photo";
+
+      const info = document.createElement("div");
+      info.className = "professor-info";
+
+      const name = document.createElement("p");
+      name.className = "professor-name";
+      name.textContent = faculty.fullName;
+
+      const meta = document.createElement("p");
+      meta.className = "professor-meta";
+      meta.textContent = `${faculty.department} | ${faculty.statusLabel}`;
+
+      info.appendChild(name);
+      info.appendChild(meta);
+      card.appendChild(photo);
+      card.appendChild(info);
+      card.appendChild(createStatusDot(faculty));
+
+      card.addEventListener("click", () => {
+        window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(faculty.id)}`;
+      });
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          card.click();
+        }
+      });
+
+      professorList.appendChild(card);
+    });
+  }
+
+  function renderAvailabilityList() {
+    if (!availabilityList) return;
+
+    availabilityList.innerHTML = "";
+
+    if (isFacultyLoading) {
+      const item = document.createElement("li");
+      item.textContent = "Loading faculty...";
+      availabilityList.appendChild(item);
+      return;
+    }
+
+    if (facultyDashboardData.length === 0) {
+      const item = document.createElement("li");
+      item.textContent = "No faculty accounts found.";
+      availabilityList.appendChild(item);
+      return;
+    }
+
+    facultyDashboardData.forEach((faculty) => {
+      const item = document.createElement("li");
+      item.appendChild(createStatusDot(faculty));
+      item.appendChild(document.createTextNode(` ${faculty.fullName} | ${faculty.statusLabel}`));
+      availabilityList.appendChild(item);
+    });
+  }
 
   function applyFilters() {
     const query = searchInput ? searchInput.value.trim().toLowerCase() : "";
+    const professorCards = professorList
+      ? Array.from(professorList.querySelectorAll(".professor-card"))
+      : [];
     let visibleCount = 0;
 
     professorCards.forEach((card) => {
-      const name = card.querySelector(".professor-name").textContent.toLowerCase();
+      const nameEl = card.querySelector(".professor-name");
+      const metaEl = card.querySelector(".professor-meta");
+      const name = nameEl ? nameEl.textContent.toLowerCase() : "";
+      const meta = metaEl ? metaEl.textContent.toLowerCase() : "";
       const department = card.dataset.department || "";
-      const matchesSearch = query === "" || name.includes(query);
+      const matchesSearch = query === "" || name.includes(query) || meta.includes(query);
       const matchesDepartment = !activeDepartment || department === activeDepartment;
       const matches = matchesSearch && matchesDepartment;
 
@@ -222,8 +334,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (noResultsMessage) {
-      noResultsMessage.hidden = visibleCount > 0;
+      noResultsMessage.hidden = isFacultyLoading || visibleCount > 0;
     }
+  }
+
+  function renderFacultyDashboard() {
+    renderProfessorCards();
+    renderAvailabilityList();
+    applyFilters();
   }
 
   if (searchInput) {
@@ -248,78 +366,28 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  professorCards.forEach((card) => {
-    const facultyId = card.dataset.facultyId;
-    if (!facultyId) return;
+  renderFacultyDashboard();
 
-    card.addEventListener("click", () => {
-      window.location.href = `faculty-directory.html?facultyId=${encodeURIComponent(facultyId)}`;
+  fetch("api/faculty-directory.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      facultyDashboardData = result && Array.isArray(result.faculty)
+        ? result.faculty.map(mapFacultyRecord)
+        : [];
+      isFacultyLoading = false;
+      renderFacultyDashboard();
+    })
+    .catch(() => {
+      facultyDashboardData = [];
+      isFacultyLoading = false;
+      renderFacultyDashboard();
     });
-  });
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
-
-  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
-  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
-
-  function isSupportedNotificationRecord(record) {
-    return (
-      record &&
-      typeof record === "object" &&
-      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
-    );
-  }
-
-  function loadStoredNotificationRecords() {
-    try {
-      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (error) {
-    }
-    return [];
-  }
-
-  function getSampleNotificationRecords() {
-    const now = Date.now();
-    const MINUTE = 60 * 1000;
-    const DAY = 24 * 60 * MINUTE;
-
-    return [
-      {
-        id: "sample-1",
-        type: "accepted",
-        facultyName: "Engr. Sales",
-        createdAt: now - 2 * MINUTE,
-      },
-      {
-        id: "sample-2",
-        type: "rescheduled",
-        accepted: true,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - 90 * MINUTE,
-      },
-      {
-        id: "sample-3",
-        type: "rescheduled",
-        accepted: false,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - DAY,
-      },
-      {
-        id: "sample-4",
-        type: "declined",
-        facultyName: "Engr. Sales",
-        createdAt: now - 3 * DAY,
-      },
-    ];
-  }
 
   const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
@@ -358,21 +426,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildRecentNotificationRows(records) {
-    return records.filter(isSupportedNotificationRecord).map((record) => {
-      const message =
-        typeof window.formatStudentNotificationMessage === "function"
-          ? window.formatStudentNotificationMessage(record)
-          : (record.message || "");
-
-      const hasProfessorMessage =
-        record.type === "rescheduled" &&
-        typeof record.message === "string" &&
-        record.message.trim() !== "";
-
+    return records.map((record) => {
       return {
-        message,
-        professorMessage: hasProfessorMessage ? record.message.trim() : "",
-        timestamp: formatNotificationTimeAgo(record.createdAt),
+        message: record.Message || record.message || "",
+        professorMessage: "",
+        timestamp: formatNotificationTimeAgo(Date.parse(record.Date_Time || record.createdAt || "")),
       };
     });
   }
@@ -427,15 +485,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const storedNotificationRecords = loadStoredNotificationRecords()
-    .filter(isSupportedNotificationRecord)
-    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
-
-  const allNotificationsInPageOrder = storedNotificationRecords.concat(getSampleNotificationRecords());
-
-  renderRecentNotifications(
-    buildRecentNotificationRows(allNotificationsInPageOrder.slice(0, RECENT_NOTIFICATIONS_LIMIT))
-  );
+  fetch("api/notifications.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const records = result && Array.isArray(result.notifications)
+        ? result.notifications.slice(0, RECENT_NOTIFICATIONS_LIMIT)
+        : [];
+      renderRecentNotifications(buildRecentNotificationRows(records));
+    })
+    .catch(() => renderRecentNotifications([]));
 
 });
 // Logout confirmation modal

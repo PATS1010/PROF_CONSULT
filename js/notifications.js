@@ -83,69 +83,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const NOTIFICATION_RECORDS_STORAGE_KEY = "studentTestNotificationRecords";
-
-  const SUPPORTED_NOTIFICATION_TYPES = ["accepted", "declined", "rescheduled"];
-
-  function isSupportedRecord(record) {
-    return (
-      record &&
-      typeof record === "object" &&
-      SUPPORTED_NOTIFICATION_TYPES.includes(record.type)
-    );
-  }
-
-  function loadStoredRecords() {
-    try {
-      const stored = localStorage.getItem(NOTIFICATION_RECORDS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (error) {
-    }
-    return [];
-  }
-
-  function getSampleRecords() {
-    const now = Date.now();
-    const MINUTE = 60 * 1000;
-    const DAY = 24 * 60 * MINUTE;
-
-    return [
-      {
-        id: "sample-1",
-        type: "accepted",
-        facultyName: "Engr. Sales",
-        createdAt: now - 2 * MINUTE,
-      },
-      {
-        id: "sample-2",
-        type: "rescheduled",
-        accepted: true,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - 90 * MINUTE,
-      },
-      {
-        id: "sample-3",
-        type: "rescheduled",
-        accepted: false,
-        facultyName: "Engr. Sales",
-        dateISO: "2026-09-19",
-        timeLabel: "3:00 PM - 3:30 PM",
-        createdAt: now - DAY,
-      },
-      {
-        id: "sample-4",
-        type: "declined",
-        facultyName: "Engr. Sales",
-        createdAt: now - 3 * DAY,
-      },
-    ];
-  }
-
   const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Manila",
     year: "numeric",
@@ -183,21 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildNotificationRows(records) {
-    return records.filter(isSupportedRecord).map((record) => {
-      const message =
-        typeof window.formatStudentNotificationMessage === "function"
-          ? window.formatStudentNotificationMessage(record)
-          : (record.message || "");
-
-      const hasProfessorMessage =
-        record.type === "rescheduled" &&
-        typeof record.message === "string" &&
-        record.message.trim() !== "";
-
+    return records.map((record) => {
       return {
-        message,
-        professorMessage: hasProfessorMessage ? record.message.trim() : "",
-        timestamp: formatTimeAgo(record.createdAt),
+        message: record.Message || record.message || "",
+        professorMessage: "",
+        timestamp: formatTimeAgo(Date.parse(record.Date_Time || record.createdAt || "")),
       };
     });
   }
@@ -207,6 +134,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!listEl) return;
 
     listEl.innerHTML = "";
+
+    if (notifications.length === 0) {
+      const li = document.createElement("li");
+      li.className = "notification-item";
+      li.textContent = "You have no notifications yet.";
+      listEl.appendChild(li);
+      return;
+    }
 
     notifications.forEach((notification) => {
       const li = document.createElement("li");
@@ -245,13 +180,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const storedRecords = loadStoredRecords()
-    .filter(isSupportedRecord)
-    .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
-
-  renderNotifications(
-    buildNotificationRows(storedRecords.concat(getSampleRecords()))
-  );
+  fetch("api/notifications.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const records = result && Array.isArray(result.notifications)
+        ? result.notifications
+        : [];
+      renderNotifications(buildNotificationRows(records));
+    })
+    .catch(() => renderNotifications([]));
 
 });
 // Logout confirmation modal

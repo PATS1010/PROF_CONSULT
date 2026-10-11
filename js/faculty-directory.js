@@ -3,93 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const DEFAULT_OFFICE = "Faculty Room";
 
-  const FACULTY_DIRECTORY_DATA = [
-    {
-      id: "maria-nina-sales",
-      lastName: "Sales",
-      fullName: "Engr. Maria Nina Sales",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "available",
-      statusLabel: "Available",
-      photo: "images/professor-maria-nina-sales.jpg",
-      hours: [
-        { day: "Monday", time: "9:00 AM - 11:00 AM" },
-        { day: "Tuesday", time: "1:00 PM - 3:00 PM" },
-        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
-        { day: "Thursday", time: "1:00 PM - 3:00 PM" },
-        { day: "Friday", time: "10:00 AM - 12:00 PM" },
-      ],
-    },
-    {
-      id: "bernard-bisuecos",
-      lastName: "Bisuecos",
-      fullName: "Engr. Bernard Bisuecos",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "onleave",
-      statusLabel: "On Leave",
-      photo: "images/professor-bernard-bisuecos.jpg",
-      hours: [
-        { day: "Monday", time: "Unavailable" },
-        { day: "Tuesday", time: "Unavailable" },
-        { day: "Wednesday", time: "10:00 AM - 12:00 PM" },
-        { day: "Thursday", time: "Unavailable" },
-        { day: "Friday", time: "Unavailable" },
-      ],
-    },
-    {
-      id: "mervin-molina",
-      lastName: "Molina",
-      fullName: "Engr. Mervin Molina",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "teaching",
-      statusLabel: "Teaching Class",
-      photo: "images/professor-mervin-molina.jpg",
-      hours: [
-        { day: "Monday", time: "2:00 PM - 4:00 PM" },
-        { day: "Tuesday", time: "9:00 AM - 10:00 AM" },
-        { day: "Wednesday", time: "2:00 PM - 4:00 PM" },
-        { day: "Thursday", time: "9:00 AM - 10:00 AM" },
-        { day: "Friday", time: "1:00 PM - 2:00 PM" },
-      ],
-    },
-    {
-      id: "rose-onate",
-      lastName: "Onate",
-      fullName: "Engr. Rose Onate",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "meeting",
-      statusLabel: "Meeting",
-      photo: "images/professor-rose-onate.jpg",
-      hours: [
-        { day: "Monday", time: "10:00 AM - 12:00 PM" },
-        { day: "Tuesday", time: "10:00 AM - 12:00 PM" },
-        { day: "Wednesday", time: "1:00 PM - 3:00 PM" },
-        { day: "Thursday", time: "10:00 AM - 12:00 PM" },
-        { day: "Friday", time: "9:00 AM - 11:00 AM" },
-      ],
-    },
-    {
-      id: "melody-paned",
-      lastName: "Paned",
-      fullName: "Engr. Melody Paned",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "offline",
-      statusLabel: "Offline",
-      photo: "images/professor-melody-paned.jpg",
-      hours: [
-        { day: "Monday", time: "9:00 AM - 11:00 AM" },
-        { day: "Tuesday", time: "Unavailable" },
-        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
-        { day: "Thursday", time: "Unavailable" },
-        { day: "Friday", time: "9:00 AM - 11:00 AM" },
-      ],
-    },
-  ];
+  let FACULTY_DIRECTORY_DATA = [];
 
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
@@ -103,6 +17,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedFacultyId = null;
 
+  function normalizeStatus(value) {
+    const raw = String(value || "offline").toLowerCase();
+    if (raw === "in class") return "teaching";
+    if (raw === "on leave") return "onleave";
+    if (raw === "unavailable") return "offline";
+    return raw;
+  }
+
+  function statusLabel(status) {
+    const labels = {
+      available: "Available",
+      teaching: "In Class",
+      meeting: "Meeting",
+      consultation: "Consultation",
+      onleave: "On Leave",
+      offline: "Offline",
+    };
+    return labels[status] || "Offline";
+  }
+
+  function parseConsultationHours(value) {
+    const rows = String(value || "").split(/\r?\n|;/).map((item) => item.trim()).filter(Boolean);
+    if (rows.length === 0) {
+      return [{ day: "Schedule", time: "Consultation hours not set" }];
+    }
+    return rows.map((row) => {
+      const parts = row.split(/:\s*/);
+      return {
+        day: parts.length > 1 ? parts.shift() : "Schedule",
+        time: parts.join(": ") || row,
+      };
+    });
+  }
+
+  function mapFacultyRecord(record) {
+    const status = normalizeStatus(record.Current_Status);
+    const fullName = String(record.Full_Name || "Faculty").trim() || "Faculty";
+    const nameParts = fullName.split(/\s+/);
+    return {
+      id: String(record.Faculty_ID || ""),
+      lastName: nameParts[nameParts.length - 1] || fullName,
+      fullName,
+      program: record.Department || "Faculty",
+      office: record.Office || DEFAULT_OFFICE,
+      status,
+      statusLabel: statusLabel(status),
+      photo: record.Profile_Photo || "images/user.png",
+      hours: parseConsultationHours(record.Consultation_Hours),
+    };
+  }
+
   function renderFacultyList() {
     facultyListEl.innerHTML = "";
 
@@ -115,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <img src="${faculty.photo}" alt="${faculty.fullName}" class="faculty-photo">
         <div class="faculty-info">
-          <p class="faculty-name">Engr. ${faculty.lastName}</p>
+          <p class="faculty-name">${faculty.fullName}</p>
           <p class="faculty-meta faculty-meta-row">
             <span>${faculty.program}</span>
             <span class="faculty-meta-dot" aria-hidden="true">&middot;</span>
@@ -256,14 +221,33 @@ document.addEventListener("DOMContentLoaded", () => {
     backButton.addEventListener("click", closeProfile);
   }
 
-  renderFacultyList();
-  applyFilters();
+  function renderInitialView() {
+    renderFacultyList();
+    applyFilters();
 
-  const initialParams = new URLSearchParams(window.location.search);
-  const initialFacultyId = initialParams.get("facultyId");
-  if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
-    openProfile(initialFacultyId);
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialFacultyId = initialParams.get("facultyId");
+    if (initialFacultyId && FACULTY_DIRECTORY_DATA.some((f) => f.id === initialFacultyId)) {
+      openProfile(initialFacultyId);
+    }
   }
+
+  fetch("api/faculty-directory.php", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      FACULTY_DIRECTORY_DATA = result && Array.isArray(result.faculty)
+        ? result.faculty.map(mapFacultyRecord)
+        : [];
+      renderInitialView();
+    })
+    .catch(() => {
+      FACULTY_DIRECTORY_DATA = [];
+      renderInitialView();
+    });
 
 });
 // Logout confirmation modal

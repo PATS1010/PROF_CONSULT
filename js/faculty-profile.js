@@ -196,6 +196,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderViewMode();
 
+  fetch("api/session.php?role=faculty", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const user = result.user || {};
+      const profile = result.profile || {};
+      const nameParts = splitLegacyName(user.name || "");
+
+      FACULTY_ACCOUNT.firstName = nameParts.firstName;
+      FACULTY_ACCOUNT.middleInitial = nameParts.middleInitial;
+      FACULTY_ACCOUNT.lastName = nameParts.lastName;
+      FACULTY_ACCOUNT.suffix = "";
+      FACULTY_ACCOUNT.name = combineName(
+        FACULTY_ACCOUNT.firstName,
+        FACULTY_ACCOUNT.middleInitial,
+        FACULTY_ACCOUNT.lastName,
+        FACULTY_ACCOUNT.suffix
+      );
+      FACULTY_ACCOUNT.facultyId = user.username || "";
+      FACULTY_ACCOUNT.program = profile.Department || profile.department || FACULTY_ACCOUNT.program;
+      FACULTY_ACCOUNT.email = user.email || FACULTY_ACCOUNT.email;
+      FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || FACULTY_ACCOUNT.phone);
+      selectedProgram = FACULTY_ACCOUNT.program;
+
+      renderViewMode();
+      if (programValueEl) programValueEl.textContent = selectedProgram;
+    })
+    .catch(() => {
+      window.location.href = "faculty-login.html";
+    });
+
   // ---------------------------------------------------------
   // Program dropdown -- built from PROGRAM_OPTIONS so future
   // programs can be added just by extending that array.

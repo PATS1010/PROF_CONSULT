@@ -1,13 +1,13 @@
 // Student Profile JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  const SAMPLE_STUDENT = {
-    studentNumber: "24-00001",
-    course: "computer-engineering",
-    yearLevel: "3",
-    section: "A",
-    email: "john.delacruz@example.com",
-    phone: "912-345-6789",
+  const EMPTY_STUDENT = {
+    studentNumber: "",
+    course: "",
+    yearLevel: "",
+    section: "",
+    email: "",
+    phone: "",
   };
 
   const STUDENT_DETAILS_STORAGE_KEY = "profconsult_student_details";
@@ -19,22 +19,22 @@ document.addEventListener("DOMContentLoaded", () => {
         const parsed = JSON.parse(stored);
         if (parsed && typeof parsed === "object") {
           return {
-            course: parsed.course || SAMPLE_STUDENT.course,
-            yearLevel: parsed.yearLevel || SAMPLE_STUDENT.yearLevel,
-            section: parsed.section || SAMPLE_STUDENT.section,
-            email: parsed.email || SAMPLE_STUDENT.email,
-            phone: parsed.phone || SAMPLE_STUDENT.phone,
+            course: parsed.course || EMPTY_STUDENT.course,
+            yearLevel: parsed.yearLevel || EMPTY_STUDENT.yearLevel,
+            section: parsed.section || EMPTY_STUDENT.section,
+            email: parsed.email || EMPTY_STUDENT.email,
+            phone: parsed.phone || EMPTY_STUDENT.phone,
           };
         }
       }
     } catch (error) {
     }
     return {
-      course: SAMPLE_STUDENT.course,
-      yearLevel: SAMPLE_STUDENT.yearLevel,
-      section: SAMPLE_STUDENT.section,
-      email: SAMPLE_STUDENT.email,
-      phone: SAMPLE_STUDENT.phone,
+      course: EMPTY_STUDENT.course,
+      yearLevel: EMPTY_STUDENT.yearLevel,
+      section: EMPTY_STUDENT.section,
+      email: EMPTY_STUDENT.email,
+      phone: EMPTY_STUDENT.phone,
     };
   }
 
@@ -142,12 +142,65 @@ document.addEventListener("DOMContentLoaded", () => {
   const phoneError = document.getElementById("phoneError");
   const phoneGroup = document.getElementById("profilePhoneGroup");
 
-  if (studentNumberInput) studentNumberInput.value = SAMPLE_STUDENT.studentNumber;
+  if (studentNumberInput) studentNumberInput.value = EMPTY_STUDENT.studentNumber;
   if (courseSelect) courseSelect.value = studentDetails.course;
   if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
   if (sectionSelect) sectionSelect.value = studentDetails.section;
   if (emailInput) emailInput.value = studentDetails.email;
   if (phoneInput) phoneInput.value = studentDetails.phone;
+
+  function splitFullName(fullName) {
+    const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return { firstName: "", middleInitial: "", lastName: "", suffix: "" };
+    }
+    if (parts.length === 1) {
+      return { firstName: parts[0], middleInitial: "", lastName: "", suffix: "" };
+    }
+    const lastName = parts.pop();
+    let middleInitial = "";
+    if (parts.length > 1 && parts[parts.length - 1].length === 1) {
+      middleInitial = parts.pop();
+    }
+    return {
+      firstName: parts.join(" "),
+      middleInitial,
+      lastName,
+      suffix: "",
+    };
+  }
+
+  fetch("api/session.php?role=student", {
+    cache: "no-store",
+    credentials: "same-origin",
+    headers: { "Accept": "application/json" },
+  })
+    .then((response) => response.ok ? response.json() : Promise.reject())
+    .then((result) => {
+      const user = result.user || {};
+      const profile = result.profile || {};
+      studentName = splitFullName(user.name || "");
+      studentDetails = {
+        course: profile.Program || profile.program || studentDetails.course,
+        yearLevel: profile.Year_Level || profile.year_level || studentDetails.yearLevel,
+        section: profile.Section || profile.section || studentDetails.section,
+        email: user.email || studentDetails.email,
+        phone: formatPhoneInput(user.phone || studentDetails.phone),
+      };
+
+      if (studentNumberInput) studentNumberInput.value = user.username || "";
+      if (courseSelect) courseSelect.value = studentDetails.course;
+      if (yearLevelSelect) yearLevelSelect.value = studentDetails.yearLevel;
+      if (sectionSelect) sectionSelect.value = studentDetails.section;
+      if (emailInput) emailInput.value = studentDetails.email;
+      if (phoneInput) phoneInput.value = studentDetails.phone;
+
+      renderFullNameDisplay();
+      populateNameEditInputs();
+    })
+    .catch(() => {
+      window.location.href = "login.html";
+    });
 
   function formatPhoneInput(rawValue) {
     const digits = rawValue.replace(/\D/g, "").slice(0, 10);
