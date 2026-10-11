@@ -90,7 +90,21 @@ document.addEventListener("DOMContentLoaded", () => {
     day: "2-digit",
   });
 
-  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  const PH_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  const PH_TIME_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Manila",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const PH_LONG_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
     timeZone: "Asia/Manila",
     month: "long",
     day: "numeric",
@@ -116,48 +130,106 @@ document.addEventListener("DOMContentLoaded", () => {
     if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
       return "Yesterday";
     }
-    return PH_DATE_LABEL_FORMATTER.format(new Date(created));
+    return PH_LONG_DATE_LABEL_FORMATTER.format(new Date(created));
+  }
+
+  function statusFromMessage(message) {
+    const text = String(message || "").toLowerCase();
+    if (text.includes("completed")) return ["completed", "Completed"];
+    if (text.includes("declined") || text.includes("rejected") || text.includes("cancelled")) {
+      return ["declined", text.includes("cancelled") ? "Cancelled" : "Declined"];
+    }
+    if (text.includes("rescheduled")) return ["rescheduled", "Rescheduled"];
+    if (text.includes("approved") || text.includes("accepted")) return ["approved", "Approved"];
+    return ["pending", "Pending"];
+  }
+
+  function titleFromMessage(message) {
+    const text = String(message || "").trim();
+    const quoted = text.match(/["']([^"']{2,60})["']/);
+    if (quoted) return quoted[1];
+
+    const purpose = text.match(/(?:for|about)\s+(.{2,50}?)(?:\s+was|\s+has|\.|$)/i);
+    if (purpose) return purpose[1].trim();
+
+    return "Notification";
   }
 
   function buildNotificationRows(records) {
     return records.map((record) => {
+      const created = new Date(record.Date_Time || Date.now());
+      const status = statusFromMessage(record.Message || "");
+
       return {
+        title: titleFromMessage(record.Message || ""),
         message: record.Message || "",
-        professorMessage: "",
-        timestamp: formatTimeAgo(new Date(record.Date_Time || Date.now()).getTime()),
+        date: PH_DATE_LABEL_FORMATTER.format(created),
+        time: PH_TIME_LABEL_FORMATTER.format(created),
+        status: status[0],
+        statusLabel: status[1],
+        timestamp: formatTimeAgo(created.getTime()),
       };
     });
   }
 
   function renderNotifications(notifications) {
     const listEl = document.getElementById("notificationsList");
+    const emptyEl = document.getElementById("noNotificationsMessage");
     if (!listEl) return;
 
     listEl.innerHTML = "";
+
+    if (notifications.length === 0) {
+      if (emptyEl) emptyEl.hidden = false;
+      return;
+    }
+
+    if (emptyEl) emptyEl.hidden = true;
 
     notifications.forEach((notification) => {
       const li = document.createElement("li");
       li.className = "notification-item";
 
-      const check = document.createElement("span");
-      check.className = "notification-check";
-      check.setAttribute("aria-hidden", "true");
-      check.innerHTML = "&check;";
+      const title = document.createElement("h2");
+      title.className = "notification-title";
+      title.textContent = notification.title;
+      li.appendChild(title);
 
       const content = document.createElement("div");
       content.className = "notification-content";
+
+      const date = document.createElement("p");
+      date.className = "notification-date";
+      date.textContent = notification.date;
+      content.appendChild(date);
+
+      const time = document.createElement("p");
+      time.className = "notification-time";
+      time.textContent = notification.time;
+      content.appendChild(time);
+
+      const statusLabel = document.createElement("p");
+      statusLabel.className = "notification-status-label";
+      statusLabel.textContent = "Status:";
+      content.appendChild(statusLabel);
+
+      const status = document.createElement("p");
+      status.className = "notification-status";
+
+      const dot = document.createElement("span");
+      dot.className = `status-dot status-${notification.status}`;
+      dot.setAttribute("aria-hidden", "true");
+      status.appendChild(dot);
+
+      const statusText = document.createElement("span");
+      statusText.textContent = notification.statusLabel;
+      status.appendChild(statusText);
+      content.appendChild(status);
 
       const message = document.createElement("p");
       message.className = "notification-message";
       message.textContent = notification.message;
       content.appendChild(message);
-
-      if (notification.professorMessage) {
-        const professorMessage = document.createElement("p");
-        professorMessage.className = "notification-professor-message";
-        professorMessage.textContent = `Professor's message: ${notification.professorMessage}`;
-        content.appendChild(professorMessage);
-      }
 
       if (notification.timestamp) {
         const timestamp = document.createElement("p");
@@ -166,7 +238,6 @@ document.addEventListener("DOMContentLoaded", () => {
         content.appendChild(timestamp);
       }
 
-      li.appendChild(check);
       li.appendChild(content);
       listEl.appendChild(li);
     });

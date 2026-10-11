@@ -421,83 +421,90 @@ input {
   margin-bottom: 32px;
 }
 
-.notifications-card {
-  position: relative;
+.notifications-list {
+  list-style: none;
   width: 100%;
-  max-width: 900px;
+  max-width: 1080px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.notification-item {
+  position: relative;
   background-color: #ffffff;
-  border-radius: 28px;
+  border-radius: 22px;
   box-shadow: var(--shadow-card);
-  padding: 32px 32px 32px 46px;
+  padding: 22px 24px 22px 34px;
   overflow: hidden;
 }
 
-.notifications-card::before {
+.notification-item::before {
   content: "";
   position: absolute;
   top: 0;
   left: 0;
   bottom: 0;
-  width: 14px;
+  width: 10px;
   background-color: var(--color-red-primary);
 }
 
-.notifications-list-container {
-  background-color: #f2f0eb;
-  border-radius: 22px;
-  padding: 12px 8px;
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.notifications-list {
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-}
-
-.notification-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 18px 20px;
-}
-
-.notification-item + .notification-item {
-  border-top: 1px solid #e6e3dc;
-}
-
-.notification-check {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background-color: var(--color-status-available);
-  color: #ffffff;
-  font-size: 0.72rem;
+.notification-title {
+  font-size: 1.05rem;
   font-weight: 700;
-  margin-top: 2px;
+  color: var(--color-red-primary);
+  line-height: 1.3;
+  margin-bottom: 16px;
 }
 
 .notification-content {
+  background-color: #f2f0eb;
+  border-radius: 16px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 10px;
 }
 
-.notification-message {
-  font-size: 0.88rem;
+.notification-date,
+.notification-time {
+  font-size: 0.95rem;
   font-weight: 500;
   color: var(--color-text-dark);
-  line-height: 1.5;
 }
 
-.notification-professor-message {
+.notification-status-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+  margin-top: 6px;
+}
+
+.notification-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.status-dot {
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.status-pending { background-color: #e0b400; }
+.status-approved { background-color: var(--color-status-available); }
+.status-completed { background-color: var(--color-text-muted); }
+.status-declined { background-color: #e0405a; }
+.status-rescheduled { background-color: var(--color-status-meeting); }
+
+.notification-message {
   font-size: 0.82rem;
-  font-style: italic;
+  font-weight: 500;
   color: var(--color-text-muted);
   line-height: 1.5;
 }
@@ -507,9 +514,25 @@ input {
   color: var(--color-text-muted);
 }
 
+.no-notifications-message {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+  margin-top: 8px;
+}
+
 @media (max-width: 1024px) {
   :root {
     --content-padding-x: 32px;
+  }
+
+  .notifications-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .notifications-list {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -534,17 +557,9 @@ input {
     font-size: 1.7rem;
   }
 
-  .notifications-card {
-    padding: 20px;
-    border-radius: 22px;
-  }
-
-  .notifications-list-container {
-    max-height: 340px;
-  }
-
   .notification-item {
-    padding: 14px 14px;
+    padding: 20px 18px 20px 30px;
+    border-radius: 18px;
   }
 
   .sidebar {
