@@ -38,7 +38,11 @@ const FACULTY_ACCOUNT = {
 
 // Structured so more programs can be added later without
 // touching any markup or logic -- just extend this array.
-const PROGRAM_OPTIONS = ["Computer Engineering"];
+const PROGRAM_OPTIONS = [
+  "Computer Engineering",
+  "Civil Engineering",
+  "Electronics Engineering",
+];
 
 // ---------------------------------------------------------
 // Name helpers

@@ -122,6 +122,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function normalizeProgramValue(value) {
     const raw = String(value || "").toLowerCase();
     if (raw.includes("computer")) return "computer-engineering";
+    if (raw.includes("civil")) return "civil-engineering";
+    if (raw.includes("electronics")) return "electronics-engineering";
     return value || "";
   }
 

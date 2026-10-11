@@ -34,7 +34,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const COURSE_LABELS = {
-    "computer-engineering": "BSCPE (Computer Engineering)",
+    "computer-engineering": "Computer Engineering",
+    "civil-engineering": "Civil Engineering",
+    "electronics-engineering": "Electronics Engineering",
   };
 
   function buildProgramYearDisplay(courseValue, yearLevel, section) {
@@ -83,6 +85,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function normalizeProgramValue(value) {
     const raw = String(value || "").toLowerCase();
     if (raw.includes("computer")) return "computer-engineering";
+    if (raw.includes("civil")) return "civil-engineering";
+    if (raw.includes("electronics")) return "electronics-engineering";
     return value || "";
   }
 
