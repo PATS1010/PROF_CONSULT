@@ -17,6 +17,13 @@ document.addEventListener("DOMContentLoaded", () => {
     return (value || "").replace(/[,.\-]/g, "");
   }
 
+  function capitalizeNamePart(value) {
+    return sanitizeNamePart(value)
+      .trim()
+      .toLowerCase()
+      .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+  }
+
   function formatMiddleInitial(value) {
     const letter = sanitizeNamePart(value).trim().slice(0, 1).toUpperCase();
     return letter ? `${letter}.` : "";
@@ -27,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildFullName(firstName, middleInitial, lastName, suffix) {
-    return [firstName, formatMiddleInitial(middleInitial), lastName, suffix]
+    return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), suffix]
       .map((part) => (part || "").trim())
       .filter((part) => part.length > 0)
       .join(" ");
@@ -60,9 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function populateNameEditInputs() {
-    if (firstNameInput) firstNameInput.value = studentName.firstName;
+    if (firstNameInput) firstNameInput.value = capitalizeNamePart(studentName.firstName);
     if (middleInitialInput) middleInitialInput.value = editMiddleInitial(studentName.middleInitial);
-    if (lastNameInput) lastNameInput.value = studentName.lastName;
+    if (lastNameInput) lastNameInput.value = capitalizeNamePart(studentName.lastName);
     if (suffixSelect) suffixSelect.value = studentName.suffix || "";
   }
 
@@ -109,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (parts.length > 1 && /^[A-Za-z]\.?$/.test(parts[parts.length - 1])) {
       middleInitial = editMiddleInitial(parts.pop());
     }
-    return { firstName: parts.join(" "), middleInitial, lastName, suffix: "" };
+    return { firstName: capitalizeNamePart(parts.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName), suffix: "" };
   }
 
   function normalizeProgramValue(value) {
@@ -325,9 +332,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function saveStudentProfileToApi() {
     const fullName = buildFullName(
-      sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
+      capitalizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
       sanitizeNamePart(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
-      sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
+      capitalizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
       suffixSelect ? suffixSelect.value : studentName.suffix
     );
 
@@ -360,9 +367,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     studentName = {
-      firstName: sanitizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
+      firstName: capitalizeNamePart(firstNameInput ? firstNameInput.value.trim() : studentName.firstName),
       middleInitial: editMiddleInitial(middleInitialInput ? middleInitialInput.value.trim() : studentName.middleInitial),
-      lastName: sanitizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
+      lastName: capitalizeNamePart(lastNameInput ? lastNameInput.value.trim() : studentName.lastName),
       suffix: suffixSelect ? suffixSelect.value : studentName.suffix,
     };
     renderFullNameDisplay();

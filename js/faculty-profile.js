@@ -50,6 +50,12 @@ function normalizeName(value) {
   return String(value || "").replace(/\s+/g, " ").trim();
 }
 
+function capitalizeNamePart(value) {
+  return normalizeName(value)
+    .toLowerCase()
+    .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
+}
+
 function sanitizeMiddleInitial(value) {
   return String(value || "").replace(/[^\p{L}]/gu, "").toUpperCase().slice(0, 1);
 }
@@ -63,7 +69,7 @@ function formatMiddleInitial(value) {
 // normal spaces only. Empty parts are skipped; the middle
 // initial is displayed with a period.
 function combineName(firstName, middleInitial, lastName, suffix) {
-  return [firstName, formatMiddleInitial(middleInitial), lastName, suffix]
+  return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), suffix]
     .map(normalizeName)
     .filter(Boolean)
     .join(" ");
@@ -87,7 +93,7 @@ function splitLegacyName(fullName) {
   if (words.length > 1 && /^[\p{L}]\.?$/u.test(words[words.length - 1])) {
     middleInitial = sanitizeMiddleInitial(words.pop());
   }
-  return { firstName: words.join(" "), middleInitial, lastName };
+  return { firstName: capitalizeNamePart(words.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName) };
 }
 
 // Make sure the account has the three parts, then keep `name` in sync
@@ -314,8 +320,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // First Name and Last Name are required; Middle Initial and
   // Suffix are optional.
   function validateName() {
-    firstNameInput.value = normalizeName(firstNameInput.value);
-    lastNameInput.value = normalizeName(lastNameInput.value);
+    firstNameInput.value = capitalizeNamePart(firstNameInput.value);
+    lastNameInput.value = capitalizeNamePart(lastNameInput.value);
 
     const firstMissing = firstNameInput.value === "";
     const lastMissing = lastNameInput.value === "";
@@ -380,9 +386,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   function enterEditMode() {
     // Populate the edit form from the current account data
-    firstNameInput.value = FACULTY_ACCOUNT.firstName;
+    firstNameInput.value = capitalizeNamePart(FACULTY_ACCOUNT.firstName);
     middleInitialInput.value = sanitizeMiddleInitial(FACULTY_ACCOUNT.middleInitial);
-    lastNameInput.value = FACULTY_ACCOUNT.lastName;
+    lastNameInput.value = capitalizeNamePart(FACULTY_ACCOUNT.lastName);
     idInput.value = FACULTY_ACCOUNT.facultyId; // display only, never submitted as editable
     selectedProgram = FACULTY_ACCOUNT.program;
     programValueEl.textContent = selectedProgram;
@@ -452,9 +458,9 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    FACULTY_ACCOUNT.firstName = firstNameInput.value;
+    FACULTY_ACCOUNT.firstName = capitalizeNamePart(firstNameInput.value);
     FACULTY_ACCOUNT.middleInitial = sanitizeMiddleInitial(middleInitialInput.value);
-    FACULTY_ACCOUNT.lastName = lastNameInput.value;
+    FACULTY_ACCOUNT.lastName = capitalizeNamePart(lastNameInput.value);
     FACULTY_ACCOUNT.suffix = suffixSelect ? suffixSelect.value : FACULTY_ACCOUNT.suffix;
     FACULTY_ACCOUNT.name = combineName(
       FACULTY_ACCOUNT.firstName,
