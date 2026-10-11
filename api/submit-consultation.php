@@ -47,6 +47,7 @@ try {
         'SELECT
             f.Faculty_ID AS "Faculty_ID",
             f.User_ID AS "User_ID",
+            f.Consultation_Hours AS "Consultation_Hours",
             u.Full_Name AS "Full_Name",
             u.Email AS "Email"
          FROM faculty f
@@ -58,6 +59,30 @@ try {
     $facultyRecord = $faculty->fetch();
     if (!$facultyRecord) {
         fail('Faculty member was not found.', 404);
+    }
+
+    $weeklyHours = parseWeeklyHours((string) ($facultyRecord['Consultation_Hours'] ?? ''));
+    $scheduledDayName = $scheduledStart->format('l');
+    $scheduledDayNumber = (int) $scheduledStart->format('N');
+    if ($scheduledDayNumber < 1 || $scheduledDayNumber > 6) {
+        fail('Consultations are available from Monday to Saturday only.', 422);
+    }
+    if (!in_array($preferredTimeStart, $weeklyHours[$scheduledDayName] ?? [], true)) {
+        fail('That time is not available for the selected professor. Please choose an available slot.', 422);
+    }
+
+    $conflict = $db->prepare(
+        "SELECT 1
+         FROM consultation_requests
+         WHERE Faculty_ID = ?
+           AND Request_Date = ?
+           AND Preferred_Time = ?
+           AND Status IN ('pending', 'approved', 'rescheduled')
+         LIMIT 1"
+    );
+    $conflict->execute([$facultyId, $date, $preferredTimeStart]);
+    if ($conflict->fetchColumn()) {
+        fail('This time slot has already been taken. Please choose another available time.', 409);
     }
 
     $db->beginTransaction();
@@ -122,4 +147,95 @@ function formatConsultationSchedule(string $date, string $time): string
     }
 
     return $dateTime->format('F j, Y \a\t g:i A');
+}
+
+function parseWeeklyHours(string $raw): array
+{
+    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    $weekly = array_fill_keys($days, []);
+
+    $decoded = json_decode($raw, true);
+    if (is_array($decoded)) {
+        foreach ($decoded as $entry) {
+            if (!is_array($entry)) {
+                continue;
+            }
+            $day = (string) ($entry['day'] ?? '');
+            if (!array_key_exists($day, $weekly)) {
+                continue;
+            }
+            $times = $entry['times'] ?? [];
+            if (!is_array($times)) {
+                $times = rangeToSlotLabels((string) ($entry['time'] ?? ''));
+            }
+            $weekly[$day] = slotStartsFromLabels($times);
+        }
+    }
+
+    if (!is_array($decoded)) {
+        $rows = preg_split('/\r?\n|;/', $raw) ?: [];
+        foreach ($rows as $row) {
+            $row = trim($row);
+            if ($row === '') {
+                continue;
+            }
+            [$day, $time] = array_pad(preg_split('/:\s*/', $row, 2) ?: [], 2, '');
+            if (array_key_exists($day, $weekly)) {
+                $weekly[$day] = slotStartsFromLabels(rangeToSlotLabels($time));
+            }
+        }
+    }
+
+    return $weekly;
+}
+
+function rangeToSlotLabels(string $range): array
+{
+    if (!preg_match('/(\d{1,2}):(\d{2})\s*(AM|PM)\s*(?:-|\x{2013})\s*(\d{1,2}):(\d{2})\s*(AM|PM)/iu', $range, $matches)) {
+        return [];
+    }
+
+    $start = rangeTimeToMinutes($matches[1], $matches[2], $matches[3]);
+    $end = rangeTimeToMinutes($matches[4], $matches[5], $matches[6]);
+    $labels = [];
+
+    for ($slot = $start; $slot + 30 <= $end; $slot += 30) {
+        $labels[] = formatRangeClock($slot) . ' - ' . formatRangeClock($slot + 30);
+    }
+
+    return $labels;
+}
+
+function rangeTimeToMinutes(string $hour, string $minute, string $period): int
+{
+    $hourValue = (int) $hour;
+    if (strtoupper($period) === 'PM' && $hourValue < 12) {
+        $hourValue += 12;
+    }
+    if (strtoupper($period) === 'AM' && $hourValue === 12) {
+        $hourValue = 0;
+    }
+    return $hourValue * 60 + (int) $minute;
+}
+
+function formatRangeClock(int $minutes): string
+{
+    $hour24 = intdiv($minutes, 60) % 24;
+    $minute = $minutes % 60;
+    $period = $hour24 >= 12 ? 'PM' : 'AM';
+    $hour12 = $hour24 % 12 ?: 12;
+    return sprintf('%d:%02d %s', $hour12, $minute, $period);
+}
+
+function slotStartsFromLabels(array $labels): array
+{
+    $starts = [];
+    foreach ($labels as $label) {
+        $start = preferredTimeStart((string) $label);
+        if ($start >= '08:00:00' && $start < '20:00:00' && !in_array($start, $starts, true)) {
+            $starts[] = $start;
+        }
+    }
+    sort($starts);
+    return $starts;
 }
