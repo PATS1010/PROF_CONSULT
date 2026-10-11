@@ -281,6 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editableFields = [courseSelect, yearLevelSelect, sectionSelect, emailInput, phoneInput];
 
   let isEditing = false;
+  if (profilePhotoEdit) profilePhotoEdit.hidden = true;
 
   function enterEditMode() {
     isEditing = true;

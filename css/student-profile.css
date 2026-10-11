@@ -449,6 +449,10 @@ input {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
+.profile-photo-edit[hidden] {
+  display: none;
+}
+
 .profile-photo-input {
   position: absolute;
   width: 1px;
