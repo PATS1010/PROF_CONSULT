@@ -14,6 +14,81 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const studentNumberInput = document.getElementById("studentNumber");
+  const studentNumberError = document.getElementById("studentNumberError");
+  let studentNumberCheckTimer = null;
+  let lastCheckedStudentNumber = "";
+  let lastStudentNumberExists = false;
+
+  function showStudentNumberError(message) {
+    if (!studentNumberError) return;
+
+    studentNumberError.textContent = message;
+    studentNumberError.hidden = false;
+    studentNumberInput.classList.add("input-error");
+  }
+
+  function clearStudentNumberError() {
+    if (!studentNumberError) return;
+
+    studentNumberError.textContent = "";
+    studentNumberError.hidden = true;
+    studentNumberInput.classList.remove("input-error");
+  }
+
+  function isCompleteStudentNumber(value) {
+    return /^\d{2}-\d{5}$/.test(value.trim());
+  }
+
+  async function checkStudentNumberExists(studentNumber) {
+    if (!isCompleteStudentNumber(studentNumber)) {
+      lastCheckedStudentNumber = "";
+      lastStudentNumberExists = false;
+      clearStudentNumberError();
+      return false;
+    }
+
+    if (lastCheckedStudentNumber === studentNumber) {
+      if (lastStudentNumberExists) {
+        showStudentNumberError(
+          "This student ID already has an account. Students cannot create a second account."
+        );
+      }
+
+      return lastStudentNumberExists;
+    }
+
+    const response = await fetch("api/check-account.php", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        role: "student",
+        id_number: studentNumber,
+      }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to check student ID right now.");
+    }
+
+    lastCheckedStudentNumber = studentNumber;
+    lastStudentNumberExists = !!result.username_exists;
+
+    if (lastStudentNumberExists) {
+      showStudentNumberError(
+        "This student ID already has an account. Students cannot create a second account."
+      );
+    } else {
+      clearStudentNumberError();
+    }
+
+    return lastStudentNumberExists;
+  }
+
   if (studentNumberInput) {
     studentNumberInput.addEventListener("input", () => {
       const digitsOnly = studentNumberInput.value.replace(/\D/g, "").slice(0, 7);
@@ -23,6 +98,25 @@ document.addEventListener("DOMContentLoaded", () => {
         : digitsOnly;
 
       studentNumberInput.value = formatted;
+      lastCheckedStudentNumber = "";
+      lastStudentNumberExists = false;
+
+      window.clearTimeout(studentNumberCheckTimer);
+      if (isCompleteStudentNumber(formatted)) {
+        studentNumberCheckTimer = window.setTimeout(() => {
+          checkStudentNumberExists(formatted).catch((error) => {
+            showStudentNumberError(error.message || "Unable to check student ID right now.");
+          });
+        }, 450);
+      } else {
+        clearStudentNumberError();
+      }
+    });
+
+    studentNumberInput.addEventListener("blur", () => {
+      checkStudentNumberExists(studentNumberInput.value.trim()).catch((error) => {
+        showStudentNumberError(error.message || "Unable to check student ID right now.");
+      });
     });
   }
 
@@ -156,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const form = document.getElementById("createStudentAccountForm");
   if (form) {
-    form.addEventListener("submit", (event) => {
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
       firstNameInput.value = normalizeName(firstNameInput.value);
@@ -164,6 +258,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!form.checkValidity() || !document.getElementById("courseProgram").value || !document.getElementById("yearLevel").value) {
         form.reportValidity();
+        return;
+      }
+
+      try {
+        const studentExists =
+          await checkStudentNumberExists(
+            studentNumberInput.value.trim()
+          );
+
+        if (studentExists) {
+          studentNumberInput.focus();
+          return;
+        }
+      } catch (error) {
+        showStudentNumberError(
+          error.message ||
+          "Unable to check student ID right now."
+        );
+        studentNumberInput.focus();
         return;
       }
 
