@@ -26,6 +26,13 @@ function capitalizeName(value) {
     .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
 }
 
+function formatFacultyGreetingName(fullName) {
+  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
+  const lastName = parts[parts.length - 1] || fullName;
+  const displayName = capitalizeName(lastName);
+  return /^prof\.?$/i.test(displayName) ? "Prof" : `Prof. ${displayName}`;
+}
+
 const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
@@ -104,8 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((result) => {
       const fullName = result && result.user ? String(result.user.name || "").trim() : "";
       if (nameEl && fullName) {
-        const parts = fullName.split(/\s+/);
-        nameEl.textContent = `Prof. ${capitalizeName(parts[parts.length - 1] || fullName)}`;
+        nameEl.textContent = formatFacultyGreetingName(fullName);
       }
     })
     .catch(() => {
