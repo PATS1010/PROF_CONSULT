@@ -188,6 +188,12 @@ document.addEventListener("DOMContentLoaded", () => {
   let facultyDashboardData = [];
   let isFacultyLoading = true;
 
+  const DEPARTMENT_OPTIONS = [
+    { key: "computer-engineering", label: "Computer Engineering" },
+    { key: "civil-engineering", label: "Civil Engineering" },
+    { key: "electronics-engineering", label: "Electronics Engineering" },
+  ];
+
   function departmentKey(value) {
     return String(value || "")
       .trim()
@@ -195,6 +201,13 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/&/g, "and")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "");
+  }
+
+  function departmentLabel(value) {
+    const key = departmentKey(value);
+    const option = DEPARTMENT_OPTIONS.find((department) => department.key === key);
+    if (option) return option.label;
+    return String(value || "Faculty").trim() || "Faculty";
   }
 
   function normalizeStatus(value) {
@@ -219,11 +232,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function mapFacultyRecord(record) {
     const status = normalizeStatus(record.Current_Status);
+    const program = departmentLabel(record.Department || "Faculty");
     return {
       id: String(record.Faculty_ID || ""),
       fullName: String(record.Full_Name || "Faculty").trim() || "Faculty",
-      program: String(record.Department || "Faculty").trim() || "Faculty",
-      departmentKey: departmentKey(record.Department || "Faculty"),
+      program,
+      departmentKey: departmentKey(program),
       status,
       statusLabel: statusLabel(status),
       photo: String(record.Profile_Photo || "images/user.png").trim() || "images/user.png",
@@ -290,38 +304,19 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderDepartmentFilters() {
     if (!filterPanel) return;
 
-    const departments = [];
-    const seen = new Set();
-
-    facultyDashboardData.forEach((faculty) => {
-      if (!faculty.departmentKey || seen.has(faculty.departmentKey)) return;
-      seen.add(faculty.departmentKey);
-      departments.push({
-        key: faculty.departmentKey,
-        label: faculty.program,
-      });
-    });
+    const departments = DEPARTMENT_OPTIONS;
 
     filterPanel.innerHTML = "";
 
-    if (departments.length === 0) {
-      const emptyOption = document.createElement("button");
-      emptyOption.type = "button";
-      emptyOption.className = "filter-option";
-      emptyOption.disabled = true;
-      emptyOption.textContent = "No departments";
-      filterPanel.appendChild(emptyOption);
-    } else {
-      departments.forEach((department) => {
-        const option = document.createElement("button");
-        option.type = "button";
-        option.className = "filter-option";
-        option.dataset.department = department.key;
-        option.textContent = department.label;
-        option.classList.toggle("is-active", activeDepartment === department.key);
-        filterPanel.appendChild(option);
-      });
-    }
+    departments.forEach((department) => {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "filter-option";
+      option.dataset.department = department.key;
+      option.textContent = department.label;
+      option.classList.toggle("is-active", activeDepartment === department.key);
+      filterPanel.appendChild(option);
+    });
 
     filterOptions = Array.from(filterPanel.querySelectorAll(".filter-option"));
   }
