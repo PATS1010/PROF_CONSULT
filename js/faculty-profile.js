@@ -69,11 +69,21 @@ function formatMiddleInitial(value) {
   return letter ? `${letter}.` : "";
 }
 
+function normalizeSuffix(value) {
+  const suffix = normalizeName(value).replace(/,/g, "");
+  const match = suffix.match(/^(sr|jr|i|ii|iii)\.?$/i);
+  if (!match) return "";
+  const normalized = match[1].toUpperCase();
+  if (normalized === "SR") return "Sr.";
+  if (normalized === "JR") return "Jr.";
+  return normalized;
+}
+
 // First Name + Middle Initial + Last Name + Suffix, joined with
 // normal spaces only. Empty parts are skipped; the middle
 // initial is displayed with a period.
 function combineName(firstName, middleInitial, lastName, suffix) {
-  return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), suffix]
+  return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), normalizeSuffix(suffix)]
     .map(normalizeName)
     .filter(Boolean)
     .join(" ");
@@ -90,14 +100,19 @@ function combineName(firstName, middleInitial, lastName, suffix) {
 function splitLegacyName(fullName) {
   const words = normalizeName(fullName).split(" ").filter(Boolean);
   if (words.length <= 1) {
-    return { firstName: words[0] || "", middleInitial: "", lastName: "" };
+    return { firstName: words[0] || "", middleInitial: "", lastName: "", suffix: "" };
+  }
+  let suffix = normalizeSuffix(words[words.length - 1]);
+  if (suffix) words.pop();
+  if (words.length <= 1) {
+    return { firstName: words[0] || "", middleInitial: "", lastName: "", suffix };
   }
   const lastName = words.pop();
   let middleInitial = "";
   if (words.length > 1 && /^[\p{L}]\.?$/u.test(words[words.length - 1])) {
     middleInitial = sanitizeMiddleInitial(words.pop());
   }
-  return { firstName: capitalizeNamePart(words.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName) };
+  return { firstName: capitalizeNamePart(words.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName), suffix };
 }
 
 // Make sure the account has the three parts, then keep `name` in sync
@@ -127,6 +142,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewEmail = document.getElementById("viewFacultyEmail");
   const viewPhone = document.getElementById("viewFacultyPhone");
   const facultyProfilePhoto = document.getElementById("facultyProfilePhoto");
+  const facultyProfilePhotoEdit = document.getElementById("facultyProfilePhotoEdit");
+  const facultyProfilePhotoInput = document.getElementById("facultyProfilePhotoInput");
 
   const firstNameInput = document.getElementById("editFirstName");
   const middleInitialInput = document.getElementById("editMiddleInitial");
@@ -173,7 +190,7 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.firstName = nameParts.firstName;
     FACULTY_ACCOUNT.middleInitial = nameParts.middleInitial;
     FACULTY_ACCOUNT.lastName = nameParts.lastName;
-    FACULTY_ACCOUNT.suffix = "";
+    FACULTY_ACCOUNT.suffix = nameParts.suffix;
     FACULTY_ACCOUNT.name = combineName(
       FACULTY_ACCOUNT.firstName,
       FACULTY_ACCOUNT.middleInitial,
@@ -415,12 +432,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     viewSection.hidden = true;
     editForm.hidden = false;
+    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
     setButtonMode(true);
   }
 
   function exitEditMode() {
     editForm.hidden = true;
     viewSection.hidden = false;
+    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
     setButtonMode(false);
     closeProgramDropdown();
   }
@@ -510,6 +529,42 @@ document.addEventListener("DOMContentLoaded", () => {
         handleSave();
       } else {
         enterEditMode();
+      }
+    });
+  }
+
+  if (facultyProfilePhotoInput && facultyProfilePhoto) {
+    facultyProfilePhotoInput.addEventListener("change", async () => {
+      const file = facultyProfilePhotoInput.files && facultyProfilePhotoInput.files[0];
+      if (!file) return;
+
+      const previousSrc = facultyProfilePhoto.src;
+      const previewUrl = URL.createObjectURL(file);
+      facultyProfilePhoto.src = previewUrl;
+
+      const formData = new FormData();
+      formData.append("profile_photo", file);
+
+      try {
+        const response = await fetch("api/profile-photo.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+          body: formData,
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to save profile photo.");
+        }
+        if (result.profile_photo) {
+          facultyProfilePhoto.src = `${result.profile_photo}?v=${Date.now()}`;
+        }
+      } catch (error) {
+        facultyProfilePhoto.src = previousSrc;
+        window.alert(error.message || "Unable to save profile photo.");
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+        facultyProfilePhotoInput.value = "";
       }
     });
   }

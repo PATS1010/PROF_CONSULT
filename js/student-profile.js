@@ -29,12 +29,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return letter ? `${letter}.` : "";
   }
 
+  function normalizeSuffix(value) {
+    const suffix = String(value || "").trim().replace(/,/g, "");
+    const match = suffix.match(/^(sr|jr|i|ii|iii)\.?$/i);
+    if (!match) return "";
+    const normalized = match[1].toUpperCase();
+    if (normalized === "SR") return "Sr.";
+    if (normalized === "JR") return "Jr.";
+    return normalized;
+  }
+
   function editMiddleInitial(value) {
     return sanitizeNamePart(value).trim().slice(0, 1).toUpperCase();
   }
 
   function buildFullName(firstName, middleInitial, lastName, suffix) {
-    return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), suffix]
+    return [capitalizeNamePart(firstName), formatMiddleInitial(middleInitial), capitalizeNamePart(lastName), normalizeSuffix(suffix)]
       .map((part) => (part || "").trim())
       .filter((part) => part.length > 0)
       .join(" ");
@@ -111,12 +121,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return { firstName: "", middleInitial: "", lastName: "", suffix: "" };
     if (parts.length === 1) return { firstName: parts[0], middleInitial: "", lastName: "", suffix: "" };
+    const suffix = normalizeSuffix(parts[parts.length - 1]);
+    if (suffix) parts.pop();
+    if (parts.length === 1) return { firstName: parts[0], middleInitial: "", lastName: "", suffix };
     const lastName = parts.pop();
     let middleInitial = "";
     if (parts.length > 1 && /^[A-Za-z]\.?$/.test(parts[parts.length - 1])) {
       middleInitial = editMiddleInitial(parts.pop());
     }
-    return { firstName: capitalizeNamePart(parts.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName), suffix: "" };
+    return { firstName: capitalizeNamePart(parts.join(" ")), middleInitial, lastName: capitalizeNamePart(lastName), suffix };
   }
 
   function normalizeProgramValue(value) {

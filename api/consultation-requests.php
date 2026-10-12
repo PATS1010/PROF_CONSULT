@@ -75,6 +75,32 @@ try {
             if (!$scheduledEnd || $scheduledEnd <= $now) {
                 fail('Preferred date and time must be in the future.');
             }
+
+            $weeklyHours = facultyWeeklyAvailability($db, (int) $profile['profile_id']);
+            $scheduledDayName = $scheduledStart->format('l');
+            if (!in_array($preferredTimeStart, $weeklyHours[$scheduledDayName] ?? [], true)) {
+                fail('That time is not available for this professor.');
+            }
+
+            $slotCheck = $db->prepare(
+                "SELECT Request_ID AS \"Request_ID\"
+                 FROM consultation_requests
+                 WHERE Faculty_ID = ?
+                   AND Request_Date = ?
+                   AND Preferred_Time = ?
+                   AND Status IN ('pending', 'approved', 'rescheduled')
+                   AND Request_ID <> ?
+                 LIMIT 1"
+            );
+            $slotCheck->execute([
+                (int) $profile['profile_id'],
+                $preferredDate,
+                $preferredTimeStart,
+                $requestId,
+            ]);
+            if ($slotCheck->fetch()) {
+                fail('That time is already taken. Please choose another available slot.', 409);
+            }
         }
 
         // Update only the selected request that belongs to the logged-in professor.
@@ -236,6 +262,47 @@ function formatRescheduledSchedule(string $date, string $time): string
     }
 
     return $dateTime->format('F j, Y \a\t g:i A');
+}
+
+function facultyWeeklyAvailability(PDO $db, int $facultyId): array
+{
+    $days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    $weekly = array_fill_keys($days, []);
+
+    $statement = $db->prepare(
+        'SELECT Consultation_Hours AS "Consultation_Hours"
+         FROM faculty
+         WHERE Faculty_ID = ?
+         LIMIT 1'
+    );
+    $statement->execute([$facultyId]);
+    $raw = (string) ($statement->fetchColumn() ?: '');
+    $decoded = json_decode($raw, true);
+
+    if (!is_array($decoded)) {
+        return $weekly;
+    }
+
+    foreach ($decoded as $entry) {
+        if (!is_array($entry)) {
+            continue;
+        }
+        $day = (string) ($entry['day'] ?? '');
+        if (!array_key_exists($day, $weekly)) {
+            continue;
+        }
+        $times = $entry['times'] ?? [];
+        if (!is_array($times)) {
+            $times = [];
+        }
+        $weekly[$day] = array_values(array_unique(array_filter(
+            array_map(static fn ($time): string => preferredTimeStart((string) $time), $times),
+            static fn (string $start): bool => $start >= '07:00:00' && $start < '19:00:00'
+        )));
+        sort($weekly[$day]);
+    }
+
+    return $weekly;
 }
 
 function markFinishedApprovedRequestsCompleted(PDO $db): void

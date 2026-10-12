@@ -79,31 +79,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return slots;
   }
 
-  const TEST_AVAILABLE_TIME_LABELS = [
-    buildTimeLabel(13 * 60, 13 * 60 + 30),
-    buildTimeLabel(13 * 60 + 30, 14 * 60),
-    buildTimeLabel(14 * 60, 14 * 60 + 30),
-  ];
-
-  const FACULTY_AVAILABILITY_TEST = {
-    availableDaysOfWeek: [1, 3, 5],
-    availableTimeSlotsByDay: {
-      1: TEST_AVAILABLE_TIME_LABELS,
-      3: TEST_AVAILABLE_TIME_LABELS,
-      5: TEST_AVAILABLE_TIME_LABELS,
-    },
-  };
-
-  const DEFAULT_PREVIEW_DAY_OF_WEEK = 1;
-
-  function isDateAvailable(dayOfWeek) {
-    return FACULTY_AVAILABILITY_TEST.availableDaysOfWeek.includes(dayOfWeek);
-  }
-
-  function getAvailableSlotsForDayOfWeek(dayOfWeek) {
-    return FACULTY_AVAILABILITY_TEST.availableTimeSlotsByDay[dayOfWeek] || [];
-  }
-
   const preferredTimeOptions = document.getElementById("reschedulePreferredTimeOptions");
   if (preferredTimeOptions) {
     buildTimeSlots(TIME_RANGE_START_MINUTES, TIME_RANGE_END_MINUTES).forEach((label) => {
@@ -114,6 +89,24 @@ document.addEventListener("DOMContentLoaded", () => {
       li.textContent = label;
       preferredTimeOptions.appendChild(li);
     });
+  }
+
+  function normalizeSlotLabel(label) {
+    return String(label || "").replace(/\s*-\s*/g, " \u2013 ").trim();
+  }
+
+  async function loadScheduleForDate(dateValue) {
+    const params = new URLSearchParams({ date: dateValue });
+    const response = await fetch(`api/faculty-schedule.php?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) {
+      throw new Error(result.message || "Unable to load available time slots.");
+    }
+    return result;
   }
 
   const timeSelect = document.getElementById("reschedulePreferredTimeSelect");
@@ -190,29 +183,36 @@ document.addEventListener("DOMContentLoaded", () => {
     hiddenTimeInput.value = label;
   }
 
-  function updateTimeSlotAvailability(availableSlots) {
+  function updateTimeSlotAvailability(slots) {
     if (!preferredTimeOptions) return;
-    const availableSet = new Set(availableSlots);
+    const availableSet = new Set(
+      (slots || [])
+        .filter((slot) => slot.available && !slot.taken)
+        .map((slot) => normalizeSlotLabel(slot.value || slot.label))
+    );
+    const takenSet = new Set(
+      (slots || [])
+        .filter((slot) => slot.taken)
+        .map((slot) => normalizeSlotLabel(slot.value || slot.label))
+    );
     const options = preferredTimeOptions.querySelectorAll("li[role='option']");
 
     options.forEach((li) => {
-      const label = li.getAttribute("data-value");
-      const isAvailable = availableSet.has(label);
+      const baseLabel = normalizeSlotLabel(li.getAttribute("data-value"));
+      const isTaken = takenSet.has(baseLabel);
+      const isAvailable = availableSet.has(baseLabel);
+      li.textContent = isTaken ? `${baseLabel} (Taken)` : baseLabel;
+      li.setAttribute("data-value", baseLabel);
       li.classList.toggle("is-unavailable", !isAvailable);
       li.setAttribute("aria-disabled", isAvailable ? "false" : "true");
     });
 
-    if (hiddenTimeInput && hiddenTimeInput.value && !availableSet.has(hiddenTimeInput.value)) {
+    if (hiddenTimeInput && hiddenTimeInput.value && !availableSet.has(normalizeSlotLabel(hiddenTimeInput.value))) {
       clearSelectedTime();
     }
   }
 
-  const initialDayOfWeek = request.preferredDateISO
-    ? new Date(`${request.preferredDateISO}T00:00:00`).getDay()
-    : DEFAULT_PREVIEW_DAY_OF_WEEK;
-
-  updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(initialDayOfWeek));
-  if (request.preferredTimeLabel) selectTimeSlot(request.preferredTimeLabel);
+  updateTimeSlotAvailability([]);
 
   function setDateErrorState(isError) {
     if (dateInput) dateInput.classList.toggle("is-date-invalid", isError);
@@ -220,29 +220,47 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (dateInput) {
-    dateInput.addEventListener("change", () => {
+    dateInput.addEventListener("change", async () => {
       const dateValue = dateInput.value;
 
       if (!dateValue) {
         setDateErrorState(false);
-        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        updateTimeSlotAvailability([]);
         return;
       }
 
       const dayOfWeek = new Date(`${dateValue}T00:00:00`).getDay();
 
-      if (!isDateAvailable(dayOfWeek)) {
+      if (dayOfWeek === 0) {
         dateInput.value = "";
         setDateErrorState(true);
-        updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(DEFAULT_PREVIEW_DAY_OF_WEEK));
+        if (dateHint) dateHint.textContent = "Consultations are available from Monday to Saturday only.";
+        updateTimeSlotAvailability([]);
         clearSelectedTime();
         window.setTimeout(() => setDateErrorState(false), 1200);
         return;
       }
 
       setDateErrorState(false);
-      updateTimeSlotAvailability(getAvailableSlotsForDayOfWeek(dayOfWeek));
+      try {
+        const schedule = await loadScheduleForDate(dateValue);
+        if (dateHint) {
+          dateHint.textContent = schedule.message || "Choose a time based on the professor's saved availability.";
+        }
+        updateTimeSlotAvailability(schedule.slots || []);
+        if (dateValue === request.preferredDateISO && request.preferredTimeLabel) {
+          selectTimeSlot(normalizeSlotLabel(request.preferredTimeLabel));
+        }
+      } catch (error) {
+        updateTimeSlotAvailability([]);
+        clearSelectedTime();
+        window.alert(error.message || "Unable to load available time slots.");
+      }
     });
+  }
+
+  if (dateInput && dateInput.value) {
+    dateInput.dispatchEvent(new Event("change"));
   }
 
   function formatDisplayDate(isoDate, timeLabel) {

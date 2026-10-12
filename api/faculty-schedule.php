@@ -6,12 +6,18 @@ require __DIR__ . '/bootstrap.php';
 $facultyId = (int) ($_GET['faculty_id'] ?? 0);
 $date = clean((string) ($_GET['date'] ?? ''));
 
-if ($facultyId <= 0) {
-    fail('Please choose a faculty member.', 400);
-}
-
 try {
     $db = database();
+
+    if ($facultyId <= 0) {
+        $sessionUser = currentUser('faculty');
+        $sessionProfile = userProfile($db, $sessionUser['id'], 'faculty');
+        $facultyId = (int) ($sessionProfile['profile_id'] ?? 0);
+    }
+
+    if ($facultyId <= 0) {
+        fail('Please choose a faculty member.', 400);
+    }
 
     $faculty = $db->prepare(
         'SELECT Consultation_Hours AS "Consultation_Hours"
