@@ -151,6 +151,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sectionSelect) sectionSelect.value = studentDetails.section;
     if (emailInput) emailInput.value = studentDetails.email;
     if (phoneInput) phoneInput.value = studentDetails.phone;
+    if (profilePhoto && user.profile_photo) {
+      profilePhoto.src = `${user.profile_photo}?v=${Date.now()}`;
+    }
     renderFullNameDisplay();
     populateNameEditInputs();
   }
@@ -415,13 +418,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilePhoto = document.getElementById("profilePhoto");
 
   if (profilePhotoInput && profilePhoto) {
-    profilePhotoInput.addEventListener("change", () => {
+    profilePhotoInput.addEventListener("change", async () => {
       const file = profilePhotoInput.files && profilePhotoInput.files[0];
       if (!file) return;
 
+      const previousSrc = profilePhoto.src;
       const previewUrl = URL.createObjectURL(file);
       profilePhoto.src = previewUrl;
 
+      const formData = new FormData();
+      formData.append("profile_photo", file);
+
+      try {
+        const response = await fetch("api/profile-photo.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Accept": "application/json" },
+          body: formData,
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          throw new Error(result.message || "Unable to save profile photo.");
+        }
+        if (result.profile_photo) {
+          profilePhoto.src = `${result.profile_photo}?v=${Date.now()}`;
+        }
+      } catch (error) {
+        profilePhoto.src = previousSrc;
+        window.alert(error.message || "Unable to save profile photo.");
+      } finally {
+        URL.revokeObjectURL(previewUrl);
+        profilePhotoInput.value = "";
+      }
     });
   }
 

@@ -126,6 +126,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewProgram = document.getElementById("viewFacultyProgram");
   const viewEmail = document.getElementById("viewFacultyEmail");
   const viewPhone = document.getElementById("viewFacultyPhone");
+  const facultyProfilePhoto = document.getElementById("facultyProfilePhoto");
 
   const firstNameInput = document.getElementById("editFirstName");
   const middleInitialInput = document.getElementById("editMiddleInitial");
@@ -183,6 +184,9 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.program = profile.Department || profile.department || "";
     FACULTY_ACCOUNT.email = user.email || "";
     FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || "");
+    if (facultyProfilePhoto && user.profile_photo) {
+      facultyProfilePhoto.src = `${user.profile_photo}?v=${Date.now()}`;
+    }
     renderViewMode();
   }
 

@@ -73,6 +73,10 @@ try {
     }
 
     $_SESSION['user']['profile_photo'] = $photoPath;
+    $roleSessionKey = ($user['role'] ?? '') === 'faculty' ? 'faculty_user' : 'student_user';
+    if (isset($_SESSION[$roleSessionKey]) && is_array($_SESSION[$roleSessionKey])) {
+        $_SESSION[$roleSessionKey]['profile_photo'] = $photoPath;
+    }
     reply(['ok' => true, 'profile_photo' => $photoPath]);
 } catch (PDOException $exception) {
     error_log($exception->getMessage());

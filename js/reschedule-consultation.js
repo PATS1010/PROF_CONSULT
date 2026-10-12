@@ -54,8 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (yearSetEl) yearSetEl.textContent = request.yearSet;
   if (dateInput) dateInput.value = request.preferredDateISO || "";
 
-  const TIME_RANGE_START_MINUTES = 8 * 60;
-  const TIME_RANGE_END_MINUTES = 20 * 60;
+  const TIME_RANGE_START_MINUTES = 7 * 60;
+  const TIME_RANGE_END_MINUTES = 19 * 60;
 
   function formatHourMinute(totalMinutes) {
     const hour24 = Math.floor(totalMinutes / 60) % 24;
@@ -263,7 +263,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const newDateISO = dateInput ? dateInput.value : "";
       const newTimeLabel = hiddenTimeInput ? hiddenTimeInput.value : "";
 
-      if (!newDateISO || !newTimeLabel) return;
+      if (!newDateISO || !newTimeLabel) {
+        window.alert("Please select a new date and time before submitting.");
+        return;
+      }
 
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
       try {

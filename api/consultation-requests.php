@@ -70,7 +70,7 @@ try {
             $scheduledEnd = $scheduledStart instanceof DateTimeImmutable
                 ? $scheduledStart->modify('+30 minutes')
                 : false;
-            $now = new DateTimeImmutable('now');
+            $now = currentManilaDateTime();
 
             if (!$scheduledEnd || $scheduledEnd <= $now) {
                 fail('Preferred date and time must be in the future.');
