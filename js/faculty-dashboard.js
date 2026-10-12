@@ -19,20 +19,6 @@ function studentNameLinkHtml(request) {
   return `<a href="${getStudentProfileUrl(request.studentId, STUDENT_PROFILE_ORIGIN)}" class="student-name-link">${request.name}</a>`;
 }
 
-function capitalizeName(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\b\p{L}/gu, (letter) => letter.toUpperCase());
-}
-
-function formatFacultyGreetingName(fullName) {
-  const parts = String(fullName || "").trim().split(/\s+/).filter(Boolean);
-  const lastName = parts[parts.length - 1] || fullName;
-  const displayName = capitalizeName(lastName);
-  return /^prof\.?$/i.test(displayName) ? "Prof" : `Prof. ${displayName}`;
-}
-
 const DEFAULT_CONSULTATIONS = [];
 
 function isPageReload() {
@@ -111,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((result) => {
       const fullName = result && result.user ? String(result.user.name || "").trim() : "";
       if (nameEl && fullName) {
-        nameEl.textContent = formatFacultyGreetingName(fullName);
+        nameEl.textContent = "Prof";
       }
     })
     .catch(() => {
