@@ -290,7 +290,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     saveStatusButton.addEventListener(
       "click",
-      (event) => {
+      async (event) => {
 
         event.stopPropagation();
 
@@ -300,9 +300,27 @@ document.addEventListener("DOMContentLoaded", () => {
             "function"
         ) {
 
-          window.setFacultyOnlineStatus(
-            pendingStatus
-          );
+          saveStatusButton.disabled = true;
+          const previousStatus =
+            typeof window.getFacultyOnlineStatus ===
+              "function"
+              ? window.getFacultyOnlineStatus()
+              : "consultation";
+          try {
+            await window.setFacultyOnlineStatus(
+              pendingStatus,
+              { throwOnError: true }
+            );
+          } catch (error) {
+            window.setFacultyOnlineStatus(
+              previousStatus,
+              { persist: false }
+            );
+            window.alert(error.message || "Unable to update status.");
+            saveStatusButton.disabled = false;
+            return;
+          }
+          saveStatusButton.disabled = false;
         }
 
         closeStatusPanel();

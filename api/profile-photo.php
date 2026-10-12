@@ -6,7 +6,10 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 
 requirePost();
-$user = currentUser();
+$requestedRole = clean((string) ($_POST['role'] ?? ''));
+$user = in_array($requestedRole, ['student', 'faculty'], true)
+    ? currentUser($requestedRole)
+    : currentUser();
 
 try {
     $db = database();

@@ -107,7 +107,31 @@ function facultyStatusFromApi(status) {
     FACULTY_STATUS_DEFAULT;
 }
 
+function getPhilippineStatusTimestamp() {
+  const formatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Manila",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    hourCycle: "h23",
+  });
+  const parts = formatter.formatToParts(new Date());
+  const getPart = (type) => {
+    const part = parts.find((item) => item.type === type);
+    return part ? part.value : "";
+  };
+  return {
+    date: `${getPart("year")}-${getPart("month")}-${getPart("day")}`,
+    time: `${getPart("hour")}:${getPart("minute")}:${getPart("second")}`,
+  };
+}
+
 async function persistFacultyOnlineStatus(status) {
+  const timestamp = getPhilippineStatusTimestamp();
   const response =
     await fetch(
       "api/availability.php",
@@ -120,6 +144,8 @@ async function persistFacultyOnlineStatus(status) {
         },
         body: JSON.stringify({
           status: facultyStatusForApi(status),
+          date: timestamp.date,
+          time: timestamp.time,
         }),
       }
     );
@@ -1291,7 +1317,7 @@ document.addEventListener(
 
       if (shouldPersist) {
 
-        persistFacultyOnlineStatus(
+        return persistFacultyOnlineStatus(
           facultyOnlineStatus
         ).catch((error) => {
 
@@ -1299,8 +1325,13 @@ document.addEventListener(
             error.message ||
             "Unable to save faculty availability."
           );
+          if (options && options.throwOnError) {
+            throw error;
+          }
         });
       }
+
+      return Promise.resolve();
     }
 
     window.setFacultyOnlineStatus =

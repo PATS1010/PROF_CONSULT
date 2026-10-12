@@ -441,6 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const formData = new FormData();
       formData.append("profile_photo", file);
+      formData.append("role", "student");
 
       try {
         const response = await fetch("api/profile-photo.php", {

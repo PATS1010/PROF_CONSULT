@@ -44,8 +44,9 @@ try {
 
         $data = input();
         $status = clean((string) ($data['status'] ?? ''));
-        $date = clean((string) ($data['date'] ?? date('Y-m-d')));
-        $time = clean((string) ($data['time'] ?? date('H:i:s')));
+        $now = currentManilaDateTime();
+        $date = clean((string) ($data['date'] ?? $now->format('Y-m-d')));
+        $time = clean((string) ($data['time'] ?? $now->format('H:i:s')));
         $allowedStatuses = ['meeting', 'on leave', 'consultation'];
 
         if (!in_array($status, $allowedStatuses, true)
@@ -63,7 +64,7 @@ try {
     }
 
     $facultyId = (int) ($_GET['faculty_id'] ?? 0);
-    $date = clean((string) ($_GET['date'] ?? date('Y-m-d')));
+    $date = clean((string) ($_GET['date'] ?? currentManilaDateTime()->format('Y-m-d')));
     $latestOnly = clean((string) ($_GET['latest'] ?? '')) === '1';
 
     if ($facultyId <= 0) {
