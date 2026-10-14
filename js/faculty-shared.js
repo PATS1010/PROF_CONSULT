@@ -18,6 +18,7 @@ const FACULTY_STATUS_LABELS = {
   meeting: "Meeting",
   consultation: "Consultation",
   onleave: "On Leave",
+  offline: "Offline",
 };
 
 const FACULTY_STATUS_COLOR_VARS = {
@@ -25,6 +26,7 @@ const FACULTY_STATUS_COLOR_VARS = {
   meeting: "--color-status-meeting",
   consultation: "--color-status-consultation",
   onleave: "--color-status-onleave",
+  offline: "--color-status-offline",
 };
 
 const FACULTY_STATUS_DEFAULT = "consultation";
@@ -34,6 +36,7 @@ const FACULTY_STATUS_API_VALUES = {
   meeting: "meeting",
   consultation: "consultation",
   onleave: "on leave",
+  offline: "offline",
 };
 
 const FACULTY_STATUS_FROM_API = {
@@ -44,7 +47,7 @@ const FACULTY_STATUS_FROM_API = {
   meeting: "meeting",
   consultation: "consultation",
   "on leave": "onleave",
-  offline: "onleave",
+  offline: "offline",
 };
 
 function isValidFacultyStatus(value) {
@@ -1192,9 +1195,11 @@ document.addEventListener(
 
     function updateQuickActionUI() {
 
-      const isOnLeave =
+      const canCheckIn =
         facultyOnlineStatus ===
-        "onleave";
+          "onleave" ||
+        facultyOnlineStatus ===
+          "offline";
 
       const colorVar =
         FACULTY_STATUS_COLOR_VARS[
@@ -1224,13 +1229,13 @@ document.addEventListener(
       if (checkInButton) {
 
         checkInButton.hidden =
-          !isOnLeave;
+          !canCheckIn;
       }
 
       if (checkOutButton) {
 
         checkOutButton.hidden =
-          isOnLeave;
+          canCheckIn;
       }
     }
 
@@ -1459,7 +1464,7 @@ document.addEventListener(
           () => {
 
             setFacultyOnlineStatus(
-              "onleave"
+              "offline"
             );
 
             checkInTimeoutId =
@@ -1477,7 +1482,7 @@ document.addEventListener(
       event.preventDefault();
 
       setFacultyOnlineStatus(
-        "onleave"
+        "offline"
       );
 
       if (checkInTimeoutId) {

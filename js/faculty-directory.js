@@ -104,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedFacultyId = null;
   let activeDepartment = null;
+  let activeStatus = null;
   let filterOptions = [];
 
   const DEPARTMENT_OPTIONS = [
@@ -133,8 +134,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (raw === "available" || raw === "online") return "online";
     if (raw === "in class") return "meeting";
     if (raw === "on leave") return "onleave";
-    if (raw === "unavailable" || raw === "offline") return "onleave";
-    return ["online", "meeting", "consultation", "onleave"].includes(raw)
+    if (raw === "unavailable") return "onleave";
+    if (raw === "offline") return "offline";
+    return ["online", "meeting", "consultation", "onleave", "offline"].includes(raw)
       ? raw
       : "consultation";
   }
@@ -145,6 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
       meeting: "Meeting",
       consultation: "Consultation",
       onleave: "On Leave",
+      offline: "Offline",
     };
     return labels[status] || "Consultation";
   }
@@ -243,6 +246,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filterPanel.innerHTML = "";
 
+    const onlineOption = document.createElement("button");
+    onlineOption.type = "button";
+    onlineOption.className = "filter-option";
+    onlineOption.dataset.status = "online";
+    onlineOption.textContent = "Online";
+    onlineOption.classList.toggle("is-active", activeStatus === "online");
+    filterPanel.appendChild(onlineOption);
+
     departments.forEach((department) => {
       const option = document.createElement("button");
       option.type = "button";
@@ -268,7 +279,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const programMatch = faculty ? faculty.program.toLowerCase().includes(query) : false;
       const matchesSearch = query === "" || nameMatch || programMatch;
       const matchesDepartment = !activeDepartment || department === activeDepartment;
-      const matches = matchesSearch && matchesDepartment;
+      const status = card.dataset.status || "";
+      const matchesStatus = !activeStatus || status === activeStatus;
+      const matches = matchesSearch && matchesDepartment && matchesStatus;
 
       card.hidden = !matches;
       if (matches) visibleCount += 1;
@@ -289,16 +302,26 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!option || option.disabled) return;
 
       event.stopPropagation();
-      const department = option.dataset.department;
+      const department = option.dataset.department || "";
+      const status = option.dataset.status || "";
 
-      if (activeDepartment === department) {
+      if (status) {
+        activeStatus = activeStatus === status ? null : status;
         activeDepartment = null;
-        option.classList.remove("is-active");
+      } else if (activeDepartment === department) {
+        activeDepartment = null;
       } else {
         activeDepartment = department;
-        filterOptions.forEach((opt) => opt.classList.remove("is-active"));
-        option.classList.add("is-active");
+        activeStatus = null;
       }
+
+      filterOptions.forEach((opt) => {
+        opt.classList.toggle(
+          "is-active",
+          (activeStatus && opt.dataset.status === activeStatus) ||
+            (activeDepartment && opt.dataset.department === activeDepartment)
+        );
+      });
 
       applyFilters();
     });
