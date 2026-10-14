@@ -223,4 +223,71 @@ html[data-theme="dark"] .faculty-save-success {
   color: #7ee09a;
 }
 
-/* ---------- 6. Add more pages below ---------- */
+/* ---------- 6. Public Landing Page ---------- */
+html[data-theme="dark"] .navbar {
+  background: linear-gradient(90deg, var(--theme-maroon-deep) 0%, var(--theme-maroon-deep-2) 100%);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+html[data-theme="dark"] .navbar-links.is-open {
+  background-color: var(--theme-maroon-deep);
+}
+
+html[data-theme="dark"] .hero-overlay,
+html[data-theme="dark"] .how-it-works-overlay,
+html[data-theme="dark"] .get-started-overlay {
+  background: var(--theme-overlay-gradient);
+  opacity: 1;
+}
+
+html[data-theme="dark"] .hero-background,
+html[data-theme="dark"] .how-it-works-background,
+html[data-theme="dark"] .get-started-background {
+  opacity: 0.72;
+}
+
+html[data-theme="dark"] .hero-title,
+html[data-theme="dark"] .how-it-works-title,
+html[data-theme="dark"] .get-started-title {
+  background-image: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #ffffff 42%,
+    var(--color-gradient-end) 78%,
+    var(--color-gradient-end) 100%
+  );
+}
+
+html[data-theme="dark"] .hero-subtitle,
+html[data-theme="dark"] .contact-info-text {
+  color: var(--theme-text-soft);
+}
+
+html[data-theme="dark"] .diagram-card {
+  background-color: var(--theme-card);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
+}
+
+html[data-theme="dark"] .contact-info-title {
+  color: var(--theme-danger);
+}
+
+html[data-theme="dark"] .why-choose-overlay,
+html[data-theme="dark"] .who-can-use-overlay {
+  background: linear-gradient(135deg, var(--theme-maroon-deep) 0%, rgba(129, 28, 16, 0.96) 100%);
+  opacity: 0.96;
+}
+
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .role-card {
+  background: linear-gradient(180deg, #3a1417 0%, #230b0d 100%);
+  border-color: var(--theme-border);
+  box-shadow: var(--theme-shadow);
+}
+
+html[data-theme="dark"] .site-footer {
+  background-color: var(--theme-maroon-deep);
+}
+
+/* ---------- 7. Add more pages below ---------- */

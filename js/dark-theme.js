@@ -523,7 +523,8 @@
       setThemeScope(window.ProfConsultAuth.currentSession.user);
     }
 
-    if (IS_PUBLIC) buildPublicToggle();
+    if (IS_PUBLIC && document.querySelector(".navbar-links")) buildNavToggle();
+    else if (IS_PUBLIC) buildPublicToggle();
     else buildNavToggle();
     syncAutoSurfaces();
 
