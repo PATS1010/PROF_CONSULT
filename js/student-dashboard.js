@@ -4,20 +4,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const STUDENT_QUICK_ACTION_SHOWN_STORAGE_KEY =
     "profconsult_student_quick_action_shown";
 
-  const firstNameEl = document.getElementById("studentFirstName");
-
   fetch("api/session.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
   })
     .then((response) => response.ok ? response.json() : Promise.reject())
-    .then((result) => {
-      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
-      if (firstNameEl && fullName) {
-        firstNameEl.textContent = fullName.split(/\s+/)[0];
-      }
-    })
     .catch(() => {
       window.location.replace("login.html");
     });
