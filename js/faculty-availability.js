@@ -546,9 +546,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (typeof window.setFacultyOnlineStatus === "function") {
-          window.setFacultyOnlineStatus("consultation");
+          window.setFacultyOnlineStatus("online");
         } else {
-          setCurrentStatus("consultation", "Consultation");
+          setCurrentStatus("online", "Online");
         }
         didSaveHours = true;
       }

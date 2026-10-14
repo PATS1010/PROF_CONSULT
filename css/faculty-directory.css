@@ -506,6 +506,7 @@ input {
 }
 
 .status-available { background-color: #2fae4e; }
+.status-online { background-color: #2fae4e; }
 .status-teaching { background-color: #f2601c; }
 .status-meeting { background-color: #2a7de1; }
 .status-offline { background-color: #b9b9b9; }

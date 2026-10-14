@@ -11,12 +11,14 @@ const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
 window.TEST_FACULTY_ACCOUNT = false;
 
 const FACULTY_STATUS_LABELS = {
+  online: "Online",
   meeting: "Meeting",
   consultation: "Consultation",
   onleave: "On Leave",
 };
 
 const FACULTY_STATUS_COLOR_VARS = {
+  online: "--color-status-available",
   meeting: "--color-status-meeting",
   consultation: "--color-status-consultation",
   onleave: "--color-status-onleave",
@@ -25,13 +27,15 @@ const FACULTY_STATUS_COLOR_VARS = {
 const FACULTY_STATUS_DEFAULT = "consultation";
 
 const FACULTY_STATUS_API_VALUES = {
+  online: "available",
   meeting: "meeting",
   consultation: "consultation",
   onleave: "on leave",
 };
 
 const FACULTY_STATUS_FROM_API = {
-  available: "consultation",
+  available: "online",
+  online: "online",
   unavailable: "onleave",
   "in class": "meeting",
   meeting: "meeting",
@@ -1395,7 +1399,7 @@ document.addEventListener(
       event.preventDefault();
 
       setFacultyOnlineStatus(
-        "consultation"
+        "online"
       );
 
       if (checkInTimeoutId) {

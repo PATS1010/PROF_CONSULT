@@ -114,8 +114,8 @@
   <div class="availability-column-left">
     <div class="faculty-status-row">
       <div class="faculty-status-pill">
-        <span class="status-dot status-consultation" id="availabilityStatusDot" aria-hidden="true"></span>
-        <span id="availabilityStatusLabel">Consultation</span>
+        <span class="status-dot status-online" id="availabilityStatusDot" aria-hidden="true"></span>
+        <span id="availabilityStatusLabel">Online</span>
       </div>
 
       <div class="faculty-change-status-wrap">
@@ -124,10 +124,13 @@
         </button>
 
         <div class="faculty-status-panel" id="statusPanel" hidden>
+          <button type="button" class="faculty-status-option is-selected" data-status="online" data-label="Online">
+            <span class="faculty-status-radio" aria-hidden="true"></span> Online
+          </button>
           <button type="button" class="faculty-status-option" data-status="meeting" data-label="Meeting">
             <span class="faculty-status-radio" aria-hidden="true"></span> Meeting
           </button>
-          <button type="button" class="faculty-status-option is-selected" data-status="consultation" data-label="Consultation">
+          <button type="button" class="faculty-status-option" data-status="consultation" data-label="Consultation">
             <span class="faculty-status-radio" aria-hidden="true"></span> Consultation
           </button>
           <button type="button" class="faculty-status-option" data-status="onleave" data-label="On Leave">

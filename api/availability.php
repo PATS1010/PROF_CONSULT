@@ -44,10 +44,13 @@ try {
 
         $data = input();
         $status = clean((string) ($data['status'] ?? ''));
+        if ($status === 'online') {
+            $status = 'available';
+        }
         $now = currentManilaDateTime();
         $date = clean((string) ($data['date'] ?? $now->format('Y-m-d')));
         $time = clean((string) ($data['time'] ?? $now->format('H:i:s')));
-        $allowedStatuses = ['meeting', 'on leave', 'consultation'];
+        $allowedStatuses = ['available', 'meeting', 'on leave', 'consultation'];
 
         if (!in_array($status, $allowedStatuses, true)
             || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {

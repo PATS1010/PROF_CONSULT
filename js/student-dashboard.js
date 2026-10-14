@@ -212,17 +212,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function normalizeStatus(value) {
     const raw = String(value || "consultation").toLowerCase();
-    if (raw === "available") return "consultation";
+    if (raw === "available" || raw === "online") return "online";
     if (raw === "in class") return "meeting";
     if (raw === "on leave") return "onleave";
     if (raw === "unavailable" || raw === "offline") return "onleave";
-    return ["meeting", "consultation", "onleave"].includes(raw)
+    return ["online", "meeting", "consultation", "onleave"].includes(raw)
       ? raw
       : "consultation";
   }
 
   function statusLabel(status) {
     const labels = {
+      online: "Online",
       meeting: "Meeting",
       consultation: "Consultation",
       onleave: "On Leave",

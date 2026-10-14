@@ -46,6 +46,7 @@
 }
 
 .status-available { background-color: var(--color-status-available); }
+.status-online { background-color: var(--color-status-available); }
 .status-teaching { background-color: var(--color-status-teaching); }
 .status-meeting { background-color: var(--color-status-meeting); }
 .status-offline { background-color: var(--color-status-offline); }

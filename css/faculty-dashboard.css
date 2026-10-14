@@ -34,6 +34,10 @@
   background-color: var(--color-status-available);
 }
 
+.status-online {
+  background-color: var(--color-status-available);
+}
+
 .status-teaching {
   background-color: var(--color-status-teaching);
 }
