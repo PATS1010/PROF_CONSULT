@@ -307,7 +307,7 @@ function facultyWeeklyAvailability(PDO $db, int $facultyId): array
 
 function markFinishedApprovedRequestsCompleted(PDO $db): void
 {
-    $now = (new DateTimeImmutable('now'))->format('Y-m-d H:i:s');
+    $now = currentManilaDateTime()->format('Y-m-d H:i:s');
 
     $studentNotifications = $db->prepare(
         "INSERT INTO notifications (User_ID, Message, Read_Status)

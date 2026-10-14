@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
       time: formatTimeLabel(record.Preferred_Time),
       status: mappedStatus[0],
       statusLabel: mappedStatus[1],
+      response: record.Response || "",
     };
   }
 
@@ -221,6 +222,14 @@ document.addEventListener("DOMContentLoaded", () => {
       status.appendChild(statusText);
 
       body.appendChild(status);
+
+      if (request.response) {
+        const response = document.createElement("p");
+        response.className = "request-card-response";
+        response.textContent = `Faculty response: ${request.response}`;
+        body.appendChild(response);
+      }
+
       card.appendChild(body);
 
       listEl.appendChild(card);

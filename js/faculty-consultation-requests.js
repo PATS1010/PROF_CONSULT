@@ -158,6 +158,7 @@ function mapApiRequest(record) {
     program: record.Program || "",
     yearSet: `${record.Year_Level || ""}${record.Section || ""}`,
     message: record.Additional_Message || "",
+    response: record.Response || "",
     status,
   };
 }
@@ -285,6 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="request-info-col">
           <p class="request-info-label">Additional Message:</p>
           <p class="request-message">${request.message}</p>
+          ${request.response ? `<p class="request-info-label">Faculty Response:</p><p class="request-message">${request.response}</p>` : ""}
           ${section === "completed" ? '<p class="request-complete-text">Consultation Complete!</p>' : ""}
         </div>
       </div>
