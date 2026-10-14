@@ -8,6 +8,9 @@ const FACULTY_NOTIFICATION_STORAGE_KEY =
 const FACULTY_INCOMING_NOTIFICATION_STORAGE_KEY =
   "facultyTestIncomingNotification";
 
+const FACULTY_QUICK_ACTION_SHOWN_STORAGE_KEY =
+  "profconsult_faculty_auto_checkin_shown";
+
 window.TEST_FACULTY_ACCOUNT = false;
 
 const FACULTY_STATUS_LABELS = {
@@ -708,7 +711,7 @@ function buildFacultyLogoutModal(logoutLink) {
       try {
 
         sessionStorage.removeItem(
-          "profconsult_faculty_auto_checkin_shown"
+          FACULTY_QUICK_ACTION_SHOWN_STORAGE_KEY
         );
 
       } catch (error) {
@@ -1011,6 +1014,48 @@ document.addEventListener(
           }
         }
       );
+    }
+
+    if (
+      activePage === "dashboard" &&
+      quickActionButton &&
+      quickActionPanel
+    ) {
+
+      let hasShownQuickAction = false;
+
+      try {
+
+        hasShownQuickAction =
+          sessionStorage.getItem(
+            FACULTY_QUICK_ACTION_SHOWN_STORAGE_KEY
+          ) === "1";
+
+      } catch (error) {
+
+      }
+
+      if (!hasShownQuickAction) {
+
+        window.setTimeout(
+          () => {
+
+            openQuickAction();
+
+            try {
+
+              sessionStorage.setItem(
+                FACULTY_QUICK_ACTION_SHOWN_STORAGE_KEY,
+                "1"
+              );
+
+            } catch (error) {
+
+            }
+          },
+          450
+        );
+      }
     }
 
     document.addEventListener(

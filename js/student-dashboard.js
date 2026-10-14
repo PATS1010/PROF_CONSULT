@@ -1,6 +1,9 @@
 // Student Dashboard JS
 document.addEventListener("DOMContentLoaded", () => {
 
+  const STUDENT_QUICK_ACTION_SHOWN_STORAGE_KEY =
+    "profconsult_student_quick_action_shown";
+
   const firstNameEl = document.getElementById("studentFirstName");
 
   fetch("api/session.php?role=student", {
@@ -114,6 +117,32 @@ document.addEventListener("DOMContentLoaded", () => {
         openQuickAction();
       }
     });
+  }
+
+  if (quickActionButton && quickActionPanel) {
+    let hasShownQuickAction = false;
+
+    try {
+      hasShownQuickAction =
+        sessionStorage.getItem(
+          STUDENT_QUICK_ACTION_SHOWN_STORAGE_KEY
+        ) === "1";
+    } catch (error) {
+    }
+
+    if (!hasShownQuickAction) {
+      window.setTimeout(() => {
+        openQuickAction();
+
+        try {
+          sessionStorage.setItem(
+            STUDENT_QUICK_ACTION_SHOWN_STORAGE_KEY,
+            "1"
+          );
+        } catch (error) {
+        }
+      }, 450);
+    }
   }
 
   const notificationBellButton = document.getElementById("notificationBellButton");
@@ -619,6 +648,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   yesButton.addEventListener("click", () => {
+    try {
+      sessionStorage.removeItem(
+        "profconsult_student_quick_action_shown"
+      );
+    } catch (error) {
+    }
+
     const redirectPage = logoutLink.getAttribute("href") || "login.html";
     if (window.ProfConsultAuth && window.ProfConsultAuth.logout) {
       window.ProfConsultAuth.logout(redirectPage);
