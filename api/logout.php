@@ -9,7 +9,7 @@ requirePost();
 try {
     $sessionUser = !empty($_SESSION['user']) ? normalizeSessionUser($_SESSION['user']) : null;
     if ($sessionUser && $sessionUser['role'] === 'faculty' && $sessionUser['id'] > 0) {
-        saveFacultyAvailabilityForUser(database(), $sessionUser['id'], 'on leave');
+        saveFacultyAvailabilityForUser(database(), $sessionUser['id'], 'offline');
     }
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
