@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/notifications.css">
+  <link rel="stylesheet" href="css/faculty-notifications.css">
   <link rel="stylesheet" href="css/student-notification-toast.css">
     <link rel="stylesheet" href="css/dark-theme.css">
   <script src="js/student-notification-toast.js"></script>
@@ -89,15 +90,18 @@
 
   <main class="notifications-page">
 
-    <h1 class="format-text notifications-title">Notifications</h1>
-    <p class="notifications-subtitle">Stay updated with your consultation requests and faculty availability.</p>
+    <div class="notifications-page-heading">
+      <h1 class="notifications-title">Notifications</h1>
+    </div>
 
-    <ul class="notifications-list" id="notificationsList">
-    </ul>
-
-    <p class="no-notifications-message" id="noNotificationsMessage" hidden>
-      You have no notifications yet.
-    </p>
+    <section class="notifications-card" aria-label="Consultation notifications">
+      <div class="notifications-list-container">
+        <ul class="notifications-list" id="notificationsList"></ul>
+        <p class="no-notifications-message" id="noNotificationsMessage" hidden>
+          You have no notifications yet.
+        </p>
+      </div>
+    </section>
 
   </main>
 
