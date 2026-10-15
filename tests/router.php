@@ -66,6 +66,7 @@ class FixturePDO extends PDO
         $sql = str_replace(['SERIAL PRIMARY KEY', 'NOW()', "CURRENT_TIMESTAMP + INTERVAL '2 hours'"], ['INTEGER PRIMARY KEY', 'CURRENT_TIMESTAMP', "datetime(CURRENT_TIMESTAMP, '+2 hours')"], $sql);
         $sql = preg_replace("/\((cr\.)?Request_Date::timestamp \+ (cr\.)?Preferred_Time \+ INTERVAL '30 minutes'\)/", "datetime($1Request_Date || ' ' || $2Preferred_Time, '+30 minutes')", $sql);
         $sql = str_replace('?::timestamp', '?', $sql);
+        $sql = str_replace("EXTRACT(EPOCH FROM (Date_Time AT TIME ZONE current_setting('TimeZone')))", "CAST(strftime('%s', Date_Time) AS INTEGER)", $sql);
         if (str_contains($sql, 'information_schema.columns')) {
             return 'SELECT 1 WHERE ' . implode(' AND ', array_fill(0, substr_count($sql, '?'), '? IS NOT NULL'));
         }

@@ -56,6 +56,7 @@ try {
             Notification_ID AS "Notification_ID",
             Message AS "Message",
             Date_Time AS "Date_Time",
+            EXTRACT(EPOCH FROM (Date_Time AT TIME ZONE current_setting(\'TimeZone\'))) AS "Created_At_Epoch",
             Read_Status AS "Read_Status"
          FROM notifications
          WHERE User_ID = ?

@@ -98,9 +98,15 @@ function buildNotificationRow(notification) {
 
   message.appendChild(link);
 
+  const content = document.createElement("div");
+  content.className = "notification-details";
+  content.appendChild(message);
+  const timestamp = window.ProfConsultNotificationTime.createElement(notification.createdAt);
+  if (timestamp) content.appendChild(timestamp);
+
   li.appendChild(icon);
 
-  li.appendChild(message);
+  li.appendChild(content);
 
   return li;
 }
@@ -167,6 +173,7 @@ document.addEventListener(
           ? result.notifications.map((item) => ({
               id: String(item.Notification_ID),
               message: item.Message || "",
+              createdAt: item.Created_At_Epoch,
               linkText: "View",
               targetId: "",
               targetSection: "pending",

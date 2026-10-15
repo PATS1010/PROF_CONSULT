@@ -122,6 +122,21 @@
   line-height: 1.6;
 }
 
+.notification-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.notification-timestamp {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
 
 .notification-student-link {
   color: inherit;

@@ -83,46 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const PH_DAY_KEY_FORMATTER = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Manila",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
-
-  const PH_LONG_DATE_LABEL_FORMATTER = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Manila",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
-
-  function formatTimeAgo(createdAt) {
-    const created = Number(createdAt);
-    if (!Number.isFinite(created)) return "";
-
-    const now = Date.now();
-    const diffMinutes = Math.floor((now - created) / 60000);
-
-    if (diffMinutes < 1) return "Just now";
-    if (diffMinutes < 60) {
-      return diffMinutes === 1 ? "1 minute ago" : `${diffMinutes} minutes ago`;
-    }
-
-    const createdDay = PH_DAY_KEY_FORMATTER.format(new Date(created));
-    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now))) {
-      return "Today";
-    }
-    if (createdDay === PH_DAY_KEY_FORMATTER.format(new Date(now - 24 * 60 * 60 * 1000))) {
-      return "Yesterday";
-    }
-    return PH_LONG_DATE_LABEL_FORMATTER.format(new Date(created));
-  }
-
   function buildNotificationRows(records) {
     return records.map((record) => ({
       message: record.Message || "",
-      timestamp: formatTimeAgo(new Date(record.Date_Time || Date.now()).getTime()),
+      createdAt: record.Created_At_Epoch,
     }));
   }
 
@@ -164,12 +128,8 @@ document.addEventListener("DOMContentLoaded", () => {
       message.appendChild(link);
       content.appendChild(message);
 
-      if (notification.timestamp) {
-        const timestamp = document.createElement("p");
-        timestamp.className = "notification-timestamp";
-        timestamp.textContent = notification.timestamp;
-        content.appendChild(timestamp);
-      }
+      const timestamp = window.ProfConsultNotificationTime.createElement(notification.createdAt);
+      if (timestamp) content.appendChild(timestamp);
 
       li.appendChild(content);
       listEl.appendChild(li);
