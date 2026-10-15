@@ -135,7 +135,7 @@ try {
         'Mobile_Number' => $phone,
     ]));
 
-    reply(['ok' => true, 'message' => 'Account created.', 'user' => $_SESSION['user']], 201);
+    reply(['ok' => true, 'message' => 'Account created.', 'user' => $_SESSION['user'], 'tab_token' => issueTabToken($_SESSION['user'])], 201);
 } catch (PDOException $exception) {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();

@@ -5,13 +5,18 @@ let failStatusSave = false;
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
+const fixtureRole = TEST_CASE === 'student' || TEST_CASE === 'wrong-role' ? 'student' : 'faculty';
+if (TEST_CASE !== 'fresh-tab') {
+  sessionStorage.setItem('profconsult_tab_role', fixtureRole);
+  sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));
+}
 const user = { id: 1, role: TEST_CASE === 'student' ? 'student' : 'faculty', name: 'Juan A. Santos Jr.', username: '24-00001', email: 'juan@example.test', phone: '9123456789', profile_photo: 'api/profile-photo.php?user_id=1' };
 const profile = { Department: 'Computer Engineering', Office: 'Room 12', Consultation_Hours: '[{"day":"Monday","times":["9:00 AM - 9:30 AM"]}]', Program: 'Computer Engineering', Year_Level: '1', Section: 'A' };
 window.fetch = async (url, options = {}) => {
   recorded.push({ url: String(url), options });
   let result = { ok: true };
   let status = 200;
-  if (String(url).includes('session.php')) result = { ok: true, user, profile };
+  if (String(url).includes('session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
   else if (String(url).includes('faculty-hours.php')) result.consultation_hours = profile.Consultation_Hours;
   else if (String(url).includes('availability.php')) {
@@ -23,7 +28,7 @@ window.fetch = async (url, options = {}) => {
   } else if (String(url).includes('faculty-schedule.php')) {
     result.slots = [{ value: '9:00 AM - 9:30 AM', available: true, taken: false }];
   }
-  return { ok: status === 200, status, json: async () => result };
+  return { ok: status === 200, status, json: async () => result, blob: async () => new Blob(['fixture'], { type: 'image/png' }) };
 };
 
 const delay = () => new Promise((resolve) => setTimeout(resolve, 50));
@@ -40,7 +45,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (TEST_CASE === 'faculty') {
       const button = document.getElementById('facultyProfilePhotoEdit');
       check(button.tagName === 'BUTTON' && !button.hidden, 'Faculty photo button is visible and keyboard accessible');
-      check(document.getElementById('facultyProfilePhoto').src.includes('user_id=1&v='), 'Faculty photo URL retains its account query parameter');
+      check(recorded.some((r) => r.url?.includes('profile-photo.php?user_id=1&v=')), 'Faculty photo URL retains its account query parameter');
       document.getElementById('editProfileButton').click();
       check(document.getElementById('editFirstName').value === 'Juan', 'First name remains in the first name field');
       check(document.getElementById('editLastName').value === 'Santos', 'Last name is separate from the suffix');
@@ -52,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(!('consultation_hours' in body) && !('office' in body), 'Profile save does not clear consultation hours or office');
       check(body.full_name === 'Juan A. Santos Jr.', 'Suffix survives the profile save round trip');
     } else if (TEST_CASE === 'student') {
-      check(document.getElementById('profilePhoto').src.includes('user_id=1&v='), 'Student photo URL retains its account query parameter');
+      check(recorded.some((r) => r.url?.includes('profile-photo.php?user_id=1&v=')), 'Student photo URL retains its account query parameter');
     } else if (TEST_CASE === 'availability') {
       check(window.getFacultyOnlineStatus() === 'offline', 'Availability loads the server status');
       const next = document.querySelector('.faculty-status-option[data-status="meeting"]');
@@ -81,6 +86,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(JSON.parse(posted.options.body).request_id === 21, 'Reschedule submits the correct server request');
       check(document.getElementById('submitRescheduleButton').disabled, 'Reschedule prevents duplicate submissions');
     }
+    check(!document.getElementById('profconsult-auth-lock'), 'Protected page is revealed only after successful session verification');
+    const sessionRequest = recorded.find((r) => r.url?.includes('session.php'));
+    check(new Headers(sessionRequest.options.headers).get('X-ProfConsult-Tab-Token') === 'a'.repeat(64), 'Protected API requests carry the login proof for this tab');
     if (failure) throw new Error(failure);
     const result = document.createElement('pre');
     result.id = 'regression-result';

@@ -2,3 +2,4 @@
 uploads/profile-photos/*
 !uploads/profile-photos/.gitkeep
 tests/runtime/
+tests/__pycache__/

@@ -5,9 +5,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 requirePost();
+$authenticatedUser = currentUser();
 
 try {
-    $sessionUser = !empty($_SESSION['user']) ? normalizeSessionUser($_SESSION['user']) : null;
+    $sessionUser = $authenticatedUser;
     if ($sessionUser && $sessionUser['role'] === 'faculty' && $sessionUser['id'] > 0) {
         saveFacultyAvailabilityForUser(database(), $sessionUser['id'], 'offline');
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 // SYSTEM NOTE: Saves and returns faculty availability status for professor and student dashboards.
 
 require __DIR__ . '/bootstrap.php';
+currentUser();
 
 $db = database();
 

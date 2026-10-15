@@ -2,6 +2,8 @@
  <!-- Faculty consultation requests  -->
 <html lang="en">
 <head>
+  <style id="profconsult-auth-lock">html{visibility:hidden!important}</style>
+  <script src="js/auth-guard.js" data-auth-role="faculty"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prof Consult | Consultation Requests</title>
@@ -207,8 +209,6 @@
 </section>
 
 </main>
-
-  <script src="js/auth-guard.js" data-auth-role="faculty"></script>
   <script src="js/faculty-shared.js"></script>
   <script src="js/faculty-consultation-requests.js"></script>
 </body>

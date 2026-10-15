@@ -183,6 +183,9 @@ document.addEventListener("DOMContentLoaded", () => {
           result = await logIn(correctedIdentifier, enteredPassword);
         }
         const role = result && result.user ? result.user.role : "";
+        if (!result.tab_token || !["student", "faculty"].includes(role)) throw new Error(MESSAGES.invalidCredentials);
+        sessionStorage.setItem(`profconsult_tab_token_${role}`, result.tab_token);
+        sessionStorage.setItem("profconsult_tab_role", role);
         if (window.ProfConsultTheme && window.ProfConsultTheme.setUser) {
           window.ProfConsultTheme.setUser(result.user);
         }

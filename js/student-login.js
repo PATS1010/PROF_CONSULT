@@ -57,6 +57,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.ok) throw new Error(result.message || "Unable to log in.");
+        if (!result.tab_token || result.user?.role !== "student") throw new Error("Unable to verify this login.");
+        sessionStorage.setItem("profconsult_tab_token_student", result.tab_token);
+        sessionStorage.setItem("profconsult_tab_role", "student");
         loginError.hidden = true;
         if (window.ProfConsultTheme && window.ProfConsultTheme.setUser) {
           window.ProfConsultTheme.setUser(result.user);

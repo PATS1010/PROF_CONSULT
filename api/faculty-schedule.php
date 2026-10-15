@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
+currentUser();
 
 $facultyId = (int) ($_GET['faculty_id'] ?? 0);
 $date = clean((string) ($_GET['date'] ?? ''));

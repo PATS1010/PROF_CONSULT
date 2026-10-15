@@ -9,9 +9,32 @@ if (PHP_SAPI !== 'cli-server' || getenv('PROFCONSULT_TEST_MODE') !== '1') {
 
 $root = dirname(__DIR__);
 $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+register_shutdown_function(static function () use ($path): void {
+    if (str_starts_with($path, '/api/') || str_ends_with($path, '.html')) {
+        error_log('TEST ' . $_SERVER['REQUEST_METHOD'] . ' ' . $path . ' -> ' . http_response_code());
+    }
+});
+if (str_starts_with($path, '/_test/login/')) {
+    $entry = basename($path);
+    if (!in_array($entry, ['login.html', 'student-login.html', 'faculty-login.html'], true)) { http_response_code(404); exit; }
+    $html = file_get_contents($root . '/' . $entry);
+    $html = preg_replace('~<link[^>]+href="https://[^>]+>~', '', $html);
+    $html = str_replace('<head>', '<head><base href="/"><script src="tests/auth-flow.js"></script>', $html);
+    header('Content-Type: text/html; charset=utf-8');
+    echo $html;
+    exit;
+}
+if (in_array($path, ['/student-dashboard.html', '/faculty-dashboard.html'], true)) {
+    $html = file_get_contents($root . $path);
+    $html = preg_replace('~<link[^>]+href="https://[^>]+>~', '', $html);
+    $html = str_replace('<head>', '<head><script src="tests/auth-flow.js"></script>', $html);
+    header('Content-Type: text/html; charset=utf-8');
+    echo $html;
+    exit;
+}
 if (str_starts_with($path, '/_test/ui/')) {
     $case = basename($path);
-    $pages = ['faculty' => 'faculty-profile.html', 'student' => 'student-profile.html', 'availability' => 'faculty-availability.html', 'reschedule' => 'reschedule-consultation.html'];
+    $pages = ['faculty' => 'faculty-profile.html', 'student' => 'student-profile.html', 'availability' => 'faculty-availability.html', 'reschedule' => 'reschedule-consultation.html', 'fresh-tab' => 'faculty-profile.html', 'wrong-role' => 'faculty-profile.html'];
     if (!isset($pages[$case])) { http_response_code(404); exit; }
     $html = file_get_contents($root . '/' . $pages[$case]);
     $html = str_replace('<head>', '<head><base href="/"><script>window.TEST_CASE = ' . json_encode($case) . ';</script><script src="tests/browser-regressions.js"></script>', $html);
@@ -87,7 +110,8 @@ if ($path === '/_test/session') {
     $s = database()->prepare('SELECT * FROM users WHERE User_ID = ?');
     $s->execute([$id]);
     $_SESSION = [];
-    reply(['ok' => true, 'user' => rememberUserSession(publicUser($s->fetch()))]);
+    $user = rememberUserSession(publicUser($s->fetch()));
+    reply(['ok' => true, 'user' => $user, 'tab_token' => issueTabToken($user)]);
 }
 if ($path === '/_test/mail') {
     reply(['ok' => true, 'mail' => database()->query('SELECT * FROM test_mail ORDER BY rowid DESC LIMIT 1')->fetch()]);

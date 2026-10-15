@@ -4,6 +4,7 @@ declare(strict_types=1);
 // SYSTEM NOTE: Returns faculty profile, photo, department, and availability data for student search.
 
 require __DIR__ . '/bootstrap.php';
+currentUser();
 
 try {
     // Open the shared PostgreSQL connection from api/config.php.

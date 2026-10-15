@@ -12,6 +12,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from browser_driver import login_flow
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = ROOT / 'tests/runtime'
@@ -20,12 +21,14 @@ db_file = RUNTIME / 'fixture.sqlite'
 if db_file.exists():
     db_file.unlink()
 db = sqlite3.connect(db_file)
+php = shutil.which('php') or r'C:\xampp\php\php.exe'
+fixture_password = subprocess.check_output([php, '-r', 'echo password_hash("TestPassword1", PASSWORD_DEFAULT);'], text=True)
 schema = (ROOT / 'database/schema.sql').read_text()
 schema = schema.replace(' CASCADE;', ';').replace('SERIAL PRIMARY KEY', 'INTEGER PRIMARY KEY')
 db.executescript(schema)
 db.executescript('CREATE TABLE test_mail (Email TEXT, Code TEXT);')
 for i, role in [(1, 'faculty'), (2, 'student'), (3, 'student')]:
-    db.execute('INSERT INTO users (User_ID,Username,Password,Full_Name,Email,Mobile_Number,Role) VALUES (?,?,?,?,?,?,?)', (i, f'test-{i}', 'unused', 'Juan A. Santos Jr.', f'test-{i}@example.test', '9123456789', role))
+    db.execute('INSERT INTO users (User_ID,Username,Password,Full_Name,Email,Mobile_Number,Role) VALUES (?,?,?,?,?,?,?)', (i, f'test-{i}', fixture_password, 'Juan A. Santos Jr.', f'test-{i}@example.test', '9123456789', role))
 db.execute('INSERT INTO faculty (Faculty_ID,User_ID,Department,Office,Consultation_Hours) VALUES (1,1,?,?,?)', ('Computer Engineering', 'Room 12', 'Monday: 9:00 AM - 11:00 AM'))
 for i in [2, 3]:
     db.execute('INSERT INTO students (Student_ID,User_ID,Program,Year_Level,Section) VALUES (?,?,?,?,?)', (i, i, 'Computer Engineering', '1', 'A'))
@@ -44,17 +47,24 @@ log = (RUNTIME / 'server.log').open('w')
 server = subprocess.Popen([php, '-d', f'upload_tmp_dir={RUNTIME}', '-S', f'127.0.0.1:{port}', 'tests/router.php'], cwd=ROOT, env=env, stdout=log, stderr=log, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 checks = 0
+active_token = ''
 
-def request(path, payload=None, raw=None, content_type=None):
+def request(path, payload=None, raw=None, content_type=None, proof=True):
+    global active_token
     data = json.dumps(payload).encode() if payload is not None else raw
     headers = {'Content-Type': content_type or 'application/json'} if data is not None else {}
+    if proof:
+        headers['X-ProfConsult-Tab-Token'] = active_token if proof is True else proof
     req = urllib.request.Request(base + path, data=data, headers=headers)
     try:
         response = opener.open(req, timeout=10)
     except urllib.error.HTTPError as error:
         response = error
     body = response.read()
-    return response.status, json.loads(body) if 'application/json' in response.headers.get('Content-Type', '') else body
+    result = json.loads(body) if 'application/json' in response.headers.get('Content-Type', '') else body
+    if isinstance(result, dict) and result.get('ok') and result.get('tab_token'):
+        active_token = result['tab_token']
+    return response.status, result
 
 def check(condition, label):
     global checks
@@ -108,7 +118,7 @@ try:
     check('January 7, 2030 at 9:30 AM' in db.execute('SELECT Message FROM notifications WHERE User_ID=2 ORDER BY Notification_ID DESC LIMIT 1').fetchone()[0], 'TC12 notification contains the revised consultation schedule')
     db.close()
     status, _ = request('/api/faculty-schedule.php?faculty_id=1&date=2030-01-07&request_id=21')
-    check(status == 401, 'TC6 student cannot exclude a faculty booking from the schedule')
+    check(status == 403, 'TC6 student cannot exclude a faculty booking from the schedule')
 
     image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6ioAAAAASUVORK5CYII=')
     boundary = 'profconsult-test-upload'
@@ -136,6 +146,18 @@ try:
     _, result = request('/_test/old-mail')
     check(len(result['codes']) == 1 and result['codes'][0]['Token'] == 'old-token' and result['codes'][0]['Consumed_At'] is None, 'TC1 failed resend preserves the previous code and removes the unsent code')
 
+    # Same cookies, but no sessionStorage proof: model a pasted URL in a fresh tab.
+    for protected in ['/api/session.php?role=student', '/api/faculty-directory.php', '/api/faculty-schedule.php?faculty_id=1&date=2030-01-07', '/api/availability.php?faculty_id=1', '/' + photo_path]:
+        check(request(protected, proof=False)[0] == 401, 'Fresh tab cannot access ' + protected.split('?')[0] + ' using cookies alone')
+    check(request('/api/session.php?role=student', proof='b' * 64)[0] == 401, 'Forged tab proof is rejected')
+    check(request('/api/session.php?role=faculty')[0] == 403, 'Student tab proof cannot access a faculty session')
+    status, result = request('/api/login.php', {'identifier': 'test-2@example.test', 'password': 'TestPassword1'})
+    check(status == 200 and len(result.get('tab_token', '')) == 64, 'Real password login issues a fresh tab proof')
+    check(request('/api/session.php?role=student')[0] == 200, 'Authenticated tab can reload its session')
+    check(request('/api/logout.php', {}, proof=False)[0] == 401, 'A fresh tab cannot log out another tab using cookies alone')
+    check(request('/api/logout.php', {})[0] == 200, 'Authenticated logout succeeds')
+    check(request('/api/session.php?role=student')[0] == 401, 'Logout revokes the proof and prevents session reuse')
+
     chrome = next((p for p in [shutil.which('google-chrome'), shutil.which('chromium'), r'C:\Program Files\Google\Chrome\Application\chrome.exe'] if p and Path(p).exists()), None)
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
@@ -144,6 +166,14 @@ try:
         (RUNTIME / (case + '.html')).write_text(process.stdout, encoding='utf-8')
         match = re.search(r'<pre id="regression-result">(.*?)</pre>', process.stdout, re.S)
         check(bool(match and match[1].startswith('PASS ')), 'Browser ' + case + ': ' + (match[1] if match else 'no result; see tests/runtime/' + case + '.html'))
+    for case in ['fresh-tab', 'wrong-role']:
+        process = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--user-data-dir={RUNTIME / ("chrome-" + case)}', '--dump-dom', '--virtual-time-budget=1200', base + '/_test/ui/' + case], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+        (RUNTIME / (case + '.html')).write_text(process.stdout, encoding='utf-8')
+        check('id="loginForm"' in process.stdout and 'id="facultyProfileView"' not in process.stdout, 'Browser ' + case + ' redirects to login before revealing the faculty portal')
+    for entry in ['login.html', 'student-login.html', 'faculty-login.html']:
+        result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'))
+        (RUNTIME / ('login-flow-' + entry)).write_text(html, encoding='utf-8')
+        check(result.startswith('PASS '), 'Browser actual ' + entry + ' signs in, opens its dashboard, and refreshes successfully')
     print(f'Completed {checks} regression checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()

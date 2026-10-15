@@ -60,7 +60,7 @@ try {
             error_log('Faculty login availability update failed: ' . $exception->getMessage());
         }
     }
-    reply(['ok' => true, 'user' => $_SESSION['user']]);
+    reply(['ok' => true, 'user' => $_SESSION['user'], 'tab_token' => issueTabToken($_SESSION['user'])]);
 } catch (PDOException $exception) {
     error_log($exception->getMessage());
     fail('A database error occurred. Check config.php and import database/schema.sql.', 500);

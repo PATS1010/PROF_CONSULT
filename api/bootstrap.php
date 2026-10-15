@@ -4,6 +4,8 @@ declare(strict_types=1);
 // SYSTEM NOTE: Loads shared API helpers for sessions, database access, validation, and JSON responses.
 
 header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, private');
+header('X-Content-Type-Options: nosniff');
 date_default_timezone_set('Asia/Manila');
 
 set_exception_handler(static function (Throwable $exception): void {
@@ -222,41 +224,40 @@ function rememberUserSession(array $user): array
     return $normalized;
 }
 
+function issueTabToken(array $user): string
+{
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['tab_tokens'][$user['role']] = [
+        'token' => $token,
+        'user_id' => (int) $user['id'],
+    ];
+    return $token;
+}
+
 function currentUser(?string $role = null): array
 {
-    if ($role && !empty($_SESSION['user'])) {
-        $activeUser = normalizeSessionUser($_SESSION['user']);
-        if ($activeUser['role'] === $role) {
-            $_SESSION[$role . '_user'] = $activeUser;
-            return $activeUser;
+    // Cookies are shared across tabs; the proof is supplied only by the tab
+    // that completed login. Never accept a proof from a URL or a cookie.
+    $presented = (string) ($_SERVER['HTTP_X_PROFCONSULT_TAB_TOKEN'] ?? '');
+    if (!preg_match('/^[a-f0-9]{64}$/', $presented)) {
+        fail('Please log in in this tab to continue.', 401);
+    }
+    foreach (['student', 'faculty'] as $sessionRole) {
+        $grant = $_SESSION['tab_tokens'][$sessionRole] ?? null;
+        if (!is_array($grant) || !hash_equals((string) ($grant['token'] ?? ''), $presented)) {
+            continue;
         }
-    }
-
-    $sessionKey = $role ? $role . '_user' : 'user';
-    if (empty($_SESSION[$sessionKey]) && $role && !empty($_SESSION['user'])) {
-        $fallback = normalizeSessionUser($_SESSION['user']);
-        if ($fallback['role'] === $role) {
-            $_SESSION[$sessionKey] = $fallback;
+        $record = $_SESSION[$sessionRole . '_user'] ?? null;
+        if (!is_array($record)) break;
+        $user = normalizeSessionUser($record);
+        if ($user['id'] <= 0 || $user['id'] !== (int) ($grant['user_id'] ?? 0) || $user['role'] !== $sessionRole) break;
+        if ($role && $role !== $sessionRole) {
+            fail('You are not allowed to perform this action.', 403);
         }
+        $_SESSION['user'] = $user;
+        return $user;
     }
-
-    if (empty($_SESSION[$sessionKey])) {
-        fail('Please log in first.', 401);
-    }
-
-    $normalized = normalizeSessionUser($_SESSION[$sessionKey]);
-    if ($normalized['id'] <= 0 || $normalized['role'] === '') {
-        fail('Please log in first.', 401);
-    }
-    if ($role && $normalized['role'] !== $role) {
-        fail('You are not allowed to perform this action.', 403);
-    }
-
-    $_SESSION[$sessionKey] = $normalized;
-    if (!$role) {
-        $_SESSION['user'] = $normalized;
-    }
-    return $normalized;
+    fail('Your login in this tab has expired. Please log in again.', 401);
 }
 
 function requireRole(string $role): array
