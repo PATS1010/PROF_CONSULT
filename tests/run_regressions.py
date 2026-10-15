@@ -208,6 +208,11 @@ try:
         process = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--user-data-dir={RUNTIME / ("chrome-" + case)}', '--dump-dom', '--virtual-time-budget=1200', base + '/_test/ui/' + case], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
         (RUNTIME / (case + '.html')).write_text(process.stdout, encoding='utf-8')
         check('id="loginForm"' in process.stdout and 'id="facultyProfileView"' not in process.stdout, 'Browser ' + case + ' redirects to login before revealing the faculty portal')
+    for role in ['faculty', 'student']:
+        process = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--user-data-dir={RUNTIME / ("chrome-popup-" + role)}', '--dump-dom', '--virtual-time-budget=1500', base + '/tests/notification-popup.html?role=' + role], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+        (RUNTIME / ('notification-popup-' + role + '.html')).write_text(process.stdout, encoding='utf-8')
+        match = re.search(r'<pre id="regression-result">(.*?)</pre>', process.stdout, re.S)
+        check(bool(match and match[1].startswith('PASS ')), 'Browser notification popup: ' + (match[1] if match else 'no result'))
     for entry in ['login.html', 'student-login.html', 'faculty-login.html']:
         result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'))
         (RUNTIME / ('login-flow-' + entry)).write_text(html, encoding='utf-8')

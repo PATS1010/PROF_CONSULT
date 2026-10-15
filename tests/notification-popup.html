@@ -1,0 +1,53 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="../css/notification-popup.css">
+<style>body{margin:0;font-family:sans-serif}header{height:64px;background:#bd2025;display:flex;justify-content:flex-end}.navbar-right{display:flex;padding-right:20px}button{min-width:44px;min-height:44px}</style>
+</head><body>
+<header><div class="navbar-right"><button id="bell">Bell</button><button id="quick" aria-expanded="true">Quick Actions</button></div></header>
+<button id="outside">Outside</button><pre id="regression-result"></pre>
+<script>
+const role = new URLSearchParams(location.search).get("role") || "student";
+const bell = document.getElementById("bell");
+const quick = document.getElementById("quick");
+bell.id = role === "faculty" ? "facultyNotificationBellButton" : "notificationBellButton";
+quick.id = role === "faculty" ? "facultyQuickActionButton" : "quickActionButton";
+quick.addEventListener("click", () => quick.setAttribute("aria-expanded", quick.getAttribute("aria-expanded") !== "true"));
+let navigated = false, calls = 0, mode = "success", pending;
+bell.addEventListener("click", () => { navigated = true; });
+window.fetch = async (url, options) => {
+  calls++;
+  if (!url.endsWith("role=" + role) || options.credentials !== "same-origin" || options.cache !== "no-store") throw Error("Incorrect request");
+  if (mode === "pending") await new Promise(resolve => { pending = resolve; });
+  if (mode === "fail") throw Error("Network failure");
+  return new Response(JSON.stringify({ok:true,notifications:mode === "empty" ? [] : [{Message:"<img onerror=unsafe> consultation request",Created_At_Epoch:1792164960}]}), {headers:{"Content-Type":"application/json"}});
+};
+</script>
+<script src="../js/notification-popup.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+  const check = (value, label) => { if (!value) throw Error(label); };
+  const settle = () => new Promise(resolve => setTimeout(resolve, 30));
+  try {
+    bell.click(); await settle();
+    const panel = document.getElementById("notificationPopup");
+    check(!panel.hidden && bell.getAttribute("aria-expanded") === "true" && !navigated, "Bell opens a popup without navigating");
+    check(quick.getAttribute("aria-expanded") === "false", "Quick Actions closes when notifications opens");
+    check(!panel.querySelector("img") && panel.textContent.includes("<img onerror=unsafe>"), "Message is rendered as safe text");
+    check(panel.querySelector("time").textContent.includes("11:36 PM (PHT)"), "Philippine date/time is retained");
+    check(panel.querySelector("a").getAttribute("href") === (role === "faculty" ? "faculty-notifications.html" : "notifications.html"), "View More opens the correct notification page");
+    const rect = panel.getBoundingClientRect();
+    check(rect.left >= 0 && rect.right <= innerWidth && rect.top >= 64 && rect.bottom <= innerHeight, "Popup fits below the header inside the viewport");
+    bell.click(); check(panel.hidden && calls === 1, "Second click closes without another request");
+    bell.click(); await settle(); document.getElementById("outside").click(); check(panel.hidden, "Outside click closes");
+    bell.click(); await settle(); panel.querySelector("button").click(); check(panel.hidden && document.activeElement === bell, "Close button returns focus to bell");
+    mode = "pending"; bell.click();
+    document.dispatchEvent(new KeyboardEvent("keydown", {key:"Escape",bubbles:true}));
+    pending(); await settle(); check(panel.hidden, "Late response cannot reopen an Escape-dismissed popup");
+    mode = "empty"; bell.click(); await settle(); check(panel.textContent.includes("No notifications yet."), "Empty inbox has a clear message");
+    bell.click(); mode = "fail"; bell.click(); await settle(); check(panel.textContent.includes("Unable to load notifications."), "Network failure has a clear message");
+    window.ProfConsultNotificationPopup.close();
+    document.getElementById("regression-result").textContent = "PASS " + role + " popup: toggle, safe text, PHT, View More, viewport, outside/close/Escape, stale response, empty/error";
+  } catch (error) { document.getElementById("regression-result").textContent = "FAIL " + error.message; }
+});
+</script></body></html>
