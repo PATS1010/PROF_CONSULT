@@ -1258,10 +1258,6 @@ document.addEventListener(
       else refreshPresence();
     });
 
-    if (activePage === "notifications") {
-
-      setFacultyNotificationCount(0);
-    }
 
     updateFacultyNotificationBadge();
 
@@ -1275,10 +1271,6 @@ document.addEventListener(
       notificationBellButton.addEventListener(
         "click",
         () => {
-
-          setFacultyNotificationCount(
-            0
-          );
 
           window.location.href =
             "faculty-notifications.html";

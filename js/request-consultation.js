@@ -348,15 +348,32 @@ document.addEventListener("DOMContentLoaded", () => {
     if (preferredDateHint) preferredDateHint.classList.toggle("is-error", isError);
   }
 
+  function refreshMinimumDate() {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date());
+    const part = (type) => parts.find((item) => item.type === type).value;
+    preferredDateInput.min = `${part("year")}-${part("month")}-${part("day")}`;
+  }
+
+  function rejectPastDate() {
+    refreshMinimumDate();
+    if (preferredDateInput.value && preferredDateInput.value < preferredDateInput.min) {
+      preferredDateInput.value = "";
+      setHint("Please select today or a future date. Past dates are not allowed.", true);
+      renderTimeOptions([]);
+      clearSelectedTime();
+      return true;
+    }
+    return false;
+  }
+
   if (preferredDateInput) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const localYear = today.getFullYear();
-    const localMonth = String(today.getMonth() + 1).padStart(2, "0");
-    const localDay = String(today.getDate()).padStart(2, "0");
-    preferredDateInput.min = `${localYear}-${localMonth}-${localDay}`;
+    refreshMinimumDate();
+    preferredDateInput.addEventListener("focus", refreshMinimumDate);
 
     preferredDateInput.addEventListener("change", async () => {
+      if (rejectPastDate()) return;
       const dateValue = preferredDateInput.value;
 
       if (!dateValue) {
@@ -390,6 +407,15 @@ document.addEventListener("DOMContentLoaded", () => {
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+
+      if (rejectPastDate()) {
+        preferredDateInput.focus();
+        return;
+      }
+      if (!preferredDateInput.value || !document.getElementById("preferredTime").value) {
+        window.alert("Please select a date and time before submitting.");
+        return;
+      }
 
       const requestId = `REQ-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
 

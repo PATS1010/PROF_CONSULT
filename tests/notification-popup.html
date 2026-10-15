@@ -13,14 +13,27 @@ const quick = document.getElementById("quick");
 bell.id = role === "faculty" ? "facultyNotificationBellButton" : "notificationBellButton";
 quick.id = role === "faculty" ? "facultyQuickActionButton" : "quickActionButton";
 quick.addEventListener("click", () => quick.setAttribute("aria-expanded", quick.getAttribute("aria-expanded") !== "true"));
-let navigated = false, calls = 0, mode = "success", pending;
+sessionStorage.clear();
+let navigated = false, calls = 0, mode = "success", pending, unread = 0;
+let records = [];
+const readIds = [];
 bell.addEventListener("click", () => { navigated = true; });
+window.setFacultyNotificationCount = (count) => { unread = count; bell.classList.toggle("has-notifications", count > 0); };
+window.ProfConsultNotifications = {
+  markRead: () => { unread = 0; }, markUnread: () => { unread = 1; },
+  renderBellIndicator: () => bell.classList.toggle("has-notifications", unread > 0),
+};
 window.fetch = async (url, options) => {
   calls++;
-  if (!url.endsWith("role=" + role) || options.credentials !== "same-origin" || options.cache !== "no-store") throw Error("Incorrect request");
   if (mode === "pending") await new Promise(resolve => { pending = resolve; });
   if (mode === "fail") throw Error("Network failure");
-  return new Response(JSON.stringify({ok:true,notifications:mode === "empty" ? [] : [{Message:"<img onerror=unsafe> consultation request",Created_At_Epoch:1792164960}]}), {headers:{"Content-Type":"application/json"}});
+  if (options.method === "POST") {
+    const body = JSON.parse(options.body);
+    if (body.role !== role) throw Error("Incorrect role");
+    readIds.push(body.notification_id);
+    records.forEach(item => { if (item.Notification_ID === body.notification_id) item.Read_Status = "read"; });
+  } else if (!url.endsWith("role=" + role) || options.credentials !== "same-origin" || options.cache !== "no-store") throw Error("Incorrect request");
+  return new Response(JSON.stringify({ok:true, notifications:records, unread_count:records.filter(item => item.Read_Status === "unread").length}), {headers:{"Content-Type":"application/json"}});
 };
 </script>
 <script src="../js/notification-popup.js"></script>
@@ -28,39 +41,46 @@ window.fetch = async (url, options) => {
 document.addEventListener("DOMContentLoaded", async () => {
   const check = (value, label) => { if (!value) throw Error(label); };
   const settle = () => new Promise(resolve => setTimeout(() => requestAnimationFrame(() => requestAnimationFrame(resolve)), 30));
+  const api = window.ProfConsultNotificationPopup;
   try {
+    document.dispatchEvent(new CustomEvent("profconsult:session", {detail:{user:{id:1,role}}}));
+    await settle();
     bell.click(); await settle();
+    check(navigated && !document.getElementById("notificationPopup"), "Bell keeps its navigation handler and does not open a popup");
+    check(!bell.hasAttribute("aria-expanded"), "Bell is not a popup toggle");
+    check(!unread, "Empty inbox has no unread dot");
+    records = [{Notification_ID:1, Message:"<img onerror=unsafe> consultation request", Created_At_Epoch:1792164960, Read_Status:"unread"}];
+    await api.refresh(); await settle();
     const panel = document.getElementById("notificationPopup");
-    check(!panel.hidden && bell.getAttribute("aria-expanded") === "true" && !navigated, "Bell opens a popup without navigating");
-    check(quick.getAttribute("aria-expanded") === "false", "Quick Actions closes when notifications opens");
+    check(!panel.hidden && unread > 0 && bell.classList.contains("has-notifications"), "New server notification automatically opens popup and raises unread dot");
+    check(quick.getAttribute("aria-expanded") === "false", "Quick Actions closes when notification arrives");
     check(!panel.querySelector("img") && panel.textContent.includes("<img onerror=unsafe>"), "Message is rendered as safe text");
     check(panel.querySelector("time").textContent.includes("11:36 PM (PHT)"), "Philippine date/time is retained");
     check(panel.querySelector("a").getAttribute("href") === (role === "faculty" ? "faculty-notifications.html" : "notifications.html"), "View More opens the correct notification page");
     const rect = panel.getBoundingClientRect();
     check(rect.left >= 0 && rect.right <= innerWidth && rect.top >= 64 && rect.bottom <= innerHeight, "Popup fits below the header inside the viewport");
-    let linkClicks = 0;
-    panel.querySelector("a").addEventListener("click", event => { event.preventDefault(); linkClicks++; });
-    for (const target of [panel.querySelector("h2"), panel.querySelector(".notification-popup-message"), panel.querySelector("time")]) {
-      const area = target.getBoundingClientRect();
-      document.elementFromPoint(area.left + 2, area.top + area.height / 2).click();
-    }
-    check(linkClicks === 3, "Clicking the title, message, or time activates the notification link");
-    bell.click(); check(panel.hidden && calls === 1, "Second click closes without another request");
-    bell.click(); await settle(); document.getElementById("outside").click(); check(panel.hidden, "Outside click closes");
-    bell.click(); await settle();
-    const closeArea = panel.querySelector("button").getBoundingClientRect();
-    const closeTarget = document.elementFromPoint(closeArea.left + closeArea.width / 2, closeArea.top + closeArea.height / 2);
-    check(closeTarget.closest(".notification-popup-close"), "Close button is above the card link: " + closeTarget.tagName + "." + closeTarget.className);
-    closeTarget.click();
-    check(panel.hidden && document.activeElement === bell, "Close button returns focus to bell");
-    check(linkClicks === 3, "X closes without activating the notification link");
-    mode = "pending"; bell.click();
+    panel.querySelector("button").click();
+    check(panel.hidden && unread > 0 && readIds.length === 0, "Dismissing popup preserves unread dot and server unread status");
+    await api.refresh(); await settle();
+    check(panel.hidden, "Polling does not repeat the same notification popup");
+    records.unshift({Notification_ID:2, Message:"Another notification", Read_Status:"unread"});
+    await api.refresh(); await settle();
+    check(!panel.hidden && panel.textContent.includes("Another notification"), "Next notification opens a fresh popup");
     document.dispatchEvent(new KeyboardEvent("keydown", {key:"Escape",bubbles:true}));
-    pending(); await settle(); check(panel.hidden, "Late response cannot reopen an Escape-dismissed popup");
-    mode = "empty"; bell.click(); await settle(); check(panel.textContent.includes("No notifications yet."), "Empty inbox has a clear message");
-    bell.click(); mode = "fail"; bell.click(); await settle(); check(panel.textContent.includes("Unable to load notifications."), "Network failure has a clear message");
-    window.ProfConsultNotificationPopup.close();
-    document.getElementById("regression-result").textContent = "PASS " + role + " popup: toggle, safe text, PHT, View More, viewport, outside/close/Escape, stale response, empty/error";
+    check(panel.hidden && unread > 0, "Escape dismisses popup without reading notifications");
+    mode = "fail"; await api.refresh();
+    check(unread > 0 && panel.hidden, "Network failure preserves unread dot without an error popup");
+    mode = "success";
+    document.dispatchEvent(new CustomEvent("profconsult:notifications-read", {detail:{role,records:records.map(item => ({...item}))}}));
+    await settle(); await settle();
+    check(!unread && readIds.length === 2, "Viewing notification records marks them read on server and clears dot");
+    mode = "pending";
+    const inflight = api.refresh();
+    document.dispatchEvent(new CustomEvent("profconsult:logout"));
+    records.push({Notification_ID:3,Message:"Late notification",Read_Status:"unread"});
+    pending(); await inflight; await settle();
+    check(panel.hidden && !unread, "Late response after logout cannot reopen popup or change badge");
+    document.getElementById("regression-result").textContent = "PASS " + role + " notifications: bell navigation, automatic arrivals, unread dot, dismissal, deduplication, server read status, safe text, PHT, viewport, logout";
   } catch (error) { document.getElementById("regression-result").textContent = "FAIL " + error.message; }
 });
 </script></body></html>

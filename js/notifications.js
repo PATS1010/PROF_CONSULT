@@ -1,9 +1,6 @@
 // Notifications JS
 document.addEventListener("DOMContentLoaded", () => {
 
-  if (window.ProfConsultNotifications) {
-    window.ProfConsultNotifications.markRead();
-  }
 
   const hamburgerButton = document.getElementById("hamburgerButton");
   const sidebar = document.getElementById("sidebar");
@@ -144,6 +141,9 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((response) => response.ok ? response.json() : Promise.reject())
     .then((result) => {
       renderNotifications(buildNotificationRows(Array.isArray(result.notifications) ? result.notifications : []));
+      if (result.ok) document.dispatchEvent(new CustomEvent("profconsult:notifications-read", {
+        detail: { role: "student", records: result.notifications || [] },
+      }));
     })
     .catch(() => {
       renderNotifications([]);

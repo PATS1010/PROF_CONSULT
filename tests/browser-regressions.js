@@ -6,12 +6,12 @@ let fixtureFacultyStatus = 'offline';
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
-const fixtureRole = TEST_CASE === 'student' || TEST_CASE === 'wrong-role' ? 'student' : 'faculty';
+const fixtureRole = ['student', 'request', 'wrong-role'].includes(TEST_CASE) ? 'student' : 'faculty';
 if (TEST_CASE !== 'fresh-tab') {
   sessionStorage.setItem('profconsult_tab_role', fixtureRole);
   sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));
 }
-const user = { id: 1, role: TEST_CASE === 'student' ? 'student' : 'faculty', name: 'Juan A. Santos Jr.', username: '24-00001', email: 'juan@example.test', phone: '9123456789', profile_photo: 'api/profile-photo.php?user_id=1' };
+const user = { id: 1, role: fixtureRole, name: 'Juan A. Santos Jr.', username: '24-00001', email: 'juan@example.test', phone: '9123456789', profile_photo: 'api/profile-photo.php?user_id=1' };
 const profile = { Department: 'Computer Engineering', Office: 'Room 12', Consultation_Hours: '[{"day":"Monday","times":["9:00 AM - 9:30 AM"]}]', Program: 'Computer Engineering', Year_Level: '1', Section: 'A' };
 window.fetch = async (url, options = {}) => {
   recorded.push({ url: String(url), options });
@@ -49,6 +49,29 @@ window.addEventListener('unhandledrejection', (event) => { failure = String(even
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await delay();
+    if (TEST_CASE === 'request' || TEST_CASE === 'reschedule') {
+      const isRequest = TEST_CASE === 'request';
+      const date = document.getElementById(isRequest ? 'preferredDate' : 'reschedulePreferredDate');
+      const time = document.getElementById(isRequest ? 'preferredTime' : 'reschedulePreferredTime');
+      const form = document.getElementById(isRequest ? 'requestConsultationForm' : 'rescheduleConsultationForm');
+      const initialDate = date.value;
+      check(/^\d{4}-\d{2}-\d{2}$/.test(date.min), 'Calendar has a minimum date');
+      date.value = '2000-01-03';
+      time.value = '9:00 AM - 9:30 AM';
+      date.dispatchEvent(new Event('change'));
+      check(date.value === '' && time.value === '', 'Past date entry clears the date and selected time');
+      date.value = '2000-01-03';
+      time.value = '9:00 AM - 9:30 AM';
+      form.dispatchEvent(new Event('submit', { cancelable: true }));
+      check(!recorded.some((r) => r.options?.method === 'POST' && r.url?.includes(isRequest ? 'submit-consultation.php' : 'consultation-requests.php')), 'Past date cannot be submitted');
+      date.value = date.min;
+      date.dispatchEvent(new Event('change'));
+      await delay();
+      check(date.value === date.min, 'Today remains selectable');
+      date.value = initialDate;
+      date.dispatchEvent(new Event('change'));
+      await delay();
+    }
     if (TEST_CASE === 'faculty') {
       const button = document.getElementById('facultyProfilePhotoEdit');
       check(button.tagName === 'BUTTON' && !button.hidden, 'Faculty photo button is visible and keyboard accessible');

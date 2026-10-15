@@ -1,8 +1,6 @@
 (function () {
   "use strict";
   let panel, message, title, timestamp, link, bell;
-  let activeRole = "";
-  let requestVersion = 0;
 
   function position() {
     if (!panel || panel.hidden) return;
@@ -16,11 +14,9 @@
   }
 
   function close(returnFocus = false) {
-    requestVersion++;
     if (!panel) return;
     panel.classList.remove("is-open");
     panel.hidden = true;
-    bell?.setAttribute("aria-expanded", "false");
     if (returnFocus) bell?.focus();
   }
 
@@ -59,10 +55,8 @@
 
   function show({ role, text = "", heading = "New Notification", epoch = null }) {
     if (!document.body || !["faculty", "student"].includes(role)) return;
-    activeRole = role;
     bell = document.getElementById(role === "faculty" ? "facultyNotificationBellButton" : "notificationBellButton");
     create();
-    requestVersion++;
     title.textContent = heading;
     message.textContent = text;
     link.href = role === "faculty" ? "faculty-notifications.html" : "notifications.html";
@@ -83,42 +77,87 @@
     const quick = document.getElementById(role === "faculty" ? "facultyQuickActionButton" : "quickActionButton");
     if (quick?.getAttribute("aria-expanded") === "true") quick.click();
     panel.hidden = false;
-    bell?.setAttribute("aria-expanded", "true");
     position();
     requestAnimationFrame(() => { if (!panel.hidden) panel.classList.add("is-open"); });
   }
 
-  async function toggle(role) {
-    if (panel && !panel.hidden && activeRole === role) { close(); return; }
-    show({ role, heading: "Notifications", text: "Loading notifications..." });
-    const version = requestVersion;
+  let session = null, timer = null, busy = false, generation = 0;
+
+  function onNotificationsPage(role) {
+    return location.pathname.endsWith(role === "faculty" ? "/faculty-notifications.html" : "/notifications.html");
+  }
+
+  function updateUnread(role, count) {
+    if (role === "faculty") window.setFacultyNotificationCount?.(count);
+    else if (window.ProfConsultNotifications) {
+      window.ProfConsultNotifications[count > 0 ? "markUnread" : "markRead"]();
+      window.ProfConsultNotifications.renderBellIndicator(document.getElementById("notificationBellButton"));
+    }
+  }
+
+  async function refresh() {
+    if (!session || busy || document.hidden) return;
+    const version = generation;
+    const { id, role } = session;
+    busy = true;
     try {
       const response = await fetch(`api/notifications.php?role=${role}`, {
         credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
       });
       const result = await response.json();
-      if (!response.ok || !result.ok) throw new Error("Unable to load notifications");
-      if (version !== requestVersion) return;
-      const latest = Array.isArray(result.notifications) ? result.notifications[0] : null;
-      show({ role, text: latest?.Message || "No notifications yet.",
-        heading: latest ? "New Notification" : "Notifications", epoch: latest?.Created_At_Epoch });
+      if (version !== generation || !response.ok || !result.ok) return;
+      const records = Array.isArray(result.notifications) ? result.notifications : [];
+      updateUnread(role, Number(result.unread_count) || 0);
+      const key = `profconsult_notification_seen_${role}_${id}`;
+      let seen = 0;
+      try { seen = Number(sessionStorage.getItem(key)) || 0; } catch (_) {}
+      const incoming = records.filter((item) => item.Read_Status === "unread" && Number(item.Notification_ID) > seen)
+        .sort((a, b) => Number(b.Notification_ID) - Number(a.Notification_ID))[0];
+      const latestId = Math.max(seen, ...records.map((item) => Number(item.Notification_ID) || 0));
+      try { sessionStorage.setItem(key, String(latestId)); } catch (_) {}
+      if (incoming && !onNotificationsPage(role)) {
+        show({ role, text: incoming.Message || "", epoch: incoming.Created_At_Epoch });
+      }
     } catch (_) {
-      if (version === requestVersion) show({ role, heading: "Notifications", text: "Unable to load notifications. Please try again." });
+      // Keep the last confirmed unread state when the connection is unavailable.
+    } finally {
+      busy = false;
     }
   }
 
-  window.ProfConsultNotificationPopup = { show, toggle, close };
-  document.addEventListener("DOMContentLoaded", () => {
-    const button = document.getElementById("facultyNotificationBellButton") || document.getElementById("notificationBellButton");
-    if (!button) return;
-    button.setAttribute("aria-controls", "notificationPopup");
-    button.setAttribute("aria-expanded", "false");
-    // Override the older page-specific navigation handlers consistently.
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopImmediatePropagation();
-      toggle(button.id === "facultyNotificationBellButton" ? "faculty" : "student");
-    }, true);
+  function start(result) {
+    const user = result?.user;
+    if (!user || !["faculty", "student"].includes(user.role)) return;
+    if (!session || session.id !== user.id || session.role !== user.role) {
+      generation++;
+      session = { id: user.id, role: user.role };
+    }
+    if (!timer) timer = window.setInterval(refresh, 10000);
+    refresh();
+  }
+
+  window.ProfConsultNotificationPopup = { show, close, refresh };
+  document.addEventListener("profconsult:session", (event) => start(event.detail));
+  document.addEventListener("DOMContentLoaded", () => start(window.ProfConsultAuth?.currentSession));
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  document.addEventListener("profconsult:notifications-read", async (event) => {
+    const role = event.detail.role;
+    const version = generation;
+    try {
+      // Mark only records that were actually rendered, so a concurrent arrival stays unread.
+      for (const record of event.detail.records || []) {
+        if (record.Read_Status !== "unread") continue;
+        const response = await fetch("api/notifications.php", {
+          method: "POST", credentials: "same-origin",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ role, notification_id: Number(record.Notification_ID) }),
+        });
+        const result = await response.json();
+        if (version !== generation || !response.ok || !result.ok) return;
+        updateUnread(role, Number(result.unread_count) || 0);
+      }
+      refresh();
+    } catch (_) {}
   });
   document.addEventListener("click", (event) => {
     if (panel && !panel.hidden && !panel.contains(event.target) && !bell?.contains(event.target)) close();
@@ -129,5 +168,11 @@
   window.addEventListener("resize", position);
   window.addEventListener("scroll", position, { passive: true });
   window.addEventListener("pagehide", () => close());
-  document.addEventListener("profconsult:logout", () => close());
+  document.addEventListener("profconsult:logout", () => {
+    generation++;
+    session = null;
+    clearInterval(timer);
+    timer = null;
+    close();
+  });
 })();

@@ -5,10 +5,10 @@
   function readUnread() {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === null) return true;
+      if (stored === null) return false;
       return stored === "true";
     } catch (error) {
-      return true;
+      return false;
     }
   }
 

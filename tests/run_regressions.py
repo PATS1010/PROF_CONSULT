@@ -199,7 +199,7 @@ try:
     chrome = next((p for p in [shutil.which('google-chrome'), shutil.which('chromium'), r'C:\Program Files\Google\Chrome\Application\chrome.exe'] if p and Path(p).exists()), None)
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
-    for case in ['faculty', 'student', 'availability', 'reschedule']:
+    for case in ['faculty', 'student', 'availability', 'request', 'reschedule']:
         process = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--user-data-dir={RUNTIME / ("chrome-" + case)}', '--dump-dom', '--virtual-time-budget=1200', base + '/_test/ui/' + case + '?request_id=21'], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
         (RUNTIME / (case + '.html')).write_text(process.stdout, encoding='utf-8')
         match = re.search(r'<pre id="regression-result">(.*?)</pre>', process.stdout, re.S)

@@ -148,15 +148,6 @@ function renderFacultyNotifications(notifications = []) {
       notifications.length > 0;
   }
 
-  if (
-    typeof window.setFacultyNotificationCount ===
-    "function"
-  ) {
-
-    window.setFacultyNotificationCount(
-      0
-    );
-  }
 }
 
 document.addEventListener(
@@ -180,6 +171,9 @@ document.addEventListener(
             }))
           : [];
         renderFacultyNotifications(notifications);
+        if (result.ok) document.dispatchEvent(new CustomEvent("profconsult:notifications-read", {
+          detail: { role: "faculty", records: result.notifications || [] },
+        }));
       })
       .catch(() => renderFacultyNotifications([]));
   }

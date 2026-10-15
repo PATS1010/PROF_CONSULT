@@ -223,10 +223,34 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (dateHint) dateHint.classList.toggle("is-error", isError);
   }
 
+  function refreshMinimumDate() {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit",
+    }).formatToParts(new Date());
+    const part = (type) => parts.find((item) => item.type === type).value;
+    dateInput.min = `${part("year")}-${part("month")}-${part("day")}`;
+  }
+
+  function rejectPastDate() {
+    refreshMinimumDate();
+    if (dateInput.value && dateInput.value < dateInput.min) {
+      dateInput.value = "";
+      setDateErrorState(true);
+      if (dateHint) dateHint.textContent = "Please select today or a future date. Past dates are not allowed.";
+      updateTimeSlotAvailability([]);
+      clearSelectedTime();
+      return true;
+    }
+    return false;
+  }
+
   if (dateInput) {
+    refreshMinimumDate();
+    dateInput.addEventListener("focus", refreshMinimumDate);
     let scheduleVersion = 0;
     dateInput.addEventListener("change", async () => {
       const version = ++scheduleVersion;
+      if (rejectPastDate()) return;
       const dateValue = dateInput.value;
       clearSelectedTime();
       updateTimeSlotAvailability([]);
@@ -289,6 +313,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (submitButton && submitButton.disabled) return;
+
+      if (dateInput && rejectPastDate()) {
+        dateInput.focus();
+        return;
+      }
 
       const newDateISO = dateInput ? dateInput.value : "";
       const newTimeLabel = hiddenTimeInput ? hiddenTimeInput.value : "";
