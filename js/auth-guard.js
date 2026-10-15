@@ -111,6 +111,22 @@
   // <img> requests cannot set headers. Fetch private photos with the same proof
   // and display a blob URL; the login token never appears in image URLs.
   const photos = new WeakMap();
+  const defaultPhoto = new URL("images/default-profile.jpg", document.baseURI).href;
+  const profilePhotoSelector = ".profile-photo, .faculty-profile-photo, .student-profile-photo, .faculty-photo";
+  function useDefaultPhoto(img) {
+    if (img instanceof HTMLImageElement && img.matches(profilePhotoSelector) && img.src !== defaultPhoto) {
+      img.src = defaultPhoto;
+    }
+  }
+  document.addEventListener("error", (event) => {
+    const img = event.target;
+    if (!(img instanceof HTMLImageElement)) return;
+    // The authenticated fetch below handles private-photo failures. The direct
+    // browser request cannot provide the login proof and may fail first.
+    const url = new URL(img.src, document.baseURI);
+    if (url.origin === location.origin && url.pathname.endsWith("/api/profile-photo.php")) return;
+    useDefaultPhoto(img);
+  }, true);
   function loadPrivatePhoto(img) {
     if (!(img instanceof HTMLImageElement) || !token) return;
     const source = img.getAttribute("src") || "";
@@ -128,7 +144,9 @@
         entry.blob = URL.createObjectURL(blob);
         img.src = entry.blob;
       })
-      .catch(() => {});
+      .catch(() => {
+        if (photos.get(img) === entry && img.getAttribute("src") === source) useDefaultPhoto(img);
+      });
   }
   new MutationObserver((records) => {
     for (const record of records) {

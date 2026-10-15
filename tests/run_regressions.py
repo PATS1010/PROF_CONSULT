@@ -200,6 +200,11 @@ try:
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
     for case in ['faculty', 'student', 'availability', 'request', 'reschedule']:
+        if case in ['faculty', 'student']:
+            result, html = login_flow(chrome, base + '/_test/ui/' + case, RUNTIME / ('chrome-photo-' + case + '-' + str(port)), RUNTIME / ('photo-' + case + '.log'), result_id='regression-result')
+            (RUNTIME / (case + '.html')).write_text(html, encoding='utf-8')
+            check(result.startswith('PASS '), 'Browser ' + case + ': ' + (result or 'no result; see tests/runtime/' + case + '.html'))
+            continue
         process = subprocess.run([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--user-data-dir={RUNTIME / ("chrome-" + case)}', '--dump-dom', '--virtual-time-budget=1200', base + '/_test/ui/' + case + '?request_id=21'], capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
         (RUNTIME / (case + '.html')).write_text(process.stdout, encoding='utf-8')
         match = re.search(r'<pre id="regression-result">(.*?)</pre>', process.stdout, re.S)

@@ -3,6 +3,7 @@ const recorded = [];
 const alerts = [];
 let failStatusSave = false;
 let fixtureFacultyStatus = 'offline';
+let failPhotoFetch = false;
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
@@ -17,6 +18,7 @@ window.fetch = async (url, options = {}) => {
   recorded.push({ url: String(url), options });
   let result = { ok: true };
   let status = 200;
+  if (String(url).includes('profile-photo.php') && failPhotoFetch) status = 404;
   if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
   else if (String(url).includes('manage-consultation-hours.php')) result.consultation_hours = profile.Consultation_Hours;
@@ -35,7 +37,7 @@ window.fetch = async (url, options = {}) => {
   } else if (String(url).includes('get-faculty-schedule.php')) {
     result.slots = [{ value: '9:00 AM - 9:30 AM', available: true, taken: false }];
   }
-  return { ok: status === 200, status, json: async () => result, blob: async () => new Blob(['fixture'], { type: 'image/png' }) };
+  return { ok: status === 200, status, json: async () => result, blob: async () => new Blob([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII='), (char) => char.charCodeAt(0))], { type: 'image/png' }) };
 };
 
 const delay = () => new Promise((resolve) => setTimeout(resolve, 50));
@@ -49,6 +51,28 @@ window.addEventListener('unhandledrejection', (event) => { failure = String(even
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await delay();
+    if (TEST_CASE === 'faculty' || TEST_CASE === 'student') {
+      const photo = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhoto' : 'profilePhoto');
+      await photo.decode();
+      check(photo.src.startsWith('blob:') && photo.naturalWidth > 0, 'Uploaded photo loads through authenticated fetch');
+      async function expectDefault(source, message) {
+        photo.src = source;
+        for (let attempt = 0; attempt < 15 && !photo.src.endsWith('/images/default-profile.jpg'); attempt++) await delay();
+        await photo.decode();
+        check(photo.src.endsWith('/images/default-profile.jpg') && photo.naturalWidth > 0, message);
+      }
+      await expectDefault('uploads/profile-photos/deleted.jpg', 'Missing legacy upload displays the default image');
+      failPhotoFetch = true;
+      await expectDefault('api/profile-photo.php?user_id=1&missing=1', 'Missing private photo displays the default image');
+      failPhotoFetch = false;
+      const corrupt = URL.createObjectURL(new Blob(['broken'], { type: 'image/png' }));
+      await expectDefault(corrupt, 'Invalid image data displays the default image');
+      URL.revokeObjectURL(corrupt);
+      photo.src = 'api/profile-photo.php?user_id=1&restored=1';
+      await delay();
+      await photo.decode();
+      check(photo.src.startsWith('blob:') && photo.naturalWidth > 0, 'A valid uploaded photo can replace the fallback');
+    }
     if (TEST_CASE === 'request' || TEST_CASE === 'reschedule') {
       const isRequest = TEST_CASE === 'request';
       const date = document.getElementById(isRequest ? 'preferredDate' : 'reschedulePreferredDate');
