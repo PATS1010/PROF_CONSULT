@@ -165,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (emailInput) emailInput.value = studentDetails.email;
     if (phoneInput) phoneInput.value = studentDetails.phone;
     if (profilePhoto && user.profile_photo) {
-      profilePhoto.src = `${user.profile_photo}?v=${Date.now()}`;
+      profilePhoto.src = `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
     }
     renderFullNameDisplay();
     populateNameEditInputs();
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.message || "Unable to save profile photo.");
         }
         if (result.profile_photo) {
-          profilePhoto.src = `${result.profile_photo}?v=${Date.now()}`;
+          profilePhoto.src = `${result.profile_photo}${result.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
         }
       } catch (error) {
         profilePhoto.src = previousSrc;

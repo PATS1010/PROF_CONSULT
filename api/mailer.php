@@ -12,11 +12,18 @@ require_once dirname(__DIR__) . '/vendor/autoload.php';
 
 function sendOtpEmail(string $toEmail, string $toName, string $otpCode): void
 {
-    if (BREVO_API_KEY === '') {
-        throw new RuntimeException('BREVO_API_KEY is not configured in Railway.');
+    if (BREVO_API_KEY !== '') {
+        sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
+        return;
     }
 
-    sendOtpEmailWithBrevoApi($toEmail, $toName, $otpCode);
+    // Local and SMTP-based deployments already supply these settings.
+    if (SMTP_USERNAME !== '' && SMTP_PASSWORD !== '' && SMTP_FROM_EMAIL !== '') {
+        sendOtpEmailWithSmtp($toEmail, $toName, $otpCode);
+        return;
+    }
+
+    throw new RuntimeException('Email verification is unavailable. Please contact the administrator to configure the email service.');
 }
 
 function sendNotificationEmail(string $toEmail, string $toName, string $subject, string $message): void

@@ -48,8 +48,9 @@ try {
             $status = 'available';
         }
         $now = currentManilaDateTime();
-        $date = clean((string) ($data['date'] ?? $now->format('Y-m-d')));
-        $time = clean((string) ($data['time'] ?? $now->format('H:i:s')));
+        // A device clock must not make a newly saved status sort behind an old one.
+        $date = $now->format('Y-m-d');
+        $time = $now->format('H:i:s');
         $allowedStatuses = ['available', 'meeting', 'on leave', 'consultation', 'offline'];
 
         if (!in_array($status, $allowedStatuses, true)
@@ -90,7 +91,7 @@ try {
                 Time AS "Time"
              FROM availability
              WHERE Faculty_ID = ?
-             ORDER BY Date DESC, Time DESC, Availability_ID DESC
+             ORDER BY Availability_ID DESC
              LIMIT 1'
         );
         $statement->execute([$facultyId]);

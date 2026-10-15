@@ -533,7 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sessionStorage.setItem(RESCHEDULE_TARGET_STORAGE_KEY, request.id);
       } catch (error) {
       }
-      window.location.href = "reschedule-consultation.html";
+      window.location.href = `reschedule-consultation.html?request_id=${encodeURIComponent(request.id)}`;
       return;
     }
 

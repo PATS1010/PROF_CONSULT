@@ -1,29 +1,11 @@
 // Reschedule Consultation JS
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
 
-  const CONSULTATIONS_STORAGE_KEY = "profconsult_faculty_consultations";
   const RESCHEDULE_TARGET_STORAGE_KEY = "profconsult_reschedule_target";
 
-  function loadConsultations() {
-    try {
-      const stored = localStorage.getItem(CONSULTATIONS_STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (error) {
-    }
-    return [];
-  }
-
-  function saveConsultations(list) {
-    try {
-      localStorage.setItem(CONSULTATIONS_STORAGE_KEY, JSON.stringify(list));
-    } catch (error) {
-    }
-  }
-
   function getRescheduleTargetId() {
+    const queryId = new URLSearchParams(window.location.search).get("request_id");
+    if (queryId) return queryId;
     try {
       return sessionStorage.getItem(RESCHEDULE_TARGET_STORAGE_KEY);
     } catch (error) {
@@ -31,9 +13,31 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const consultations = loadConsultations();
   const targetId = getRescheduleTargetId();
-  const request = targetId ? consultations.find((item) => item.id === targetId) : null;
+  let request = null;
+  try {
+    const response = await fetch("api/consultation-requests.php?role=faculty", {
+      cache: "no-store",
+      credentials: "same-origin",
+      headers: { "Accept": "application/json" },
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) throw new Error(result.message || "Unable to load the consultation request.");
+    const record = (result.requests || []).find((item) => String(item.Request_ID) === String(targetId));
+    if (record) {
+      request = {
+        id: String(record.Request_ID),
+        type: record.Purpose || "Consultation",
+        message: record.Additional_Message || "",
+        name: record.Student_Name || "",
+        yearSet: `${record.Year_Level || ""} ${record.Section || ""}`.trim(),
+        preferredDateISO: record.Request_Date || "",
+        preferredTimeLabel: "",
+      };
+    }
+  } catch (error) {
+    window.alert(error.message || "Unable to load the consultation request.");
+  }
 
   if (!request) {
     window.location.href = "faculty-consultation-requests.html";
@@ -96,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadScheduleForDate(dateValue) {
-    const params = new URLSearchParams({ date: dateValue });
+    const params = new URLSearchParams({ date: dateValue, request_id: request.id });
     const response = await fetch(`api/faculty-schedule.php?${params.toString()}`, {
       cache: "no-store",
       credentials: "same-origin",
@@ -220,8 +224,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (dateInput) {
+    let scheduleVersion = 0;
     dateInput.addEventListener("change", async () => {
+      const version = ++scheduleVersion;
       const dateValue = dateInput.value;
+      clearSelectedTime();
+      updateTimeSlotAvailability([]);
 
       if (!dateValue) {
         setDateErrorState(false);
@@ -244,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setDateErrorState(false);
       try {
         const schedule = await loadScheduleForDate(dateValue);
+        if (version !== scheduleVersion) return;
         if (dateHint) {
           dateHint.textContent = schedule.message || "Choose a time based on the professor's saved availability.";
         }
@@ -252,6 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
           selectTimeSlot(normalizeSlotLabel(request.preferredTimeLabel));
         }
       } catch (error) {
+        if (version !== scheduleVersion) return;
         updateTimeSlotAvailability([]);
         clearSelectedTime();
         window.alert(error.message || "Unable to load available time slots.");
@@ -273,10 +283,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("rescheduleConsultationForm");
   const submitButton = document.getElementById("submitRescheduleButton");
   const countdownEl = document.getElementById("rescheduleCountdown");
+  if (submitButton) submitButton.disabled = false;
 
   if (form) {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
+      if (submitButton && submitButton.disabled) return;
 
       const newDateISO = dateInput ? dateInput.value : "";
       const newTimeLabel = hiddenTimeInput ? hiddenTimeInput.value : "";
@@ -287,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
+      if (submitButton) submitButton.disabled = true;
       try {
         const response = await fetch("api/consultation-requests.php", {
           method: "POST",
@@ -306,6 +319,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.message || "Unable to reschedule consultation.");
         }
       } catch (error) {
+        if (submitButton) submitButton.disabled = false;
         window.alert(error.message || "Unable to reschedule consultation.");
         return;
       }

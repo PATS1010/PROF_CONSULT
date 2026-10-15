@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS password_reset_codes CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS faculty CASCADE;
+DROP TABLE IF EXISTS user_profile_photos CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
 -- ============================================================
@@ -40,6 +41,13 @@ CREATE TABLE faculty (
 );
 
 CREATE INDEX idx_faculty_department ON faculty (Department);
+
+-- Database storage keeps uploaded photos across server restarts and deploys.
+CREATE TABLE user_profile_photos (
+  User_ID INTEGER PRIMARY KEY REFERENCES users(User_ID) ON DELETE CASCADE,
+  Mime_Type VARCHAR(30) NOT NULL,
+  Image_Data TEXT NOT NULL
+);
 
 -- ============================================================
 -- STUDENT TABLE

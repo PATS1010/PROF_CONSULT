@@ -203,11 +203,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (saveStatusButton) {
-    saveStatusButton.addEventListener("click", (event) => {
+    saveStatusButton.addEventListener("click", async (event) => {
       event.stopPropagation();
+      if (saveStatusButton.disabled) return;
       const selectedOption = statusOptions.find((opt) => opt.classList.contains("is-selected"));
       if (selectedOption && typeof window.setFacultyOnlineStatus === "function") {
-        window.setFacultyOnlineStatus(selectedOption.dataset.status);
+        saveStatusButton.disabled = true;
+        try {
+          await window.setFacultyOnlineStatus(selectedOption.dataset.status, { throwOnError: true });
+        } catch (error) {
+          const previous = window.getFacultyOnlineStatus();
+          setCurrentStatus(previous, window.FACULTY_STATUS_LABELS[previous]);
+          window.alert(error.message || "Unable to save faculty availability.");
+          return;
+        } finally {
+          saveStatusButton.disabled = false;
+        }
       }
       closeStatusPanel();
     });

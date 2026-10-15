@@ -1,3 +1,4 @@
 .env
 uploads/profile-photos/*
 !uploads/profile-photos/.gitkeep
+tests/runtime/

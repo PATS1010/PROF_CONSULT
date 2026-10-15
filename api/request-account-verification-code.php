@@ -33,13 +33,6 @@ try {
     $otpCode = (string) random_int(100000, 999999);
     $token = bin2hex(random_bytes(32));
 
-    $expireOld = $db->prepare(
-        'UPDATE account_verification_codes
-         SET Consumed_At = NOW()
-         WHERE Email = ? AND Role = ? AND Consumed_At IS NULL'
-    );
-    $expireOld->execute([$email, $role]);
-
     $insert = $db->prepare(
         'INSERT INTO account_verification_codes (Email, Role, Token, Code_Hash, Expires_At)
          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'2 hours\')'
@@ -51,7 +44,21 @@ try {
         password_hash($otpCode, PASSWORD_DEFAULT),
     ]);
 
-    sendOtpEmail($email, 'Prof Consult User', $otpCode);
+    try {
+        sendOtpEmail($email, 'Prof Consult User', $otpCode);
+    } catch (Throwable $exception) {
+        // A failed resend must not invalidate the code already in the user's inbox.
+        $delete = $db->prepare('DELETE FROM account_verification_codes WHERE Token = ?');
+        $delete->execute([$token]);
+        throw $exception;
+    }
+
+    $expireOld = $db->prepare(
+        'UPDATE account_verification_codes
+         SET Consumed_At = NOW()
+         WHERE Email = ? AND Role = ? AND Consumed_At IS NULL AND Token <> ?'
+    );
+    $expireOld->execute([$email, $role, $token]);
 
     reply([
         'ok' => true,

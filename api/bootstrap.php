@@ -40,6 +40,7 @@ session_set_cookie_params([
 ]);
 session_start();
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/schedule-helpers.php';
 
 function reply(array $data, int $status = 200): never
 {

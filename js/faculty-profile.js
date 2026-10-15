@@ -94,9 +94,7 @@ function combineName(firstName, middleInitial, lastName, suffix) {
 // word as "the" first name: the LAST word becomes the last name,
 // a single-letter word before it becomes the middle initial, and
 // EVERYTHING else stays together as First Name (multi-word safe).
-// Does not attempt to detect a trailing Suffix -- legacy data has
-// no way to distinguish "Jr." as a suffix from part of the name,
-// so it's left for the person to set via the new dropdown.
+// Recognize a supported trailing suffix before selecting the last name.
 function splitLegacyName(fullName) {
   const words = normalizeName(fullName).split(" ").filter(Boolean);
   if (words.length <= 1) {
@@ -202,7 +200,7 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.email = user.email || "";
     FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || "");
     if (facultyProfilePhoto && user.profile_photo) {
-      facultyProfilePhoto.src = `${user.profile_photo}?v=${Date.now()}`;
+      facultyProfilePhoto.src = `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
     }
     renderViewMode();
   }
@@ -439,7 +437,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function exitEditMode() {
     editForm.hidden = true;
     viewSection.hidden = false;
-    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = true;
     setButtonMode(false);
     closeProgramDropdown();
   }
@@ -459,8 +456,6 @@ document.addEventListener("DOMContentLoaded", () => {
         email: FACULTY_ACCOUNT.email,
         phone: FACULTY_ACCOUNT.phone,
         department: FACULTY_ACCOUNT.program,
-        office: "",
-        consultation_hours: "",
       }),
     });
     const result = await response.json().catch(() => ({}));
@@ -533,6 +528,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (facultyProfilePhotoEdit && facultyProfilePhotoInput) {
+    facultyProfilePhotoEdit.addEventListener("click", () => facultyProfilePhotoInput.click());
+  }
+
   if (facultyProfilePhotoInput && facultyProfilePhoto) {
     facultyProfilePhotoInput.addEventListener("change", async () => {
       const file = facultyProfilePhotoInput.files && facultyProfilePhotoInput.files[0];
@@ -558,7 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.message || "Unable to save profile photo.");
         }
         if (result.profile_photo) {
-          facultyProfilePhoto.src = `${result.profile_photo}?v=${Date.now()}`;
+          facultyProfilePhoto.src = `${result.profile_photo}${result.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
         }
       } catch (error) {
         facultyProfilePhoto.src = previousSrc;

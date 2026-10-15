@@ -59,6 +59,8 @@ function isValidFacultyStatus(value) {
 }
 
 let facultyOnlineStatus = FACULTY_STATUS_DEFAULT;
+let facultyStatusVersion = 0;
+let facultyStatusPending = 0;
 
 let checkInTimeoutId = null;
 
@@ -66,24 +68,8 @@ const CHECK_IN_TIMEOUT =
   5 * 60 * 1000;
 
 function loadFacultyOnlineStatus() {
-
-  try {
-
-    const savedStatus =
-      localStorage.getItem(
-        FACULTY_ONLINE_STATUS_STORAGE_KEY
-      );
-
-    facultyOnlineStatus =
-      isValidFacultyStatus(savedStatus)
-        ? savedStatus
-        : FACULTY_STATUS_DEFAULT;
-
-  } catch (error) {
-
-    facultyOnlineStatus =
-      FACULTY_STATUS_DEFAULT;
-  }
+  // A shared browser cache may belong to a different faculty account.
+  facultyOnlineStatus = FACULTY_STATUS_DEFAULT;
 }
 
 function saveFacultyOnlineStatus(
@@ -1332,15 +1318,32 @@ document.addEventListener(
       });
     }
 
-    function setFacultyOnlineStatus(
+    async function setFacultyOnlineStatus(
       newStatus,
       options
     ) {
 
-      facultyOnlineStatus =
+      const version = ++facultyStatusVersion;
+      const nextStatus =
         isValidFacultyStatus(newStatus)
           ? newStatus
           : FACULTY_STATUS_DEFAULT;
+
+      const shouldPersist = !options || options.persist !== false;
+      if (shouldPersist) {
+        facultyStatusPending += 1;
+        try {
+          await persistFacultyOnlineStatus(nextStatus);
+        } catch (error) {
+          if (options && options.throwOnError) throw error;
+          window.alert(error.message || "Unable to save faculty availability.");
+          return false;
+        } finally {
+          facultyStatusPending -= 1;
+        }
+      }
+      if (version !== facultyStatusVersion) return false;
+      facultyOnlineStatus = nextStatus;
 
       saveFacultyOnlineStatus(
         facultyOnlineStatus
@@ -1365,27 +1368,7 @@ document.addEventListener(
         )
       );
 
-      const shouldPersist =
-        !options ||
-        options.persist !== false;
-
-      if (shouldPersist) {
-
-        return persistFacultyOnlineStatus(
-          facultyOnlineStatus
-        ).catch((error) => {
-
-          console.error(
-            error.message ||
-            "Unable to save faculty availability."
-          );
-          if (options && options.throwOnError) {
-            throw error;
-          }
-        });
-      }
-
-      return Promise.resolve();
+      return true;
     }
 
     window.setFacultyOnlineStatus =
@@ -1398,7 +1381,8 @@ document.addEventListener(
       FACULTY_STATUS_LABELS;
 
     function loadFacultyOnlineStatusFromApi() {
-
+      if (facultyStatusPending > 0) return;
+      const version = facultyStatusVersion;
       fetch(
         "api/availability.php?role=faculty&latest=1",
         {
@@ -1415,6 +1399,7 @@ document.addEventListener(
             : Promise.reject()
         )
         .then((result) => {
+          if (version !== facultyStatusVersion || facultyStatusPending > 0) return;
 
           const rows =
             result &&
@@ -1442,15 +1427,16 @@ document.addEventListener(
         });
     }
 
-    function handleCheckIn(
+    async function handleCheckIn(
       event
     ) {
 
       event.preventDefault();
 
-      setFacultyOnlineStatus(
+      const saved = await setFacultyOnlineStatus(
         "online"
       );
+      if (!saved) return;
 
       if (checkInTimeoutId) {
 
@@ -1475,15 +1461,16 @@ document.addEventListener(
         );
     }
 
-    function handleCheckOut(
+    async function handleCheckOut(
       event
     ) {
 
       event.preventDefault();
 
-      setFacultyOnlineStatus(
+      const saved = await setFacultyOnlineStatus(
         "offline"
       );
+      if (!saved) return;
 
       if (checkInTimeoutId) {
 
@@ -1559,26 +1546,7 @@ document.addEventListener(
           FACULTY_ONLINE_STATUS_STORAGE_KEY
         ) {
 
-          loadFacultyOnlineStatus();
-
-          updateQuickActionUI();
-
-          updateDashboardStatusUI();
-
-          updateAvailabilityStatusUI();
-
-          syncStatusPanelSelection();
-
-          document.dispatchEvent(
-            new CustomEvent(
-              "faculty-status-changed",
-              {
-                detail: {
-                  status: facultyOnlineStatus,
-                },
-              }
-            )
-          );
+          loadFacultyOnlineStatusFromApi();
         }
 
         if (

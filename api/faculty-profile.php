@@ -50,17 +50,18 @@ try {
         'faculty',
     ]);
 
-    $updateFaculty = $db->prepare(
-        'UPDATE faculty
-         SET Department = ?, Office = ?, Consultation_Hours = ?
-         WHERE User_ID = ?'
-    );
-    $updateFaculty->execute([
-        $department,
-        $office !== '' ? $office : null,
-        $consultationHours !== '' ? $consultationHours : null,
-        (int) $user['id'],
-    ]);
+    // Preserve fields managed on other pages unless explicitly supplied.
+    $fields = ['Department = ?'];
+    $values = [$department];
+    foreach (['office' => ['Office', $office], 'consultation_hours' => ['Consultation_Hours', $consultationHours]] as $key => [$column, $value]) {
+        if (array_key_exists($key, $data)) {
+            $fields[] = $column . ' = ?';
+            $values[] = $value !== '' ? $value : null;
+        }
+    }
+    $values[] = (int) $user['id'];
+    $updateFaculty = $db->prepare('UPDATE faculty SET ' . implode(', ', $fields) . ' WHERE User_ID = ?');
+    $updateFaculty->execute($values);
 
     $db->commit();
 

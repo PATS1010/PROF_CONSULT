@@ -30,8 +30,8 @@ try {
                 FROM availability a
                 -- Match only rows that belong to the faculty account currently being listed.
                 WHERE a.Faculty_ID = f.Faculty_ID
-                -- Newest date/time/id wins, so students see the most recent professor status.
-                ORDER BY a.Date DESC, a.Time DESC, a.Availability_ID DESC
+                -- Insert order remains reliable even after a device clock was incorrect.
+                ORDER BY a.Availability_ID DESC
                 -- Only one status is needed for the dashboard and directory cards.
                 LIMIT 1
             ) AS "Current_Status"
