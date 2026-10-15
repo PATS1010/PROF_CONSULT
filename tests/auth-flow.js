@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (form) {
     sessionStorage.clear();
     const role = faculty ? 'faculty' : 'student';
+    if (role === 'student') sessionStorage.setItem('profconsult_student_quick_action_shown', '1');
     sessionStorage.setItem('regression_login_role', role);
     document.getElementById(generic ? 'loginIdentifier' : student ? 'studentEmail' : 'facultyEmail').value = role === 'faculty' ? 'test-1@example.test' : 'test-2@example.test';
     document.getElementById(generic ? 'loginPassword' : student ? 'studentPassword' : 'facultyPassword').value = 'TestPassword1';
@@ -19,11 +20,25 @@ document.addEventListener('DOMContentLoaded', async () => {
   const result = await window.ProfConsultAuth.checkSession();
   const token = sessionStorage.getItem(`profconsult_tab_token_${role}`) || '';
   if (!sessionStorage.getItem('regression_auth_refreshed') && result?.user?.role === role) {
+    if (role === 'student') {
+      await new Promise((resolve) => setTimeout(resolve, 650));
+      const panel = document.getElementById('quickActionPanel');
+      sessionStorage.setItem('regression_student_popup', String(panel && !panel.hidden));
+      document.getElementById('quickActionButton').click();
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
     sessionStorage.setItem('regression_auth_refreshed', '1');
     location.reload();
     return;
   }
   let passed = result?.user?.role === role && /^[a-f0-9]{64}$/.test(token) && !document.getElementById('profconsult-auth-lock');
+  if (role === 'student') {
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    const panel = document.getElementById('quickActionPanel');
+    passed = passed && sessionStorage.getItem('regression_student_popup') === 'true' && panel && panel.hidden;
+    document.getElementById('quickActionButton').click();
+    passed = passed && !panel.hidden;
+  }
   if (role === 'faculty') {
     await new Promise((resolve) => setTimeout(resolve, 650));
     const panel = document.getElementById('facultyQuickActionPanel');

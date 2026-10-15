@@ -198,6 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (role === "student") {
+          sessionStorage.removeItem("profconsult_student_quick_action_shown");
           sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
           window.location.href = "student-dashboard.html";
           return;

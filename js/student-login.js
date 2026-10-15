@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!result.tab_token || result.user?.role !== "student") throw new Error("Unable to verify this login.");
         sessionStorage.setItem("profconsult_tab_token_student", result.tab_token);
         sessionStorage.setItem("profconsult_tab_role", "student");
+        sessionStorage.removeItem("profconsult_student_quick_action_shown");
         loginError.hidden = true;
         if (window.ProfConsultTheme && window.ProfConsultTheme.setUser) {
           window.ProfConsultTheme.setUser(result.user);
