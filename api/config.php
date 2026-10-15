@@ -136,6 +136,13 @@ CREATE TABLE IF NOT EXISTS students (
   Section VARCHAR(50) NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS faculty_presence (
+  Faculty_ID INTEGER PRIMARY KEY REFERENCES faculty(Faculty_ID) ON DELETE CASCADE,
+  Checked_In BOOLEAN NOT NULL DEFAULT FALSE,
+  Last_Seen TIMESTAMP NULL,
+  Page_ID VARCHAR(64) NULL
+);
+
 CREATE TABLE IF NOT EXISTS notifications (
   Notification_ID SERIAL PRIMARY KEY,
   User_ID INTEGER NOT NULL,
@@ -253,6 +260,7 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_user_active ON password_reset_code
 CREATE INDEX IF NOT EXISTS idx_consultation_requests_student ON consultation_requests (Student_ID, Status);
 CREATE INDEX IF NOT EXISTS idx_consultation_requests_faculty ON consultation_requests (Faculty_ID, Status);
 CREATE INDEX IF NOT EXISTS idx_availability_faculty_date ON availability (Faculty_ID, Date);
+CREATE INDEX IF NOT EXISTS idx_availability_faculty_latest ON availability (Faculty_ID, Availability_ID DESC);
 CREATE INDEX IF NOT EXISTS idx_attendance_logs_faculty_date ON attendance_logs (Faculty_ID, Date);
 SQL);
 }

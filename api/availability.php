@@ -58,14 +58,21 @@ try {
             || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
             fail('Please provide valid availability details.');
         }
+        $pageId = clean((string) ($data['page_id'] ?? 'status-update'));
+        if (!preg_match('/^[a-zA-Z0-9-]{1,64}$/', $pageId)) fail('Please provide a valid page ID.');
 
+        $db->beginTransaction();
         $statement = $db->prepare(
             'INSERT INTO availability (Faculty_ID, Status, Date, Time)
              VALUES (?, ?, ?, ?)
              RETURNING Availability_ID AS "Availability_ID"'
         );
         $statement->execute([(int) $profile['profile_id'], $status, $date, preferredTimeStart($time)]);
-        reply(['ok' => true, 'id' => (int) $statement->fetchColumn(), 'status' => $status], 201);
+        $id = (int) $statement->fetchColumn();
+        $statement->closeCursor();
+        touchFacultyPresence($db, (int) $profile['profile_id'], $pageId, $status !== 'offline');
+        $db->commit();
+        reply(['ok' => true, 'id' => $id, 'status' => facultyCurrentStatus($db, (int) $profile['profile_id']), 'checked_in' => facultyCheckedIn($db, (int) $profile['profile_id'])], 201);
     }
 
     $facultyId = (int) ($_GET['faculty_id'] ?? 0);
@@ -110,8 +117,20 @@ try {
         );
         $statement->execute([$facultyId, $date]);
     }
-    reply(['ok' => true, 'availability' => $statement->fetchAll()]);
+    $rows = $statement->fetchAll();
+    if ($latestOnly) {
+        $now = currentManilaDateTime();
+        $rows = [[
+            'Availability_ID' => $rows[0]['Availability_ID'] ?? null,
+            'Faculty_ID' => $facultyId,
+            'Status' => facultyCurrentStatus($db, $facultyId, $now),
+            'Date' => $now->format('Y-m-d'),
+            'Time' => $now->format('H:i:s'),
+        ]];
+    }
+    reply(['ok' => true, 'availability' => $rows, 'checked_in' => facultyCheckedIn($db, $facultyId)]);
 } catch (PDOException $exception) {
+    if (isset($db) && $db->inTransaction()) $db->rollBack();
     error_log($exception->getMessage());
     fail('Unable to save or load availability.', 500);
 }

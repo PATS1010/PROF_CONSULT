@@ -454,7 +454,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderFacultyDashboard();
 
-  fetch("api/faculty-directory.php", {
+  function refreshFacultyDirectory() {
+    if (document.hidden) return;
+    fetch("api/faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -472,6 +474,10 @@ document.addEventListener("DOMContentLoaded", () => {
       isFacultyLoading = false;
       renderFacultyDashboard();
     });
+  }
+  refreshFacultyDirectory();
+  window.setInterval(refreshFacultyDirectory, 20000);
+  document.addEventListener("visibilitychange", refreshFacultyDirectory);
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
 

@@ -74,6 +74,9 @@ def check(condition, label):
     print('PASS', label, flush=True)
 
 try:
+    status_tests = subprocess.run([php, 'tests/faculty-status.php'], cwd=ROOT, capture_output=True, text=True)
+    check(status_tests.returncode == 0, 'All deterministic faculty status boundary checks: ' + status_tests.stderr.strip())
+    print(status_tests.stdout, end='', flush=True)
     for mode in ['smtp', 'missing']:
         result = subprocess.run([php, 'tests/mail-dispatch.php', mode], cwd=ROOT, capture_output=True, text=True)
         check(result.returncode == 0 and 'PASS mail provider selection:' in result.stdout, 'TC1 mail provider selection: ' + mode + ' ' + result.stderr.strip())
@@ -146,6 +149,24 @@ try:
     _, result = request('/_test/old-mail')
     check(len(result['codes']) == 1 and result['codes'][0]['Token'] == 'old-token' and result['codes'][0]['Consumed_At'] is None, 'TC1 failed resend preserves the previous code and removes the unsent code')
 
+    request('/api/login.php', {'role': 'faculty', 'identifier': 'test-1@example.test', 'password': 'TestPassword1'})
+    _, status_data = request('/api/availability.php?role=faculty&latest=1')
+    check(status_data['availability'][0]['Status'] == 'offline', 'Faculty password login resets status to offline')
+    _, status_data = request('/api/presence.php', {'page_id': 'active-page', 'action': 'heartbeat'})
+    check(status_data['status'] == 'offline' and not status_data['checked_in'], 'Heartbeat alone does not check in the professor')
+    request('/api/availability.php', {'status': 'online', 'page_id': 'active-page'})
+    _, status_data = request('/api/presence.php', {'page_id': 'active-page', 'action': 'heartbeat'})
+    check(status_data['status'] == 'available' and status_data['checked_in'], 'Check-in plus heartbeat keeps the professor online')
+    _, status_data = request('/api/presence.php', {'page_id': 'active-page', 'action': 'leave'})
+    check(status_data['status'] == 'offline', 'Page leave makes the professor offline')
+    request('/api/presence.php', {'page_id': 'new-page', 'action': 'heartbeat'})
+    _, status_data = request('/api/presence.php', {'page_id': 'active-page', 'action': 'leave'})
+    check(status_data['status'] == 'available', 'Old page leave cannot override a new page heartbeat')
+    request('/api/logout.php', {})
+    request('/_test/session?id=3')
+    _, directory = request('/api/faculty-directory.php')
+    check(directory['faculty'][0]['Current_Status'] == 'offline', 'Student directory shows offline after professor logout')
+
     # Same cookies, but no sessionStorage proof: model a pasted URL in a fresh tab.
     for protected in ['/api/session.php?role=student', '/api/faculty-directory.php', '/api/faculty-schedule.php?faculty_id=1&date=2030-01-07', '/api/availability.php?faculty_id=1', '/' + photo_path]:
         check(request(protected, proof=False)[0] == 401, 'Fresh tab cannot access ' + protected.split('?')[0] + ' using cookies alone')
@@ -174,7 +195,7 @@ try:
         result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'))
         (RUNTIME / ('login-flow-' + entry)).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Browser actual ' + entry + ' signs in, opens its dashboard, and refreshes successfully')
-    print(f'Completed {checks} regression checks. SQLite fixture and mocked browser delivery; no production email sent.')
+    print(f'Completed {checks} regression checks plus 17 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()
     server.wait(timeout=10)

@@ -423,7 +423,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  fetch("api/faculty-directory.php", {
+  let directoryLoaded = false;
+  function refreshFacultyDirectory() {
+    if (document.hidden) return;
+    fetch("api/faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -433,9 +436,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (result && Array.isArray(result.faculty)) {
         FACULTY_DIRECTORY_DATA = result.faculty.map(mapFacultyRecord);
       }
-      renderInitialView();
+      if (directoryLoaded) {
+        renderFacultyList();
+        applyFilters();
+        if (selectedFacultyId) openProfile(selectedFacultyId);
+      } else {
+        renderInitialView();
+        directoryLoaded = true;
+      }
     })
-    .catch(renderInitialView);
+    .catch(() => { if (!directoryLoaded) renderInitialView(); });
+  }
+  refreshFacultyDirectory();
+  window.setInterval(refreshFacultyDirectory, 20000);
+  document.addEventListener("visibilitychange", refreshFacultyDirectory);
 
 });
 // Logout confirmation modal

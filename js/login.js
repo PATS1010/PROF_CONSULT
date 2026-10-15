@@ -191,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (role === "faculty") {
+          sessionStorage.removeItem("profconsult_faculty_auto_checkin_shown");
           sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
           window.location.href = "faculty-dashboard.html";
           return;

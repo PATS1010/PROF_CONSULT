@@ -7,6 +7,7 @@ DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS password_reset_codes CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS faculty CASCADE;
+DROP TABLE IF EXISTS faculty_presence CASCADE;
 DROP TABLE IF EXISTS user_profile_photos CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
 
@@ -41,6 +42,13 @@ CREATE TABLE faculty (
 );
 
 CREATE INDEX idx_faculty_department ON faculty (Department);
+
+CREATE TABLE faculty_presence (
+  Faculty_ID INTEGER PRIMARY KEY REFERENCES faculty(Faculty_ID) ON DELETE CASCADE,
+  Checked_In BOOLEAN NOT NULL DEFAULT FALSE,
+  Last_Seen TIMESTAMP NULL,
+  Page_ID VARCHAR(64) NULL
+);
 
 -- Database storage keeps uploaded photos across server restarts and deploys.
 CREATE TABLE user_profile_photos (
@@ -135,6 +143,7 @@ CREATE TABLE availability (
 );
 
 CREATE INDEX idx_availability_faculty_date ON availability (Faculty_ID, Date);
+CREATE INDEX idx_availability_faculty_latest ON availability (Faculty_ID, Availability_ID DESC);
 
 -- ============================================================
 -- ATTENDANCE LOG TABLE

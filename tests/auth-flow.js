@@ -23,7 +23,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.reload();
     return;
   }
-  const passed = result?.user?.role === role && /^[a-f0-9]{64}$/.test(token) && !document.getElementById('profconsult-auth-lock');
+  let passed = result?.user?.role === role && /^[a-f0-9]{64}$/.test(token) && !document.getElementById('profconsult-auth-lock');
+  if (role === 'faculty') {
+    await new Promise((resolve) => setTimeout(resolve, 650));
+    const panel = document.getElementById('facultyQuickActionPanel');
+    passed = passed && window.getFacultyOnlineStatus() === 'offline' && panel && !panel.hidden;
+    document.getElementById('facultyCheckInButton').click();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    passed = passed && window.getFacultyOnlineStatus() === 'online';
+    document.getElementById('facultyCheckOutButton').click();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    passed = passed && window.getFacultyOnlineStatus() === 'offline';
+  }
   const output = document.createElement('pre');
   output.id = 'auth-flow-result';
   output.textContent = passed ? 'PASS real login, dashboard navigation, and refresh: ' + role : 'FAIL actual login or session persistence';

@@ -104,6 +104,7 @@ function sendNotificationEmail(string $email, string $name, string $subject, str
 $bootstrap = file_get_contents($root . '/api/bootstrap.php');
 eval(substr($bootstrap, strpos($bootstrap, 'function reply(')));
 require $root . '/api/schedule-helpers.php';
+require $root . '/api/faculty-status.php';
 
 if ($path === '/_test/session') {
     $id = (int) ($_GET['id'] ?? 1);

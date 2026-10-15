@@ -54,7 +54,7 @@ try {
             saveFacultyAvailabilityForUser(
                 $db,
                 (int) $record['User_ID'],
-                'consultation'
+                'offline'
             );
         } catch (PDOException $exception) {
             error_log('Faculty login availability update failed: ' . $exception->getMessage());

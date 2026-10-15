@@ -23,19 +23,7 @@ try {
             u.Full_Name AS "Full_Name",
             u.Email AS "Email",
             u.Mobile_Number AS "Mobile_Number",
-            u.Profile_Photo AS "Profile_Photo",
-            (
-                -- Read the latest availability status saved by this faculty member.
-                SELECT a.Status
-                -- Pull statuses from the availability history table.
-                FROM availability a
-                -- Match only rows that belong to the faculty account currently being listed.
-                WHERE a.Faculty_ID = f.Faculty_ID
-                -- Insert order remains reliable even after a device clock was incorrect.
-                ORDER BY a.Availability_ID DESC
-                -- Only one status is needed for the dashboard and directory cards.
-                LIMIT 1
-            ) AS "Current_Status"
+            u.Profile_Photo AS "Profile_Photo"
          -- Start from faculty profiles.
          FROM faculty f
          -- Join user account data so the frontend can show names, emails, and photos.
@@ -47,7 +35,13 @@ try {
     );
 
     // Send the faculty list back to the browser as JSON.
-    reply(['ok' => true, 'faculty' => $statement->fetchAll()]);
+    $faculty = $statement->fetchAll();
+    $statuses = facultyCurrentStatuses($db, array_map(static fn (array $record): int => (int) $record['Faculty_ID'], $faculty));
+    foreach ($faculty as &$record) {
+        $record['Current_Status'] = $statuses[(int) $record['Faculty_ID']];
+    }
+    unset($record);
+    reply(['ok' => true, 'faculty' => $faculty]);
 } catch (PDOException $exception) {
     // Store the database error in server logs without exposing it to students.
     error_log($exception->getMessage());

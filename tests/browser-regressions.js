@@ -2,6 +2,7 @@
 const recorded = [];
 const alerts = [];
 let failStatusSave = false;
+let fixtureFacultyStatus = 'offline';
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
@@ -19,9 +20,15 @@ window.fetch = async (url, options = {}) => {
   if (String(url).includes('session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
   else if (String(url).includes('faculty-hours.php')) result.consultation_hours = profile.Consultation_Hours;
+  else if (String(url).includes('presence.php')) result = { ok: true, status: fixtureFacultyStatus, checked_in: fixtureFacultyStatus !== 'offline' };
   else if (String(url).includes('availability.php')) {
     if (options.method === 'POST') {
       if (failStatusSave) { result = { ok: false, message: 'Status save rejected' }; status = 422; }
+      else {
+        fixtureFacultyStatus = JSON.parse(options.body).status;
+        result.status = fixtureFacultyStatus;
+        result.checked_in = fixtureFacultyStatus !== 'offline';
+      }
     } else result.availability = [{ Status: 'offline' }];
   } else if (String(url).includes('consultation-requests.php') && options.method !== 'POST') {
     result.requests = [{ Request_ID: 21, Student_Name: 'Fresh Server Student', Purpose: 'Server request', Request_Date: '2030-01-07', Preferred_Time: '09:00:00', Year_Level: '1', Section: 'A' }];

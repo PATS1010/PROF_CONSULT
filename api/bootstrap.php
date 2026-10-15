@@ -43,6 +43,7 @@ session_set_cookie_params([
 session_start();
 require __DIR__ . '/config.php';
 require_once __DIR__ . '/schedule-helpers.php';
+require_once __DIR__ . '/faculty-status.php';
 
 function reply(array $data, int $status = 200): never
 {
@@ -175,6 +176,8 @@ function saveFacultyAvailabilityForUser(PDO $db, int $userId, string $status, ?D
     if (!$profile) {
         return;
     }
+
+    if ($status === 'offline') resetFacultyPresence($db, (int) $profile['profile_id']);
 
     $timestamp = $now ?? currentManilaDateTime();
     $statement = $db->prepare(

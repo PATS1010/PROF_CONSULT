@@ -29,7 +29,11 @@ const FACULTY_STATUS_COLOR_VARS = {
   offline: "--color-status-offline",
 };
 
-const FACULTY_STATUS_DEFAULT = "consultation";
+const FACULTY_STATUS_DEFAULT = "offline";
+const FACULTY_PRESENCE_PAGE_ID = typeof crypto.randomUUID === "function"
+  ? crypto.randomUUID()
+  : Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+let facultyCheckedIn = false;
 
 const FACULTY_STATUS_API_VALUES = {
   online: "available",
@@ -61,11 +65,6 @@ function isValidFacultyStatus(value) {
 let facultyOnlineStatus = FACULTY_STATUS_DEFAULT;
 let facultyStatusVersion = 0;
 let facultyStatusPending = 0;
-
-let checkInTimeoutId = null;
-
-const CHECK_IN_TIMEOUT =
-  5 * 60 * 1000;
 
 function loadFacultyOnlineStatus() {
   // A shared browser cache may belong to a different faculty account.
@@ -140,6 +139,7 @@ async function persistFacultyOnlineStatus(status) {
         },
         body: JSON.stringify({
           status: facultyStatusForApi(status),
+          page_id: FACULTY_PRESENCE_PAGE_ID,
           date: timestamp.date,
           time: timestamp.time,
         }),
@@ -1181,11 +1181,7 @@ document.addEventListener(
 
     function updateQuickActionUI() {
 
-      const canCheckIn =
-        facultyOnlineStatus ===
-          "onleave" ||
-        facultyOnlineStatus ===
-          "offline";
+      const canCheckIn = !facultyCheckedIn;
 
       const colorVar =
         FACULTY_STATUS_COLOR_VARS[
@@ -1324,7 +1320,7 @@ document.addEventListener(
     ) {
 
       const version = ++facultyStatusVersion;
-      const nextStatus =
+      let nextStatus =
         isValidFacultyStatus(newStatus)
           ? newStatus
           : FACULTY_STATUS_DEFAULT;
@@ -1333,7 +1329,9 @@ document.addEventListener(
       if (shouldPersist) {
         facultyStatusPending += 1;
         try {
-          await persistFacultyOnlineStatus(nextStatus);
+          const result = await persistFacultyOnlineStatus(nextStatus);
+          nextStatus = facultyStatusFromApi(result.status || facultyStatusForApi(nextStatus));
+          facultyCheckedIn = result.checked_in ?? nextStatus !== "offline";
         } catch (error) {
           if (options && options.throwOnError) throw error;
           window.alert(error.message || "Unable to save faculty availability.");
@@ -1400,6 +1398,7 @@ document.addEventListener(
         )
         .then((result) => {
           if (version !== facultyStatusVersion || facultyStatusPending > 0) return;
+          facultyCheckedIn = result.checked_in ?? false;
 
           const rows =
             result &&
@@ -1437,28 +1436,6 @@ document.addEventListener(
         "online"
       );
       if (!saved) return;
-
-      if (checkInTimeoutId) {
-
-        window.clearTimeout(
-          checkInTimeoutId
-        );
-      }
-
-      checkInTimeoutId =
-        window.setTimeout(
-          () => {
-
-            setFacultyOnlineStatus(
-              "offline"
-            );
-
-            checkInTimeoutId =
-              null;
-
-          },
-          CHECK_IN_TIMEOUT
-        );
     }
 
     async function handleCheckOut(
@@ -1471,16 +1448,6 @@ document.addEventListener(
         "offline"
       );
       if (!saved) return;
-
-      if (checkInTimeoutId) {
-
-        window.clearTimeout(
-          checkInTimeoutId
-        );
-
-        checkInTimeoutId =
-          null;
-      }
     }
 
     if (checkInButton) {
@@ -1508,6 +1475,47 @@ document.addEventListener(
     syncStatusPanelSelection();
 
     loadFacultyOnlineStatusFromApi();
+
+    let presenceBusy = false;
+    async function refreshPresence() {
+      if (document.hidden || presenceBusy || facultyStatusPending > 0) return;
+      presenceBusy = true;
+      const version = facultyStatusVersion;
+      try {
+        const response = await fetch("api/presence.php", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          body: JSON.stringify({ action: "heartbeat", page_id: FACULTY_PRESENCE_PAGE_ID }),
+        });
+        const result = await response.json();
+        if (response.ok && result.ok && version === facultyStatusVersion && facultyStatusPending === 0) {
+          facultyCheckedIn = result.checked_in;
+          await setFacultyOnlineStatus(facultyStatusFromApi(result.status), { persist: false });
+        }
+      } catch (_) {
+        // The server lease expires if this page loses connectivity.
+      } finally {
+        presenceBusy = false;
+      }
+    }
+    function leavePage() {
+      fetch("api/presence.php", {
+        method: "POST",
+        credentials: "same-origin",
+        keepalive: true,
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ action: "leave", page_id: FACULTY_PRESENCE_PAGE_ID }),
+      }).catch(() => {});
+    }
+    refreshPresence();
+    window.setInterval(refreshPresence, 20000);
+    window.addEventListener("pagehide", leavePage);
+    window.addEventListener("pageshow", refreshPresence);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) leavePage();
+      else refreshPresence();
+    });
 
     if (activePage === "notifications") {
 
