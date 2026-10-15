@@ -102,10 +102,10 @@ function sendOtpEmail(string $email, string $name, string $code): void
 }
 function sendNotificationEmail(string $email, string $name, string $subject, string $message): void {}
 
-$bootstrap = file_get_contents($root . '/api/bootstrap.php');
+$bootstrap = file_get_contents($root . '/api/api-helpers.php');
 eval(substr($bootstrap, strpos($bootstrap, 'function reply(')));
-require $root . '/api/schedule-helpers.php';
-require $root . '/api/faculty-status.php';
+require $root . '/api/consultation-schedule-helpers.php';
+require $root . '/api/faculty-presence-helpers.php';
 
 if ($path === '/_test/session') {
     $id = (int) ($_GET['id'] ?? 1);
@@ -130,5 +130,5 @@ if (!preg_match('~^/api/[a-z-]+\.php$~', $path) || !is_file($root . $path)) {
 }
 $source = file_get_contents($root . $path);
 $source = preg_replace('~^<\?php\s*declare\(strict_types=1\);~', '', $source);
-$source = str_replace(["require __DIR__ . '/bootstrap.php';", "require __DIR__ . '/mailer.php';"], '', $source);
+$source = str_replace(["require __DIR__ . '/api-helpers.php';", "require __DIR__ . '/email-delivery-helpers.php';"], '', $source);
 eval($source);

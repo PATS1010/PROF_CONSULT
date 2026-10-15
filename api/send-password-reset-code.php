@@ -1,0 +1,76 @@
+<?php
+declare(strict_types=1);
+
+require __DIR__ . '/api-helpers.php';
+require __DIR__ . '/email-delivery-helpers.php';
+requirePost();
+
+set_time_limit(20);
+
+$data = input();
+$identifier = strtolower(clean((string) ($data['identifier'] ?? '')));
+$role = clean((string) ($data['role'] ?? ''));
+$method = clean((string) ($data['method'] ?? ''));
+
+if (!filter_var($identifier, FILTER_VALIDATE_EMAIL) || ($role !== '' && !in_array($role, ['student', 'faculty'], true))) {
+    fail('Please enter your registered email address.');
+}
+
+if ($method !== '' && $method !== 'email') {
+    fail('Please use your registered email address.', 400);
+}
+
+try {
+    $db = database();
+    $roleFilter = $role !== '' ? 'Role = ? AND' : "Role IN ('student', 'faculty') AND";
+    $parameters = $role !== ''
+        ? [$role, $identifier, 'active']
+        : [$identifier, 'active'];
+
+    $lookup = $db->prepare(
+        "SELECT User_ID AS \"User_ID\", Full_Name AS \"Full_Name\", Email AS \"Email\", Role AS \"Role\"
+         FROM users
+         WHERE {$roleFilter}
+           LOWER(Email) = ?
+           AND Account_Status = ?
+         LIMIT 1"
+    );
+    $lookup->execute($parameters);
+    $user = $lookup->fetch();
+
+    if (!$user) {
+        fail('No active account was found for that email address.', 404);
+    }
+
+    $otpCode = (string) random_int(100000, 999999);
+    $token = bin2hex(random_bytes(32));
+
+    // Old unused codes for this user are marked consumed before creating a fresh OTP.
+    $expireOld = $db->prepare('UPDATE password_reset_codes SET Consumed_At = NOW() WHERE User_ID = ? AND Consumed_At IS NULL');
+    $expireOld->execute([(int) $user['User_ID']]);
+
+    $insert = $db->prepare(
+        'INSERT INTO password_reset_codes (User_ID, Token, Code_Hash, Expires_At)
+         VALUES (?, ?, ?, CURRENT_TIMESTAMP + INTERVAL \'2 hours\')'
+    );
+    $insert->execute([
+        (int) $user['User_ID'],
+        $token,
+        password_hash($otpCode, PASSWORD_DEFAULT),
+    ]);
+
+    sendOtpEmail((string) $user['Email'], (string) $user['Full_Name'], $otpCode);
+
+    reply([
+        'ok' => true,
+        'message' => 'Verification code sent.',
+        'token' => $token,
+        'role' => $user['Role'],
+        'sent_to' => 'email',
+    ]);
+} catch (RuntimeException $exception) {
+    fail($exception->getMessage(), 500);
+} catch (Throwable $exception) {
+    error_log($exception->getMessage());
+    fail('Unable to create a verification code right now.', 500);
+}

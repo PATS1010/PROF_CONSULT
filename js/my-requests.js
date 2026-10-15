@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  fetch("api/consultation-requests.php?role=student", {
+  fetch("api/manage-consultation-requests.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },

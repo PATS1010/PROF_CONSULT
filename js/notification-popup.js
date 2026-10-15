@@ -101,7 +101,7 @@
     const { id, role } = session;
     busy = true;
     try {
-      const response = await fetch(`api/notifications.php?role=${role}`, {
+      const response = await fetch(`api/manage-notifications.php?role=${role}`, {
         credentials: "same-origin", cache: "no-store", headers: { Accept: "application/json" },
       });
       const result = await response.json();
@@ -147,7 +147,7 @@
       // Mark only records that were actually rendered, so a concurrent arrival stays unread.
       for (const record of event.detail.records || []) {
         if (record.Read_Status !== "unread") continue;
-        const response = await fetch("api/notifications.php", {
+        const response = await fetch("api/manage-notifications.php", {
           method: "POST", credentials: "same-origin",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
           body: JSON.stringify({ role, notification_id: Number(record.Notification_ID) }),

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/api-helpers.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $viewer = currentUser();

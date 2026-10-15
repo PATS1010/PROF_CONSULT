@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Applies a verified password reset code to set a new password.
 
-require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/api-helpers.php';
 requirePost();
 
 // Saves the new password after the OTP token has already been verified.

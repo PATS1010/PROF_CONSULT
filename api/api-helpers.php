@@ -1,0 +1,281 @@
+<?php
+declare(strict_types=1);
+
+// SYSTEM NOTE: Loads shared API helpers for sessions, database access, validation, and JSON responses.
+
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store, private');
+header('X-Content-Type-Options: nosniff');
+date_default_timezone_set('Asia/Manila');
+
+set_exception_handler(static function (Throwable $exception): void {
+    error_log($exception->getMessage());
+    reply(['ok' => false, 'message' => 'A server error occurred.'], 500);
+});
+
+set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    throw new ErrorException($message, 0, $severity, $file, $line);
+});
+
+register_shutdown_function(static function (): void {
+    $error = error_get_last();
+    if ($error && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR], true)) {
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['ok' => false, 'message' => 'A server error occurred.']);
+    }
+});
+
+// Shared backend setup for PHP form handlers.
+// Starts the user session, loads the database connection, and provides validation/JSON helper functions.
+
+$sessionLifetime = 60 * 60 * 24 * 7;
+ini_set('session.gc_maxlifetime', (string) $sessionLifetime);
+ini_set('session.cookie_lifetime', (string) $sessionLifetime);
+session_set_cookie_params([
+    'lifetime' => $sessionLifetime,
+    'path' => '/',
+    'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https'),
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+session_start();
+require __DIR__ . '/app-config.php';
+require_once __DIR__ . '/consultation-schedule-helpers.php';
+require_once __DIR__ . '/faculty-presence-helpers.php';
+
+function reply(array $data, int $status = 200): never
+{
+    http_response_code($status);
+    echo json_encode($data);
+    exit;
+}
+
+// Call only after authentication and the endpoint's last session mutation.
+// The authenticated request keeps its user snapshot; subsequent requests still
+// have to pass currentUser() against the server session and tab proof.
+function releaseSessionLock(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+}
+
+function input(): array
+{
+    $data = json_decode(file_get_contents('php://input'), true);
+    return is_array($data) ? $data : $_POST;
+}
+
+function fail(string $message, int $status = 422): never
+{
+    reply(['ok' => false, 'message' => $message], $status);
+}
+
+function requirePost(): void
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        fail('Only POST requests are allowed.', 405);
+    }
+}
+
+function clean(string $value): string
+{
+    return trim($value);
+}
+
+function validPassword(string $password): bool
+{
+    return strlen($password) >= 8 && preg_match('/[A-Z]/', $password) && preg_match('/\d/', $password);
+}
+
+function publicUser(array $row): array
+{
+    return [
+        'id' => (int) ($row['User_ID'] ?? $row['user_id'] ?? $row['id']),
+        'role' => $row['Role'] ?? $row['role'],
+        'name' => $row['Full_Name'] ?? $row['full_name'] ?? '',
+        'username' => $row['Username'] ?? $row['username'] ?? '',
+        'email' => $row['Email'] ?? $row['email'] ?? '',
+        'phone' => $row['Mobile_Number'] ?? $row['mobile_number'] ?? '',
+        'profile_photo' => $row['Profile_Photo'] ?? $row['profile_photo'] ?? '',
+    ];
+}
+
+function notificationPreferencesForUser(PDO $db, int $userId): array
+{
+    $statement = $db->prepare(
+        'SELECT
+            Email_Notifications AS "Email_Notifications",
+            Push_Notifications AS "Push_Notifications"
+         FROM users
+         WHERE User_ID = ?
+         LIMIT 1'
+    );
+    $statement->execute([$userId]);
+    $row = $statement->fetch();
+
+    return [
+        'email_notifications' => $row ? (bool) $row['Email_Notifications'] : true,
+        'push_notifications' => $row ? (bool) $row['Push_Notifications'] : true,
+    ];
+}
+
+function userWantsEmailNotifications(PDO $db, int $userId): bool
+{
+    return notificationPreferencesForUser($db, $userId)['email_notifications'];
+}
+
+function currentManilaDateTime(): DateTimeImmutable
+{
+    return new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
+}
+
+function isFacultyClassHours(?DateTimeImmutable $now = null): bool
+{
+    $time = ($now ?? currentManilaDateTime())->format('H:i:s');
+    return ($time >= '07:00:00' && $time < '12:00:00')
+        || ($time >= '13:00:00' && $time < '19:00:00');
+}
+
+function saveFacultyAvailabilityForUser(PDO $db, int $userId, string $status, ?DateTimeImmutable $now = null): void
+{
+    $profile = userProfile($db, $userId, 'faculty');
+    if (!$profile) {
+        return;
+    }
+
+    if ($status === 'offline') resetFacultyPresence($db, (int) $profile['profile_id']);
+
+    $timestamp = $now ?? currentManilaDateTime();
+    $statement = $db->prepare(
+        'INSERT INTO availability (Faculty_ID, Status, Date, Time)
+         VALUES (?, ?, ?, ?)'
+    );
+    $statement->execute([
+        (int) $profile['profile_id'],
+        $status,
+        $timestamp->format('Y-m-d'),
+        $timestamp->format('H:i:s'),
+    ]);
+}
+
+function clearLoginSession(): void
+{
+    $_SESSION = [];
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000, $params['path'], $params['domain'], $params['secure'], $params['httponly']);
+    }
+    session_destroy();
+}
+
+function normalizeSessionUser(array $user): array
+{
+    return [
+        'id' => (int) ($user['id'] ?? $user['User_ID'] ?? 0),
+        'role' => $user['role'] ?? $user['Role'] ?? '',
+        'name' => $user['name'] ?? $user['Full_Name'] ?? '',
+        'username' => $user['username'] ?? $user['Username'] ?? '',
+        'email' => $user['email'] ?? $user['Email'] ?? '',
+        'phone' => $user['phone'] ?? $user['Mobile_Number'] ?? '',
+        'profile_photo' => $user['profile_photo'] ?? $user['Profile_Photo'] ?? '',
+    ];
+}
+
+function rememberUserSession(array $user): array
+{
+    $normalized = normalizeSessionUser($user);
+    if ($normalized['id'] <= 0 || $normalized['role'] === '') {
+        fail('Please log in first.', 401);
+    }
+
+    $_SESSION['user'] = $normalized;
+    $_SESSION[$normalized['role'] . '_user'] = $normalized;
+    return $normalized;
+}
+
+function issueTabToken(array $user): string
+{
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['tab_tokens'][$user['role']] = [
+        'token' => $token,
+        'user_id' => (int) $user['id'],
+    ];
+    return $token;
+}
+
+function currentUser(?string $role = null): array
+{
+    // Cookies are shared across tabs; the proof is supplied only by the tab
+    // that completed login. Never accept a proof from a URL or a cookie.
+    $presented = (string) ($_SERVER['HTTP_X_PROFCONSULT_TAB_TOKEN'] ?? '');
+    if (!preg_match('/^[a-f0-9]{64}$/', $presented)) {
+        fail('Please log in in this tab to continue.', 401);
+    }
+    foreach (['student', 'faculty'] as $sessionRole) {
+        $grant = $_SESSION['tab_tokens'][$sessionRole] ?? null;
+        if (!is_array($grant) || !hash_equals((string) ($grant['token'] ?? ''), $presented)) {
+            continue;
+        }
+        $record = $_SESSION[$sessionRole . '_user'] ?? null;
+        if (!is_array($record)) break;
+        $user = normalizeSessionUser($record);
+        if ($user['id'] <= 0 || $user['id'] !== (int) ($grant['user_id'] ?? 0) || $user['role'] !== $sessionRole) break;
+        if ($role && $role !== $sessionRole) {
+            fail('You are not allowed to perform this action.', 403);
+        }
+        $_SESSION['user'] = $user;
+        return $user;
+    }
+    fail('Your login in this tab has expired. Please log in again.', 401);
+}
+
+function requireRole(string $role): array
+{
+    return currentUser($role);
+}
+
+function userProfile(PDO $db, int $userId, string $role): ?array
+{
+    if ($role === 'student') {
+        $statement = $db->prepare(
+            'SELECT Student_ID AS profile_id, Program AS "Program", Year_Level AS "Year_Level", Section AS "Section"
+             FROM students WHERE User_ID = ? LIMIT 1'
+        );
+    } elseif ($role === 'faculty') {
+        $statement = $db->prepare(
+            'SELECT Faculty_ID AS profile_id, Department AS "Department", Office AS "Office", Consultation_Hours AS "Consultation_Hours"
+             FROM faculty WHERE User_ID = ? LIMIT 1'
+        );
+    } else {
+        return null;
+    }
+
+    $statement->execute([$userId]);
+    $profile = $statement->fetch();
+    return $profile ?: null;
+}
+
+function preferredTimeStart(string $value): string
+{
+    if (preg_match('/^\d{2}:\d{2}(:\d{2})?$/', $value)) {
+        return strlen($value) === 5 ? $value . ':00' : $value;
+    }
+
+    if (!preg_match('/(\d{1,2}):(\d{2})\s*(AM|PM)/i', $value, $matches)) {
+        fail('Please provide a valid preferred time.');
+    }
+
+    $hour = (int) $matches[1];
+    $minute = (int) $matches[2];
+    $period = strtoupper($matches[3]);
+
+    if ($period === 'PM' && $hour < 12) {
+        $hour += 12;
+    }
+    if ($period === 'AM' && $hour === 12) {
+        $hour = 0;
+    }
+
+    return sprintf('%02d:%02d:00', $hour, $minute);
+}

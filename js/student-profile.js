@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateNameEditInputs();
   }
 
-  fetch("api/session.php?role=student", {
+  fetch("api/get-current-session.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -356,7 +356,7 @@ document.addEventListener("DOMContentLoaded", () => {
       suffixSelect ? suffixSelect.value : studentName.suffix
     );
 
-    const response = await fetch("api/student-profile.php", {
+    const response = await fetch("api/update-student-profile.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },

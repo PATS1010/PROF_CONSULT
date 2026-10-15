@@ -3,93 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const DEFAULT_OFFICE = "Faculty Room";
 
-  let FACULTY_DIRECTORY_DATA = [
-    {
-      id: "maria-nina-sales",
-      lastName: "Sales",
-      fullName: "Engr. Maria Nina Sales",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "consultation",
-      statusLabel: "Consultation",
-      photo: "images/professor-maria-nina-sales.jpg",
-      hours: [
-        { day: "Monday", time: "9:00 AM - 11:00 AM" },
-        { day: "Tuesday", time: "1:00 PM - 3:00 PM" },
-        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
-        { day: "Thursday", time: "1:00 PM - 3:00 PM" },
-        { day: "Friday", time: "10:00 AM - 12:00 PM" },
-      ],
-    },
-    {
-      id: "bernard-bisuecos",
-      lastName: "Bisuecos",
-      fullName: "Engr. Bernard Bisuecos",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "onleave",
-      statusLabel: "On Leave",
-      photo: "images/professor-bernard-bisuecos.jpg",
-      hours: [
-        { day: "Monday", time: "Unavailable" },
-        { day: "Tuesday", time: "Unavailable" },
-        { day: "Wednesday", time: "10:00 AM - 12:00 PM" },
-        { day: "Thursday", time: "Unavailable" },
-        { day: "Friday", time: "Unavailable" },
-      ],
-    },
-    {
-      id: "mervin-molina",
-      lastName: "Molina",
-      fullName: "Engr. Mervin Molina",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "meeting",
-      statusLabel: "Meeting",
-      photo: "images/professor-mervin-molina.jpg",
-      hours: [
-        { day: "Monday", time: "2:00 PM - 4:00 PM" },
-        { day: "Tuesday", time: "9:00 AM - 10:00 AM" },
-        { day: "Wednesday", time: "2:00 PM - 4:00 PM" },
-        { day: "Thursday", time: "9:00 AM - 10:00 AM" },
-        { day: "Friday", time: "1:00 PM - 2:00 PM" },
-      ],
-    },
-    {
-      id: "rose-onate",
-      lastName: "Onate",
-      fullName: "Engr. Rose Onate",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "meeting",
-      statusLabel: "Meeting",
-      photo: "images/professor-rose-onate.jpg",
-      hours: [
-        { day: "Monday", time: "10:00 AM - 12:00 PM" },
-        { day: "Tuesday", time: "10:00 AM - 12:00 PM" },
-        { day: "Wednesday", time: "1:00 PM - 3:00 PM" },
-        { day: "Thursday", time: "10:00 AM - 12:00 PM" },
-        { day: "Friday", time: "9:00 AM - 11:00 AM" },
-      ],
-    },
-    {
-      id: "melody-paned",
-      lastName: "Paned",
-      fullName: "Engr. Melody Paned",
-      program: "Computer Engineering",
-      office: DEFAULT_OFFICE,
-      status: "onleave",
-      statusLabel: "On Leave",
-      photo: "images/professor-melody-paned.jpg",
-      hours: [
-        { day: "Monday", time: "9:00 AM - 11:00 AM" },
-        { day: "Tuesday", time: "Unavailable" },
-        { day: "Wednesday", time: "9:00 AM - 11:00 AM" },
-        { day: "Thursday", time: "Unavailable" },
-        { day: "Friday", time: "9:00 AM - 11:00 AM" },
-      ],
-    },
-  ];
+  let FACULTY_DIRECTORY_DATA = [];
 
   const SELECTED_FACULTY_STORAGE_KEY = "profconsult_selected_faculty";
 
@@ -426,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let directoryLoaded = false;
   function refreshFacultyDirectory() {
     if (document.hidden) return;
-    fetch("api/faculty-directory.php", {
+    fetch("api/get-faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },

@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Permanently deletes the logged-in student or faculty account.
 
-require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/api-helpers.php';
 requirePost();
 
 $data = input();

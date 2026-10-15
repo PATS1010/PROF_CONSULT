@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadBackendSettings() {
-    const response = await fetch("api/notification-settings.php?role=student", {
+    const response = await fetch("api/manage-notification-preferences.php?role=student", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -140,7 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     }
 
-    const response = await fetch("api/notification-settings.php", {
+    const response = await fetch("api/manage-notification-preferences.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -340,7 +340,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function verifyCurrentPassword(password) {
-    const sessionResponse = await fetch(`api/session.php?role=${origin}`, {
+    const sessionResponse = await fetch(`api/get-current-session.php?role=${origin}`, {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error("Unable to verify this account.");
     }
 
-    const loginResponse = await fetch("api/login.php", {
+    const loginResponse = await fetch("api/authenticate-user.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },

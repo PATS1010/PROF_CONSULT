@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require dirname(__DIR__) . '/api/config.php';
+require dirname(__DIR__) . '/api/app-config.php';
 
 // Exercise the real migration lifecycle with transactional SQLite. PostgreSQL
 // advisory locks and idempotent ALTER syntax still need deployment validation.

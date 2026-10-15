@@ -129,7 +129,7 @@ async function persistFacultyOnlineStatus(status) {
   const timestamp = getPhilippineStatusTimestamp();
   const response =
     await fetch(
-      "api/availability.php",
+      "api/manage-faculty-availability.php",
       {
         method: "POST",
         credentials: "same-origin",
@@ -1123,7 +1123,7 @@ document.addEventListener(
       if (facultyStatusPending > 0) return;
       const version = facultyStatusVersion;
       fetch(
-        "api/availability.php?role=faculty&latest=1",
+        "api/manage-faculty-availability.php?role=faculty&latest=1",
         {
           cache: "no-store",
           credentials: "same-origin",
@@ -1223,7 +1223,7 @@ document.addEventListener(
       presenceBusy = true;
       const version = facultyStatusVersion;
       try {
-        const response = await fetch("api/presence.php", {
+        const response = await fetch("api/update-faculty-presence.php", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json", Accept: "application/json" },
@@ -1241,7 +1241,7 @@ document.addEventListener(
       }
     }
     function leavePage() {
-      fetch("api/presence.php", {
+      fetch("api/update-faculty-presence.php", {
         method: "POST",
         credentials: "same-origin",
         keepalive: true,

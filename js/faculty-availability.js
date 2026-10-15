@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentStatusDot = document.getElementById("availabilityStatusDot");
   const currentStatusLabel = document.getElementById("availabilityStatusLabel");
 
-  fetch("api/faculty-hours.php", {
+  fetch("api/manage-consultation-hours.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -536,7 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
         saveAvailableHours(AVAILABLE_HOURS);
 
         try {
-          const response = await fetch("api/faculty-hours.php", {
+          const response = await fetch("api/manage-consultation-hours.php", {
             method: "POST",
             credentials: "same-origin",
             headers: {

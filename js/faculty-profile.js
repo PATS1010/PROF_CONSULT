@@ -205,7 +205,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderViewMode();
   }
 
-  fetch("api/session.php?role=faculty", {
+  fetch("api/get-current-session.php?role=faculty", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -447,7 +447,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // the form (it's read-only and never changes).
   // ---------------------------------------------------------
   async function saveFacultyProfileToApi() {
-    const response = await fetch("api/faculty-profile.php", {
+    const response = await fetch("api/update-faculty-profile.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },

@@ -153,7 +153,7 @@ function renderFacultyNotifications(notifications = []) {
 document.addEventListener(
   "DOMContentLoaded",
   () => {
-    fetch("api/notifications.php?role=faculty", {
+    fetch("api/manage-notifications.php?role=faculty", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },

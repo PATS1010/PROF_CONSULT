@@ -816,7 +816,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const response =
             await fetch(
-              "/api/register.php",
+              "/api/create-account.php",
               {
                 method: "POST",
 

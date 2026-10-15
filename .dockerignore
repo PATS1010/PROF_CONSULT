@@ -4,7 +4,6 @@
 !.env.example
 .codex*
 .agents
-tests/runtime
-tests/__pycache__
+tests/
 uploads/profile-photos/*
 !uploads/profile-photos/.gitkeep

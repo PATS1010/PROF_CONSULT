@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (resendButton.classList.contains("is-locked")) return;
 
       try {
-        const response = await fetch("api/request-reset-code.php", {
+        const response = await fetch("api/send-password-reset-code.php", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
@@ -134,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
       codeInput.value = enteredCode;
 
       try {
-        const response = await fetch("api/verify-reset-code.php", {
+        const response = await fetch("api/verify-password-reset-code.php", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ token, code: enteredCode })

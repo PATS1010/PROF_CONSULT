@@ -4,7 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const STUDENT_QUICK_ACTION_SHOWN_STORAGE_KEY =
     "profconsult_student_quick_action_shown";
 
-  fetch("api/session.php?role=student", {
+  fetch("api/get-current-session.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -456,7 +456,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function refreshFacultyDirectory() {
     if (document.hidden) return;
-    fetch("api/faculty-directory.php", {
+    fetch("api/get-faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },

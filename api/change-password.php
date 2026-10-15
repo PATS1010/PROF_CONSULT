@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Updates a logged-in user password after validating the current password.
 
-require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/api-helpers.php';
 requirePost();
 
 $user = currentUser();

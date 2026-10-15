@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return selectedFaculty;
     }
 
-    const response = await fetch("api/faculty-directory.php", {
+    const response = await fetch("api/get-faculty-directory.php", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return value || "";
   }
 
-  fetch("api/session.php?role=student", {
+  fetch("api/get-current-session.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const params = new URLSearchParams({ faculty_id: String(selectedFaculty.id) });
     if (dateValue) params.set("date", dateValue);
 
-    const response = await fetch(`api/faculty-schedule.php?${params.toString()}`, {
+    const response = await fetch(`api/get-faculty-schedule.php?${params.toString()}`, {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -435,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("profconsult_last_request", JSON.stringify(requestData));
 
       try {
-        const response = await fetch("api/submit-consultation.php", {
+        const response = await fetch("api/create-consultation-request.php", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },

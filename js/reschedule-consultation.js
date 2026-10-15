@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const targetId = getRescheduleTargetId();
   let request = null;
   try {
-    const response = await fetch("api/consultation-requests.php?role=faculty", {
+    const response = await fetch("api/manage-consultation-requests.php?role=faculty", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   async function loadScheduleForDate(dateValue) {
     const params = new URLSearchParams({ date: dateValue, request_id: request.id });
-    const response = await fetch(`api/faculty-schedule.php?${params.toString()}`, {
+    const response = await fetch(`api/get-faculty-schedule.php?${params.toString()}`, {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -330,7 +330,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       const messageForStudentRaw = messageForStudentInput ? messageForStudentInput.value.trim() : "";
       if (submitButton) submitButton.disabled = true;
       try {
-        const response = await fetch("api/consultation-requests.php", {
+        const response = await fetch("api/manage-consultation-requests.php", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },

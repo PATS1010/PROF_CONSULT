@@ -164,7 +164,7 @@ function mapApiRequest(record) {
 }
 
 async function loadRequestsFromApi() {
-  const response = await fetch("api/consultation-requests.php?role=faculty", {
+  const response = await fetch("api/manage-consultation-requests.php?role=faculty", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -177,7 +177,7 @@ async function loadRequestsFromApi() {
 }
 
 async function updateRequestStatus(request, status) {
-  const response = await fetch("api/consultation-requests.php", {
+  const response = await fetch("api/manage-consultation-requests.php", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },

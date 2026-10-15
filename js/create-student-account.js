@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return lastStudentNumberExists;
     }
 
-    const response = await fetch("api/check-account.php", {
+    const response = await fetch("api/check-account-exists.php", {
       method: "POST",
       credentials: "same-origin",
       headers: {

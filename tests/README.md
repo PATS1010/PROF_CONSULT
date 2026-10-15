@@ -20,10 +20,10 @@ Faculty login starts offline. Quick Actions opens for manual check-in, with a he
 
 Effective status is computed on the server whenever faculty status/directory data is requested. Approved or rescheduled consultations override presence during their 30-minute booking slots (Asia/Manila), including while logged out. After the slot, status is offline unless the professor is still checked in with a fresh presence lease. Pending, declined, or cancelled requests do not trigger the override. Student lists poll every 20 seconds while visible. This does not require a browser to stay open or a background scheduler. Deterministic tests cover the exact start/end boundaries and presence expiry.
 
-The notification bell opens a shared popup below the header for both roles. It
-keeps the gradient heading, white message area, PHT timestamp, close button, and
-View More link. Opening it closes Quick Actions; clicking the bell again,
-outside, X, or Escape dismisses it. It fetches only when opened, uses the existing
-authenticated fetch wrapper, and never caches notification messages in storage.
-Incoming notification events use the same popup. Browser checks cover safe text,
-role-specific links, empty/error states, dismissal, and late-response handling.
+The notification bell navigates to the role's Notifications page. A separate
+popup appears when an unread server notification arrives, with a PHT timestamp,
+close button, and View More link. Notifications poll every 10 seconds while the
+page is visible, using the authenticated fetch wrapper. Dismissing a popup keeps
+the unread dot; records are marked read on the server after the Notifications
+page renders them. Browser checks cover navigation, automatic arrivals, unread
+dots, duplicate suppression, server read updates, safe text, and logout handling.

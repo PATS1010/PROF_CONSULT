@@ -17,11 +17,11 @@ window.fetch = async (url, options = {}) => {
   recorded.push({ url: String(url), options });
   let result = { ok: true };
   let status = 200;
-  if (String(url).includes('session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
-  else if (String(url).includes('faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
-  else if (String(url).includes('faculty-hours.php')) result.consultation_hours = profile.Consultation_Hours;
-  else if (String(url).includes('presence.php')) result = { ok: true, status: fixtureFacultyStatus, checked_in: fixtureFacultyStatus !== 'offline' };
-  else if (String(url).includes('availability.php')) {
+  if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
+  else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
+  else if (String(url).includes('manage-consultation-hours.php')) result.consultation_hours = profile.Consultation_Hours;
+  else if (String(url).includes('update-faculty-presence.php')) result = { ok: true, status: fixtureFacultyStatus, checked_in: fixtureFacultyStatus !== 'offline' };
+  else if (String(url).includes('manage-faculty-availability.php')) {
     if (options.method === 'POST') {
       if (failStatusSave) { result = { ok: false, message: 'Status save rejected' }; status = 422; }
       else {
@@ -30,9 +30,9 @@ window.fetch = async (url, options = {}) => {
         result.checked_in = fixtureFacultyStatus !== 'offline';
       }
     } else result.availability = [{ Status: 'offline' }];
-  } else if (String(url).includes('consultation-requests.php') && options.method !== 'POST') {
+  } else if (String(url).includes('manage-consultation-requests.php') && options.method !== 'POST') {
     result.requests = [{ Request_ID: 21, Student_Name: 'Fresh Server Student', Purpose: 'Server request', Request_Date: '2030-01-07', Preferred_Time: '09:00:00', Year_Level: '1', Section: 'A' }];
-  } else if (String(url).includes('faculty-schedule.php')) {
+  } else if (String(url).includes('get-faculty-schedule.php')) {
     result.slots = [{ value: '9:00 AM - 9:30 AM', available: true, taken: false }];
   }
   return { ok: status === 200, status, json: async () => result, blob: async () => new Blob(['fixture'], { type: 'image/png' }) };
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       date.value = '2000-01-03';
       time.value = '9:00 AM - 9:30 AM';
       form.dispatchEvent(new Event('submit', { cancelable: true }));
-      check(!recorded.some((r) => r.options?.method === 'POST' && r.url?.includes(isRequest ? 'submit-consultation.php' : 'consultation-requests.php')), 'Past date cannot be submitted');
+      check(!recorded.some((r) => r.options?.method === 'POST' && r.url?.includes(isRequest ? 'create-consultation-request.php' : 'manage-consultation-requests.php')), 'Past date cannot be submitted');
       date.value = date.min;
       date.dispatchEvent(new Event('change'));
       await delay();
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(document.getElementById('editFacultySuffix').value === 'Jr.', 'Suffix reloads into the suffix field');
       document.getElementById('editProfileButton').click();
       await delay();
-      const saved = recorded.find((r) => r.url?.includes('faculty-profile.php'));
+      const saved = recorded.find((r) => r.url?.includes('update-faculty-profile.php'));
       const body = JSON.parse(saved.options.body);
       check(!('consultation_hours' in body) && !('office' in body), 'Profile save does not clear consultation hours or office');
       check(body.full_name === 'Juan A. Santos Jr.', 'Suffix survives the profile save round trip');
@@ -105,19 +105,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(window.getFacultyOnlineStatus() === 'meeting', 'Confirmed availability save updates the interface');
     } else if (TEST_CASE === 'reschedule') {
       check(document.getElementById('rescheduleStudentName').textContent === 'Fresh Server Student', 'Reschedule loads the request from the server without local storage');
-      const schedule = recorded.find((r) => r.url?.includes('faculty-schedule.php'));
+      const schedule = recorded.find((r) => r.url?.includes('get-faculty-schedule.php'));
       check(schedule.url.includes('request_id=21'), 'Schedule lookup excludes the request being edited');
       const option = [...document.querySelectorAll('#reschedulePreferredTimeOptions li')].find((li) => li.dataset.value === '9:00 AM \u2013 9:30 AM');
       check(option && !option.classList.contains('is-unavailable'), 'Available schedule slot can be selected');
       option.click();
       document.getElementById('rescheduleConsultationForm').dispatchEvent(new Event('submit', { cancelable: true }));
       await delay();
-      const posted = recorded.find((r) => r.url?.includes('consultation-requests.php') && r.options.method === 'POST');
+      const posted = recorded.find((r) => r.url?.includes('manage-consultation-requests.php') && r.options.method === 'POST');
       check(JSON.parse(posted.options.body).request_id === 21, 'Reschedule submits the correct server request');
       check(document.getElementById('submitRescheduleButton').disabled, 'Reschedule prevents duplicate submissions');
     }
     check(!document.getElementById('profconsult-auth-lock'), 'Protected page is revealed only after successful session verification');
-    const sessionRequest = recorded.find((r) => r.url?.includes('session.php'));
+    const sessionRequest = recorded.find((r) => r.url?.includes('get-current-session.php'));
     check(new Headers(sessionRequest.options.headers).get('X-ProfConsult-Tab-Token') === 'a'.repeat(64), 'Protected API requests carry the login proof for this tab');
     if (failure) throw new Error(failure);
     const result = document.createElement('pre');

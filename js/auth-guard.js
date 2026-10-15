@@ -68,7 +68,7 @@
     }
     sessionCheckPromise = (async () => {
       try {
-        const response = await fetch(`api/session.php?role=${encodeURIComponent(role)}`, {
+        const response = await fetch(`api/get-current-session.php?role=${encodeURIComponent(role)}`, {
           credentials: "same-origin",
           headers: { Accept: "application/json" },
         });
@@ -97,7 +97,7 @@
     isLoggingOut = true;
     lockPage();
     try {
-      await fetch("api/logout.php", { method: "POST", credentials: "same-origin" });
+      await fetch("api/logout-user.php", { method: "POST", credentials: "same-origin" });
     } finally {
       clearTabLogin();
       window.ProfConsultTheme?.clearUser?.();

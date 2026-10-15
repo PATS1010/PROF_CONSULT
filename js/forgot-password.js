@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setSubmitLoading(true);
 
       try {
-        const response = await fetch("api/request-reset-code.php", {
+        const response = await fetch("api/send-password-reset-code.php", {
           method: "POST",
           cache: "no-store",
           credentials: "same-origin",

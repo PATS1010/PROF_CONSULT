@@ -19,8 +19,8 @@ namespace {
     putenv('SMTP_USERNAME=' . ($mode === 'smtp' ? 'fixture-user' : ''));
     putenv('SMTP_PASSWORD=' . ($mode === 'smtp' ? 'fixture-password' : ''));
     putenv('SMTP_FROM_EMAIL=' . ($mode === 'smtp' ? 'sender@example.test' : ''));
-    require dirname(__DIR__) . '/api/config.php';
-    require dirname(__DIR__) . '/api/mailer.php';
+    require dirname(__DIR__) . '/api/app-config.php';
+    require dirname(__DIR__) . '/api/email-delivery-helpers.php';
     try {
         sendOtpEmail('recipient@example.test', 'Test recipient', '123456');
         if ($mode !== 'smtp' || \PHPMailer\PHPMailer\PHPMailer::$sent !== 1) {

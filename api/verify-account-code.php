@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 // SYSTEM NOTE: Verifies the email OTP used before account creation.
 
-require __DIR__ . '/bootstrap.php';
+require __DIR__ . '/api-helpers.php';
 requirePost();
 
 $data = input();

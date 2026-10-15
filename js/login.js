@@ -136,7 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
   passwordInput.addEventListener("input", clearMessages);
 
   async function logIn(identifier, password) {
-    const response = await fetch("api/login.php", {
+    const response = await fetch("api/authenticate-user.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },

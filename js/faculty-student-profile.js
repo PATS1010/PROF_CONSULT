@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  fetch(`api/student-public-profile.php?student_number=${encodeURIComponent(studentId)}`, {
+  fetch(`api/get-student-public-profile.php?student_number=${encodeURIComponent(studentId)}`, {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },

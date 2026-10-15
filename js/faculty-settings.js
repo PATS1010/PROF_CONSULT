@@ -36,7 +36,7 @@ function applyNotificationSettings(settings, emailCheckbox, pushCheckbox) {
 }
 
 async function loadBackendNotificationSettings(emailCheckbox, pushCheckbox) {
-  const response = await fetch("api/notification-settings.php?role=faculty", {
+  const response = await fetch("api/manage-notification-preferences.php?role=faculty", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -49,7 +49,7 @@ async function loadBackendNotificationSettings(emailCheckbox, pushCheckbox) {
 }
 
 async function saveBackendNotificationSettings(settings, emailCheckbox, pushCheckbox) {
-  const response = await fetch("api/notification-settings.php", {
+  const response = await fetch("api/manage-notification-preferences.php", {
     method: "POST",
     credentials: "same-origin",
     headers: { "Content-Type": "application/json", "Accept": "application/json" },
@@ -214,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function verifyCurrentPassword(password) {
-    const sessionResponse = await fetch(`api/session.php?role=${origin}`, {
+    const sessionResponse = await fetch(`api/get-current-session.php?role=${origin}`, {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -229,7 +229,7 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error("Unable to verify this account.");
     }
 
-    const loginResponse = await fetch("api/login.php", {
+    const loginResponse = await fetch("api/authenticate-user.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },

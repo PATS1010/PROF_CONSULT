@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  fetch("api/notifications.php?role=student", {
+  fetch("api/manage-notifications.php?role=student", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },

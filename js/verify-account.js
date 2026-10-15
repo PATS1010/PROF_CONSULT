@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!email) return;
 
       try {
-        const response = await fetch("api/request-account-verification-code.php", {
+        const response = await fetch("api/send-account-verification-code.php", {
           method: "POST",
           credentials: "same-origin",
           headers: {

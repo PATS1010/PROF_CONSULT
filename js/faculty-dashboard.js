@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const nameEl = document.getElementById("facultyLastName");
 
-  fetch("api/session.php?role=faculty", {
+  fetch("api/get-current-session.php?role=faculty", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
@@ -403,7 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function loadConsultationsFromApi() {
-    const response = await fetch("api/consultation-requests.php?role=faculty", {
+    const response = await fetch("api/manage-consultation-requests.php?role=faculty", {
       cache: "no-store",
       credentials: "same-origin",
       headers: { "Accept": "application/json" },
@@ -416,7 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function updateRequestStatus(request, status) {
-    const response = await fetch("api/consultation-requests.php", {
+    const response = await fetch("api/manage-consultation-requests.php", {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
