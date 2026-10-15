@@ -13,6 +13,7 @@
   color: #2b2b2b;
   box-shadow: 0 20px 45px rgba(0, 0, 0, .25);
   font-family: var(--font-main, 'Montserrat', sans-serif);
+  cursor: pointer;
   opacity: 0;
   transform: translateY(-10px);
   pointer-events: none;
@@ -34,6 +35,7 @@
 .notification-popup-header h2 { margin: 0; color: #fff; font-size: .9rem; font-weight: 800; line-height: 1.4; text-transform: uppercase; }
 .notification-popup-close {
   position: absolute;
+  z-index: 2;
   top: 2px;
   right: 4px;
   width: 44px;
@@ -65,6 +67,15 @@
   font-weight: 700;
   text-decoration: none;
 }
+/* Extend the existing native link over the card; keep X above it. */
+.notification-popup-view-more::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 22px;
+}
+.notification-popup-view-more:focus-visible::after { outline: 2px solid #c5001b; outline-offset: -3px; }
 .notification-popup-close:focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
 .notification-popup-view-more:focus-visible { outline: 2px solid #c5001b; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { .notification-popup { transition: none; } }

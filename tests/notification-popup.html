@@ -27,7 +27,7 @@ window.fetch = async (url, options) => {
 <script>
 document.addEventListener("DOMContentLoaded", async () => {
   const check = (value, label) => { if (!value) throw Error(label); };
-  const settle = () => new Promise(resolve => setTimeout(resolve, 30));
+  const settle = () => new Promise(resolve => setTimeout(() => requestAnimationFrame(() => requestAnimationFrame(resolve)), 30));
   try {
     bell.click(); await settle();
     const panel = document.getElementById("notificationPopup");
@@ -38,9 +38,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     check(panel.querySelector("a").getAttribute("href") === (role === "faculty" ? "faculty-notifications.html" : "notifications.html"), "View More opens the correct notification page");
     const rect = panel.getBoundingClientRect();
     check(rect.left >= 0 && rect.right <= innerWidth && rect.top >= 64 && rect.bottom <= innerHeight, "Popup fits below the header inside the viewport");
+    let linkClicks = 0;
+    panel.querySelector("a").addEventListener("click", event => { event.preventDefault(); linkClicks++; });
+    for (const target of [panel.querySelector("h2"), panel.querySelector(".notification-popup-message"), panel.querySelector("time")]) {
+      const area = target.getBoundingClientRect();
+      document.elementFromPoint(area.left + 2, area.top + area.height / 2).click();
+    }
+    check(linkClicks === 3, "Clicking the title, message, or time activates the notification link");
     bell.click(); check(panel.hidden && calls === 1, "Second click closes without another request");
     bell.click(); await settle(); document.getElementById("outside").click(); check(panel.hidden, "Outside click closes");
-    bell.click(); await settle(); panel.querySelector("button").click(); check(panel.hidden && document.activeElement === bell, "Close button returns focus to bell");
+    bell.click(); await settle();
+    const closeArea = panel.querySelector("button").getBoundingClientRect();
+    const closeTarget = document.elementFromPoint(closeArea.left + closeArea.width / 2, closeArea.top + closeArea.height / 2);
+    check(closeTarget.closest(".notification-popup-close"), "Close button is above the card link: " + closeTarget.tagName + "." + closeTarget.className);
+    closeTarget.click();
+    check(panel.hidden && document.activeElement === bell, "Close button returns focus to bell");
+    check(linkClicks === 3, "X closes without activating the notification link");
     mode = "pending"; bell.click();
     document.dispatchEvent(new KeyboardEvent("keydown", {key:"Escape",bubbles:true}));
     pending(); await settle(); check(panel.hidden, "Late response cannot reopen an Escape-dismissed popup");

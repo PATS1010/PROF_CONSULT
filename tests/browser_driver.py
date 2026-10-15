@@ -9,7 +9,7 @@ import time
 import urllib.request
 from urllib.parse import urlsplit
 
-def login_flow(chrome, url, profile, log_path):
+def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result'):
     with socket.socket() as probe:
         probe.bind(('127.0.0.1', 0))
         debug_port = probe.getsockname()[1]
@@ -74,7 +74,7 @@ def login_flow(chrome, url, profile, log_path):
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:
             try:
-                result = evaluate("document.getElementById('auth-flow-result')?.textContent || ''")
+                result = evaluate('document.getElementById(' + json.dumps(result_id) + ')?.textContent || ""')
                 if result: break
             except (OSError, EOFError):
                 raise
