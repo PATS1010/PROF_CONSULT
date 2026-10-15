@@ -72,6 +72,10 @@
   object-fit: cover;
 }
 
+.faculty-profile-photo[src*="images/default-profile.jpg"] {
+  object-view-box: inset(15%);
+}
+
 .faculty-profile-photo-edit {
   border: 0;
   position: absolute;

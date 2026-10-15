@@ -432,6 +432,10 @@ input {
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
 }
 
+.profile-photo[src*="images/default-profile.jpg"] {
+  object-view-box: inset(15%);
+}
+
 .profile-photo-edit {
   position: absolute;
   bottom: 0;

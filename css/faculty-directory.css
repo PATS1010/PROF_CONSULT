@@ -724,6 +724,11 @@ input {
   flex-shrink: 0;
 }
 
+.faculty-photo[src*="images/default-profile.jpg"],
+.profile-photo[src*="images/default-profile.jpg"] {
+  object-view-box: inset(15%);
+}
+
 .faculty-info {
   flex: 1;
   min-width: 0;

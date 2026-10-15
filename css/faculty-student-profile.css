@@ -44,6 +44,10 @@
   box-shadow: var(--shadow-card);
 }
 
+.student-profile-photo[src*="images/default-profile.jpg"] {
+  object-view-box: inset(15%);
+}
+
 .student-profile-name {
   font-family: var(--font-main);
   font-weight: 800;
