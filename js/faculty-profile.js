@@ -199,8 +199,10 @@ document.addEventListener("DOMContentLoaded", () => {
     FACULTY_ACCOUNT.program = profile.Department || profile.department || "";
     FACULTY_ACCOUNT.email = user.email || "";
     FACULTY_ACCOUNT.phone = formatPhoneInput(user.phone || "");
-    if (facultyProfilePhoto && user.profile_photo) {
-      facultyProfilePhoto.src = `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
+    if (facultyProfilePhoto) {
+      facultyProfilePhoto.src = user.profile_photo
+        ? `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`
+        : "images/default-profile.jpg";
     }
     renderViewMode();
   }

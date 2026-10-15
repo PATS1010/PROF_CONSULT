@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
       office: record.Office || DEFAULT_OFFICE,
       status,
       statusLabel: statusLabel(status),
-      photo: record.Profile_Photo || "images/user.png",
+      photo: record.Profile_Photo || "images/default-profile.jpg",
       hours: parseConsultationHours(record.Consultation_Hours),
     };
   }

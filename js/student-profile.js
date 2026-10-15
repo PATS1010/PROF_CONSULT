@@ -164,8 +164,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sectionSelect) sectionSelect.value = studentDetails.section;
     if (emailInput) emailInput.value = studentDetails.email;
     if (phoneInput) phoneInput.value = studentDetails.phone;
-    if (profilePhoto && user.profile_photo) {
-      profilePhoto.src = `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
+    if (profilePhoto) {
+      profilePhoto.src = user.profile_photo
+        ? `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`
+        : "images/default-profile.jpg";
     }
     renderFullNameDisplay();
     populateNameEditInputs();

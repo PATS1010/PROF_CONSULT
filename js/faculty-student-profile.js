@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const fullName = profile.Full_Name || "";
 
       if (photoEl) {
-        photoEl.src = profile.Profile_Photo || "images/student-profile-photo.jpg";
+        photoEl.src = profile.Profile_Photo || "images/default-profile.jpg";
         photoEl.alt = fullName;
       }
 
