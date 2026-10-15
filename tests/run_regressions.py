@@ -74,6 +74,9 @@ def check(condition, label):
     print('PASS', label, flush=True)
 
 try:
+    migration_tests = subprocess.run([php, 'tests/database-migration.php'], cwd=ROOT, capture_output=True, text=True)
+    check(migration_tests.returncode == 0, 'Deployment migration lifecycle: ' + migration_tests.stderr.strip())
+    print(migration_tests.stdout, end='', flush=True)
     status_tests = subprocess.run([php, 'tests/faculty-status.php'], cwd=ROOT, capture_output=True, text=True)
     check(status_tests.returncode == 0, 'All deterministic faculty status boundary checks: ' + status_tests.stderr.strip())
     print(status_tests.stdout, end='', flush=True)
@@ -122,6 +125,20 @@ try:
     db.close()
     status, _ = request('/api/faculty-schedule.php?faculty_id=1&date=2030-01-07&request_id=21')
     check(status == 403, 'TC6 student cannot exclude a faculty booking from the schedule')
+
+    db = sqlite3.connect(db_file)
+    db.execute("INSERT INTO consultation_requests (Request_ID,Student_ID,Faculty_ID,Purpose,Request_Date,Preferred_Time,Status) VALUES (61,2,1,'Finished consultation','2000-01-01','09:00:00','approved')")
+    db.executescript("CREATE TRIGGER fail_completion BEFORE INSERT ON notifications WHEN NEW.User_ID=1 AND NEW.Message LIKE '%has been completed.' BEGIN SELECT RAISE(ABORT, 'Simulated notification failure'); END;")
+    db.commit()
+    check(request('/api/consultation-requests.php?role=student')[0] == 500, 'Completion notification failure is reported')
+    check(db.execute('SELECT Status FROM consultation_requests WHERE Request_ID=61').fetchone()[0] == 'approved' and db.execute("SELECT COUNT(*) FROM notifications WHERE Message LIKE '%has been completed.'").fetchone()[0] == 0, 'Failed completion rolls back both notifications and status')
+    db.execute('DROP TRIGGER fail_completion')
+    db.commit()
+    check(request('/api/consultation-requests.php?role=student')[0] == 200, 'Completion retries successfully after a failure')
+    request('/api/consultation-requests.php?role=student')
+    counts = db.execute("SELECT User_ID, COUNT(*) FROM notifications WHERE Message LIKE '%has been completed.' GROUP BY User_ID ORDER BY User_ID").fetchall()
+    check(counts == [(1, 1), (2, 1)] and db.execute('SELECT Status FROM consultation_requests WHERE Request_ID=61').fetchone()[0] == 'completed', 'Repeated refresh produces one completion notification for each participant')
+    db.close()
 
     image = base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6ioAAAAASUVORK5CYII=')
     boundary = 'profconsult-test-upload'

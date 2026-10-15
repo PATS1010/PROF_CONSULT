@@ -1,0 +1,10 @@
+.git
+.env
+.env.*
+!.env.example
+.codex*
+.agents
+tests/runtime
+tests/__pycache__
+uploads/profile-photos/*
+!uploads/profile-photos/.gitkeep

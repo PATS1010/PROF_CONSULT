@@ -4,6 +4,7 @@ declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
 requirePost();
 $user = requireRole('faculty');
+releaseSessionLock();
 $data = input();
 $pageId = clean((string) ($data['page_id'] ?? ''));
 $action = clean((string) ($data['action'] ?? 'heartbeat'));

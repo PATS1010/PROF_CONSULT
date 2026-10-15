@@ -18,11 +18,10 @@ $requestedRole = clean((string) ($_GET['role'] ?? ($requestBody['role'] ?? '')))
 $user = in_array($requestedRole, ['student', 'faculty'], true)
     ? currentUser($requestedRole)
     : currentUser();
+releaseSessionLock();
 $db = database();
 
 try {
-    // Make sure older databases have the message column before reading requests.
-    ensureConsultationMessageColumn($db);
     markFinishedApprovedRequestsCompleted($db);
 
     // Get the student or faculty profile row connected to the logged-in user.
@@ -288,43 +287,56 @@ function markFinishedApprovedRequestsCompleted(PDO $db): void
 {
     $now = currentManilaDateTime()->format('Y-m-d H:i:s');
 
-    $studentNotifications = $db->prepare(
-        "INSERT INTO notifications (User_ID, Message, Read_Status)
-         SELECT
-            student_user.User_ID,
-            'Your consultation with ' || faculty_user.Full_Name || ' has been completed.',
-            'unread'
-         FROM consultation_requests cr
-         INNER JOIN students s ON s.Student_ID = cr.Student_ID
-         INNER JOIN users student_user ON student_user.User_ID = s.User_ID
-         INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
-         INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
-         WHERE cr.Status IN ('approved', 'rescheduled')
-           AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
-    );
-    $studentNotifications->execute([$now]);
+    // Parallel workers must not send completion notifications twice. Keep the
+    // notification inserts and status update together under one short DB lock.
+    $db->beginTransaction();
+    try {
+        $lock = $db->prepare('SELECT pg_advisory_xact_lock(?)');
+        $lock->execute([2026101602]);
+        $lock->closeCursor();
 
-    $facultyNotifications = $db->prepare(
-        "INSERT INTO notifications (User_ID, Message, Read_Status)
-         SELECT
-            faculty_user.User_ID,
-            'Your consultation with ' || student_user.Full_Name || ' has been completed.',
-            'unread'
-         FROM consultation_requests cr
-         INNER JOIN students s ON s.Student_ID = cr.Student_ID
-         INNER JOIN users student_user ON student_user.User_ID = s.User_ID
-         INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
-         INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
-         WHERE cr.Status IN ('approved', 'rescheduled')
-           AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
-    );
-    $facultyNotifications->execute([$now]);
+        $studentNotifications = $db->prepare(
+            "INSERT INTO notifications (User_ID, Message, Read_Status)
+             SELECT
+                student_user.User_ID,
+                'Your consultation with ' || faculty_user.Full_Name || ' has been completed.',
+                'unread'
+             FROM consultation_requests cr
+             INNER JOIN students s ON s.Student_ID = cr.Student_ID
+             INNER JOIN users student_user ON student_user.User_ID = s.User_ID
+             INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
+             INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
+             WHERE cr.Status IN ('approved', 'rescheduled')
+               AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+        );
+        $studentNotifications->execute([$now]);
 
-    $statement = $db->prepare(
-        "UPDATE consultation_requests
-         SET Status = 'completed'
-         WHERE Status IN ('approved', 'rescheduled')
-           AND (Request_Date::timestamp + Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
-    );
-    $statement->execute([$now]);
+        $facultyNotifications = $db->prepare(
+            "INSERT INTO notifications (User_ID, Message, Read_Status)
+             SELECT
+                faculty_user.User_ID,
+                'Your consultation with ' || student_user.Full_Name || ' has been completed.',
+                'unread'
+             FROM consultation_requests cr
+             INNER JOIN students s ON s.Student_ID = cr.Student_ID
+             INNER JOIN users student_user ON student_user.User_ID = s.User_ID
+             INNER JOIN faculty f ON f.Faculty_ID = cr.Faculty_ID
+             INNER JOIN users faculty_user ON faculty_user.User_ID = f.User_ID
+             WHERE cr.Status IN ('approved', 'rescheduled')
+               AND (cr.Request_Date::timestamp + cr.Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+        );
+        $facultyNotifications->execute([$now]);
+
+        $statement = $db->prepare(
+            "UPDATE consultation_requests
+             SET Status = 'completed'
+             WHERE Status IN ('approved', 'rescheduled')
+               AND (Request_Date::timestamp + Preferred_Time + INTERVAL '30 minutes') <= ?::timestamp"
+        );
+        $statement->execute([$now]);
+        $db->commit();
+    } catch (Throwable $exception) {
+        if ($db->inTransaction()) $db->rollBack();
+        throw $exception;
+    }
 }

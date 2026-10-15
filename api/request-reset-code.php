@@ -22,7 +22,6 @@ if ($method !== '' && $method !== 'email') {
 
 try {
     $db = database();
-    ensurePasswordResetTable($db);
     $roleFilter = $role !== '' ? 'Role = ? AND' : "Role IN ('student', 'faculty') AND";
     $parameters = $role !== ''
         ? [$role, $identifier, 'active']
@@ -74,25 +73,4 @@ try {
 } catch (Throwable $exception) {
     error_log($exception->getMessage());
     fail('Unable to create a verification code right now.', 500);
-}
-
-function ensurePasswordResetTable(PDO $db): void
-{
-    // Creates the OTP table automatically if the current PostgreSQL database has not been updated yet.
-    $db->exec(
-        'CREATE TABLE IF NOT EXISTS password_reset_codes (
-            Reset_ID SERIAL PRIMARY KEY,
-            User_ID INTEGER NOT NULL,
-            Token CHAR(64) NOT NULL UNIQUE,
-            Code_Hash VARCHAR(255) NOT NULL,
-            Expires_At TIMESTAMP NOT NULL,
-            Verified_At TIMESTAMP NULL,
-            Consumed_At TIMESTAMP NULL,
-            Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_password_reset_user
-                FOREIGN KEY (User_ID) REFERENCES users(User_ID) ON DELETE CASCADE
-        )'
-    );
-    $db->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_token ON password_reset_codes (Token)');
-    $db->exec('CREATE INDEX IF NOT EXISTS idx_password_reset_user_active ON password_reset_codes (User_ID, Consumed_At)');
 }

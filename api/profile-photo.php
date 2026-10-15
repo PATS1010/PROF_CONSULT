@@ -5,6 +5,7 @@ require __DIR__ . '/bootstrap.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $viewer = currentUser();
+    releaseSessionLock();
     $userId = (int) ($_GET['user_id'] ?? 0);
 
     try {
@@ -48,7 +49,6 @@ $user = in_array($requestedRole, ['student', 'faculty'], true)
 
 try {
     $db = database();
-    ensureProfilePhotoColumn($db);
     if (empty($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
         fail('Please choose a profile photo.');
     }

@@ -52,6 +52,14 @@ function reply(array $data, int $status = 200): never
     exit;
 }
 
+// Call only after authentication and the endpoint's last session mutation.
+// The authenticated request keeps its user snapshot; subsequent requests still
+// have to pass currentUser() against the server session and tab proof.
+function releaseSessionLock(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
+}
+
 function input(): array
 {
     $data = json_decode(file_get_contents('php://input'), true);
@@ -93,42 +101,8 @@ function publicUser(array $row): array
     ];
 }
 
-function columnExists(PDO $db, string $table, array $columns): bool
-{
-    $placeholders = implode(', ', array_fill(0, count($columns), '?'));
-    $statement = $db->prepare(
-        "SELECT 1
-         FROM information_schema.columns
-         WHERE table_schema = current_schema()
-           AND table_name = ?
-           AND column_name IN ($placeholders)
-         LIMIT 1"
-    );
-    $statement->execute(array_merge([$table], $columns));
-    return (bool) $statement->fetchColumn();
-}
-
-function ensureProfilePhotoColumn(PDO $db): void
-{
-    if (!columnExists($db, 'users', ['profile_photo', 'Profile_Photo'])) {
-        $db->exec('ALTER TABLE users ADD COLUMN Profile_Photo VARCHAR(255) NULL');
-    }
-}
-
-function ensureNotificationPreferenceColumns(PDO $db): void
-{
-    if (!columnExists($db, 'users', ['email_notifications', 'Email_Notifications'])) {
-        $db->exec('ALTER TABLE users ADD COLUMN Email_Notifications BOOLEAN NOT NULL DEFAULT TRUE');
-    }
-    if (!columnExists($db, 'users', ['push_notifications', 'Push_Notifications'])) {
-        $db->exec('ALTER TABLE users ADD COLUMN Push_Notifications BOOLEAN NOT NULL DEFAULT TRUE');
-    }
-}
-
 function notificationPreferencesForUser(PDO $db, int $userId): array
 {
-    ensureNotificationPreferenceColumns($db);
-
     $statement = $db->prepare(
         'SELECT
             Email_Notifications AS "Email_Notifications",
@@ -149,13 +123,6 @@ function notificationPreferencesForUser(PDO $db, int $userId): array
 function userWantsEmailNotifications(PDO $db, int $userId): bool
 {
     return notificationPreferencesForUser($db, $userId)['email_notifications'];
-}
-
-function ensureConsultationMessageColumn(PDO $db): void
-{
-    if (!columnExists($db, 'consultation_requests', ['additional_message', 'Additional_Message'])) {
-        $db->exec('ALTER TABLE consultation_requests ADD COLUMN Additional_Message TEXT NULL');
-    }
 }
 
 function currentManilaDateTime(): DateTimeImmutable

@@ -17,7 +17,6 @@ $user = in_array($requestedRole, ['student', 'faculty'], true)
 $db = database();
 
 try {
-    ensureNotificationPreferenceColumns($db);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $emailNotifications = filter_var(

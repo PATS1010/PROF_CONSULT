@@ -8,6 +8,7 @@ require __DIR__ . '/mailer.php';
 requirePost();
 
 $user = requireRole('student');
+releaseSessionLock();
 $data = input();
 $facultyId = (int) ($data['faculty_id'] ?? 0);
 $purpose = clean((string) ($data['purpose'] ?? ''));
@@ -33,7 +34,6 @@ if (!$scheduledStart || $scheduledStart->format('Y-m-d H:i:s') !== $date . ' ' .
 
 try {
     $db = database();
-    ensureConsultationMessageColumn($db);
 
     $student = userProfile($db, $user['id'], 'student');
     if (!$student) {

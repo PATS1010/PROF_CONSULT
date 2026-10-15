@@ -5,12 +5,11 @@ declare(strict_types=1);
 
 require __DIR__ . '/bootstrap.php';
 currentUser();
+releaseSessionLock();
 
 try {
     // Open the shared PostgreSQL connection from api/config.php.
     $db = database();
-    // Make sure older databases still have the optional profile photo column.
-    ensureProfilePhotoColumn($db);
 
     // Build one directory query that returns each active faculty account and its latest saved status.
     $statement = $db->query(

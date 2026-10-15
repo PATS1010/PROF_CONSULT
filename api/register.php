@@ -27,7 +27,6 @@ if (!in_array($role, ['student', 'faculty'], true)
 
 try {
     $db = database();
-    ensureAccountVerificationTable($db);
     $db->beginTransaction();
 
     $checkUsername = $db->prepare('SELECT 1 FROM users WHERE Username = ? LIMIT 1');
@@ -142,23 +141,4 @@ try {
     }
     error_log($exception->getMessage());
     fail('A database error occurred. Check config.php and import database/schema.sql.', 500);
-}
-
-function ensureAccountVerificationTable(PDO $db): void
-{
-    $db->exec(
-        'CREATE TABLE IF NOT EXISTS account_verification_codes (
-            Verification_ID SERIAL PRIMARY KEY,
-            Email VARCHAR(190) NOT NULL,
-            Role VARCHAR(20) NOT NULL CHECK (Role IN (\'student\', \'faculty\')),
-            Token CHAR(64) NOT NULL UNIQUE,
-            Code_Hash VARCHAR(255) NOT NULL,
-            Expires_At TIMESTAMP NOT NULL,
-            Verified_At TIMESTAMP NULL,
-            Consumed_At TIMESTAMP NULL,
-            Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )'
-    );
-    $db->exec('CREATE INDEX IF NOT EXISTS idx_account_verification_token ON account_verification_codes (Token)');
-    $db->exec('CREATE INDEX IF NOT EXISTS idx_account_verification_email_role ON account_verification_codes (Email, Role, Consumed_At)');
 }

@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS availability CASCADE;
 DROP TABLE IF EXISTS consultation_requests CASCADE;
 DROP TABLE IF EXISTS notifications CASCADE;
 DROP TABLE IF EXISTS password_reset_codes CASCADE;
+DROP TABLE IF EXISTS account_verification_codes CASCADE;
 DROP TABLE IF EXISTS students CASCADE;
 DROP TABLE IF EXISTS faculty CASCADE;
 DROP TABLE IF EXISTS faculty_presence CASCADE;
@@ -14,6 +15,21 @@ DROP TABLE IF EXISTS users CASCADE;
 -- ============================================================
 -- USER TABLE
 -- ============================================================
+CREATE TABLE account_verification_codes (
+  Verification_ID SERIAL PRIMARY KEY,
+  Email VARCHAR(190) NOT NULL,
+  Role VARCHAR(20) NOT NULL CHECK (Role IN ('student', 'faculty')),
+  Token CHAR(64) NOT NULL UNIQUE,
+  Code_Hash VARCHAR(255) NOT NULL,
+  Expires_At TIMESTAMP NOT NULL,
+  Verified_At TIMESTAMP NULL,
+  Consumed_At TIMESTAMP NULL,
+  Created_At TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_account_verification_token ON account_verification_codes (Token);
+CREATE INDEX idx_account_verification_email_role ON account_verification_codes (Email, Role, Consumed_At);
+
 CREATE TABLE users (
   User_ID SERIAL PRIMARY KEY,
   Username VARCHAR(50) NOT NULL UNIQUE,

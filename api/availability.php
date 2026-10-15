@@ -11,7 +11,6 @@ $db = database();
 try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sessionUser = requireRole('faculty');
-        ensureProfilePhotoColumn($db);
         $refreshUser = $db->prepare(
             'SELECT
                 User_ID AS "User_ID",

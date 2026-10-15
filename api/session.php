@@ -12,7 +12,6 @@ $sessionUser = in_array($requestedRole, ['student', 'faculty'], true)
 
 try {
     $db = database();
-    ensureProfilePhotoColumn($db);
     $statement = $db->prepare(
         'SELECT
             User_ID AS "User_ID",

@@ -14,7 +14,6 @@ if ($studentNumber === '') {
 
 try {
     $db = database();
-    ensureProfilePhotoColumn($db);
 
     $statement = $db->prepare(
         'SELECT

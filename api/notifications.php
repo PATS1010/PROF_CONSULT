@@ -14,6 +14,7 @@ $requestedRole = clean((string) ($_GET['role'] ?? ($requestBody['role'] ?? '')))
 $user = in_array($requestedRole, ['student', 'faculty'], true)
     ? currentUser($requestedRole)
     : currentUser();
+releaseSessionLock();
 $db = database();
 
 try {
