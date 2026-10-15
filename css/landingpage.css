@@ -109,6 +109,11 @@ img {
 }
 
 .navbar-links .navbar-login-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
   padding: 9px 18px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
@@ -124,6 +129,9 @@ img {
 }
 
 .nav-toggle {
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
   display: none;
   flex-direction: column;
   justify-content: center;

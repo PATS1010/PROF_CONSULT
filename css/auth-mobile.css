@@ -1,0 +1,112 @@
+/* Shared phone layout for all login entry points. */
+.page-background,
+.page-background-overlay {
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  html {
+    scroll-padding-top: 88px;
+    scroll-padding-bottom: 32px;
+  }
+
+  body {
+    min-height: 100dvh;
+    overflow-y: auto;
+  }
+
+  .login-page {
+    min-height: 100dvh;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    gap: 20px;
+    padding: max(84px, calc(env(safe-area-inset-top) + 64px)) max(16px, env(safe-area-inset-right)) max(32px, calc(env(safe-area-inset-bottom) + 24px)) max(16px, env(safe-area-inset-left));
+  }
+
+  .branding-section,
+  .login-card {
+    flex: 0 0 auto;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .branding-logo {
+    width: auto;
+    max-width: min(200px, 70vw);
+    max-height: 88px;
+    object-fit: contain;
+  }
+
+  .welcome-text {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .login-card {
+    padding: 26px 20px;
+    border-radius: 24px;
+  }
+
+  .login-title {
+    margin-bottom: 22px;
+  }
+
+  .login-input {
+    min-height: 48px;
+    font-size: 16px;
+    scroll-margin-block: 88px;
+  }
+
+  .login-button {
+    width: 100%;
+    min-height: 48px;
+    touch-action: manipulation;
+  }
+
+  .password-toggle,
+  .back-button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  .back-button {
+    top: max(12px, env(safe-area-inset-top));
+    left: max(16px, env(safe-area-inset-left));
+  }
+
+  .create-account-links {
+    flex-wrap: wrap;
+  }
+}
+
+/* Leave room for the form in landscape or when the keyboard shrinks the page. */
+@media (max-height: 500px) and (max-width: 1024px) {
+  .login-page {
+    min-height: 100dvh;
+    align-items: center;
+    padding-top: 76px;
+    padding-bottom: max(28px, env(safe-area-inset-bottom));
+    gap: 16px;
+  }
+
+  .branding-section {
+    display: none;
+  }
+
+  .login-card {
+    flex: 0 1 auto;
+    width: min(100%, 440px);
+    min-width: 0;
+    padding: 24px 20px;
+  }
+
+  .login-input {
+    min-height: 48px;
+    font-size: 16px;
+  }
+
+  .login-button {
+    min-height: 48px;
+  }
+}
