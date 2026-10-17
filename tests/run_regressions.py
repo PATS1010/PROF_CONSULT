@@ -199,8 +199,8 @@ try:
     chrome = next((p for p in [shutil.which('google-chrome'), shutil.which('chromium'), r'C:\Program Files\Google\Chrome\Application\chrome.exe'] if p and Path(p).exists()), None)
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
-    for case in ['faculty', 'student', 'availability', 'request', 'reschedule']:
-        if case in ['faculty', 'student']:
+    for case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard', 'request', 'reschedule']:
+        if case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard']:
             result, html = login_flow(chrome, base + '/_test/ui/' + case, RUNTIME / ('chrome-photo-' + case + '-' + str(port)), RUNTIME / ('photo-' + case + '.log'), result_id='regression-result')
             (RUNTIME / (case + '.html')).write_text(html, encoding='utf-8')
             check(result.startswith('PASS '), 'Browser ' + case + ': ' + (result or 'no result; see tests/runtime/' + case + '.html'))
@@ -242,7 +242,7 @@ try:
         result, html = login_flow(chrome, base + '/_test/public/landingpage.html', RUNTIME / ('chrome-' + label), RUNTIME / (label + '.log'), result_id='regression-result', viewport=(width, height), screenshot_path=RUNTIME / (label + '.png'))
         (RUNTIME / (label + '.html')).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Landing page ' + label + ': ' + result)
-    print(f'Completed {checks} regression checks plus 17 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
+    print(f'Completed {checks} regression checks plus 42 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()
     server.wait(timeout=10)

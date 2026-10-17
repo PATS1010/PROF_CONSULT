@@ -178,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
       typeof window.getFacultyOnlineStatus ===
         "function"
         ? window.getFacultyOnlineStatus()
-        : "consultation";
+        : "offline";
 
     statusOptions.forEach((opt) => {
       opt.classList.remove("is-selected");
@@ -304,7 +304,7 @@ document.addEventListener("DOMContentLoaded", () => {
             typeof window.getFacultyOnlineStatus ===
               "function"
               ? window.getFacultyOnlineStatus()
-              : "consultation";
+              : "offline";
           try {
             await window.setFacultyOnlineStatus(
               pendingStatus,
@@ -353,7 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (
         statusPanel &&
-        !statusPanel.hidden
+        statusPanel.hidden
       ) {
 
         syncPendingFromCurrentStatus();

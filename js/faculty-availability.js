@@ -163,6 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   function openStatusPanel() {
+    const current = window.getFacultyOnlineStatus?.() || "offline";
+    setCurrentStatus(current, window.FACULTY_STATUS_LABELS?.[current] || "Offline");
     statusPanel.hidden = false;
     requestAnimationFrame(() => statusPanel.classList.add("is-open"));
     changeStatusButton.setAttribute("aria-expanded", "true");
@@ -195,10 +197,6 @@ document.addEventListener("DOMContentLoaded", () => {
       statusOptions.forEach((opt) => opt.classList.remove("is-selected"));
       option.classList.add("is-selected");
 
-      const status = option.dataset.status;
-      const label = option.dataset.label;
-      if (currentStatusDot) currentStatusDot.className = `status-dot status-${status}`;
-      if (currentStatusLabel) currentStatusLabel.textContent = label;
     });
   });
 
@@ -239,6 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("faculty-status-changed", (event) => {
     const newStatus = event.detail && event.detail.status;
     if (!newStatus) return;
+    if (statusPanel && !statusPanel.hidden) return;
 
     statusOptions.forEach((opt) => {
       opt.classList.toggle("is-selected", opt.dataset.status === newStatus);
@@ -556,11 +555,6 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        if (typeof window.setFacultyOnlineStatus === "function") {
-          window.setFacultyOnlineStatus("online");
-        } else {
-          setCurrentStatus("online", "Online");
-        }
         didSaveHours = true;
       }
 

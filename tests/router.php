@@ -46,6 +46,8 @@ if (str_starts_with($path, '/_test/ui/')) {
     $case = basename($path);
     $pages = ['faculty' => 'faculty-profile.html', 'student' => 'student-profile.html', 'request' => 'request-consultation.html', 'availability' => 'faculty-availability.html', 'reschedule' => 'reschedule-consultation.html', 'fresh-tab' => 'faculty-profile.html', 'wrong-role' => 'faculty-profile.html'];
     $pages['directory'] = 'faculty-directory.html';
+    $pages['student-dashboard'] = 'student-dashboard.html';
+    $pages['faculty-dashboard'] = 'faculty-dashboard.html';
     if (!isset($pages[$case])) { http_response_code(404); exit; }
     $html = file_get_contents($root . '/' . $pages[$case]);
     $html = str_replace('<head>', '<head><base href="/"><script>window.TEST_CASE = ' . json_encode($case) . ';</script><script src="tests/browser-regressions.js"></script>', $html);

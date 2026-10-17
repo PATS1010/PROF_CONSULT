@@ -51,6 +51,7 @@ const FACULTY_STATUS_FROM_API = {
   meeting: "meeting",
   consultation: "consultation",
   "on leave": "onleave",
+  onleave: "onleave",
   offline: "offline",
 };
 
@@ -1033,7 +1034,7 @@ document.addEventListener(
           "statusPanel"
         );
 
-      if (!statusPanel) {
+      if (!statusPanel || !statusPanel.hidden) {
 
         return;
       }
@@ -1250,9 +1251,10 @@ document.addEventListener(
       }).catch(() => {});
     }
     refreshPresence();
-    window.setInterval(refreshPresence, 20000);
+    window.setInterval(refreshPresence, 5000);
     window.addEventListener("pagehide", leavePage);
     window.addEventListener("pageshow", refreshPresence);
+    window.addEventListener("focus", refreshPresence);
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) refreshPresence();
     });

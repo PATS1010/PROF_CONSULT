@@ -39,4 +39,17 @@ $leave->execute([1, 'old-page']);
 expectStatus($db, '11:30:01', 'available', 'A delayed leave from an old page cannot clear the new page presence');
 $leave->execute([1, 'new-page']);
 expectStatus($db, '11:30:01', 'offline', 'Leaving the current page clears online presence');
-echo "Completed 17 deterministic presence and schedule checks.\n";
+foreach (['available', 'meeting', 'consultation', 'on leave', 'offline'] as $status) {
+    $db->prepare('INSERT INTO availability (Faculty_ID,Status) VALUES (1,?)')->execute([$status]);
+    $checkedIn = $status !== 'offline';
+    touchFacultyPresence($db, 1, 'all-statuses', $checkedIn, at('15:00:00'));
+    expectStatus($db, '15:00:01', $status, 'Server preserves saved ' . $status);
+    touchFacultyPresence($db, 1, 'all-statuses', null, at('15:00:30'));
+    expectStatus($db, '15:00:31', $status, 'Heartbeat preserves ' . $status);
+    expectStatus($db, '15:02:01', 'offline', 'Expired presence resolves ' . $status . ' to offline');
+    touchFacultyPresence($db, 1, 'all-statuses', $checkedIn, at('09:14:59'));
+    expectStatus($db, '09:15:00', 'consultation', 'Active booking overrides ' . $status);
+    touchFacultyPresence($db, 1, 'all-statuses', null, at('09:29:59'));
+    expectStatus($db, '09:30:00', $status, 'Booking end restores ' . $status);
+}
+echo "Completed 42 deterministic presence and schedule checks.\n";

@@ -1,6 +1,13 @@
 // Loaded into the real pages by the local test router, before application scripts.
 const recorded = [];
 const alerts = [];
+const STATUS_CASES = [
+  ['available', 'online', 'Online'],
+  ['meeting', 'meeting', 'Meeting'],
+  ['consultation', 'consultation', 'Consultation'],
+  ['on leave', 'onleave', 'On Leave'],
+  ['offline', 'offline', 'Offline'],
+];
 let failStatusSave = false;
 let fixtureFacultyStatus = 'offline';
 let failPhotoFetch = false;
@@ -14,7 +21,7 @@ window.setInterval = (callback, milliseconds, ...args) => {
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
-const fixtureRole = ['student', 'request', 'wrong-role', 'directory'].includes(TEST_CASE) ? 'student' : 'faculty';
+const fixtureRole = ['student', 'student-dashboard', 'request', 'wrong-role', 'directory'].includes(TEST_CASE) ? 'student' : 'faculty';
 if (TEST_CASE !== 'fresh-tab') {
   sessionStorage.setItem('profconsult_tab_role', fixtureRole);
   sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));
@@ -42,7 +49,7 @@ window.fetch = async (url, options = {}) => {
         result.status = fixtureFacultyStatus;
         result.checked_in = fixtureFacultyStatus !== 'offline';
       }
-    } else result.availability = [{ Status: 'offline' }];
+    } else result.availability = [{ Status: fixtureFacultyStatus }];
   } else if (String(url).includes('manage-consultation-requests.php') && options.method !== 'POST') {
     result.requests = [{ Request_ID: 21, Student_Name: 'Fresh Server Student', Purpose: 'Server request', Request_Date: '2030-01-07', Preferred_Time: '09:00:00', Year_Level: '1', Section: 'A' }];
   } else if (String(url).includes('get-faculty-schedule.php')) {
@@ -94,6 +101,40 @@ document.addEventListener('DOMContentLoaded', async () => {
       intervalTasks.find(task => task.milliseconds === 5000).callback();
       await delay();
       check(panel.querySelector('.profile-status-label').textContent === 'Status: Online', 'Regular polling follows check-in without reopening the profile');
+      for (const [apiStatus, cssStatus, label] of STATUS_CASES) {
+        directoryFacultyStatus = apiStatus;
+        intervalTasks.find(task => task.milliseconds === 5000).callback();
+        await delay();
+        check(panel.querySelector('.profile-status-label').textContent === 'Status: ' + label && !!panel.querySelector('.status-' + cssStatus), 'Directory profile synchronizes ' + label + ' text and indicator');
+        check(document.querySelector('#facultyList [data-faculty-id="1"]').dataset.status === cssStatus, 'Directory list synchronizes ' + label);
+      }
+    }
+    if (TEST_CASE === 'student-dashboard') {
+      for (const [apiStatus, cssStatus, label] of STATUS_CASES) {
+        directoryFacultyStatus = apiStatus;
+        intervalTasks.find(task => task.milliseconds === 5000).callback();
+        await delay();
+        const card = document.querySelector('.professor-card[data-faculty-id="1"]');
+        check(card.dataset.status === cssStatus && card.querySelector('.professor-meta').textContent.endsWith(label) && !!card.querySelector('.status-' + cssStatus), 'Student dashboard synchronizes ' + label + ' text and indicator');
+      }
+    }
+    if (TEST_CASE === 'faculty-dashboard') {
+      for (const [apiStatus, uiStatus, label] of STATUS_CASES.filter(item => item[1] !== 'offline')) {
+        document.getElementById('changeStatusButton').click();
+        document.querySelector(`.faculty-status-option[data-status="${uiStatus}"]`).click();
+        const confirmedLabel = document.getElementById('currentStatusLabel').textContent;
+        intervalTasks.filter(task => task.milliseconds === 5000).forEach(task => task.callback());
+        await delay();
+        check(document.querySelector(`.faculty-status-option[data-status="${uiStatus}"]`).classList.contains('is-selected'), 'Professor dashboard heartbeat preserves the ' + label + ' draft');
+        check(document.getElementById('currentStatusLabel').textContent === confirmedLabel, 'Unsaved ' + label + ' does not change the dashboard status');
+        document.getElementById('saveStatusButton').click();
+        await delay();
+        check(window.getFacultyOnlineStatus() === uiStatus && document.getElementById('currentStatusLabel').textContent === label && document.getElementById('currentStatusDot').classList.contains('status-' + uiStatus), 'Professor dashboard synchronizes ' + label + ' text and indicator');
+        await new Promise(resolve => setTimeout(resolve, 220));
+      }
+      document.getElementById('facultyCheckOutButton').click();
+      await delay();
+      check(document.getElementById('currentStatusLabel').textContent === 'Offline', 'Professor dashboard synchronizes Offline after Check Out');
     }
     if (TEST_CASE === 'faculty' || TEST_CASE === 'student') {
       const photo = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhoto' : 'profilePhoto');
@@ -161,7 +202,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const previousHeartbeats = recorded.filter(record => record.url?.includes('update-faculty-presence.php')).length;
       Object.defineProperty(document, 'hidden', { configurable: true, value: true });
       document.dispatchEvent(new Event('visibilitychange'));
-      intervalTasks.filter(task => task.milliseconds === 20000).forEach(task => task.callback());
+      intervalTasks.filter(task => task.milliseconds === 5000).forEach(task => task.callback());
       await delay();
       check(leaveCount() === previousLeaves, 'Switching away from the professor tab does not mark them offline');
       check(recorded.filter(record => record.url?.includes('update-faculty-presence.php')).length > previousHeartbeats, 'An open background professor tab continues its heartbeat');
@@ -186,6 +227,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('saveStatusButton').click();
       await delay();
       check(window.getFacultyOnlineStatus() === 'meeting', 'Confirmed availability save updates the interface');
+      for (const [apiStatus, uiStatus, label] of STATUS_CASES.filter(item => item[1] !== 'offline')) {
+        document.getElementById('changeStatusButton').click();
+        const confirmedStatus = window.getFacultyOnlineStatus();
+        document.querySelector(`.faculty-status-option[data-status="${uiStatus}"]`).click();
+        check(document.getElementById('availabilityStatusLabel').textContent === window.FACULTY_STATUS_LABELS[confirmedStatus], 'Draft ' + label + ' is not displayed as the saved status');
+        intervalTasks.filter(task => task.milliseconds === 5000).forEach(task => task.callback());
+        await delay();
+        check(document.querySelector(`.faculty-status-option[data-status="${uiStatus}"]`).classList.contains('is-selected'), 'Heartbeat preserves the ' + label + ' draft selection');
+        document.getElementById('saveStatusButton').click();
+        await delay();
+        check(window.getFacultyOnlineStatus() === uiStatus && document.getElementById('availabilityStatusLabel').textContent === label, 'Saving ' + label + ' updates the confirmed status');
+        const statusWritesBefore = recorded.filter(record => record.url?.includes('manage-faculty-availability.php') && record.options.method === 'POST').length;
+        document.getElementById('editHoursButton').click();
+        document.getElementById('saveHoursButton').click();
+        await delay();
+        check(window.getFacultyOnlineStatus() === uiStatus && recorded.filter(record => record.url?.includes('manage-faculty-availability.php') && record.options.method === 'POST').length === statusWritesBefore, 'Saving hours preserves ' + label + ' without changing status');
+        await new Promise(resolve => setTimeout(resolve, 220));
+      }
+      document.getElementById('facultyCheckOutButton').click();
+      await delay();
+      check(window.getFacultyOnlineStatus() === 'offline' && document.getElementById('availabilityStatusLabel').textContent === 'Offline', 'Check Out synchronizes Offline on the availability page');
     } else if (TEST_CASE === 'reschedule') {
       check(document.getElementById('rescheduleStudentName').textContent === 'Fresh Server Student', 'Reschedule loads the request from the server without local storage');
       const schedule = recorded.find((r) => r.url?.includes('get-faculty-schedule.php'));
