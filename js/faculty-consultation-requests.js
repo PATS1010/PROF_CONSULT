@@ -147,6 +147,8 @@ function formatRequestDate(dateValue, timeValue) {
 function mapApiRequest(record) {
   const apiStatus = String(record.Status || "pending").toLowerCase();
   const status = apiStatus === "approved" || apiStatus === "rescheduled" ? "upcoming" : apiStatus;
+  const yearNumber = String(record.Year_Level || "").match(/\d+/)?.[0] || "";
+  const section = String(record.Section || "").trim();
   return {
     id: String(record.Request_ID),
     name: record.Student_Name || "",
@@ -157,7 +159,7 @@ function mapApiRequest(record) {
     scheduledSortKey: `${record.Request_Date || "9999-12-31"}T${record.Preferred_Time || "23:59:59"}`,
     preferredTimeLabel: formatTimeRange(record.Preferred_Time),
     program: record.Program || "",
-    yearSet: `${record.Year_Level || ""}${record.Section || ""}`,
+    yearSet: /^\d/.test(section) ? section : `${yearNumber}${section}`,
     message: record.Additional_Message || "",
     response: record.Response || "",
     status,
