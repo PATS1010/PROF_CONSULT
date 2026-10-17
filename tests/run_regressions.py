@@ -232,6 +232,16 @@ try:
         result, html = login_flow(chrome, base + '/_test/ui/directory', RUNTIME / ('chrome-' + label), RUNTIME / (label + '.log'), result_id='regression-result', viewport=(width, height))
         (RUNTIME / (label + '.html')).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Directory layout and filters ' + label + ': ' + result)
+    for entry in ['login.html', 'student-login.html', 'faculty-login.html']:
+        for role in ['student', 'faculty']:
+            label = 'register-' + entry + '-' + role
+            result, html = login_flow(chrome, base + '/_test/public/' + entry + '?role=' + role, RUNTIME / ('chrome-' + label), RUNTIME / (label + '.log'), result_id='regression-result', viewport=(390, 844))
+            check(result.startswith('PASS '), 'Registration navigation ' + label + ': ' + result)
+    for width, height in [(320, 568), (1280, 900)]:
+        label = f'landing-{width}'
+        result, html = login_flow(chrome, base + '/_test/public/landingpage.html', RUNTIME / ('chrome-' + label), RUNTIME / (label + '.log'), result_id='regression-result', viewport=(width, height), screenshot_path=RUNTIME / (label + '.png'))
+        (RUNTIME / (label + '.html')).write_text(html, encoding='utf-8')
+        check(result.startswith('PASS '), 'Landing page ' + label + ': ' + result)
     print(f'Completed {checks} regression checks plus 17 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()

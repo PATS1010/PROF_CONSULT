@@ -4,8 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const NAV_TARGETS = {
     "back": "landingpage.html",
     "forgot-password": "forgot-password.html",
-    "create-student-account": "create-student-account.html",
-    "create-faculty-account": "create-faculty-account.html",
+    "register": "choose-account.html",
   };
 
   Object.entries(NAV_TARGETS).forEach(([navKey, targetPage]) => {

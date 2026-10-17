@@ -15,10 +15,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.querySelectorAll('[data-nav="create-account"]').forEach((link) => {
+  document.querySelectorAll('[data-nav="register"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      window.location.href = "create-faculty-account.html";
+      window.location.href = "choose-account.html";
     });
   });
 

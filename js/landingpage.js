@@ -31,7 +31,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.querySelectorAll('[data-nav="home"]').forEach((link) => {
     link.addEventListener("click", (event) => {
       event.preventDefault();
-      window.location.href = "index.html";
+      document.getElementById("hero")?.scrollIntoView({ behavior: "smooth" });
+      if (navLinks) navLinks.classList.remove("is-open");
+      navToggle?.setAttribute("aria-expanded", "false");
     });
   });
 

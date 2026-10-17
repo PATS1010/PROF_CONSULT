@@ -269,6 +269,14 @@ html[data-theme="dark"] .diagram-card {
   box-shadow: var(--theme-shadow);
 }
 
+html[data-theme="dark"] .team-chart {
+  background-color: var(--theme-card);
+  border: 1px solid var(--theme-border);
+  box-shadow: var(--theme-shadow);
+}
+html[data-theme="dark"] .team-member-name { color: var(--theme-text); }
+html[data-theme="dark"] .team-member-role { color: var(--theme-text-soft); }
+
 html[data-theme="dark"] .contact-info-title {
   color: var(--theme-danger);
 }

@@ -14,6 +14,16 @@ register_shutdown_function(static function () use ($path): void {
         error_log('TEST ' . $_SERVER['REQUEST_METHOD'] . ' ' . $path . ' -> ' . http_response_code());
     }
 });
+if (str_starts_with($path, '/_test/public/') || in_array($path, ['/choose-account.html', '/create-student-account.html', '/create-faculty-account.html'], true)) {
+    $entry = basename($path);
+    if (!in_array($entry, ['login.html', 'student-login.html', 'faculty-login.html', 'choose-account.html', 'create-student-account.html', 'create-faculty-account.html', 'landingpage.html'], true)) { http_response_code(404); exit; }
+    $html = file_get_contents($root . '/' . $entry);
+    $html = preg_replace('~<link[^>]+href="https://[^>]+>~', '', $html);
+    $html = str_replace('<head>', '<head><base href="/"><script src="tests/public-pages.js"></script>', $html);
+    header('Content-Type: text/html; charset=utf-8');
+    echo $html;
+    exit;
+}
 if (str_starts_with($path, '/_test/login/')) {
     $entry = basename($path);
     if (!in_array($entry, ['login.html', 'student-login.html', 'faculty-login.html'], true)) { http_response_code(404); exit; }
