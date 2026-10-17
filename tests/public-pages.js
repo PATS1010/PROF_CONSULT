@@ -13,6 +13,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (document.querySelector('.hero')) {
       const chart = document.querySelector('.team-chart');
       check(chart.querySelectorAll('.team-member').length === 7, 'All original team members are present');
+      const image = chart.querySelector('.team-chart-image');
+      await image.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0);
+      check(context.getImageData(0, 0, 1, 1).data[3] === 0, 'Team chart canvas has a transparent background');
+      check(context.getImageData(Math.round(canvas.width * .441), Math.round(canvas.height * .0865), 1, 1).data[3] === 0, 'Background inside the portrait is transparent');
       for (const theme of ['light', 'dark']) {
         window.ProfConsultTheme.set(theme);
         await wait(300);
@@ -29,6 +38,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(location.pathname === originalPath && scrollY < 5, 'Home returns to the title section on the landing page');
       check(!document.getElementById('navLinks').classList.contains('is-open'), 'Home closes the phone menu');
       document.getElementById('about-us').scrollIntoView({behavior: 'instant'});
+      const previewTheme = new URLSearchParams(location.search).get('theme');
+      if (previewTheme === 'light' || previewTheme === 'dark') window.ProfConsultTheme.set(previewTheme);
       await wait();
       finish('PASS landing Home navigation, team portraits, light/dark backgrounds, and responsive layout');
       return;
