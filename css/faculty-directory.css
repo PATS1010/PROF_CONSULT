@@ -624,6 +624,7 @@ input {
 }
 
 .directory-container.is-profile-view .directory-list-panel .search-bar,
+.directory-container.is-profile-view .directory-dashboard-back,
 .directory-container.is-profile-view .faculty-list-container {
   display: none;
 }
@@ -640,6 +641,9 @@ input {
 
 .directory-back-button {
   display: inline-block;
+  min-height: 44px;
+  box-sizing: border-box;
+  text-decoration: none;
   padding: 9px 22px;
   border-radius: 999px;
   background: linear-gradient(90deg, #7a0f0f 0%, #e8560f 100%);
@@ -649,6 +653,8 @@ input {
   box-shadow: 0 8px 18px rgba(122, 15, 15, 0.25);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
+
+.directory-dashboard-back { text-align: left; }
 
 .directory-back-button:hover {
   opacity: 0.92;
