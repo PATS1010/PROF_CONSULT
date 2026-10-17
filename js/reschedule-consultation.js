@@ -25,12 +25,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!response.ok || !result.ok) throw new Error(result.message || "Unable to load the consultation request.");
     const record = (result.requests || []).find((item) => String(item.Request_ID) === String(targetId));
     if (record) {
+      const yearNumber = String(record.Year_Level || "").match(/\d+/)?.[0] || "";
+      const section = String(record.Section || "").trim();
       request = {
         id: String(record.Request_ID),
         type: record.Purpose || "Consultation",
         message: record.Additional_Message || "",
         name: record.Student_Name || "",
-        yearSet: `${record.Year_Level || ""} ${record.Section || ""}`.trim(),
+        yearSet: /^\d/.test(section) ? section : `${yearNumber}${section}`,
         preferredDateISO: record.Request_Date || "",
         preferredTimeLabel: "",
       };
