@@ -739,9 +739,8 @@ input {
   font-size: 0.9rem;
   font-weight: 700;
   color: #2b2b2b;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
   text-align: left;
   margin-bottom: 4px;
   transition: color 0.25s ease;

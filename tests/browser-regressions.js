@@ -99,6 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(order() === '199,103,104,102,101,105', 'Newly accepted consultation is inserted in chronological order');
     }
     if (TEST_CASE === 'directory') {
+      const facultyName = document.querySelector('#facultyList [data-faculty-id="1"] .faculty-name');
+      check(facultyName.textContent === 'Sean Test III', 'Directory displays the full saved professor name including suffix');
+      check(getComputedStyle(facultyName).whiteSpace === 'normal', 'Full names wrap instead of being truncated on phones');
       const filters = document.querySelectorAll('#filterPanel .filter-option');
       check(filters.length === 3 && !document.querySelector('#filterPanel [data-status]'), 'Directory filter contains only departments');
       check(document.querySelectorAll('#facultyList .faculty-card:not([hidden])').length === 2, 'Directory shows both online and offline professors');

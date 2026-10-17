@@ -68,11 +68,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function mapFacultyRecord(record) {
     const status = normalizeStatus(record.Current_Status);
     const fullName = record.Full_Name || "";
-    const nameParts = fullName.trim().split(/\s+/);
     const program = departmentLabel(record.Department || "Faculty");
     return {
       id: String(record.Faculty_ID),
-      lastName: nameParts[nameParts.length - 1] || fullName,
       fullName,
       program,
       departmentKey: departmentKey(program),
@@ -127,7 +125,7 @@ document.addEventListener("DOMContentLoaded", () => {
       card.innerHTML = `
         <img src="${faculty.photo}" alt="${faculty.fullName}" class="faculty-photo">
         <div class="faculty-info">
-          <p class="faculty-name">Engr. ${faculty.lastName}</p>
+          <p class="faculty-name"></p>
           <p class="faculty-meta faculty-meta-row">
             <span>${faculty.program}</span>
             <span class="faculty-meta-dot" aria-hidden="true">&middot;</span>
@@ -143,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ></span>
       `;
 
+      card.querySelector(".faculty-name").textContent = faculty.fullName;
       facultyListEl.appendChild(card);
     });
 
