@@ -218,9 +218,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     if (TEST_CASE === 'faculty') {
       const button = document.getElementById('facultyProfilePhotoEdit');
-      check(button.tagName === 'BUTTON' && !button.hidden, 'Faculty photo button is visible and keyboard accessible');
+      check(button.hidden && getComputedStyle(button).display === 'none', 'Faculty photo pencil is hidden before editing');
       check(recorded.some((r) => r.url?.includes('profile-photo.php?user_id=1&v=')), 'Faculty photo URL retains its account query parameter');
       document.getElementById('editProfileButton').click();
+      check(button.tagName === 'BUTTON' && !button.hidden && getComputedStyle(button).display !== 'none', 'Faculty photo pencil becomes visible in edit mode');
       check(document.getElementById('editFirstName').value === 'Juan', 'First name remains in the first name field');
       check(document.getElementById('editLastName').value === 'Santos', 'Last name is separate from the suffix');
       check(document.getElementById('editFacultySuffix').value === 'Jr.', 'Suffix reloads into the suffix field');
@@ -228,6 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       await delay();
       const saved = recorded.find((r) => r.url?.includes('update-faculty-profile.php'));
       const body = JSON.parse(saved.options.body);
+      check(button.hidden && getComputedStyle(button).display === 'none', 'Faculty photo pencil hides again after saving');
       check(!('consultation_hours' in body) && !('office' in body), 'Profile save does not clear consultation hours or office');
       check(body.full_name === 'Juan A. Santos Jr.', 'Suffix survives the profile save round trip');
       document.getElementById('facultyCheckInButton').click();

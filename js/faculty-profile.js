@@ -403,6 +403,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------
   function setButtonMode(editing) {
     isEditing = editing;
+    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = !editing;
     editProfileButton.textContent = editing ? "Save Changes" : "Edit Profile";
   }
 
@@ -432,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     viewSection.hidden = true;
     editForm.hidden = false;
-    if (facultyProfilePhotoEdit) facultyProfilePhotoEdit.hidden = false;
     setButtonMode(true);
   }
 
