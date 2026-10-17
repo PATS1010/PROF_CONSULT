@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (facultyId === lastCheckedFacultyId) {
       if (lastFacultyIdExists) {
         showFacultyIdError(
-          "This faculty ID already has an account. Faculty cannot create a second account."
+          "This faculty ID already has an account."
         );
       }
       return lastFacultyIdExists;
@@ -81,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (lastFacultyIdExists) {
       showFacultyIdError(
-        "This faculty ID already has an account. Faculty cannot create a second account."
+        "This faculty ID already has an account."
       );
     } else {
       clearFacultyIdError();

@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (lastCheckedStudentNumber === studentNumber) {
       if (lastStudentNumberExists) {
         showStudentNumberError(
-          "This student ID already has an account. Students cannot create a second account."
+          "This student ID already has an account."
         );
       }
 
@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (lastStudentNumberExists) {
       showStudentNumberError(
-        "This student ID already has an account. Students cannot create a second account."
+        "This student ID already has an account."
       );
     } else {
       clearStudentNumberError();

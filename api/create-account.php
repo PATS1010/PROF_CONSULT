@@ -34,7 +34,7 @@ try {
     if ($checkUsername->fetchColumn()) {
         $db->rollBack();
         $idLabel = $role === 'faculty' ? 'faculty ID' : 'student ID';
-        fail('This ' . $idLabel . ' already has an account. You cannot create a second account.', 409);
+        fail('This ' . $idLabel . ' already has an account.', 409);
     }
 
     $checkEmail = $db->prepare('SELECT 1 FROM users WHERE LOWER(Email) = ? LIMIT 1');
