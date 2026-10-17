@@ -173,6 +173,39 @@ try:
     request('/_test/session?id=3')
     check(request('/' + photo_path)[0] == 403, 'TC18 another student cannot read a private student photo')
 
+    remove_student = b'role=student&action=remove'
+    remove_faculty = b'role=faculty&action=remove'
+    form_type = 'application/x-www-form-urlencoded'
+    request('/api/profile-photo.php', raw=remove_student + b'&user_id=2', content_type=form_type)
+    request('/_test/session?id=2')
+    check(request('/' + photo_path)[0] == 200, 'A different student cannot remove the owner photo by supplying its user ID')
+    check(request('/api/profile-photo.php', raw=remove_student, content_type=form_type, proof=False)[0] == 401, 'Photo removal requires the authenticated tab proof')
+    check(request('/api/profile-photo.php', raw=remove_faculty, content_type=form_type)[0] == 403, 'Student cannot remove a photo using the faculty role')
+    db = sqlite3.connect(db_file)
+    db.execute("CREATE TRIGGER reject_photo_clear BEFORE UPDATE OF Profile_Photo ON users WHEN NEW.User_ID=2 AND NEW.Profile_Photo IS NULL BEGIN SELECT RAISE(ABORT, 'Simulated photo clear failure'); END;")
+    db.commit()
+    check(request('/api/profile-photo.php', raw=remove_student, content_type=form_type)[0] == 500, 'Failed photo removal is reported')
+    check(request('/' + photo_path)[0] == 200, 'Failed removal rolls back deletion of the photo bytes')
+    db.execute('DROP TRIGGER reject_photo_clear')
+    db.commit()
+    status, result = request('/api/profile-photo.php', raw=remove_student, content_type=form_type)
+    check(status == 200 and result['profile_photo'] == '', 'Student can remove their uploaded profile picture')
+    check(request('/api/get-current-session.php?role=student')[1]['user']['profile_photo'] == '' and request('/' + photo_path)[0] == 404, 'Removed student photo stays removed on session reload and cannot be downloaded')
+    check(db.execute('SELECT COUNT(*) FROM user_profile_photos WHERE User_ID=2').fetchone()[0] == 0 and db.execute('SELECT Profile_Photo FROM users WHERE User_ID=2').fetchone()[0] is None, 'Removal clears both the stored bytes and account photo reference')
+    check(request('/api/profile-photo.php', raw=remove_student, content_type=form_type)[0] == 200, 'Repeated removal is safe when no photo remains')
+    db.close()
+    check(request('/api/profile-photo.php', raw=upload, content_type=f'multipart/form-data; boundary={boundary}')[0] == 200, 'Student can upload a new photo after removal')
+    request('/_test/session?id=1')
+    faculty_upload = upload.replace(b'\r\nstudent\r\n', b'\r\nfaculty\r\n')
+    status, result = request('/api/profile-photo.php', raw=faculty_upload, content_type=f'multipart/form-data; boundary={boundary}')
+    check(status == 200, 'Faculty can upload a profile photo before removal')
+    faculty_photo_path = result['profile_photo']
+    status, result = request('/api/profile-photo.php', raw=remove_faculty + b'&user_id=2', content_type=form_type)
+    check(status == 200 and result['profile_photo'] == '' and request('/' + faculty_photo_path)[0] == 404, 'Faculty can remove only their own uploaded photo')
+    check(request('/' + photo_path)[0] == 200, 'Faculty photo removal does not delete the student photo')
+    check(request('/api/get-current-session.php?role=faculty')[1]['user']['profile_photo'] == '', 'Faculty session reload retains the default-photo state')
+    request('/_test/session?id=3')
+
     status, result = request('/api/send-account-verification-code.php', {'role': 'student', 'email': 'new@example.test', 'method': 'email'})
     check(status == 200 and result['ok'], 'TC1 verification request succeeds with the delivery fixture')
     token = result['token']

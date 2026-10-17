@@ -12,6 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/student-profile.css">
+  <link rel="stylesheet" href="css/profile-photo-actions.css">
   <link rel="stylesheet" href="css/dark-theme.css">
   <script src="js/student-notification-toast.js"></script>
   <link rel="stylesheet" href="css/notification-popup.css">
@@ -102,6 +103,7 @@
             <input type="file" id="profilePhotoInput" accept="image/*" class="profile-photo-input">
             <span aria-hidden="true">&#9998;</span>
           </label>
+          <button type="button" class="profile-photo-remove" id="profilePhotoRemove" hidden>Remove Photo</button>
         </div>
 
         <div class="profile-fields">
@@ -200,6 +202,7 @@
   </main>
 
   <script src="js/notification-state.js"></script>
-  <script src="js/student-profile.js"></script>
+  <script src="js/profile-photo-actions.js"></script>
+  <script src="js/student-profile.js?v=photo-remove-3"></script>
 </body>
 </html>

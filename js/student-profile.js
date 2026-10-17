@@ -164,11 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sectionSelect) sectionSelect.value = studentDetails.section;
     if (emailInput) emailInput.value = studentDetails.email;
     if (phoneInput) phoneInput.value = studentDetails.phone;
-    if (profilePhoto) {
-      profilePhoto.src = user.profile_photo
-        ? `${user.profile_photo}${user.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`
-        : "images/default-profile.jpg";
-    }
+    photoActions.sync(user.profile_photo || "");
     renderFullNameDisplay();
     populateNameEditInputs();
   }
@@ -319,6 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const editProfileButton = document.getElementById("editProfileButton");
   const profileInfoCard = document.querySelector(".profile-info-card");
   const profilePhotoEdit = document.getElementById("profilePhotoEdit");
+  const profilePhotoRemove = document.getElementById("profilePhotoRemove");
 
   const editableFields = [courseSelect, yearLevelSelect, sectionSelect, emailInput, phoneInput];
 
@@ -347,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     profileInfoCard.classList.add("is-editing");
     profilePhotoEdit.hidden = false;
+    if (profilePhotoRemove) profilePhotoRemove.hidden = false;
     editProfileButton.textContent = "Save Changes";
   }
 
@@ -408,6 +406,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     profileInfoCard.classList.remove("is-editing");
     profilePhotoEdit.hidden = true;
+    if (profilePhotoRemove) profilePhotoRemove.hidden = true;
     editProfileButton.textContent = "Edit Profile";
 
   }
@@ -432,42 +431,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const profilePhotoInput = document.getElementById("profilePhotoInput");
   const profilePhoto = document.getElementById("profilePhoto");
 
-  if (profilePhotoInput && profilePhoto) {
-    profilePhotoInput.addEventListener("change", async () => {
-      const file = profilePhotoInput.files && profilePhotoInput.files[0];
-      if (!file) return;
-
-      const previousSrc = profilePhoto.src;
-      const previewUrl = URL.createObjectURL(file);
-      profilePhoto.src = previewUrl;
-
-      const formData = new FormData();
-      formData.append("profile_photo", file);
-      formData.append("role", "student");
-
-      try {
-        const response = await fetch("api/profile-photo.php", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "Accept": "application/json" },
-          body: formData,
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok || !result.ok) {
-          throw new Error(result.message || "Unable to save profile photo.");
-        }
-        if (result.profile_photo) {
-          profilePhoto.src = `${result.profile_photo}${result.profile_photo.includes("?") ? "&" : "?"}v=${Date.now()}`;
-        }
-      } catch (error) {
-        profilePhoto.src = previousSrc;
-        window.alert(error.message || "Unable to save profile photo.");
-      } finally {
-        URL.revokeObjectURL(previewUrl);
-        profilePhotoInput.value = "";
-      }
-    });
-  }
+  const photoActions = window.ProfConsultProfilePhotoActions({
+    role: "student", photo: profilePhoto, input: profilePhotoInput,
+    uploadButton: profilePhotoEdit, removeButton: profilePhotoRemove,
+    editButton: editProfileButton, isEditing: () => isEditing,
+  });
 
 });
 // Logout confirmation modal

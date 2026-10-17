@@ -11,6 +11,9 @@ const STATUS_CASES = [
 let failStatusSave = false;
 let fixtureFacultyStatus = 'offline';
 let failPhotoFetch = false;
+let failPhotoRemoval = false;
+let holdPhotoRemoval = false;
+let releasePhotoRemoval = null;
 let directoryFacultyStatus = 'online';
 let directoryHours = null;
 let failHoursSave = false;
@@ -40,12 +43,24 @@ window.fetch = async (url, options = {}) => {
   let result = { ok: true };
   let status = 200;
   if (String(url).includes('profile-photo.php') && failPhotoFetch) status = 404;
-  if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
+  if (String(url).includes('profile-photo.php') && options.method === 'POST') {
+    check(options.body.get('role') === fixtureRole, 'Photo action uses the current profile role');
+    if (options.body.get('action') === 'remove') {
+      if (holdPhotoRemoval) await new Promise(resolve => { releasePhotoRemoval = resolve; });
+      if (failPhotoRemoval) { status = 500; result = { ok: false, message: 'Photo removal rejected' }; }
+      else { user.profile_photo = ''; result.profile_photo = ''; }
+    } else {
+      user.profile_photo = 'api/profile-photo.php?user_id=1';
+      result.profile_photo = user.profile_photo;
+    }
+  }
+  else if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('get-faculty-directory.php')) result.faculty = [
     { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: directoryFacultyStatus, Consultation_Hours: directoryHours ?? JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
     { Faculty_ID: 2, Full_Name: 'Offline Faculty', Department: 'Civil Engineering', Current_Status: 'offline' },
   ];
   else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
+  else if (String(url).includes('update-student-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
   else if (String(url).includes('manage-consultation-hours.php')) {
     if (options.method === 'POST') {
       if (holdHoursSave) await new Promise(resolve => { releaseHoursSave = resolve; });
@@ -197,6 +212,41 @@ document.addEventListener('DOMContentLoaded', async () => {
       await delay();
       await photo.decode();
       check(photo.src.startsWith('blob:') && photo.naturalWidth > 0, 'A valid uploaded photo can replace the fallback');
+      const remove = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhotoRemove' : 'profilePhotoRemove');
+      const input = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhotoInput' : 'profilePhotoInput');
+      const edit = document.getElementById('editProfileButton');
+      check(remove.hidden, 'Remove Photo is hidden in view mode');
+      edit.click();
+      check(!remove.hidden && !remove.disabled, 'Remove Photo is available in edit mode with an uploaded picture');
+      const removeRect = remove.getBoundingClientRect();
+      check(removeRect.height >= 44 && removeRect.left >= 0 && removeRect.right <= innerWidth, 'Remove Photo is reachable on a phone without horizontal overflow');
+      const previousPhoto = photo.src;
+      failPhotoRemoval = true;
+      remove.click();
+      await delay();
+      check(photo.src === previousPhoto && !remove.disabled && alerts.includes('Photo removal rejected'), 'Failed removal retains the existing picture and can be retried');
+      failPhotoRemoval = false;
+      holdPhotoRemoval = true;
+      const photoPosts = () => recorded.filter(record => record.url?.includes('profile-photo.php') && record.options.method === 'POST').length;
+      const previousPosts = photoPosts();
+      remove.click();
+      remove.click();
+      check(photoPosts() === previousPosts + 1 && input.disabled && edit.disabled, 'Pending removal blocks repeated clicks and competing photo edits');
+      holdPhotoRemoval = false;
+      releasePhotoRemoval();
+      await delay();
+      await photo.decode();
+      check(photo.src.endsWith('/images/default-profile.jpg') && remove.disabled, 'Removing the picture restores the default avatar and disables redundant removal');
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII='), char => char.charCodeAt(0))], 'new-photo.png', { type: 'image/png' }));
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change'));
+      await delay();
+      await photo.decode();
+      check(!remove.disabled && photo.src.startsWith('blob:'), 'A new picture can be uploaded after removing the old one');
+      edit.click();
+      await delay();
+      check(remove.hidden, 'Remove Photo hides again when profile editing ends');
     }
     if (TEST_CASE === 'request' || TEST_CASE === 'reschedule') {
       const isRequest = TEST_CASE === 'request';

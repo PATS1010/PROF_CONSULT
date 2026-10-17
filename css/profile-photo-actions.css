@@ -1,0 +1,21 @@
+.profile-photo-remove {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: 600 .75rem/1.3 var(--font-main, sans-serif);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.profile-photo-remove[hidden] { display: none !important; }
+.profile-photo-remove:disabled { opacity: .5; cursor: default; }
+.profile-photo-remove:focus-visible { outline: 2px solid #f54a00; outline-offset: 3px; }
+.profile-photo-wrapper .profile-photo-remove {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+.profile-info-card.is-editing .profile-photo-wrapper { margin-bottom: 52px; }

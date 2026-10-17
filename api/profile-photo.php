@@ -49,6 +49,19 @@ $user = in_array($requestedRole, ['student', 'faculty'], true)
 
 try {
     $db = database();
+    $action = clean((string) ($_POST['action'] ?? 'upload'));
+    if ($action === 'remove') {
+        $db->beginTransaction();
+        $delete = $db->prepare('DELETE FROM user_profile_photos WHERE User_ID = ?');
+        $delete->execute([(int) $user['id']]);
+        $update = $db->prepare('UPDATE users SET Profile_Photo = NULL WHERE User_ID = ?');
+        $update->execute([(int) $user['id']]);
+        $db->commit();
+        $user['profile_photo'] = '';
+        rememberUserSession($user);
+        reply(['ok' => true, 'profile_photo' => '']);
+    }
+    if ($action !== 'upload') fail('Please choose a valid photo action.');
     if (empty($_FILES['profile_photo']) || !is_array($_FILES['profile_photo'])) {
         fail('Please choose a profile photo.');
     }
@@ -93,5 +106,5 @@ try {
         $db->rollBack();
     }
     error_log($exception->getMessage());
-    fail('Unable to save the profile photo.', 500);
+    fail(($action ?? 'upload') === 'remove' ? 'Unable to remove the profile photo.' : 'Unable to save the profile photo.', 500);
 }
