@@ -441,11 +441,21 @@ img {
   object-fit: contain;
 }
 
-.team-chart {
-  min-height: 0;
-  padding: clamp(12px, 3vw, 32px);
+.team-chart-image {
+  display: block;
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 924 / 785;
+  object-fit: contain;
+  -webkit-mask-image: url('../images/members-chart-mask.svg');
+  mask-image: url('../images/members-chart-mask.svg');
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
 }
-.team-chart-image { width: 100%; height: auto; }
 .team-roster {
   position: absolute;
   width: 1px;

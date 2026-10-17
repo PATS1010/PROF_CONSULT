@@ -15,19 +15,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(chart.querySelectorAll('.team-member').length === 7, 'All original team members are present');
       const image = chart.querySelector('.team-chart-image');
       await image.decode();
-      const canvas = document.createElement('canvas');
-      canvas.width = image.naturalWidth;
-      canvas.height = image.naturalHeight;
-      const context = canvas.getContext('2d');
-      context.drawImage(image, 0, 0);
-      check(context.getImageData(0, 0, 1, 1).data[3] === 0, 'Team chart canvas has a transparent background');
-      check(context.getImageData(Math.round(canvas.width * .441), Math.round(canvas.height * .0865), 1, 1).data[3] === 0, 'Background inside the portrait is transparent');
+      check(image.getAttribute('src') === 'images/members.png', 'Original photo pixels and circle backgrounds are preserved');
+      check(getComputedStyle(image).maskImage.includes('members-chart-mask.svg'), 'Mask removes only the outside white background');
+      check(document.getElementById('teamRoster').hidden, 'Accessible roster cannot appear next to the image');
       for (const theme of ['light', 'dark']) {
         window.ProfConsultTheme.set(theme);
         await wait(300);
         const background = getComputedStyle(chart).backgroundColor;
         check(theme === 'dark' ? background !== 'rgb(255, 255, 255)' : background === 'rgb(255, 255, 255)', 'Team background follows ' + theme + ' mode');
         for (const img of chart.querySelectorAll('img')) await img.decode();
+        const imageRect = image.getBoundingClientRect();
+        check(Math.abs(imageRect.width / imageRect.height - 924 / 785) < .01, 'Chart keeps the original proportions without stretching');
         check(document.documentElement.scrollWidth <= innerWidth, 'Team layout fits the phone width');
       }
       document.getElementById('about-us').scrollIntoView({behavior: 'instant'});
