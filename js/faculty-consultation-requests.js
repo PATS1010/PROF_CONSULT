@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <p class="request-info-value">${request.yearSet}</p>
         </div>
         <div class="request-info-col">
-          <p class="request-info-label">Additional Message:</p>
+          <p class="request-info-label">Purpose:</p>
           <p class="request-message">${request.message}</p>
           ${request.response ? `<p class="request-info-label">Faculty Response:</p><p class="request-message">${request.response}</p>` : ""}
           ${section === "completed" ? '<p class="request-complete-text">Consultation Complete!</p>' : ""}
