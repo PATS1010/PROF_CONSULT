@@ -94,10 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
     headers: { "Accept": "application/json" },
   })
     .then((response) => response.ok ? response.json() : Promise.reject())
-    .then((result) => {
-      const fullName = result && result.user ? String(result.user.name || "").trim() : "";
-      if (nameEl && fullName) {
-        nameEl.textContent = "Prof";
+    .then(() => {
+      if (nameEl) {
+        nameEl.textContent = "Professor";
       }
     })
     .catch(() => {
