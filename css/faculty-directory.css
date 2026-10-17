@@ -810,6 +810,7 @@ input {
 
 .directory-profile-panel {
   flex: 1 1 460px;
+  min-width: 0;
   max-width: 460px;
   width: 100%;
 
@@ -884,7 +885,8 @@ input {
 }
 
 .profile-hours-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
@@ -899,10 +901,15 @@ input {
 }
 
 .profile-hours-time {
+  min-width: 0;
   color: #6b6b6b;
   text-align: right;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+
+.profile-hours-slot { display: block; line-height: 1.5; }
+.profile-hours-slot + .profile-hours-slot { margin-top: 4px; }
 
 .request-consultation-button {
   display: block;
@@ -963,6 +970,8 @@ input {
 }
 
 @media (max-width: 480px) {
+  .profile-hours-row { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .profile-hours-time { text-align: left; }
   .directory-content {
     padding: 32px 18px 40px;
   }

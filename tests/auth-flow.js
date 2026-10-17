@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   let passed = result?.user?.role === role && /^[a-f0-9]{64}$/.test(token) && !document.getElementById('profconsult-auth-lock');
   if (role === 'student') {
+    passed = passed && !!document.querySelector('#filterPanel [data-status="online"]') && !document.querySelector('#filterPanel [data-status="offline"]');
     await new Promise((resolve) => setTimeout(resolve, 2250));
     const panel = document.getElementById('quickActionPanel');
     passed = passed && sessionStorage.getItem('regression_student_popup') === 'true' && panel && panel.hidden;
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     passed = passed && !panel.hidden;
   }
   if (role === 'faculty') {
+    passed = passed && !!document.querySelector('#statusPanel [data-status="online"]') && !document.querySelector('#statusPanel [data-status="offline"]');
     await new Promise((resolve) => setTimeout(resolve, 2250));
     const panel = document.getElementById('facultyQuickActionPanel');
     passed = passed && window.getFacultyOnlineStatus() === 'offline' && panel && !panel.hidden;

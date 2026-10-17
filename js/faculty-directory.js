@@ -18,7 +18,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedFacultyId = null;
   let activeDepartment = null;
-  let activeStatus = null;
   let filterOptions = [];
 
   const DEPARTMENT_OPTIONS = [
@@ -160,14 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     filterPanel.innerHTML = "";
 
-    const onlineOption = document.createElement("button");
-    onlineOption.type = "button";
-    onlineOption.className = "filter-option";
-    onlineOption.dataset.status = "online";
-    onlineOption.textContent = "Online";
-    onlineOption.classList.toggle("is-active", activeStatus === "online");
-    filterPanel.appendChild(onlineOption);
-
     departments.forEach((department) => {
       const option = document.createElement("button");
       option.type = "button";
@@ -193,9 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const programMatch = faculty ? faculty.program.toLowerCase().includes(query) : false;
       const matchesSearch = query === "" || nameMatch || programMatch;
       const matchesDepartment = !activeDepartment || department === activeDepartment;
-      const status = card.dataset.status || "";
-      const matchesStatus = !activeStatus || status === activeStatus;
-      const matches = matchesSearch && matchesDepartment && matchesStatus;
+      const matches = matchesSearch && matchesDepartment;
 
       card.hidden = !matches;
       if (matches) visibleCount += 1;
@@ -217,23 +206,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.stopPropagation();
       const department = option.dataset.department || "";
-      const status = option.dataset.status || "";
-
-      if (status) {
-        activeStatus = activeStatus === status ? null : status;
-        activeDepartment = null;
-      } else if (activeDepartment === department) {
+      if (activeDepartment === department) {
         activeDepartment = null;
       } else {
         activeDepartment = department;
-        activeStatus = null;
       }
 
       filterOptions.forEach((opt) => {
         opt.classList.toggle(
           "is-active",
-          (activeStatus && opt.dataset.status === activeStatus) ||
-            (activeDepartment && opt.dataset.department === activeDepartment)
+          activeDepartment === opt.dataset.department
         );
       });
 
@@ -242,10 +224,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function buildProfileMarkup(faculty) {
+    function escapeText(value) {
+      const text = document.createElement("span");
+      text.textContent = value;
+      return text.innerHTML;
+    }
     const hoursRows = faculty.hours.map((entry) => `
       <li class="profile-hours-row">
-        <span class="profile-hours-day">${entry.day}</span>
-        <span class="profile-hours-time">${entry.time}</span>
+        <span class="profile-hours-day">${escapeText(entry.day)}</span>
+        <span class="profile-hours-time">${String(entry.time).split(/\s*[,\n]\s*/).filter(Boolean)
+          .map((slot) => `<span class="profile-hours-slot">${escapeText(slot)}</span>`).join("")}</span>
       </li>
     `).join("");
 

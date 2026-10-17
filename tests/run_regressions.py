@@ -227,6 +227,11 @@ try:
             result, html = login_flow(chrome, base + '/tests/notification-popup.html?role=' + role, RUNTIME / ('chrome-popup-' + label), RUNTIME / ('popup-' + label + '.log'), result_id='regression-result', viewport=(width, height))
             (RUNTIME / ('popup-' + label + '.html')).write_text(html, encoding='utf-8')
             check(result.startswith('PASS '), 'Phone notification popup ' + label + ': ' + result)
+    for width, height in [(320, 568), (390, 844), (1280, 900)]:
+        label = f'directory-{width}x{height}'
+        result, html = login_flow(chrome, base + '/_test/ui/directory', RUNTIME / ('chrome-' + label), RUNTIME / (label + '.log'), result_id='regression-result', viewport=(width, height))
+        (RUNTIME / (label + '.html')).write_text(html, encoding='utf-8')
+        check(result.startswith('PASS '), 'Directory layout and filters ' + label + ': ' + result)
     print(f'Completed {checks} regression checks plus 17 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()

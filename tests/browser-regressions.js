@@ -7,7 +7,7 @@ let failPhotoFetch = false;
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
-const fixtureRole = ['student', 'request', 'wrong-role'].includes(TEST_CASE) ? 'student' : 'faculty';
+const fixtureRole = ['student', 'request', 'wrong-role', 'directory'].includes(TEST_CASE) ? 'student' : 'faculty';
 if (TEST_CASE !== 'fresh-tab') {
   sessionStorage.setItem('profconsult_tab_role', fixtureRole);
   sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));
@@ -20,6 +20,10 @@ window.fetch = async (url, options = {}) => {
   let status = 200;
   if (String(url).includes('profile-photo.php') && failPhotoFetch) status = 404;
   if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
+  else if (String(url).includes('get-faculty-directory.php')) result.faculty = [
+    { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: 'online', Consultation_Hours: JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
+    { Faculty_ID: 2, Full_Name: 'Offline Faculty', Department: 'Civil Engineering', Current_Status: 'offline' },
+  ];
   else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
   else if (String(url).includes('manage-consultation-hours.php')) result.consultation_hours = profile.Consultation_Hours;
   else if (String(url).includes('update-faculty-presence.php')) result = { ok: true, status: fixtureFacultyStatus, checked_in: fixtureFacultyStatus !== 'offline' };
@@ -51,6 +55,23 @@ window.addEventListener('unhandledrejection', (event) => { failure = String(even
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await delay();
+    if (TEST_CASE === 'directory') {
+      const filters = document.querySelectorAll('#filterPanel .filter-option');
+      check(filters.length === 3 && !document.querySelector('#filterPanel [data-status]'), 'Directory filter contains only departments');
+      check(document.querySelectorAll('#facultyList .faculty-card:not([hidden])').length === 2, 'Directory shows both online and offline professors');
+      document.querySelector('[data-department="civil-engineering"].filter-option').click();
+      check(document.querySelectorAll('#facultyList .faculty-card:not([hidden])').length === 1, 'Department filtering still works');
+      document.querySelector('[data-department="civil-engineering"].filter-option').click();
+      document.querySelector('.view-profile-button[data-faculty-id="1"]').click();
+      await new Promise(resolve => setTimeout(resolve, 550));
+      const panel = document.getElementById('directoryProfilePanel');
+      const rect = panel.getBoundingClientRect();
+      const slots = panel.querySelectorAll('.profile-hours-slot');
+      check(slots.length === 4, 'Each consultation range displays on its own line');
+      check(Array.from(slots).every(slot => { const box = slot.getBoundingClientRect(); return box.left >= rect.left && box.right <= rect.right; }), 'All consultation times stay within the profile card');
+      check(document.documentElement.scrollWidth <= innerWidth, 'Directory profile does not overflow the screen horizontally');
+      if (innerWidth <= 480) check(panel.querySelector('.profile-hours-day').getBoundingClientRect().bottom <= slots[0].getBoundingClientRect().top, 'Phone schedule places time ranges below the day');
+    }
     if (TEST_CASE === 'faculty' || TEST_CASE === 'student') {
       const photo = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhoto' : 'profilePhoto');
       await photo.decode();
