@@ -244,12 +244,30 @@ document.addEventListener("DOMContentLoaded", async () => {
     return false;
   }
 
+  function hasCompletePreferredDate() {
+    return /^\d{4}-\d{2}-\d{2}$/.test(dateInput.value) && !dateInput.validity.badInput;
+  }
+
   if (dateInput) {
     refreshMinimumDate();
-    dateInput.addEventListener("focus", refreshMinimumDate);
     let scheduleVersion = 0;
-    dateInput.addEventListener("change", async () => {
+    dateInput.addEventListener("focus", () => {
+      refreshMinimumDate();
+    });
+    dateInput.addEventListener("input", () => {
+      scheduleVersion++;
+      clearSelectedTime();
+      updateTimeSlotAvailability([]);
+      setDateErrorState(false);
+      if (dateHint) dateHint.textContent = "Complete the date, then leave this field to view available times.";
+    });
+    async function validatePreferredDate() {
       const version = ++scheduleVersion;
+      if (!hasCompletePreferredDate() && (dateInput.value || dateInput.validity.badInput)) {
+        setDateErrorState(true);
+        if (dateHint) dateHint.textContent = "Please enter a complete date (day, month, and year).";
+        return;
+      }
       if (rejectPastDate()) return;
       const dateValue = dateInput.value;
       clearSelectedTime();
@@ -290,6 +308,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         clearSelectedTime();
         window.alert(error.message || "Unable to load available time slots.");
       }
+    }
+    dateInput.addEventListener("blur", validatePreferredDate);
+    dateInput.addEventListener("change", () => {
+      if (document.activeElement !== dateInput) validatePreferredDate();
     });
   }
 
@@ -314,6 +336,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       event.preventDefault();
       if (submitButton && submitButton.disabled) return;
 
+      if (dateInput && !hasCompletePreferredDate()) {
+        dateInput.focus();
+        setDateErrorState(true);
+        if (dateHint) dateHint.textContent = "Please enter a complete date (day, month, and year).";
+        return;
+      }
       if (dateInput && rejectPastDate()) {
         dateInput.focus();
         return;

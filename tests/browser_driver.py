@@ -71,6 +71,7 @@ def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result', vie
             response = send('Runtime.evaluate', {'expression': expression, 'returnByValue': True})
             return response.get('result', {}).get('result', {}).get('value', '')
         if viewport:
+            send('Emulation.setFocusEmulationEnabled', {'enabled': True})
             send('Emulation.setDeviceMetricsOverride', {'width': viewport[0], 'height': viewport[1], 'deviceScaleFactor': 1, 'mobile': True})
             send('Page.navigate', {'url': url})
         result = ''

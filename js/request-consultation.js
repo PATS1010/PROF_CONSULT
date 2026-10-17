@@ -381,12 +381,27 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
+  function hasCompletePreferredDate() {
+    return /^\d{4}-\d{2}-\d{2}$/.test(preferredDateInput.value) && !preferredDateInput.validity.badInput;
+  }
+
   if (preferredDateInput) {
     refreshMinimumDate();
-    preferredDateInput.addEventListener("focus", refreshMinimumDate);
-
-    preferredDateInput.addEventListener("change", async () => {
+    preferredDateInput.addEventListener("focus", () => {
+      refreshMinimumDate();
+    });
+    preferredDateInput.addEventListener("input", () => {
       scheduleVersion++;
+      clearSelectedTime();
+      renderTimeOptions([]);
+      setHint("Complete the date, then leave this field to view available times.", false);
+    });
+    async function validatePreferredDate() {
+      scheduleVersion++;
+      if (!hasCompletePreferredDate() && (preferredDateInput.value || preferredDateInput.validity.badInput)) {
+        setHint("Please enter a complete date (day, month, and year).", true);
+        return;
+      }
       if (rejectPastDate()) return;
       const dateValue = preferredDateInput.value;
 
@@ -414,11 +429,16 @@ document.addEventListener("DOMContentLoaded", () => {
         setHint(error.message || "Unable to load available times.", true);
         renderTimeOptions([]);
       }
+    }
+    preferredDateInput.addEventListener("blur", validatePreferredDate);
+    preferredDateInput.addEventListener("change", () => {
+      if (document.activeElement !== preferredDateInput) validatePreferredDate();
     });
   }
 
   async function refreshCurrentSchedule() {
-    if (document.hidden || scheduleRefreshing || !selectedFaculty?.id) return;
+    if (document.hidden || scheduleRefreshing || !selectedFaculty?.id || document.activeElement === preferredDateInput) return;
+    if (preferredDateInput?.validity.badInput || preferredDateInput?.classList.contains("is-date-invalid")) return;
     scheduleRefreshing = true;
     try {
       await loadFacultySchedule(preferredDateInput?.value || "", true);
@@ -440,6 +460,11 @@ document.addEventListener("DOMContentLoaded", () => {
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      if (!hasCompletePreferredDate()) {
+        setHint("Please enter a complete date (day, month, and year).", true);
+        preferredDateInput.focus();
+        return;
+      }
       if (rejectPastDate()) {
         preferredDateInput.focus();
         return;
