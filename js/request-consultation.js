@@ -41,7 +41,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function buildProgramYearDisplay(courseValue, yearLevel, section) {
     const programLabel = COURSE_LABELS[courseValue] || courseValue;
-    return `${programLabel} - ${yearLevel}${section}`;
+    const yearNumber = String(yearLevel || "").match(/\d+/)?.[0] || "";
+    const sectionLabel = String(section || "").trim();
+    const yearSection = /^\d/.test(sectionLabel) ? sectionLabel : `${yearNumber}${sectionLabel}`;
+    return [programLabel, yearSection].filter(Boolean).join(" - ");
   }
 
   const facultyMemberInput = document.getElementById("facultyMember");
