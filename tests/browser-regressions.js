@@ -66,6 +66,14 @@ window.fetch = async (url, options = {}) => {
     } else result.availability = [{ Status: fixtureFacultyStatus }];
   } else if (String(url).includes('manage-consultation-requests.php') && options.method !== 'POST') {
     result.requests = [{ Request_ID: 21, Student_Name: 'Fresh Server Student', Purpose: 'Server request', Request_Date: '2030-01-07', Preferred_Time: '09:00:00', Year_Level: '1', Section: 'A' }];
+    if (TEST_CASE === 'consultations') result.requests = [
+      { Request_ID: 105, Request_Date: '2031-01-02', Preferred_Time: '09:00:00', Status: 'approved' },
+      { Request_ID: 101, Request_Date: '2030-11-03', Preferred_Time: '09:00:00', Status: 'approved' },
+      { Request_ID: 104, Request_Date: '2030-10-01', Preferred_Time: '14:00:00', Status: 'rescheduled' },
+      { Request_ID: 102, Request_Date: '2030-10-30', Preferred_Time: '09:00:00', Status: 'approved' },
+      { Request_ID: 103, Request_Date: '2030-10-01', Preferred_Time: '08:00:00', Status: 'approved' },
+      { Request_ID: 199, Request_Date: '2030-09-30', Preferred_Time: '09:00:00', Status: 'pending' },
+    ].map(record => ({ Student_Name: 'Student ' + record.Request_ID, Purpose: 'Subject', ...record }));
   } else if (String(url).includes('get-faculty-schedule.php')) {
     result.slots = [{ value: '9:00 AM - 9:30 AM', label: '9:00 AM - 9:30 AM', available: scheduleSlotAvailable, taken: false }];
   }
@@ -83,6 +91,13 @@ window.addEventListener('unhandledrejection', (event) => { failure = String(even
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     await delay();
+    if (TEST_CASE === 'consultations') {
+      const order = () => Array.from(document.querySelectorAll('#upcomingScrollContainer .request-card')).map(card => card.dataset.id).join(',');
+      check(order() === '103,104,102,101,105', 'Upcoming consultations sort by nearest date, then earliest time, across months and years');
+      document.querySelector('.request-card[data-id="199"] [data-action="accept"]').click();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      check(order() === '199,103,104,102,101,105', 'Newly accepted consultation is inserted in chronological order');
+    }
     if (TEST_CASE === 'directory') {
       const filters = document.querySelectorAll('#filterPanel .filter-option');
       check(filters.length === 3 && !document.querySelector('#filterPanel [data-status]'), 'Directory filter contains only departments');

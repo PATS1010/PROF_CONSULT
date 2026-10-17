@@ -218,7 +218,7 @@ try:
     chrome = next((p for p in [shutil.which('google-chrome'), shutil.which('chromium'), r'C:\Program Files\Google\Chrome\Application\chrome.exe'] if p and Path(p).exists()), None)
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
-    for case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard', 'request', 'reschedule']:
+    for case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard', 'request', 'reschedule', 'consultations']:
         result, html = login_flow(chrome, base + '/_test/ui/' + case + '?request_id=21', RUNTIME / ('chrome-ui-' + case + '-' + str(port)), RUNTIME / ('ui-' + case + '.log'), result_id='regression-result', viewport=(1280, 900))
         (RUNTIME / (case + '.html')).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Browser ' + case + ': ' + (result or 'no result; see tests/runtime/' + case + '.html'))

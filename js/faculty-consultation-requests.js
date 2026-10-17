@@ -154,6 +154,7 @@ function mapApiRequest(record) {
     type: record.Purpose || "Consultation",
     date: formatRequestDate(record.Request_Date, record.Preferred_Time),
     preferredDateISO: record.Request_Date || "",
+    scheduledSortKey: `${record.Request_Date || "9999-12-31"}T${record.Preferred_Time || "23:59:59"}`,
     preferredTimeLabel: formatTimeRange(record.Preferred_Time),
     program: record.Program || "",
     yearSet: `${record.Year_Level || ""}${record.Section || ""}`,
@@ -330,6 +331,9 @@ document.addEventListener("DOMContentLoaded", () => {
     containerEl.innerHTML = "";
 
     const items = REQUESTS.filter((request) => request.status === status);
+    if (section === "upcoming") {
+      items.sort((a, b) => a.scheduledSortKey.localeCompare(b.scheduledSortKey) || Number(a.id) - Number(b.id));
+    }
     items.forEach((request) => {
       containerEl.appendChild(buildConsultationCard(request, section));
     });
