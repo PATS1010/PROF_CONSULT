@@ -9,12 +9,12 @@ import time
 import urllib.request
 from urllib.parse import urlsplit
 
-def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result'):
+def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result', viewport=None):
     with socket.socket() as probe:
         probe.bind(('127.0.0.1', 0))
         debug_port = probe.getsockname()[1]
     log = log_path.open('w', encoding='utf-8')
-    process = subprocess.Popen([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--remote-debugging-port={debug_port}', f'--user-data-dir={profile}', url], stdout=log, stderr=log, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+    process = subprocess.Popen([chrome, '--headless', '--disable-gpu', '--no-first-run', '--no-default-browser-check', f'--remote-debugging-port={debug_port}', f'--user-data-dir={profile}', 'about:blank' if viewport else url], stdout=log, stderr=log, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
     channel = None
     try:
         deadline = time.monotonic() + 15
@@ -70,6 +70,9 @@ def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result'):
         def evaluate(expression):
             response = send('Runtime.evaluate', {'expression': expression, 'returnByValue': True})
             return response.get('result', {}).get('result', {}).get('value', '')
+        if viewport:
+            send('Emulation.setDeviceMetricsOverride', {'width': viewport[0], 'height': viewport[1], 'deviceScaleFactor': 1, 'mobile': True})
+            send('Page.navigate', {'url': url})
         result = ''
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:

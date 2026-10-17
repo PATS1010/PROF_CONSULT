@@ -6,11 +6,22 @@
     if (!panel || panel.hidden) return;
     const header = bell?.closest("header");
     const edge = header?.querySelector(".faculty-navbar-right, .navbar-right") || bell;
-    const top = Math.max(12, (header || bell)?.getBoundingClientRect().bottom + 14 || 78);
-    const right = Math.max(12, window.innerWidth - (edge?.getBoundingClientRect().right || window.innerWidth - 20));
-    panel.style.top = `${Math.min(top, window.innerHeight - 100)}px`;
-    panel.style.right = `${Math.min(right, Math.max(12, window.innerWidth - panel.offsetWidth - 12))}px`;
-    panel.style.maxHeight = `${Math.max(80, window.innerHeight - parseFloat(panel.style.top) - 12)}px`;
+    const viewport = window.visualViewport;
+    const width = viewport?.width || document.documentElement.clientWidth;
+    const height = viewport?.height || window.innerHeight;
+    const left = viewport?.offsetLeft || 0;
+    const upperEdge = viewport?.offsetTop || 0;
+    const gap = 12;
+    panel.style.maxWidth = `${Math.max(0, width - gap * 2)}px`;
+    const preferredTop = (header || bell)?.getBoundingClientRect().bottom + 14 || 78;
+    const top = Math.max(upperEdge + gap, Math.min(preferredTop, upperEdge + height - 100));
+    const preferredLeft = (edge?.getBoundingClientRect().right || left + width - gap) - panel.offsetWidth;
+    const x = width <= 480 ? left + (width - panel.offsetWidth) / 2
+      : Math.max(left + gap, Math.min(preferredLeft, left + width - panel.offsetWidth - gap));
+    panel.style.top = `${top}px`;
+    panel.style.left = `${x}px`;
+    panel.style.right = "auto";
+    panel.style.maxHeight = `${Math.max(0, upperEdge + height - top - gap)}px`;
   }
 
   function close(returnFocus = false) {
@@ -166,6 +177,8 @@
     if (event.key === "Escape" && panel && !panel.hidden) { event.preventDefault(); close(true); }
   });
   window.addEventListener("resize", position);
+  window.visualViewport?.addEventListener("resize", position);
+  window.visualViewport?.addEventListener("scroll", position);
   window.addEventListener("scroll", position, { passive: true });
   window.addEventListener("pagehide", () => close());
   document.addEventListener("profconsult:logout", () => {

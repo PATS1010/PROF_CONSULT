@@ -59,6 +59,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     check(panel.querySelector("a").getAttribute("href") === (role === "faculty" ? "faculty-notifications.html" : "notifications.html"), "View More opens the correct notification page");
     const rect = panel.getBoundingClientRect();
     check(rect.left >= 0 && rect.right <= innerWidth && rect.top >= 64 && rect.bottom <= innerHeight, "Popup fits below the header inside the viewport");
+    check(getComputedStyle(panel.querySelector('.notification-popup-header')).borderBottomLeftRadius === '0px', "Header has a flat lower edge like the reference");
+    if (innerWidth <= 480) check(Math.abs(rect.left - (innerWidth - rect.right)) <= 1, "Phone popup is centered with equal side margins");
+    const closeRect = panel.querySelector('button').getBoundingClientRect();
+    check(closeRect.width >= 44 && closeRect.height >= 44, "Close button has a phone-friendly touch target");
+    api.show({role, text: 'Long notification message '.repeat(120)});
+    await settle();
+    const longRect = panel.getBoundingClientRect();
+    const body = panel.querySelector('.notification-popup-body');
+    check(longRect.bottom <= innerHeight && longRect.right <= innerWidth && body.scrollHeight > body.clientHeight, "Long notification scrolls within the popup without leaving the screen");
+    body.scrollTop = body.scrollHeight;
+    check(body.scrollTop > 0, "Long notification content can be scrolled to View More");
     panel.querySelector("button").click();
     check(panel.hidden && unread > 0 && readIds.length === 0, "Dismissing popup preserves unread dot and server unread status");
     await api.refresh(); await settle();
@@ -80,7 +91,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     records.push({Notification_ID:3,Message:"Late notification",Read_Status:"unread"});
     pending(); await inflight; await settle();
     check(panel.hidden && !unread, "Late response after logout cannot reopen popup or change badge");
-    document.getElementById("regression-result").textContent = "PASS " + role + " notifications: bell navigation, automatic arrivals, unread dot, dismissal, deduplication, server read status, safe text, PHT, viewport, logout";
+    document.getElementById("regression-result").textContent = "PASS " + role + " notifications: bell navigation, automatic arrivals, unread dot, dismissal, deduplication, server read status, safe text, PHT, viewport, touch targets, long message scrolling, logout";
   } catch (error) { document.getElementById("regression-result").textContent = "FAIL " + error.message; }
 });
 </script></body></html>

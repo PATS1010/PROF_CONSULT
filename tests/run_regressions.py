@@ -221,6 +221,12 @@ try:
         result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'))
         (RUNTIME / ('login-flow-' + entry)).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Browser actual ' + entry + ' signs in, opens its dashboard, and refreshes successfully')
+    for role in ['faculty', 'student']:
+        for width, height in [(320, 568), (390, 844), (667, 375)]:
+            label = f'{role}-{width}x{height}'
+            result, html = login_flow(chrome, base + '/tests/notification-popup.html?role=' + role, RUNTIME / ('chrome-popup-' + label), RUNTIME / ('popup-' + label + '.log'), result_id='regression-result', viewport=(width, height))
+            (RUNTIME / ('popup-' + label + '.html')).write_text(html, encoding='utf-8')
+            check(result.startswith('PASS '), 'Phone notification popup ' + label + ': ' + result)
     print(f'Completed {checks} regression checks plus 17 deterministic status checks. SQLite fixture and mocked browser delivery; no production email sent.')
 finally:
     server.terminate()
