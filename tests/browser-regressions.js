@@ -12,6 +12,11 @@ let failStatusSave = false;
 let fixtureFacultyStatus = 'offline';
 let failPhotoFetch = false;
 let directoryFacultyStatus = 'online';
+let directoryHours = null;
+let failHoursSave = false;
+let holdHoursSave = false;
+let releaseHoursSave = null;
+let scheduleSlotAvailable = true;
 const intervalTasks = [];
 const nativeSetInterval = window.setInterval.bind(window);
 window.setInterval = (callback, milliseconds, ...args) => {
@@ -20,12 +25,14 @@ window.setInterval = (callback, milliseconds, ...args) => {
 };
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
+if (TEST_CASE === 'availability') localStorage.setItem('profconsult_faculty_available_hours', JSON.stringify([{ day: 'Monday', times: ['5:00 PM - 5:30 PM'] }]));
 sessionStorage.clear();
 const fixtureRole = ['student', 'student-dashboard', 'request', 'wrong-role', 'directory'].includes(TEST_CASE) ? 'student' : 'faculty';
 if (TEST_CASE !== 'fresh-tab') {
   sessionStorage.setItem('profconsult_tab_role', fixtureRole);
   sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));
 }
+if (TEST_CASE === 'request') sessionStorage.setItem('profconsult_selected_faculty', JSON.stringify({ id: '1', fullName: 'Sean Test III' }));
 const user = { id: 1, role: fixtureRole, name: 'Juan A. Santos Jr.', username: '24-00001', email: 'juan@example.test', phone: '9123456789', profile_photo: 'api/profile-photo.php?user_id=1' };
 const profile = { Department: 'Computer Engineering', Office: 'Room 12', Consultation_Hours: '[{"day":"Monday","times":["9:00 AM - 9:30 AM"]}]', Program: 'Computer Engineering', Year_Level: '1', Section: 'A' };
 window.fetch = async (url, options = {}) => {
@@ -35,11 +42,18 @@ window.fetch = async (url, options = {}) => {
   if (String(url).includes('profile-photo.php') && failPhotoFetch) status = 404;
   if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('get-faculty-directory.php')) result.faculty = [
-    { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: directoryFacultyStatus, Consultation_Hours: JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
+    { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: directoryFacultyStatus, Consultation_Hours: directoryHours ?? JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
     { Faculty_ID: 2, Full_Name: 'Offline Faculty', Department: 'Civil Engineering', Current_Status: 'offline' },
   ];
   else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
-  else if (String(url).includes('manage-consultation-hours.php')) result.consultation_hours = profile.Consultation_Hours;
+  else if (String(url).includes('manage-consultation-hours.php')) {
+    if (options.method === 'POST') {
+      if (holdHoursSave) await new Promise(resolve => { releaseHoursSave = resolve; });
+      if (failHoursSave) { status = 503; result = { ok: false, message: 'Hours save rejected' }; }
+      else profile.Consultation_Hours = JSON.parse(options.body).consultation_hours;
+    }
+    result.consultation_hours = profile.Consultation_Hours;
+  }
   else if (String(url).includes('update-faculty-presence.php')) result = { ok: true, status: fixtureFacultyStatus, checked_in: fixtureFacultyStatus !== 'offline' };
   else if (String(url).includes('manage-faculty-availability.php')) {
     if (options.method === 'POST') {
@@ -53,7 +67,7 @@ window.fetch = async (url, options = {}) => {
   } else if (String(url).includes('manage-consultation-requests.php') && options.method !== 'POST') {
     result.requests = [{ Request_ID: 21, Student_Name: 'Fresh Server Student', Purpose: 'Server request', Request_Date: '2030-01-07', Preferred_Time: '09:00:00', Year_Level: '1', Section: 'A' }];
   } else if (String(url).includes('get-faculty-schedule.php')) {
-    result.slots = [{ value: '9:00 AM - 9:30 AM', available: true, taken: false }];
+    result.slots = [{ value: '9:00 AM - 9:30 AM', label: '9:00 AM - 9:30 AM', available: scheduleSlotAvailable, taken: false }];
   }
   return { ok: status === 200, status, json: async () => result, blob: async () => new Blob([Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a3ioAAAAASUVORK5CYII='), (char) => char.charCodeAt(0))], { type: 'image/png' }) };
 };
@@ -101,6 +115,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       intervalTasks.find(task => task.milliseconds === 5000).callback();
       await delay();
       check(panel.querySelector('.profile-status-label').textContent === 'Status: Online', 'Regular polling follows check-in without reopening the profile');
+      directoryHours = JSON.stringify([{ day: 'Monday', times: ['2:00 PM - 2:30 PM'], time: '8:00 AM - 11:00 AM' }]);
+      window.dispatchEvent(new StorageEvent('storage', { key: 'profconsult_faculty_available_hours', newValue: directoryHours }));
+      await delay();
+      check(panel.querySelector('.profile-hours-time').textContent === '2:00 PM - 2:30 PM', 'Student profile replaces stale summary with the newly saved slots');
+      directoryHours = JSON.stringify([{ day: 'Monday', times: [], time: '8:00 AM - 11:00 AM' }]);
+      intervalTasks.find(task => task.milliseconds === 5000).callback();
+      await delay();
+      check(panel.querySelector('.profile-hours-time').textContent === 'Unavailable', 'Clearing hours removes old availability from the student profile');
       for (const [apiStatus, cssStatus, label] of STATUS_CASES) {
         directoryFacultyStatus = apiStatus;
         intervalTasks.find(task => task.milliseconds === 5000).callback();
@@ -180,6 +202,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       date.value = initialDate;
       date.dispatchEvent(new Event('change'));
       await delay();
+      if (isRequest) {
+        date.value = date.min;
+        date.dispatchEvent(new Event('change'));
+        await delay();
+        document.querySelector('#preferredTimeOptions li.is-available').click();
+        intervalTasks.find(task => task.milliseconds === 5000).callback();
+        await delay();
+        check(time.value === '9:00 AM - 9:30 AM', 'Schedule refresh preserves a still-available selected time');
+        scheduleSlotAvailable = false;
+        intervalTasks.find(task => task.milliseconds === 5000).callback();
+        await delay();
+        check(time.value === '' && !document.querySelector('#preferredTimeOptions li.is-available'), 'Professor hour changes remove unavailable times from an open student request form');
+      }
     }
     if (TEST_CASE === 'faculty') {
       const button = document.getElementById('facultyProfilePhotoEdit');
@@ -213,6 +248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if (TEST_CASE === 'student') {
       check(recorded.some((r) => r.url?.includes('profile-photo.php?user_id=1&v=')), 'Student photo URL retains its account query parameter');
     } else if (TEST_CASE === 'availability') {
+      check(document.querySelector('[data-day-index="0"] .availability-time-text').textContent.includes('9:00 AM') && !document.querySelector('[data-day-index="0"] .availability-time-text').textContent.includes('5:00 PM'), 'Server hours replace another account’s stale browser hours');
       check(window.getFacultyOnlineStatus() === 'offline', 'Availability loads the server status');
       const next = document.querySelector('.faculty-status-option[data-status="meeting"]');
       next.click();
@@ -248,6 +284,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       document.getElementById('facultyCheckOutButton').click();
       await delay();
       check(window.getFacultyOnlineStatus() === 'offline' && document.getElementById('availabilityStatusLabel').textContent === 'Offline', 'Check Out synchronizes Offline on the availability page');
+      const confirmedHours = profile.Consultation_Hours;
+      function editMonday() {
+        document.getElementById('editHoursButton').click();
+        document.querySelector('.availability-time-arrow[data-day-index="0"]').click();
+        document.querySelector('.availability-time-dropdown[data-day-index="0"] [data-value="Unavailable"]').click();
+        document.querySelector('.availability-time-dropdown[data-day-index="0"] [data-value="2:00 PM - 2:30 PM"]').click();
+      }
+      editMonday();
+      failHoursSave = true;
+      document.getElementById('saveHoursButton').click();
+      await delay();
+      check(profile.Consultation_Hours === confirmedHours && alerts.includes('Hours save rejected'), 'Failed hours save does not replace the server schedule');
+      document.getElementById('editHoursButton').click();
+      check(document.querySelector('[data-day-index="0"] .availability-time-text').textContent.includes('9:00 AM'), 'Cancel after failed save restores the last confirmed hours');
+      failHoursSave = false;
+      editMonday();
+      holdHoursSave = true;
+      const writesBeforeSave = recorded.filter(record => record.url?.includes('manage-consultation-hours.php') && record.options.method === 'POST').length;
+      document.getElementById('saveHoursButton').click();
+      document.getElementById('saveHoursButton').click();
+      check(document.getElementById('saveHoursButton').disabled && document.getElementById('editHoursButton').disabled, 'Hours controls wait for server confirmation');
+      check(recorded.filter(record => record.url?.includes('manage-consultation-hours.php') && record.options.method === 'POST').length === writesBeforeSave + 1, 'Repeated save cannot submit competing hours updates');
+      check(profile.Consultation_Hours === confirmedHours, 'Pending save does not appear as confirmed availability');
+      holdHoursSave = false;
+      releaseHoursSave();
+      await delay();
+      check(document.querySelector('[data-day-index="0"] .availability-time-text').textContent === '2:00 PM - 2:30 PM' && profile.Consultation_Hours.includes('2:00 PM'), 'Successful save displays the server-confirmed new hours');
+      check(JSON.parse(localStorage.getItem('profconsult_faculty_available_hours'))[0].times[0] === '2:00 PM - 2:30 PM', 'Student refresh signal is published only after the hours save succeeds');
+      profile.Consultation_Hours = '';
+      window.dispatchEvent(new Event('focus'));
+      await delay();
+      check(!document.querySelector('[data-day-index="0"] .availability-time-text').textContent.includes('2:00 PM'), 'Empty saved schedule clears previously displayed hours');
+      profile.Consultation_Hours = JSON.stringify([{ day: 'Monday', times: ['2:00 PM - 2:30 PM', '2:30 PM - 3:00 PM'] }]);
+      window.dispatchEvent(new Event('focus'));
+      await delay();
+      document.querySelector('.availability-view-button').click();
+      const openHours = document.querySelector('.availability-time-dropdown[data-day-index="0"]');
+      intervalTasks.filter(task => task.milliseconds === 5000).forEach(task => task.callback());
+      await delay();
+      check(openHours.isConnected && !openHours.hidden, 'Unchanged background refresh does not close View All');
     } else if (TEST_CASE === 'reschedule') {
       check(document.getElementById('rescheduleStudentName').textContent === 'Fresh Server Student', 'Reschedule loads the request from the server without local storage');
       const schedule = recorded.find((r) => r.url?.includes('get-faculty-schedule.php'));

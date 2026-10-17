@@ -248,7 +248,10 @@ document.addEventListener("DOMContentLoaded", () => {
       : "No available days set by this professor yet.";
   }
 
-  async function loadFacultySchedule(dateValue) {
+  let scheduleVersion = 0;
+  let scheduleRefreshing = false;
+  async function loadFacultySchedule(dateValue, preserveSelection = false) {
+    const version = ++scheduleVersion;
     if (!selectedFaculty || !selectedFaculty.id) {
       renderTimeOptions([]);
       setHint("Please choose a professor first.", true);
@@ -267,6 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to load this professor's schedule.");
     }
+    if (version !== scheduleVersion) return null;
 
     availableDayNumbers = Array.isArray(result.days) && result.days.length
       ? result.days.map(Number)
@@ -274,8 +278,17 @@ document.addEventListener("DOMContentLoaded", () => {
     setHint(formatDayHint(result.day_names || []), false);
 
     if (dateValue) {
+      const selectedTime = document.getElementById("preferredTime")?.value || "";
+      const optionsScrollTop = preferredTimeOptions?.scrollTop || 0;
+      const stillAvailable = preserveSelection && (result.slots || []).some((slot) =>
+        (slot.value || slot.label) === selectedTime && slot.available === true && !slot.taken);
       renderTimeOptions(result.slots || []);
-      clearSelectedTime();
+      if (preserveSelection && preferredTimeOptions) preferredTimeOptions.scrollTop = optionsScrollTop;
+      if (stillAvailable) {
+        preferredTimeOptions?.querySelectorAll("li").forEach((option) => {
+          option.classList.toggle("is-active", option.dataset.value === selectedTime);
+        });
+      } else clearSelectedTime();
       if (result.message) setHint(result.message, true);
       if (!result.message && !(result.slots || []).some((slot) => slot.available === true && !slot.taken)) {
         setHint("This professor has no available slots on this date.", true);
@@ -373,6 +386,7 @@ document.addEventListener("DOMContentLoaded", () => {
     preferredDateInput.addEventListener("focus", refreshMinimumDate);
 
     preferredDateInput.addEventListener("change", async () => {
+      scheduleVersion++;
       if (rejectPastDate()) return;
       const dateValue = preferredDateInput.value;
 
@@ -402,6 +416,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  async function refreshCurrentSchedule() {
+    if (document.hidden || scheduleRefreshing || !selectedFaculty?.id) return;
+    scheduleRefreshing = true;
+    try {
+      await loadFacultySchedule(preferredDateInput?.value || "", true);
+    } catch (_) {
+      // Keep the last confirmed schedule until the connection returns.
+    } finally {
+      scheduleRefreshing = false;
+    }
+  }
+  window.setInterval(refreshCurrentSchedule, 5000);
+  window.addEventListener("focus", refreshCurrentSchedule);
+  document.addEventListener("visibilitychange", refreshCurrentSchedule);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "profconsult_faculty_available_hours") refreshCurrentSchedule();
+  });
 
   const form = document.getElementById("requestConsultationForm");
   if (form) {

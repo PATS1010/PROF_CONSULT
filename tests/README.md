@@ -4,6 +4,8 @@ Run from the repository root with PHP 8.2+, Python 3, and Chrome/Chromium instal
 python tests/run_regressions.py
 ```
 
+Available Hours loads from the authenticated server response, including empty schedules; browser storage is used only to signal a confirmed save to other tabs. Draft edits remain separate until the save succeeds, failed saves retain the confirmed schedule, and overlapping saves are blocked. Professor hours, open student directory profiles, and open consultation forms refresh every five seconds or on focus. Student booking selections remain selected only while the updated schedule still allows them. Endpoint checks verify professor save/reload, student directory and booking updates, clearing hours, and student write rejection.
+
 The runner starts a local PHP server, executes the actual endpoint bodies against an isolated SQLite database, and runs the actual pages in headless Chrome. PostgreSQL syntax is translated by the fixture adapter; advisory locks are stubbed, so this suite does not verify PostgreSQL concurrency. OTP delivery is simulated. The mail dispatch check uses a PHPMailer double to verify SMTP fallback without sending email.
 
 The router is enabled only with `PROFCONSULT_TEST_MODE=1` under PHP's development server. Test data, sessions, and browser profiles stay in the ignored `tests/runtime/` directory. No production credentials, accounts, or email recipients are used.

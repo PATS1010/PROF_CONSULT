@@ -92,7 +92,9 @@ document.addEventListener("DOMContentLoaded", () => {
           .filter((entry) => entry && entry.day)
           .map((entry) => ({
             day: entry.day,
-            time: entry.time || (Array.isArray(entry.times) && entry.times.length ? entry.times.join(", ") : "Unavailable"),
+            time: Array.isArray(entry.times)
+              ? (entry.times.length ? entry.times.join(", ") : "Unavailable")
+              : (entry.time || "Unavailable"),
           }));
         return rows.length ? rows : [{ day: "Schedule", time: "Consultation hours not set" }];
       }
@@ -362,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", refreshFacultyDirectory);
   window.addEventListener("focus", refreshFacultyDirectory);
   window.addEventListener("storage", (event) => {
-    if (event.key === "facultyTestOnlineStatus") refreshFacultyDirectory();
+    if (["facultyTestOnlineStatus", "profconsult_faculty_available_hours"].includes(event.key)) refreshFacultyDirectory();
   });
 
 });

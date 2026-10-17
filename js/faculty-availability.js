@@ -52,7 +52,7 @@ function summarizeTimes(times) {
 
 // Older saved hours were one range such as "10:00 AM - 12:00 PM"; turn them into 30-minute slots
 function rangeToSlots(rangeText) {
-  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*-\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(rangeText).trim());
+  const match = /^(\d{1,2}):(\d{2})\s*(AM|PM)\s*[-–—]\s*(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(rangeText).trim());
   if (!match) return [];
 
   const toMinutes = (hour, minute, period) => {
@@ -81,14 +81,21 @@ function cloneHours(hours) {
   return hours.map((entry) => ({ ...entry, times: entry.times.slice() }));
 }
 
-function loadAvailableHours() {
+function loadAvailableHours(raw = "[]") {
   const defaults = cloneHours(DEFAULT_AVAILABLE_HOURS);
 
   try {
-    const raw = localStorage.getItem(AVAILABLE_HOURS_STORAGE_KEY);
     if (!raw) return defaults;
 
-    const saved = JSON.parse(raw);
+    let saved;
+    try {
+      saved = JSON.parse(raw);
+    } catch (_) {
+      saved = String(raw).split(/\r?\n|;/).map((row) => {
+        const match = row.trim().match(/^([^:]+):\s*(.*)$/);
+        return match ? { day: match[1].trim(), time: match[2] } : null;
+      }).filter(Boolean);
+    }
     if (!Array.isArray(saved)) return defaults;
 
     return defaults.map((entry) => {
@@ -104,7 +111,8 @@ function loadAvailableHours() {
 
       if (typeof match.time === "string" && match.time) {
         if (match.time === UNAVAILABLE_LABEL) return { ...entry, times: [], time: UNAVAILABLE_LABEL };
-        const times = rangeToSlots(match.time);
+        const parsedTimes = match.time.split(/\s*,\s*/).flatMap(rangeToSlots);
+        const times = TIME_OPTIONS.filter((slot) => parsedTimes.includes(slot));
         if (times.length) return { ...entry, times, time: summarizeTimes(times) };
       }
 
@@ -126,14 +134,8 @@ let AVAILABLE_HOURS = loadAvailableHours();
 let draftHours = cloneHours(AVAILABLE_HOURS);
 
 function applySavedHours(rawHours) {
-  try {
-    const saved = JSON.parse(rawHours || "[]");
-    if (!Array.isArray(saved)) return;
-    localStorage.setItem(AVAILABLE_HOURS_STORAGE_KEY, JSON.stringify(saved));
-    AVAILABLE_HOURS = loadAvailableHours();
-    draftHours = cloneHours(AVAILABLE_HOURS);
-  } catch (error) {
-  }
+  AVAILABLE_HOURS = loadAvailableHours(rawHours);
+  draftHours = cloneHours(AVAILABLE_HOURS);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -146,21 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveStatusButton = document.getElementById("saveStatusButton");
   const currentStatusDot = document.getElementById("availabilityStatusDot");
   const currentStatusLabel = document.getElementById("availabilityStatusLabel");
-
-  fetch("api/manage-consultation-hours.php", {
-    cache: "no-store",
-    credentials: "same-origin",
-    headers: { "Accept": "application/json" },
-  })
-    .then((response) => response.ok ? response.json() : Promise.reject())
-    .then((result) => {
-      if (result && result.consultation_hours) {
-        applySavedHours(result.consultation_hours);
-        renderAvailableHours();
-      }
-    })
-    .catch(() => {
-    });
 
   function openStatusPanel() {
     const current = window.getFacultyOnlineStatus?.() || "offline";
@@ -257,7 +244,42 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveHoursButton = document.getElementById("saveHoursButton");
 
   let isEditingHours = false;
+  let isSavingHours = false;
+  let hoursLoaded = false;
+  let hoursRefreshing = false;
+  let hoursVersion = 0;
   let savedFeedbackTimer = null;
+
+  function updateHoursButtons() {
+    if (editButton) editButton.disabled = !hoursLoaded || isSavingHours;
+    if (saveHoursButton) saveHoursButton.disabled = !hoursLoaded || isSavingHours;
+  }
+
+  async function refreshSavedHours() {
+    if (document.hidden || hoursRefreshing || isEditingHours || isSavingHours) return;
+    hoursRefreshing = true;
+    const version = hoursVersion;
+    try {
+      const response = await fetch("api/manage-consultation-hours.php", {
+        cache: "no-store", credentials: "same-origin", headers: { Accept: "application/json" },
+      });
+      const result = await response.json();
+      if (!response.ok || !result.ok) throw new Error(result.message || "Unable to load availability hours.");
+      if (version !== hoursVersion || isEditingHours || isSavingHours) return;
+      const rawHours = result.consultation_hours || "[]";
+      const changed = JSON.stringify(loadAvailableHours(rawHours)) !== JSON.stringify(AVAILABLE_HOURS);
+      if (changed || !hoursLoaded) {
+        applySavedHours(rawHours);
+        renderAvailableHours();
+      }
+      hoursLoaded = true;
+    } catch (_) {
+      // Retain the last confirmed hours and retry when the connection returns.
+    } finally {
+      hoursRefreshing = false;
+      updateHoursButtons();
+    }
+  }
 
   function setSaveButtonSaved() {
     if (!saveHoursButton) return;
@@ -441,6 +463,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   renderAvailableHours();
+  updateHoursButtons();
+  refreshSavedHours();
+  window.setInterval(refreshSavedHours, 5000);
+  window.addEventListener("focus", refreshSavedHours);
+  document.addEventListener("visibilitychange", refreshSavedHours);
+  window.addEventListener("storage", (event) => {
+    if (event.key === AVAILABLE_HOURS_STORAGE_KEY) refreshSavedHours();
+  });
 
   if (hoursListEl) {
     hoursListEl.addEventListener("click", (event) => {
@@ -527,13 +557,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (saveHoursButton) {
     saveHoursButton.addEventListener("click", async () => {
+      if (!hoursLoaded || isSavingHours || !isEditingHours) return;
       let didSaveHours = false;
 
       if (isEditingHours) {
-        AVAILABLE_HOURS = cloneHours(draftHours);
-
-        saveAvailableHours(AVAILABLE_HOURS);
-
+        const pendingHours = cloneHours(draftHours);
+        hoursVersion++;
+        isSavingHours = true;
+        updateHoursButtons();
         try {
           const response = await fetch("api/manage-consultation-hours.php", {
             method: "POST",
@@ -543,16 +574,21 @@ document.addEventListener("DOMContentLoaded", () => {
               "Accept": "application/json",
             },
             body: JSON.stringify({
-              consultation_hours: JSON.stringify(AVAILABLE_HOURS),
+              consultation_hours: JSON.stringify(pendingHours),
             }),
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || !result.ok) {
             throw new Error(result.message || "Unable to save availability hours.");
           }
+          applySavedHours(result.consultation_hours);
+          saveAvailableHours(AVAILABLE_HOURS);
         } catch (error) {
           window.alert(error.message || "Unable to save availability hours.");
           return;
+        } finally {
+          isSavingHours = false;
+          updateHoursButtons();
         }
 
         didSaveHours = true;
@@ -568,6 +604,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (editButton) {
     editButton.addEventListener("click", () => {
+      if (!hoursLoaded || isSavingHours) return;
+      hoursVersion++;
       if (isEditingHours) {
         isEditingHours = false;
         editButton.textContent = "Edit";

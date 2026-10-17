@@ -108,6 +108,25 @@ try:
     _, result = request('/api/get-faculty-directory.php')
     check(result['faculty'][0]['Current_Status'] == 'available', 'TC4 newly saved status supersedes older records with an incorrect future timestamp')
 
+    saved_hours = json.dumps([{'day': 'Monday', 'times': ['2:00 PM - 2:30 PM', '2:30 PM - 3:00 PM'], 'time': '9:00 AM - 11:00 AM'}])
+    status, result = request('/api/manage-consultation-hours.php', {'consultation_hours': saved_hours})
+    check(status == 200 and result['consultation_hours'] == saved_hours, 'Faculty hours save is confirmed by the server')
+    check(request('/api/manage-consultation-hours.php')[1]['consultation_hours'] == saved_hours, 'Faculty hours reload returns the persisted update')
+    request('/_test/session?id=2')
+    _, result = request('/api/get-faculty-directory.php')
+    check(result['faculty'][0]['Consultation_Hours'] == saved_hours, 'Student directory receives the exact updated faculty hours')
+    _, result = request('/api/get-faculty-schedule.php?faculty_id=1&date=2030-01-07')
+    slots = {slot['start']: slot for slot in result['slots']}
+    check(slots['14:00:00']['available'] and not slots['09:00:00']['available'], 'Student booking uses updated slots rather than an outdated summary')
+    check(request('/api/manage-consultation-hours.php', {'consultation_hours': '[]'})[0] == 403, 'Students cannot overwrite professor hours')
+    request('/_test/session?id=1')
+    request('/api/manage-consultation-hours.php', {'consultation_hours': json.dumps([{'day': 'Monday', 'times': [], 'time': '9:00 AM - 11:00 AM'}])})
+    request('/_test/session?id=2')
+    _, result = request('/api/get-faculty-schedule.php?faculty_id=1&date=2030-01-07')
+    check(result['days'] == [] and not any(slot['available'] for slot in result['slots']), 'Clearing saved hours removes previously available student booking slots')
+    request('/_test/session?id=1')
+    request('/api/manage-consultation-hours.php', {'consultation_hours': 'Monday: 9:00 AM - 11:00 AM'})
+
     _, result = request('/api/get-faculty-schedule.php?date=2030-01-07&request_id=21')
     slots = {s['start']: s for s in result['slots']}
     check(slots['09:00:00']['available'] and not slots['09:00:00']['taken'], 'TC6 own booking remains selectable during rescheduling')
@@ -200,7 +219,7 @@ try:
     if not chrome:
         raise RuntimeError('Chrome/Chromium is required for the browser regression checks.')
     for case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard', 'request', 'reschedule']:
-        if case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard']:
+        if case in ['faculty', 'student', 'availability', 'student-dashboard', 'faculty-dashboard', 'request']:
             result, html = login_flow(chrome, base + '/_test/ui/' + case, RUNTIME / ('chrome-photo-' + case + '-' + str(port)), RUNTIME / ('photo-' + case + '.log'), result_id='regression-result')
             (RUNTIME / (case + '.html')).write_text(html, encoding='utf-8')
             check(result.startswith('PASS '), 'Browser ' + case + ': ' + (result or 'no result; see tests/runtime/' + case + '.html'))

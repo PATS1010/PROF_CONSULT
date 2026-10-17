@@ -481,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", refreshFacultyDirectory);
   window.addEventListener("focus", refreshFacultyDirectory);
   window.addEventListener("storage", (event) => {
-    if (event.key === "facultyTestOnlineStatus") refreshFacultyDirectory();
+    if (["facultyTestOnlineStatus", "profconsult_faculty_available_hours"].includes(event.key)) refreshFacultyDirectory();
   });
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
