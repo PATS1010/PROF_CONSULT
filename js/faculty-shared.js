@@ -783,7 +783,7 @@ document.addEventListener(
 
             }
           },
-          450
+          2000
         );
       }
     }

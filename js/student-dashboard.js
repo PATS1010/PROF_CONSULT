@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         } catch (error) {
         }
-      }, 450);
+      }, 2000);
     }
   }
 
