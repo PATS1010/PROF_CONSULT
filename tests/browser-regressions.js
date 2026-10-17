@@ -31,6 +31,8 @@ localStorage.clear();
 if (TEST_CASE === 'availability') localStorage.setItem('profconsult_faculty_available_hours', JSON.stringify([{ day: 'Monday', times: ['5:00 PM - 5:30 PM'] }]));
 sessionStorage.clear();
 const fixtureRole = ['student', 'student-dashboard', 'request', 'wrong-role', 'directory'].includes(TEST_CASE) ? 'student' : 'faculty';
+// These fixtures represent navigation from another application page.
+Object.defineProperty(document, 'referrer', { value: location.origin + '/student-dashboard.html' });
 if (TEST_CASE !== 'fresh-tab') {
   sessionStorage.setItem('profconsult_tab_role', fixtureRole);
   sessionStorage.setItem(`profconsult_tab_token_${fixtureRole}`, 'a'.repeat(64));

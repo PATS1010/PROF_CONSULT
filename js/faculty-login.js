@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
           window.ProfConsultTheme.setUser(result.user);
         }
         sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
-        window.location.href = "faculty-dashboard.html";
+        window.location.replace("faculty-dashboard.html");
       } catch (error) {
         loginError.textContent = error.message || "Unable to log in.";
         loginError.hidden = false;

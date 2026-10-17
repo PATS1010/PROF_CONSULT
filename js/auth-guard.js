@@ -44,6 +44,13 @@
     }
   }
 
+  // A pasted/bookmarked URL starts a new navigation without an app referrer.
+  // Reloads and history traversal retain this tab's existing login proof.
+  const navigationType = performance.getEntriesByType("navigation")[0]?.type;
+  let fromApp = false;
+  try { fromApp = new URL(document.referrer).origin === location.origin; } catch (_) {}
+  if (navigationType === "navigate" && !fromApp) clearTabLogin();
+
   // Attach the proof to same-origin API requests, never to third-party URLs.
   window.fetch = async (input, init = {}) => {
     const url = new URL(input instanceof Request ? input.url : input, document.baseURI);
@@ -62,6 +69,10 @@
   async function checkSession() {
     if (sessionCheckPromise) return sessionCheckPromise;
     lockPage();
+    // Cached history pages must not revive a proof cleared by logout or a
+    // directly opened URL in this tab.
+    try { token = sessionStorage.getItem(`profconsult_tab_token_${role}`) || ""; }
+    catch (_) { token = ""; }
     if (!token || !["student", "faculty"].includes(role)) {
       redirectToLogin();
       return null;
@@ -167,8 +178,5 @@
     if (document.hidden) lockPage();
     else checkSession();
   });
-  try {
-    window.history.pushState({ profConsultProtectedPage: true }, "", window.location.href);
-  } catch (_) {}
-  window.addEventListener("popstate", () => { logout(loginPage).catch(redirectToLogin); });
+  window.addEventListener("popstate", checkSession);
 })();

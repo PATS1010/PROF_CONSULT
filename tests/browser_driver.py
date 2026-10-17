@@ -9,7 +9,7 @@ import time
 import urllib.request
 from urllib.parse import urlsplit
 
-def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result', viewport=None, screenshot_path=None):
+def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result', viewport=None, screenshot_path=None, navigation_checks=False):
     with socket.socket() as probe:
         probe.bind(('127.0.0.1', 0))
         debug_port = probe.getsockname()[1]
@@ -83,6 +83,32 @@ def login_flow(chrome, url, profile, log_path, result_id='auth-flow-result', vie
             except (OSError, EOFError):
                 raise
             time.sleep(.1)
+        if navigation_checks and result.startswith('PASS '):
+            def wait_for(expression, label):
+                deadline = time.monotonic() + 10
+                while time.monotonic() < deadline:
+                    if evaluate(expression): return
+                    time.sleep(.1)
+                raise AssertionError(label)
+            original_url = evaluate('location.href')
+            proof = evaluate('sessionStorage.getItem("profconsult_tab_token_" + sessionStorage.getItem("profconsult_tab_role"))')
+            authenticated = 'window.ProfConsultAuth?.currentSession?.ok && !document.getElementById("profconsult-auth-lock") && sessionStorage.getItem("profconsult_tab_token_" + sessionStorage.getItem("profconsult_tab_role")) === ' + json.dumps(proof)
+            second_url = original_url + '?history-check=1'
+            evaluate('location.href = ' + json.dumps(second_url))
+            wait_for('location.href === ' + json.dumps(second_url) + ' && ' + authenticated, 'Internal navigation preserves login')
+            evaluate('history.back()')
+            wait_for('location.href === ' + json.dumps(original_url) + ' && ' + authenticated, 'Browser Back preserves login')
+            evaluate('history.forward()')
+            wait_for('location.href === ' + json.dumps(second_url) + ' && ' + authenticated, 'Browser Forward preserves login')
+            evaluate('history.pushState({}, "", "#history-check"); history.back()')
+            wait_for('location.href === ' + json.dumps(second_url) + ' && ' + authenticated, 'Same-document browser Back preserves login')
+            # CDP navigation has no referrer, like pasting into the address bar.
+            send('Page.navigate', {'url': original_url + '?pasted=1'})
+            login_visible = '!!document.getElementById("loginForm") && !sessionStorage.getItem("profconsult_tab_role")'
+            wait_for(login_visible, 'Pasting a protected URL in the same tab requires login')
+            evaluate('window.regressionLeavingLogin = true; history.back()')
+            wait_for('!window.regressionLeavingLogin && ' + login_visible, 'History cannot restore login after the proof was cleared')
+            result += '; Back/Forward preserve login; pasted links require login'
         html = evaluate('document.documentElement.outerHTML')
         if screenshot_path:
             capture = send('Page.captureScreenshot', {'format': 'png'})

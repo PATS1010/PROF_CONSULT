@@ -264,7 +264,7 @@ try:
         (RUNTIME / ('notification-popup-' + role + '.html')).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Browser notification popup: ' + result)
     for entry in ['login.html', 'student-login.html', 'faculty-login.html']:
-        result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'))
+        result, html = login_flow(chrome, base + '/_test/login/' + entry, RUNTIME / ('chrome-login-' + entry + '-' + str(port)), RUNTIME / ('login-flow-' + entry + '.log'), navigation_checks=True)
         (RUNTIME / ('login-flow-' + entry)).write_text(html, encoding='utf-8')
         check(result.startswith('PASS '), 'Browser actual ' + entry + ' signs in, opens its dashboard, and refreshes successfully')
     for role in ['faculty', 'student']:

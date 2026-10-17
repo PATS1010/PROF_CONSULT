@@ -192,14 +192,14 @@ document.addEventListener("DOMContentLoaded", () => {
         if (role === "faculty") {
           sessionStorage.removeItem("profconsult_faculty_auto_checkin_shown");
           sessionStorage.setItem("profConsultFacultyJustLoggedIn", "1");
-          window.location.href = "faculty-dashboard.html";
+          window.location.replace("faculty-dashboard.html");
           return;
         }
 
         if (role === "student") {
           sessionStorage.removeItem("profconsult_student_quick_action_shown");
           sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
-          window.location.href = "student-dashboard.html";
+          window.location.replace("student-dashboard.html");
           return;
         }
 

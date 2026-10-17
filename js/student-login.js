@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
           window.ProfConsultTheme.setUser(result.user);
         }
         sessionStorage.setItem("profConsultStudentJustLoggedIn", "1");
-        window.location.href = "student-dashboard.html";
+        window.location.replace("student-dashboard.html");
       } catch (error) {
         loginError.hidden = false;
       }
