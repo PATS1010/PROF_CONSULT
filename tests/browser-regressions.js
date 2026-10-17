@@ -4,6 +4,13 @@ const alerts = [];
 let failStatusSave = false;
 let fixtureFacultyStatus = 'offline';
 let failPhotoFetch = false;
+let directoryFacultyStatus = 'online';
+const intervalTasks = [];
+const nativeSetInterval = window.setInterval.bind(window);
+window.setInterval = (callback, milliseconds, ...args) => {
+  intervalTasks.push({ callback, milliseconds });
+  return nativeSetInterval(callback, milliseconds, ...args);
+};
 window.alert = (message) => alerts.push(message);
 localStorage.clear();
 sessionStorage.clear();
@@ -21,7 +28,7 @@ window.fetch = async (url, options = {}) => {
   if (String(url).includes('profile-photo.php') && failPhotoFetch) status = 404;
   if (String(url).includes('get-current-session.php')) result = { ok: true, user: TEST_CASE === 'wrong-role' ? { ...user, role: 'student' } : user, profile };
   else if (String(url).includes('get-faculty-directory.php')) result.faculty = [
-    { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: 'online', Consultation_Hours: JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
+    { Faculty_ID: 1, Full_Name: 'Sean Test III', Department: 'Computer Engineering', Current_Status: directoryFacultyStatus, Consultation_Hours: JSON.stringify([{ day: 'Monday', time: '8:00 AM - 11:00 AM, 11:30 AM - 12:50 PM, 2:30 PM - 3:00 PM, 4:00 PM - 5:00 PM' }]) },
     { Faculty_ID: 2, Full_Name: 'Offline Faculty', Department: 'Civil Engineering', Current_Status: 'offline' },
   ];
   else if (String(url).includes('update-faculty-profile.php')) result = { ok: true, user: { ...user, name: JSON.parse(options.body).full_name }, profile };
@@ -71,6 +78,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       check(Array.from(slots).every(slot => { const box = slot.getBoundingClientRect(); return box.left >= rect.left && box.right <= rect.right; }), 'All consultation times stay within the profile card');
       check(document.documentElement.scrollWidth <= innerWidth, 'Directory profile does not overflow the screen horizontally');
       if (innerWidth <= 480) check(panel.querySelector('.profile-hours-day').getBoundingClientRect().bottom <= slots[0].getBoundingClientRect().top, 'Phone schedule places time ranges below the day');
+      window.scrollTo(0, 100);
+      const scrollBeforeRefresh = scrollY;
+      directoryFacultyStatus = 'offline';
+      window.dispatchEvent(new StorageEvent('storage', { key: 'facultyTestOnlineStatus', newValue: 'offline' }));
+      await delay();
+      check(panel.querySelector('.profile-status-label').textContent === 'Status: Offline', 'Open profile follows check-out reported by the server');
+      check(document.querySelector('#facultyList [data-faculty-id="1"]').dataset.status === 'offline', 'Profile and directory list display the same server status');
+      check(scrollY === scrollBeforeRefresh, 'Background status refresh preserves profile scroll position');
+      directoryFacultyStatus = 'meeting';
+      window.dispatchEvent(new Event('focus'));
+      await delay();
+      check(panel.querySelector('.profile-status-label').textContent === 'Status: Meeting', 'Returning to the page refreshes the actual professor status');
+      directoryFacultyStatus = 'available';
+      intervalTasks.find(task => task.milliseconds === 5000).callback();
+      await delay();
+      check(panel.querySelector('.profile-status-label').textContent === 'Status: Online', 'Regular polling follows check-in without reopening the profile');
     }
     if (TEST_CASE === 'faculty' || TEST_CASE === 'student') {
       const photo = document.getElementById(TEST_CASE === 'faculty' ? 'facultyProfilePhoto' : 'profilePhoto');
@@ -131,6 +154,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       const body = JSON.parse(saved.options.body);
       check(!('consultation_hours' in body) && !('office' in body), 'Profile save does not clear consultation hours or office');
       check(body.full_name === 'Juan A. Santos Jr.', 'Suffix survives the profile save round trip');
+      document.getElementById('facultyCheckInButton').click();
+      await delay();
+      const leaveCount = () => recorded.filter(record => record.url?.includes('update-faculty-presence.php') && JSON.parse(record.options.body).action === 'leave').length;
+      const previousLeaves = leaveCount();
+      const previousHeartbeats = recorded.filter(record => record.url?.includes('update-faculty-presence.php')).length;
+      Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+      intervalTasks.filter(task => task.milliseconds === 20000).forEach(task => task.callback());
+      await delay();
+      check(leaveCount() === previousLeaves, 'Switching away from the professor tab does not mark them offline');
+      check(recorded.filter(record => record.url?.includes('update-faculty-presence.php')).length > previousHeartbeats, 'An open background professor tab continues its heartbeat');
+      check(window.getFacultyOnlineStatus() === 'online', 'Checked-in professor remains online after switching tabs');
+      delete document.hidden;
+      document.dispatchEvent(new Event('visibilitychange'));
+      await delay();
     } else if (TEST_CASE === 'student') {
       check(recorded.some((r) => r.url?.includes('profile-photo.php?user_id=1&v=')), 'Student photo URL retains its account query parameter');
     } else if (TEST_CASE === 'availability') {

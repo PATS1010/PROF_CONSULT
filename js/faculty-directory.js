@@ -261,7 +261,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  function openProfile(facultyId) {
+  function openProfile(facultyId, userInitiated = true) {
     const faculty = FACULTY_DIRECTORY_DATA.find((f) => f.id === facultyId);
     if (!faculty) return;
 
@@ -287,7 +287,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    window.scrollTo(0, 0);
+    if (userInitiated) {
+      window.scrollTo(0, 0);
+      refreshFacultyDirectory();
+    }
 
     requestAnimationFrame(() => profilePanel.classList.add("is-visible"));
   }
@@ -326,32 +329,41 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   let directoryLoaded = false;
+  let directoryRefreshing = false;
   function refreshFacultyDirectory() {
-    if (document.hidden) return;
-    fetch("api/get-faculty-directory.php", {
+    if (document.hidden || directoryRefreshing) return;
+    directoryRefreshing = true;
+    return fetch("api/get-faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
   })
     .then((response) => response.ok ? response.json() : Promise.reject())
     .then((result) => {
-      if (result && Array.isArray(result.faculty)) {
-        FACULTY_DIRECTORY_DATA = result.faculty.map(mapFacultyRecord);
-      }
+      if (!result.ok || !Array.isArray(result.faculty)) throw new Error("Invalid faculty directory response");
+      FACULTY_DIRECTORY_DATA = result.faculty.map(mapFacultyRecord);
       if (directoryLoaded) {
         renderFacultyList();
         applyFilters();
-        if (selectedFacultyId) openProfile(selectedFacultyId);
+        if (selectedFacultyId) {
+          if (FACULTY_DIRECTORY_DATA.some((faculty) => faculty.id === selectedFacultyId)) openProfile(selectedFacultyId, false);
+          else closeProfile();
+        }
       } else {
         renderInitialView();
         directoryLoaded = true;
       }
     })
-    .catch(() => { if (!directoryLoaded) renderInitialView(); });
+    .catch(() => { if (!directoryLoaded) renderInitialView(); })
+    .finally(() => { directoryRefreshing = false; });
   }
   refreshFacultyDirectory();
-  window.setInterval(refreshFacultyDirectory, 20000);
+  window.setInterval(refreshFacultyDirectory, 5000);
   document.addEventListener("visibilitychange", refreshFacultyDirectory);
+  window.addEventListener("focus", refreshFacultyDirectory);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "facultyTestOnlineStatus") refreshFacultyDirectory();
+  });
 
 });
 // Logout confirmation modal

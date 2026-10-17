@@ -1219,7 +1219,7 @@ document.addEventListener(
 
     let presenceBusy = false;
     async function refreshPresence() {
-      if (document.hidden || presenceBusy || facultyStatusPending > 0) return;
+      if (presenceBusy || facultyStatusPending > 0) return;
       presenceBusy = true;
       const version = facultyStatusVersion;
       try {
@@ -1254,8 +1254,7 @@ document.addEventListener(
     window.addEventListener("pagehide", leavePage);
     window.addEventListener("pageshow", refreshPresence);
     document.addEventListener("visibilitychange", () => {
-      if (document.hidden) leavePage();
-      else refreshPresence();
+      if (!document.hidden) refreshPresence();
     });
 
 

@@ -454,30 +454,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   renderFacultyDashboard();
 
+  let directoryRefreshing = false;
   function refreshFacultyDirectory() {
-    if (document.hidden) return;
-    fetch("api/get-faculty-directory.php", {
+    if (document.hidden || directoryRefreshing) return;
+    directoryRefreshing = true;
+    return fetch("api/get-faculty-directory.php", {
     cache: "no-store",
     credentials: "same-origin",
     headers: { "Accept": "application/json" },
   })
     .then((response) => response.ok ? response.json() : Promise.reject())
     .then((result) => {
-      facultyDashboardData = result && Array.isArray(result.faculty)
-        ? result.faculty.map(mapFacultyRecord)
-        : [];
+      if (!result.ok || !Array.isArray(result.faculty)) throw new Error("Invalid faculty directory response");
+      facultyDashboardData = result.faculty.map(mapFacultyRecord);
       isFacultyLoading = false;
       renderFacultyDashboard();
     })
     .catch(() => {
-      facultyDashboardData = [];
       isFacultyLoading = false;
       renderFacultyDashboard();
-    });
+    })
+    .finally(() => { directoryRefreshing = false; });
   }
   refreshFacultyDirectory();
-  window.setInterval(refreshFacultyDirectory, 20000);
+  window.setInterval(refreshFacultyDirectory, 5000);
   document.addEventListener("visibilitychange", refreshFacultyDirectory);
+  window.addEventListener("focus", refreshFacultyDirectory);
+  window.addEventListener("storage", (event) => {
+    if (event.key === "facultyTestOnlineStatus") refreshFacultyDirectory();
+  });
 
   const RECENT_NOTIFICATIONS_LIMIT = 3;
 
