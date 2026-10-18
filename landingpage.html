@@ -5,11 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Prof Consult</title>
-  <script src="js/dark-theme.js" data-scope="public"></script>
+  <script src="js/dark-theme.js?v=phone-header-2" data-scope="public"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/landingpage.css?v=team-mask-2">
+  <link rel="stylesheet" href="css/landingpage.css?v=phone-header-3">
   <link rel="stylesheet" href="css/dark-theme.css">
 </head>
 <body>
@@ -19,7 +19,7 @@
       <img src="images/prof-consult-logo.png" alt="Prof Consult Logo">
     </a>
 
-    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-expanded="false">
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation menu" aria-controls="navLinks" aria-expanded="false">
       <span></span>
       <span></span>
       <span></span>
@@ -29,8 +29,11 @@
       <a href="#hero" data-nav="home">Home</a>
       <a href="#why-choose" data-nav="scroll">About</a>
       <a href="#contact" data-nav="scroll">Contact</a>
-      <a href="login.html" class="navbar-login-button" data-nav="login">Login</a>
     </nav>
+
+    <div class="navbar-actions">
+      <a href="login.html" class="navbar-login-button" data-nav="login">Login</a>
+    </div>
   </header>
 
   <main class="landing-main">

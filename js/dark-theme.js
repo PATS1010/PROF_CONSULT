@@ -250,7 +250,7 @@
   function buildNavToggle() {
     if (!document.body || document.getElementById("pcThemeToggle")) return;
 
-    var navRight = document.querySelector(".navbar-right, .faculty-navbar-right, .navbar-links");
+    var navRight = document.querySelector(".navbar-actions") || document.querySelector(".navbar-right, .faculty-navbar-right, .navbar-links");
     if (!navRight) return;
 
     var button = document.createElement("button");

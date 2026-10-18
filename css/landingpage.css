@@ -94,9 +94,19 @@ img {
   display: flex;
   align-items: center;
   gap: 28px;
+  margin-left: auto;
 }
 
-.navbar-links a {
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-left: 28px;
+  flex-shrink: 0;
+}
+
+.navbar-links a,
+.navbar-actions a {
   color: var(--color-text-light);
   font-size: 0.85rem;
   font-weight: 500;
@@ -108,7 +118,7 @@ img {
   opacity: 0.8;
 }
 
-.navbar-links .navbar-login-button {
+.navbar-actions .navbar-login-button {
   min-height: 44px;
   display: inline-flex;
   align-items: center;
@@ -121,7 +131,7 @@ img {
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
 }
 
-.navbar-links .navbar-login-button:hover {
+.navbar-actions .navbar-login-button:hover {
   color: var(--color-red-primary);
   background-color: var(--color-text-light);
   opacity: 1;
@@ -738,6 +748,16 @@ img {
 }
 
 @media (max-width: 768px) {
+  .navbar-logo {
+    margin-right: auto;
+  }
+
+  .navbar-actions {
+    order: 1;
+    gap: 12px;
+    margin-left: 12px;
+  }
+
   .navbar-links {
     position: absolute;
     top: var(--nav-height);
@@ -749,6 +769,7 @@ img {
     padding: 20px var(--section-padding-x);
     background-color: var(--color-red-primary);
     display: none;
+    margin-left: 0;
   }
 
   .navbar-links.is-open {
@@ -757,6 +778,8 @@ img {
 
   .nav-toggle {
     display: flex;
+    order: 2;
+    margin-left: 12px;
   }
 
   .hero {
