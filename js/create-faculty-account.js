@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  async function checkFacultyIdExists(facultyId) {
+  async function checkFacultyIdExists(facultyId, force = false) {
     if (!facultyId || facultyId.length < 8) {
       lastCheckedFacultyId = "";
       lastFacultyIdExists = false;
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    if (facultyId === lastCheckedFacultyId) {
+    if (!force && facultyId === lastCheckedFacultyId) {
       if (lastFacultyIdExists) {
         showFacultyIdError(
           "This faculty ID already has an account."
@@ -74,6 +74,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) {
       throw new Error(result.message || "Unable to check faculty ID right now.");
+    }
+
+    if (facultyIdInput.value.trim() !== facultyId) {
+      return !!result.username_exists;
     }
 
     lastCheckedFacultyId = facultyId;
@@ -102,6 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.clearTimeout(facultyIdCheckTimer);
       lastCheckedFacultyId = "";
       lastFacultyIdExists = false;
+      clearFacultyIdError();
 
       if (formatted.length === 8) {
         facultyIdCheckTimer = window.setTimeout(() => {
@@ -261,7 +266,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const facultyIdExists = await checkFacultyIdExists(facultyIdInput.value.trim());
+        const facultyIdExists = await checkFacultyIdExists(facultyIdInput.value.trim(), true);
         if (facultyIdExists) {
           facultyIdInput.focus();
           return;

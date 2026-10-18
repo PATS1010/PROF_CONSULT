@@ -206,6 +206,25 @@ try:
     check(request('/api/get-current-session.php?role=faculty')[1]['user']['profile_photo'] == '', 'Faculty session reload retains the default-photo state')
     request('/_test/session?id=3')
 
+    for role in ['student', 'faculty']:
+        for owner_id in [1, 2]:
+            status, result = request('/api/check-account-exists.php', {'role': role, 'id_number': f'test-{owner_id}'})
+            check(status == 200 and result['username_exists'], f'{role} registration rejects an ID owned by account {owner_id}, regardless of role')
+            status, result = request('/api/check-account-exists.php', {'role': role, 'email': f'TEST-{owner_id}@example.test'})
+            check(status == 200 and result['email_exists'], f'{role} registration detects an existing email regardless of role or email case')
+            status, result = request('/api/create-account.php', {
+                'role': role, 'id_number': f'test-{owner_id}', 'full_name': 'Duplicate Account',
+                'email': f'duplicate-{role}@example.test', 'phone': '9123456789',
+                'password': 'TestPassword1', 'account_verification_token': 'unused',
+                'program': 'BSIT', 'year_level': '1', 'department': 'Computer Engineering',
+            })
+            check(status == 409 and 'ID already has an account' in result['message'], f'{role} account creation blocks duplicate ID {owner_id} even when the form check is bypassed')
+        status, result = request('/api/check-account-exists.php', {'role': role, 'id_number': '99-12345', 'email': 'unused@example.test'})
+        check(status == 200 and not result['exists'], f'{role} registration allows unused account details')
+    db = sqlite3.connect(db_file)
+    check(db.execute('SELECT COUNT(*) FROM users').fetchone()[0] == 3, 'Duplicate registration attempts create no accounts')
+    db.close()
+
     status, result = request('/api/send-account-verification-code.php', {'role': 'student', 'email': 'new@example.test', 'method': 'email'})
     check(status == 200 and result['ok'], 'TC1 verification request succeeds with the delivery fixture')
     token = result['token']

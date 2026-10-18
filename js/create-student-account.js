@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return /^\d{2}-\d{5}$/.test(value.trim());
   }
 
-  async function checkStudentNumberExists(studentNumber) {
+  async function checkStudentNumberExists(studentNumber, force = false) {
     if (!isCompleteStudentNumber(studentNumber)) {
       lastCheckedStudentNumber = "";
       lastStudentNumberExists = false;
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
-    if (lastCheckedStudentNumber === studentNumber) {
+    if (!force && lastCheckedStudentNumber === studentNumber) {
       if (lastStudentNumberExists) {
         showStudentNumberError(
           "This student ID already has an account."
@@ -75,6 +75,10 @@ document.addEventListener("DOMContentLoaded", () => {
       throw new Error(result.message || "Unable to check student ID right now.");
     }
 
+    if (studentNumberInput.value.trim() !== studentNumber) {
+      return !!result.username_exists;
+    }
+
     lastCheckedStudentNumber = studentNumber;
     lastStudentNumberExists = !!result.username_exists;
 
@@ -100,6 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
       studentNumberInput.value = formatted;
       lastCheckedStudentNumber = "";
       lastStudentNumberExists = false;
+      clearStudentNumberError();
 
       window.clearTimeout(studentNumberCheckTimer);
       if (isCompleteStudentNumber(formatted)) {
@@ -264,7 +269,7 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const studentExists =
           await checkStudentNumberExists(
-            studentNumberInput.value.trim()
+            studentNumberInput.value.trim(), true
           );
 
         if (studentExists) {

@@ -21,10 +21,10 @@ try {
         $checkUsername = $db->prepare(
             'SELECT 1
              FROM users
-             WHERE Role = ? AND Username = ?
+             WHERE Username = ?
              LIMIT 1'
         );
-        $checkUsername->execute([$role, $username]);
+        $checkUsername->execute([$username]);
         $usernameExists = (bool) $checkUsername->fetchColumn();
     }
 
@@ -37,10 +37,10 @@ try {
         $checkEmail = $db->prepare(
             'SELECT 1
              FROM users
-             WHERE Role = ? AND LOWER(Email) = ?
+             WHERE LOWER(Email) = ?
              LIMIT 1'
         );
-        $checkEmail->execute([$role, $email]);
+        $checkEmail->execute([$email]);
         $emailExists = (bool) $checkEmail->fetchColumn();
     }
 

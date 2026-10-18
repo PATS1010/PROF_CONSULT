@@ -139,6 +139,11 @@ try {
     if (isset($db) && $db->inTransaction()) {
         $db->rollBack();
     }
+    // The unique constraints also reject simultaneous registrations that both
+    // passed the checks above before either transaction committed.
+    if ($exception->getCode() === '23505') {
+        fail('This ID or email already has an account.', 409);
+    }
     error_log($exception->getMessage());
     fail('A database error occurred. Check app-config.php and import database/schema.sql.', 500);
 }
