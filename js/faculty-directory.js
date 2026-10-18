@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function mapFacultyRecord(record) {
     const status = normalizeStatus(record.Current_Status);
-    const fullName = record.Full_Name || "";
+    const fullName = window.ProfConsultNames.format(record.Full_Name);
     const program = departmentLabel(record.Department || "Faculty");
     return {
       id: String(record.Faculty_ID),

@@ -260,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const program = departmentLabel(record.Department || "Faculty");
     return {
       id: String(record.Faculty_ID || ""),
-      fullName: String(record.Full_Name || "Faculty").trim() || "Faculty",
+      fullName: window.ProfConsultNames.format(record.Full_Name) || "Faculty",
       program,
       departmentKey: departmentKey(program),
       status,

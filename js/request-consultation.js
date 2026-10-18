@@ -14,6 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let selectedFaculty = getSelectedFaculty();
 
+  function formatConsultationName(name) {
+    return window.ProfConsultNames.format(name);
+  }
+
   function requestedFacultyId() {
     return new URLSearchParams(window.location.search).get("facultyId");
   }
@@ -22,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedFaculty = faculty;
     if (facultyMemberInput) {
       facultyMemberInput.textContent = faculty && faculty.fullName
-        ? faculty.fullName
+        ? formatConsultationName(faculty.fullName)
         : "Selected Faculty Member";
     }
     try {
@@ -102,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
     .then((result) => {
       const user = result.user || {};
       const profile = result.profile || {};
-      if (studentNameInput) studentNameInput.textContent = user.name || "";
+      if (studentNameInput) studentNameInput.textContent = formatConsultationName(user.name);
       if (studentIdInput) studentIdInput.textContent = user.username || "";
       if (programYearInput) {
         programYearInput.textContent = buildProgramYearDisplay(
